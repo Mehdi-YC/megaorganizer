@@ -1,0 +1,178 @@
+import { db } from '$lib/server/db';
+import { treeElement, treeRelationship } from '$lib/server/db/schema';
+import { eq, and, asc, like, sql } from 'drizzle-orm';
+
+export type TreeElementType = 'node' | 'item';
+export type TreeParentType = 'page' | 'node' | 'item';
+
+export async function createTreeElement(
+	userId: string,
+	type: TreeElementType,
+	data: {
+		name: string;
+		description?: string;
+		markdown?: string;
+		imageUrl?: string;
+		videoUrl?: string;
+		externalUrl?: string;
+		tags?: string;
+		metadata?: string;
+		ydkData?: string;
+	}
+) {
+	const [result] = await db
+		.insert(treeElement)
+		.values({
+			userId,
+			type,
+			...data
+		})
+		.returning();
+
+	return result;
+}
+
+export async function getTreeElementById(id: string) {
+	return db.select().from(treeElement).where(eq(treeElement.id, id)).get();
+}
+
+export async function updateTreeElement(
+	id: string,
+	data: {
+		name?: string;
+		description?: string;
+		markdown?: string;
+		imageUrl?: string;
+		videoUrl?: string;
+		externalUrl?: string;
+		tags?: string;
+		metadata?: string;
+		ydkData?: string;
+	}
+) {
+	const [result] = await db
+		.update(treeElement)
+		.set(data)
+		.where(eq(treeElement.id, id))
+		.returning();
+
+	return result;
+}
+
+export async function deleteTreeElement(id: string) {
+	await db.delete(treeElement).where(eq(treeElement.id, id));
+}
+
+export async function getChildren(parentType: TreeParentType, parentId: string) {
+	const relationships = await db
+		.select()
+		.from(treeRelationship)
+		.where(
+			and(
+				eq(treeRelationship.parentType, parentType),
+				eq(treeRelationship.parentId, parentId)
+			)
+		)
+		.orderBy(asc(treeRelationship.position))
+		.all();
+
+	const children = [];
+	for (const rel of relationships) {
+		const element = await getTreeElementById(rel.childId);
+		if (element) {
+			children.push({ ...element, position: rel.position });
+		}
+	}
+
+	return children;
+}
+
+export async function addChildToParent(
+	parentType: TreeParentType,
+	parentId: string,
+	childType: TreeElementType,
+	childId: string
+) {
+	const maxPosition = await db
+		.select({ position: treeRelationship.position })
+		.from(treeRelationship)
+		.where(
+			and(
+				eq(treeRelationship.parentType, parentType),
+				eq(treeRelationship.parentId, parentId)
+			)
+		)
+		.orderBy(asc(treeRelationship.position))
+		.all();
+
+	const position = maxPosition.length > 0 ? Math.max(...maxPosition.map((p) => p.position)) + 1 : 0;
+
+	const [result] = await db
+		.insert(treeRelationship)
+		.values({
+			parentType,
+			parentId,
+			childType,
+			childId,
+			position
+		})
+		.returning();
+
+	return result;
+}
+
+export async function removeChildFromParent(
+	parentType: TreeParentType,
+	parentId: string,
+	childId: string
+) {
+	await db
+		.delete(treeRelationship)
+		.where(
+			and(
+				eq(treeRelationship.parentType, parentType),
+				eq(treeRelationship.parentId, parentId),
+				eq(treeRelationship.childId, childId)
+			)
+		);
+}
+
+export async function moveChild(
+	parentType: TreeParentType,
+	parentId: string,
+	childId: string,
+	newPosition: number
+) {
+	await db
+		.update(treeRelationship)
+		.set({ position: newPosition })
+		.where(
+			and(
+				eq(treeRelationship.parentType, parentType),
+				eq(treeRelationship.parentId, parentId),
+				eq(treeRelationship.childId, childId)
+			)
+		);
+}
+
+export async function searchTreeElements(userId: string, query: string) {
+	if (!query || !query.trim()) {
+		return db
+			.select()
+			.from(treeElement)
+			.where(eq(treeElement.userId, userId))
+			.all();
+	}
+
+	const searchTerm = `%${query.trim()}%`;
+	return db
+		.select()
+		.from(treeElement)
+		.where(
+			and(
+				eq(treeElement.userId, userId),
+				like(treeElement.name, searchTerm)
+			)
+		)
+		.all();
+}
