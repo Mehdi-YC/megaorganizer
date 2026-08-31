@@ -2,6 +2,8 @@
 	import snarkdown from 'snarkdown';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { parseMetadata, getNodeColor, getNodeIcon, checkSmallImages, searchTree, NODE_COLORS, NODE_ICONS } from '$lib/utils';
+	import { GridItemImage } from '$lib/components/ui';
 
 	let { data } = $props();
 	let category = $state(data.category);
@@ -32,48 +34,14 @@
 	let editPageDescription = $state('');
 	let smallImages = $state(new Set<string>());
 
-	const NODE_COLORS = ['#5a31f4', '#e35169', '#ffa439', '#2ec46d', '#3b82f6', '#a855f7', '#ec4899', '#14b8a6'];
-	const NODE_ICONS = ['fa-folder', 'fa-book', 'fa-flask', 'fa-code', 'fa-graduation-cap', 'fa-tasks', 'fa-bolt', 'fa-star', 'fa-heart', 'fa-gamepad', 'fa-dumbbell', 'fa-music', 'fa-palette', 'fa-cube', 'fa-layer-group', 'fa-brain', 'fa-lightbulb', 'fa-rocket', 'fa-shield', 'fa-gem'];
-
-	function parseMetadata(raw: string | null | undefined): Record<string, any> {
-		if (!raw) return {};
-		try { return JSON.parse(raw); } catch { return {}; }
-	}
-
-	function getNodeColor(node: any): string {
-		const meta = parseMetadata(node.metadata);
-		if (meta.color) return meta.color;
-		let hash = 0;
-		for (let i = 0; i < node.name.length; i++) hash = node.name.charCodeAt(i) + ((hash << 5) - hash);
-		return NODE_COLORS[Math.abs(hash) % NODE_COLORS.length];
-	}
-
-	function getNodeIcon(node: any): string {
-		const meta = parseMetadata(node.metadata);
-		return meta.icon || 'fa-folder';
-	}
-
 	function toggleNode(id: string) {
 		const next = new Set(expandedNodes);
 		if (next.has(id)) next.delete(id); else next.add(id);
 		expandedNodes = next;
 	}
 
-	function checkSmallImages(items: any[]) {
-		items.forEach((item: any) => {
-			if (!item.imageUrl || smallImages.has(item.id)) return;
-			const img = new Image();
-			img.onload = () => {
-				if (img.naturalWidth < 200 || img.naturalHeight < 150) {
-					smallImages = new Set([...smallImages, item.id]);
-				}
-			};
-			img.src = item.imageUrl;
-		});
-	}
-
 	onMount(() => {
-		checkSmallImages(treeElements);
+		checkSmallImages(treeElements, (ids) => smallImages = ids, smallImages);
 		if (topLevelNodes.length > 0 && expandedNodes.size === 0) {
 			const next = new Set(expandedNodes);
 			next.add(topLevelNodes[0].id);
@@ -88,11 +56,7 @@
 
 	async function searchItems() {
 		if (!searchQuery.trim()) { searchResults = []; return; }
-		const res = await fetch(`/api/tree?search=${encodeURIComponent(searchQuery)}`);
-		if (res.ok) {
-			const all = await res.json();
-			searchResults = all.filter((r: any) => r.type === 'item');
-		}
+		searchResults = await searchTree(searchQuery, 'item');
 	}
 
 	async function createAndAddItem() {
@@ -148,7 +112,7 @@
 		if (res.ok) {
 			const children = await res.json();
 			nodeChildrenCache = { ...nodeChildrenCache, [nodeId]: children };
-			checkSmallImages(children);
+			checkSmallImages(children, (ids) => smallImages = ids, smallImages);
 		}
 	}
 
@@ -197,11 +161,8 @@
 
 	async function searchForNode(nodeId: string, query: string) {
 		if (!query.trim()) { nodeSearchResults = { ...nodeSearchResults, [nodeId]: [] }; return; }
-		const res = await fetch(`/api/tree?search=${encodeURIComponent(query)}`);
-		if (res.ok) {
-			const all = await res.json();
-			nodeSearchResults = { ...nodeSearchResults, [nodeId]: all.filter((r: any) => r.type === 'item') };
-		}
+		const results = await searchTree(query, 'item');
+		nodeSearchResults = { ...nodeSearchResults, [nodeId]: results };
 	}
 
 	async function addItemToNode(nodeId: string) {
@@ -416,34 +377,19 @@
 										</div>
 									{/each}
 
-									<div class="grid gap-2 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5">
+									<div class="grid gap-1.5 grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
 										{#each childItems as item}
 											<a
 												href="/app/item/{item.id}"
-												class="group rounded-sm border border-border bg-surface p-2 transition-all hover:border-primary/50"
+												class="group rounded-sm border border-border bg-surface p-1.5 transition-all hover:border-primary/50"
 												onmouseenter={(e) => onItemHover(e, item)}
 												onmousemove={onItemHoverMove}
 												onmouseleave={onItemHoverLeave}
 											>
-												<div class="mb-1.5">
-													{#if item.imageUrl}
-														{#if smallImages.has(item.id)}
-															<div class="relative h-20 w-full overflow-hidden rounded">
-																<img src={item.imageUrl} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
-																<img src={item.imageUrl} alt={item.name} class="relative h-full w-full object-contain p-0.5" />
-															</div>
-														{:else}
-															<div class="h-20 w-full overflow-hidden rounded-sm">
-																<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover" />
-															</div>
-														{/if}
-													{:else}
-														<div class="flex h-20 w-full items-center justify-center rounded-sm bg-muted">
-															<i class="fas {item.ydkData ? 'fa-layer-group' : 'fa-cube'} text-sm text-fg-subdued"></i>
-														</div>
-													{/if}
-												</div>
-												<p class="truncate text-[10px] font-medium text-fg-accent group-hover:text-primary">{item.name}</p>
+											<div class="mb-1">
+												<GridItemImage src={item.imageUrl} alt={item.name} height="h-14" icon={item.ydkData ? 'fa-layer-group' : 'fa-cube'} />
+											</div>
+												<p class="truncate text-[9px] font-medium text-fg-accent group-hover:text-primary">{item.name}</p>
 											</a>
 										{/each}
 									</div>
