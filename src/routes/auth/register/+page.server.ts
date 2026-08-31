@@ -11,8 +11,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	signUpEmail: async ({ request }) => {
-		const formData = await request.formData();
+	signUpEmail: async (event) => {
+		const formData = await event.request.formData();
 		const name = formData.get('name')?.toString() ?? '';
 		const email = formData.get('email')?.toString() ?? '';
 		const password = formData.get('password')?.toString() ?? '';
@@ -27,7 +27,8 @@ export const actions: Actions = {
 
 		try {
 			await auth.api.signUpEmail({
-				body: { name, email, password }
+				body: { name, email, password },
+				headers: event.request.headers
 			});
 		} catch (error) {
 			if (error instanceof APIError) {

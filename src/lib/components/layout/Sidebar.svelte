@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 
-	let { categories = [], onNavigate = () => {} }: {
+	let { categories = [], user, onNavigate = () => {} }: {
 		categories?: Array<{
 			id: string;
 			name: string;
@@ -11,6 +11,7 @@
 			accentColor?: string;
 			pages?: Array<{ id: string; name: string; icon?: string }>;
 		}>;
+		user?: { name: string; email: string; image?: string | null };
 		onNavigate?: () => void;
 	} = $props();
 
@@ -29,6 +30,7 @@
 	let showSearch = $state(false);
 	let searchQuery = $state('');
 	let searchResults = $state<Array<{ id: string; name: string; type: string; imageUrl?: string; categoryId?: string }>>([]);
+	let showUserMenu = $state(false);
 
 	function toggleCategory(id: string) {
 		const next = new Set(expandedCategories);
@@ -88,8 +90,13 @@
 			searchQuery = '';
 			searchResults = [];
 		}
-		if (e.key === 'Escape' && showSearch) {
-			showSearch = false;
+		if (e.key === 'Escape') {
+			if (showSearch) {
+				showSearch = false;
+			}
+			if (showUserMenu) {
+				showUserMenu = false;
+			}
 		}
 	}
 
@@ -109,6 +116,19 @@
 		} else {
 			goto(`/app/item/${result.id}`);
 		}
+	}
+
+	function getUserInitial(): string {
+		if (user?.name) return user.name.charAt(0).toUpperCase();
+		return '?';
+	}
+
+	async function handleLogout() {
+		const form = document.createElement('form');
+		form.method = 'POST';
+		form.action = '/auth/logout';
+		document.body.appendChild(form);
+		form.submit();
 	}
 </script>
 
@@ -282,10 +302,44 @@
 		</div>
 	</nav>
 
-	<div class="border-t border-border p-3">
-		<div class="flex items-center gap-2.5 rounded-sm px-2 py-1.5">
-			<div class="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white">T</div>
-			<div class="flex-1 truncate text-xs text-fg">Test User</div>
-		</div>
+	<div class="border-t border-border p-3 relative">
+		<button
+			type="button"
+			class="flex w-full items-center gap-2.5 rounded-sm px-2 py-1.5 hover:bg-muted transition-colors"
+			onclick={() => (showUserMenu = !showUserMenu)}
+		>
+			<div class="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white">{getUserInitial()}</div>
+			<div class="flex-1 truncate text-left text-xs text-fg">{user?.name || 'User'}</div>
+			<i class="fas fa-ellipsis-vertical text-[10px] text-fg-subdued"></i>
+		</button>
+
+		{#if showUserMenu}
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="absolute bottom-full left-3 right-3 mb-1 rounded-sm border border-border bg-surface shadow-lg" onclick={(e) => e.stopPropagation()}>
+				<div class="border-b border-border px-3 py-2">
+					<p class="text-xs font-medium text-fg truncate">{user?.name}</p>
+					<p class="text-[10px] text-fg-subdued truncate">{user?.email}</p>
+				</div>
+				<div class="py-1">
+					<a
+						href="/app/settings/profile"
+						onclick={() => { showUserMenu = false; onNavigate(); }}
+						class="flex items-center gap-2 px-3 py-2 text-xs text-fg-subdued hover:bg-muted hover:text-fg transition-colors"
+					>
+						<i class="fas fa-user-pen w-4 text-center text-[10px]"></i>
+						Edit Profile
+					</a>
+					<button
+						type="button"
+						class="flex w-full items-center gap-2 px-3 py-2 text-xs text-fg-subdued hover:bg-muted hover:text-fg transition-colors"
+						onclick={handleLogout}
+					>
+						<i class="fas fa-right-from-bracket w-4 text-center text-[10px]"></i>
+						Logout
+					</button>
+				</div>
+			</div>
+		{/if}
 	</div>
 </aside>

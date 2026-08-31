@@ -7,9 +7,11 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	default: async ({ locals }) => {
-		if (locals.session) {
-			await auth.api.signOut({ headers: new Headers() });
+	default: async (event) => {
+		if (event.locals.session) {
+			await auth.api.signOut({
+				headers: event.request.headers
+			});
 		}
 		throw redirect(302, '/auth/login');
 	}

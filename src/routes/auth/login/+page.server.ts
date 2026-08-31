@@ -11,8 +11,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	signInEmail: async ({ request }) => {
-		const formData = await request.formData();
+	signInEmail: async (event) => {
+		const formData = await event.request.formData();
 		const email = formData.get('email')?.toString() ?? '';
 		const password = formData.get('password')?.toString() ?? '';
 
@@ -21,7 +21,10 @@ export const actions: Actions = {
 		}
 
 		try {
-			await auth.api.signInEmail({ body: { email, password } });
+			await auth.api.signInEmail({
+				body: { email, password },
+				headers: event.request.headers
+			});
 		} catch (error) {
 			if (error instanceof APIError) {
 				return fail(400, { message: error.message || 'Invalid email or password' });

@@ -3,7 +3,7 @@
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import { page } from '$app/state';
 
-	let { children, data }: { children: Snippet; data: { categories?: any[] } } = $props();
+	let { children, data }: { children: Snippet; data: { categories?: any[]; user?: { name: string; email: string; image?: string | null } } } = $props();
 	let sidebarOpen = $state(false);
 </script>
 
@@ -15,7 +15,7 @@
 	{/if}
 
 	<div class="fixed z-50 h-full lg:static lg:z-auto {sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} transition-transform duration-200">
-		<Sidebar categories={data.categories ?? []} onNavigate={() => (sidebarOpen = false)} />
+		<Sidebar categories={data.categories ?? []} user={data.user} onNavigate={() => (sidebarOpen = false)} />
 	</div>
 
 	<main class="flex-1 overflow-y-auto overflow-x-hidden">
