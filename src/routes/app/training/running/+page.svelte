@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
+	import RunMap from '$lib/components/ui/RunMap.svelte';
 
 	let status = $state<'idle' | 'requesting' | 'running' | 'paused' | 'finished'>('idle');
 	let startTime = $state<number>(0);
@@ -12,6 +13,7 @@
 	let maxSpeed = $state(0);
 	let currentPace = $state(0);
 	let averagePace = $state(0);
+	let currentPosition = $state<{ latitude: number; longitude: number } | null>(null);
 	let gpsPoints = $state<Array<{
 		latitude: number;
 		longitude: number;
@@ -68,6 +70,8 @@
 					speed: position.coords.speed ?? undefined,
 					timestamp: position.timestamp
 				};
+
+				currentPosition = { latitude: point.latitude, longitude: point.longitude };
 
 				if (lastPoint) {
 					const dist = calculateDistance(
@@ -180,6 +184,7 @@
 
 <svelte:head>
 	<title>Running - MegaOrganize</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
 <div class="flex h-full flex-col bg-bg text-fg">
@@ -206,127 +211,150 @@
 		</div>
 
 	{:else if status === 'running' || status === 'paused'}
-		<div class="flex flex-1 flex-col items-center justify-center p-8">
-			{#if status === 'paused'}
-				<div class="mb-4 rounded-sm bg-yellow-500/20 px-4 py-2 text-sm text-yellow-400">
-					PAUSED
-				</div>
-			{/if}
-
-			<div class="mb-8 text-center">
-				<div class="text-6xl font-bold tabular-nums">{formatTime(elapsed)}</div>
-			</div>
-
-			<div class="mb-8 grid w-full max-w-md grid-cols-2 gap-8">
-				<div class="text-center">
-					<div class="text-4xl font-bold tabular-nums">{(distance / 1000).toFixed(2)}</div>
-				<div class="text-sm text-fg-subdued">km</div>
-			</div>
-			<div class="text-center">
-				<div class="text-4xl font-bold tabular-nums">{formatPace(currentPace)}</div>
-				<div class="text-sm text-fg-subdued">/km</div>
-				</div>
-			</div>
-
-			<div class="mb-8 grid w-full max-w-md grid-cols-2 gap-6 text-center">
-				<div>
-					<div class="text-xl font-semibold tabular-nums">{formatPace(averagePace)}</div>
-				<div class="text-xs text-fg-subdued">Avg Pace</div>
-			</div>
-			<div>
-				<div class="text-xl font-semibold tabular-nums">{currentSpeed.toFixed(1)}</div>
-				<div class="text-xs text-fg-subdued">km/h</div>
-			</div>
-			<div>
-				<div class="text-xl font-semibold tabular-nums">{averageSpeed.toFixed(1)}</div>
-				<div class="text-xs text-fg-subdued">Avg km/h</div>
-			</div>
-			<div>
-				<div class="text-xl font-semibold tabular-nums">{maxSpeed.toFixed(1)}</div>
-				<div class="text-xs text-fg-subdued">Max km/h</div>
-				</div>
-			</div>
-
-			<div class="flex gap-4">
-				{#if status === 'running'}
-					<button
-						type="button"
-						class="h-16 w-32 rounded-sm bg-yellow-500 text-lg font-medium text-white transition-colors hover:bg-yellow-600"
-						onclick={pauseRun}
-					>
-						<i class="fas fa-pause mr-2"></i>
-						Pause
-					</button>
-				{:else}
-					<button
-						type="button"
-						class="h-16 w-32 rounded-sm bg-primary text-lg font-medium text-white transition-colors hover:bg-primary-hover"
-						onclick={resumeRun}
-					>
-						<i class="fas fa-play mr-2"></i>
-						Resume
-					</button>
+		<div class="flex flex-1 flex-col">
+			<div class="relative" style="height: 45%;">
+				<RunMap
+					points={gpsPoints}
+					center={currentPosition}
+					followPosition={true}
+					showRoute={true}
+					className="rounded-b-lg"
+				/>
+				{#if status === 'paused'}
+					<div class="absolute top-3 left-3 z-[1000] rounded-sm bg-yellow-500/90 px-4 py-2 text-sm font-medium text-white shadow-lg">
+						PAUSED
+					</div>
 				{/if}
-				<button
-					type="button"
-					class="h-16 w-32 rounded-sm bg-error text-lg font-medium text-white transition-colors hover:bg-error/80"
-					onclick={finishRun}
-				>
-					<i class="fas fa-stop mr-2"></i>
-					Finish
-				</button>
+			</div>
+
+			<div class="flex flex-1 flex-col items-center justify-center p-4">
+				<div class="mb-4 text-center">
+					<div class="text-5xl font-bold tabular-nums">{formatTime(elapsed)}</div>
+				</div>
+
+				<div class="mb-6 grid w-full max-w-md grid-cols-2 gap-6">
+					<div class="text-center">
+						<div class="text-3xl font-bold tabular-nums">{(distance / 1000).toFixed(2)}</div>
+						<div class="text-sm text-fg-subdued">km</div>
+					</div>
+					<div class="text-center">
+						<div class="text-3xl font-bold tabular-nums">{formatPace(currentPace)}</div>
+						<div class="text-sm text-fg-subdued">/km</div>
+					</div>
+				</div>
+
+				<div class="mb-6 grid w-full max-w-md grid-cols-4 gap-4 text-center">
+					<div>
+						<div class="text-lg font-semibold tabular-nums">{formatPace(averagePace)}</div>
+						<div class="text-[10px] text-fg-subdued">Avg Pace</div>
+					</div>
+					<div>
+						<div class="text-lg font-semibold tabular-nums">{currentSpeed.toFixed(1)}</div>
+						<div class="text-[10px] text-fg-subdued">km/h</div>
+					</div>
+					<div>
+						<div class="text-lg font-semibold tabular-nums">{averageSpeed.toFixed(1)}</div>
+						<div class="text-[10px] text-fg-subdued">Avg km/h</div>
+					</div>
+					<div>
+						<div class="text-lg font-semibold tabular-nums">{maxSpeed.toFixed(1)}</div>
+						<div class="text-[10px] text-fg-subdued">Max km/h</div>
+					</div>
+				</div>
+
+				<div class="flex gap-4">
+					{#if status === 'running'}
+						<button
+							type="button"
+							class="h-14 w-28 rounded-sm bg-yellow-500 text-lg font-medium text-white transition-colors hover:bg-yellow-600"
+							onclick={pauseRun}
+						>
+							<i class="fas fa-pause mr-2"></i>
+							Pause
+						</button>
+					{:else}
+						<button
+							type="button"
+							class="h-14 w-28 rounded-sm bg-primary text-lg font-medium text-white transition-colors hover:bg-primary-hover"
+							onclick={resumeRun}
+						>
+							<i class="fas fa-play mr-2"></i>
+							Resume
+						</button>
+					{/if}
+					<button
+						type="button"
+						class="h-14 w-28 rounded-sm bg-error text-lg font-medium text-white transition-colors hover:bg-error/80"
+						onclick={finishRun}
+					>
+						<i class="fas fa-stop mr-2"></i>
+						Finish
+					</button>
+				</div>
 			</div>
 		</div>
 
 	{:else if status === 'finished'}
-		<div class="flex flex-1 flex-col items-center justify-center p-8">
-			<i class="fas fa-check-circle mb-6 text-6xl text-green-400"></i>
-			<h1 class="mb-4 text-lg font-semibold text-fg-accent">Run Complete!</h1>
+		<div class="flex flex-1 flex-col">
+			<div class="relative" style="height: 40%;">
+				<RunMap
+					points={gpsPoints}
+					center={gpsPoints.length > 0 ? gpsPoints[0] : undefined}
+					showRoute={true}
+					className="rounded-b-lg"
+				/>
+			</div>
 
-			<div class="mb-8 grid grid-cols-2 gap-8 text-center">
-				<div>
-					<div class="text-4xl font-bold">{(distance / 1000).toFixed(2)}</div>
-				<div class="text-sm text-fg-subdued">km</div>
-			</div>
-			<div>
-				<div class="text-4xl font-bold">{formatTime(elapsed)}</div>
-				<div class="text-sm text-fg-subdued">duration</div>
-			</div>
-			<div>
-				<div class="text-4xl font-bold">{formatPace(averagePace)}</div>
-				<div class="text-sm text-fg-subdued">avg pace</div>
-			</div>
-			<div>
-				<div class="text-4xl font-bold">{averageSpeed.toFixed(1)}</div>
-				<div class="text-sm text-fg-subdued">avg km/h</div>
+			<div class="flex flex-1 flex-col items-center justify-center p-6">
+				<i class="fas fa-check-circle mb-4 text-5xl text-green-400"></i>
+				<h1 class="mb-4 text-lg font-semibold text-fg-accent">Run Complete!</h1>
+
+				<div class="mb-6 grid grid-cols-2 gap-6 text-center">
+					<div>
+						<div class="text-3xl font-bold">{(distance / 1000).toFixed(2)}</div>
+						<div class="text-sm text-fg-subdued">km</div>
+					</div>
+					<div>
+						<div class="text-3xl font-bold">{formatTime(elapsed)}</div>
+						<div class="text-sm text-fg-subdued">duration</div>
+					</div>
+					<div>
+						<div class="text-3xl font-bold">{formatPace(averagePace)}</div>
+						<div class="text-sm text-fg-subdued">avg pace</div>
+					</div>
+					<div>
+						<div class="text-3xl font-bold">{averageSpeed.toFixed(1)}</div>
+						<div class="text-sm text-fg-subdued">avg km/h</div>
+					</div>
 				</div>
-			</div>
 
-			<div class="flex gap-4">
-				<a
-					href="/app/training/calendar"
-					class="h-12 rounded-sm bg-primary px-6 font-medium text-white transition-colors hover:bg-primary-hover"
-				>
-					View History
-				</a>
-				<button
-					type="button"
-					class="h-12 rounded-sm border border-border bg-surface px-6 font-medium text-fg transition-colors hover:bg-border"
-					onclick={() => {
-						status = 'idle';
-						distance = 0;
-						elapsed = 0;
-						currentSpeed = 0;
-						averageSpeed = 0;
-						maxSpeed = 0;
-						currentPace = 0;
-						averagePace = 0;
-						gpsPoints = [];
-						lastPoint = null;
-					}}
-				>
-					New Run
-				</button>
+				<div class="flex gap-4">
+					<a
+						href="/app/training/calendar"
+						class="h-12 rounded-sm bg-primary px-6 font-medium text-white transition-colors hover:bg-primary-hover inline-flex items-center"
+					>
+						View History
+					</a>
+					<button
+						type="button"
+						class="h-12 rounded-sm border border-border bg-surface px-6 font-medium text-fg transition-colors hover:bg-border"
+						onclick={() => {
+							status = 'idle';
+							distance = 0;
+							elapsed = 0;
+							currentSpeed = 0;
+							averageSpeed = 0;
+							maxSpeed = 0;
+							currentPace = 0;
+							averagePace = 0;
+							currentPosition = null;
+							gpsPoints = [];
+							lastPoint = null;
+						}}
+					>
+						New Run
+					</button>
+				</div>
 			</div>
 		</div>
 	{/if}

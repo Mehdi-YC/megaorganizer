@@ -6,6 +6,7 @@ import {
 	updateTreeElement,
 	deleteTreeElement,
 	getChildren,
+	getSubtreeForItem,
 	addChildToParent,
 	removeChildFromParent,
 	moveChild,
@@ -38,6 +39,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	if (parentType && parentId) {
 		const children = await getChildren(parentType, parentId);
 		return json(children);
+	}
+
+	const subtreeId = url.searchParams.get('subtree');
+	if (subtreeId) {
+		const subtree = await getSubtreeForItem(subtreeId);
+		return json(subtree ? [subtree] : []);
 	}
 
 	// No params = return all user's tree elements (for library)

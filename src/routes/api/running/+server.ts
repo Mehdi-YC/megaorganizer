@@ -10,12 +10,18 @@ import {
 	deleteTrackPoints,
 	getRunningHistory
 } from '$lib/server/services/running.service';
+import {
+	createTrainingSession,
+	createTrainingActivity,
+	getTrainingActivities
+} from '$lib/server/services/training.service';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
+	const sessionId = url.searchParams.get('sessionId');
 	const activityId = url.searchParams.get('activityId');
 	const history = url.searchParams.get('history');
 
@@ -24,12 +30,30 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		return json(runs);
 	}
 
+	if (sessionId) {
+		const activities = await getTrainingActivities(sessionId);
+		const allTrackPoints: any[] = [];
+		for (const act of activities) {
+			const runningAct = await getRunningActivity(act.id);
+			if (runningAct) {
+				const points = await getTrackPoints(act.id);
+				allTrackPoints.push({
+					activityId: act.id,
+					runningActivity: runningAct,
+					trackPoints: points
+				});
+			}
+		}
+		return json(allTrackPoints);
+	}
+
 	if (activityId) {
 		const activity = await getRunningActivity(activityId);
 		if (!activity) {
 			return json({ error: 'Activity not found' }, { status: 404 });
 		}
-		return json(activity);
+		const points = await getTrackPoints(activityId);
+		return json({ activity, trackPoints: points });
 	}
 
 	return json({ error: 'Invalid parameters' }, { status: 400 });
@@ -60,6 +84,42 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (data.action === 'getTrackPoints') {
 		const points = await getTrackPoints(data.activityId);
 		return json(points);
+	}
+
+	if (data.action === 'saveRun') {
+		const session = await createTrainingSession(locals.user.id, {
+			title: `Run - ${new Date().toLocaleDateString()}`,
+			startedAt: data.gpsPoints?.length > 0 ? new Date(data.gpsPoints[0].timestamp) : new Date()
+		});
+
+		const activity = await createTrainingActivity(session.id, {
+			type: 'running',
+			startedAt: data.gpsPoints?.length > 0 ? new Date(data.gpsPoints[0].timestamp) : new Date()
+		});
+
+		const runningActivity = await createRunningActivity(activity.id, {
+			distance: data.distance,
+			elapsedDuration: data.elapsedDuration,
+			averageSpeed: data.averageSpeed,
+			maxSpeed: data.maxSpeed,
+			averagePace: data.averagePace,
+			bestPace: data.bestPace
+		});
+
+		if (data.gpsPoints && data.gpsPoints.length > 0) {
+			await batchAddTrackPoints(activity.id, data.gpsPoints);
+		}
+
+		await updateRunningActivity(activity.id, {
+			distance: data.distance,
+			elapsedDuration: data.elapsedDuration,
+			averageSpeed: data.averageSpeed,
+			maxSpeed: data.maxSpeed,
+			averagePace: data.averagePace,
+			bestPace: data.bestPace
+		});
+
+		return json({ sessionId: session.id, activityId: activity.id }, { status: 201 });
 	}
 
 	return json({ error: 'Invalid action' }, { status: 400 });

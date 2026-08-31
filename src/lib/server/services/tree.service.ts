@@ -63,6 +63,58 @@ export async function deleteTreeElement(id: string) {
 	await db.delete(treeElement).where(eq(treeElement.id, id));
 }
 
+export async function getChildrenRecursive(parentType: TreeParentType, parentId: string): Promise<any[]> {
+	const allElements = await db.select().from(treeElement).all();
+	const allRels = await db.select().from(treeRelationship).all();
+
+	const byId = new Map(allElements.map((e) => [e.id, { ...e, children: [] as any[] }]));
+
+	for (const rel of allRels) {
+		const parent = byId.get(rel.parentId);
+		const child = byId.get(rel.childId);
+		if (parent && child) {
+			parent.children.push(child);
+		}
+	}
+
+	const root = byId.get(parentId);
+	if (!root) return [];
+
+	const built = buildTree(root, byId);
+	return built.children || [];
+}
+
+function buildTree(node: any, byId: Map<string, any>): any {
+	const result = { ...node, children: [] as any[] };
+	for (const child of node.children) {
+		const full = byId.get(child.id);
+		if (full) {
+			result.children.push(buildTree(full, byId));
+		}
+	}
+	return result;
+}
+
+export async function getSubtreeForItem(itemId: string): Promise<any> {
+	const allElements = await db.select().from(treeElement).all();
+	const allRels = await db.select().from(treeRelationship).all();
+
+	const byId = new Map(allElements.map((e) => [e.id, { ...e, children: [] as any[] }]));
+
+	for (const rel of allRels) {
+		const parent = byId.get(rel.parentId);
+		const child = byId.get(rel.childId);
+		if (parent && child) {
+			parent.children.push(child);
+		}
+	}
+
+	const root = byId.get(itemId);
+	if (!root) return null;
+
+	return buildTree(root, byId);
+}
+
 export async function getChildren(parentType: TreeParentType, parentId: string) {
 	const relationships = await db
 		.select()
@@ -153,6 +205,52 @@ export async function moveChild(
 				eq(treeRelationship.childId, childId)
 			)
 		);
+}
+
+export async function getFullTree(userId: string) {
+	const elements = await db
+		.select()
+		.from(treeElement)
+		.where(eq(treeElement.userId, userId))
+		.all();
+
+	const relationships = await db
+		.select()
+		.from(treeRelationship)
+		.all();
+
+	const elementMap = new Map(elements.map((e) => [e.id, { ...e, children: [] as any[] }]));
+
+	const rootNodes: any[] = [];
+
+	for (const rel of relationships) {
+		const parent = elementMap.get(rel.parentId);
+		const child = elementMap.get(rel.childId);
+		if (parent && child) {
+			parent.children.push(child);
+		}
+	}
+
+	for (const el of elements) {
+		const node = elementMap.get(el.id)!;
+		const isChild = relationships.some((r) => r.childId === el.id);
+		if (!isChild) {
+			rootNodes.push(node);
+		}
+	}
+
+	for (const node of rootNodes) {
+		sortChildren(node);
+	}
+
+	return rootNodes;
+}
+
+function sortChildren(node: any) {
+	node.children.sort((a: any, b: any) => a.name.localeCompare(b.name));
+	for (const child of node.children) {
+		sortChildren(child);
+	}
 }
 
 export async function searchTreeElements(userId: string, query: string) {

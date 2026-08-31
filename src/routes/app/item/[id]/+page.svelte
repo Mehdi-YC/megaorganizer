@@ -4,6 +4,7 @@
 	import snarkdown from 'snarkdown';
 	import { isSmallImage as checkIsSmallImage, getTagIds, toggleArrayItem, searchTree, DEFAULT_TAG_COLOR } from '$lib/utils';
 	import { ItemImage, TagChips } from '$lib/components/ui';
+	import MindMap from '$lib/components/ui/MindMap.svelte';
 
 	let { data } = $props();
 	let item = $state(data.item);
@@ -30,6 +31,8 @@
 	let enlargedCard = $state<any>(null);
 	let showTagPicker = $state(false);
 	let isSmall = $state(false);
+	let showTree = $state(false);
+	let subtree = $state<any[]>([]);
 
 	let isDeck = $derived(!!ydkData);
 	let parsedDeck = $derived(() => {
@@ -220,6 +223,22 @@
 			fetchCards([...deck.mainDeck, ...deck.extraDeck, ...deck.sideDeck]);
 		}
 	});
+
+	function toggleTreeView() {
+		showTree = !showTree;
+		if (showTree && subtree.length === 0 && item) {
+			fetch(`/api/tree?subtree=${item.id}`)
+				.then((r) => r.json())
+				.then((data) => { subtree = Array.isArray(data) ? data : []; })
+				.catch(() => { subtree = []; });
+		}
+	}
+
+	function handleMindmapNodeClick(node: any) {
+		if (node.type === 'item') {
+			goto(`/app/item/${node.id}`);
+		}
+	}
 </script>
 
 <svelte:head><title>{item?.name || 'Item'} - MegaOrganize</title></svelte:head>
@@ -339,6 +358,9 @@
 						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover" onclick={saveItem}><i class="fas fa-check text-xs"></i> Save</button>
 						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = false)}>Cancel</button>
 					{:else}
+						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm {showTree ? 'bg-primary text-white' : 'bg-muted text-fg'} px-3 text-sm font-medium hover:bg-border transition-colors" onclick={toggleTreeView}>
+							<i class="fas fa-project-diagram text-xs"></i>
+						</button>
 						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
 						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
 					{/if}
@@ -463,47 +485,59 @@
 				</div>
 			{/if}
 
-			<!-- Child Items -->
-			<div class="rounded-sm border border-border bg-surface p-4">
-				<div class="flex items-center justify-between mb-3">
-					<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Child Items ({children.length})</h3>
-					<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-primary px-2.5 text-[11px] font-medium text-white hover:bg-primary-hover" onclick={() => (showAddChild = !showAddChild)}><i class="fas fa-plus text-[9px]"></i> Add</button>
-				</div>
-				{#if showAddChild}
-					<div class="mb-3 space-y-2">
-						<input type="search" bind:value={searchItemsQuery} oninput={searchToAdd} placeholder="Search existing items..." class="w-full h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
-						{#if searchItemsResults.length > 0}
-							<div class="max-h-32 overflow-y-auto space-y-0.5">
-								{#each searchItemsResults.slice(0, 5) as result}
-									<button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-muted" onclick={() => addChildExisting(result.id)}>
-										<i class="fas fa-cube w-3 text-center text-fg-subdued"></i> {result.name}
-									</button>
-								{/each}
+		<!-- Child Items -->
+			{#if !showTree}
+				<div class="rounded-sm border border-border bg-surface p-4">
+					<div class="flex items-center justify-between mb-3">
+						<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Child Items ({children.length})</h3>
+						<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-primary px-2.5 text-[11px] font-medium text-white hover:bg-primary-hover" onclick={() => (showAddChild = !showAddChild)}><i class="fas fa-plus text-[9px]"></i> Add</button>
+					</div>
+					{#if showAddChild}
+						<div class="mb-3 space-y-2">
+							<input type="search" bind:value={searchItemsQuery} oninput={searchToAdd} placeholder="Search existing items..." class="w-full h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
+							{#if searchItemsResults.length > 0}
+								<div class="max-h-32 overflow-y-auto space-y-0.5">
+									{#each searchItemsResults.slice(0, 5) as result}
+										<button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-muted" onclick={() => addChildExisting(result.id)}>
+											<i class="fas fa-cube w-3 text-center text-fg-subdued"></i> {result.name}
+										</button>
+									{/each}
+								</div>
+							{/if}
+							<div class="flex gap-1.5">
+								<input type="text" bind:value={newChildName} placeholder="Or create new item" class="flex-1 min-w-0 h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
+								<button type="button" class="h-8 shrink-0 rounded-sm bg-primary px-2 text-xs text-white hover:bg-primary-hover" onclick={addChildNew}>Create</button>
+								<button type="button" class="h-8 shrink-0 rounded-sm bg-muted px-2 text-xs text-fg hover:bg-border" onclick={() => { showAddChild = false; newChildName = ''; searchItemsQuery = ''; }}>Cancel</button>
 							</div>
-						{/if}
-						<div class="flex gap-1.5">
-							<input type="text" bind:value={newChildName} placeholder="Or create new item" class="flex-1 min-w-0 h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
-							<button type="button" class="h-8 shrink-0 rounded-sm bg-primary px-2 text-xs text-white hover:bg-primary-hover" onclick={addChildNew}>Create</button>
-							<button type="button" class="h-8 shrink-0 rounded-sm bg-muted px-2 text-xs text-fg hover:bg-border" onclick={() => { showAddChild = false; newChildName = ''; searchItemsQuery = ''; }}>Cancel</button>
 						</div>
+					{/if}
+					{#if children.length > 0}
+						<div class="space-y-1">
+							{#each children as child}
+								<div class="group flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-muted">
+									<a href="/app/item/{child.id}" class="flex flex-1 items-center gap-2 text-fg">
+										<i class="fas fa-cube w-3 text-center text-fg-subdued"></i>
+										{child.name}
+									</a>
+									<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={() => removeChild(child.id)}><i class="fas fa-times text-[9px]"></i></button>
+								</div>
+							{/each}
+						</div>
+					{:else if !showAddChild}
+						<p class="text-xs text-fg-subdued text-center py-2">No child items yet.</p>
+					{/if}
+				</div>
+			{:else if children.length > 0}
+				<div class="rounded-sm border border-border bg-surface p-4">
+					<div class="flex items-center justify-between mb-3">
+						<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Tree View</h3>
+						<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={toggleTreeView}><i class="fas fa-list text-[9px]"></i> List</button>
 					</div>
-				{/if}
-				{#if children.length > 0}
-					<div class="space-y-1">
-						{#each children as child}
-							<div class="group flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-muted">
-								<a href="/app/item/{child.id}" class="flex flex-1 items-center gap-2 text-fg">
-									<i class="fas fa-cube w-3 text-center text-fg-subdued"></i>
-									{child.name}
-								</a>
-								<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={() => removeChild(child.id)}><i class="fas fa-times text-[9px]"></i></button>
-							</div>
-						{/each}
+					<div class="rounded-sm border border-border overflow-hidden" style="height: 350px;">
+						<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />
 					</div>
-				{:else if !showAddChild}
-					<p class="text-xs text-fg-subdued text-center py-2">No child items yet.</p>
-				{/if}
-			</div>
+				</div>
+			{/if}
 		</div>
 
 		<!-- Desktop: content left + sidebar right -->
@@ -522,7 +556,10 @@
 							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover" onclick={saveItem}><i class="fas fa-check text-xs"></i> Save</button>
 							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = false)}>Cancel</button>
 						{:else}
-							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i> Edit</button>
+							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm {showTree ? 'bg-primary text-white' : 'bg-muted text-fg'} px-3 text-sm font-medium hover:bg-border transition-colors" onclick={toggleTreeView}>
+								<i class="fas fa-project-diagram text-xs"></i>
+							</button>
+							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
 							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
 						{/if}
 					</div>
@@ -550,47 +587,59 @@
 					</div>
 				{/if}
 
-				<!-- Child Items -->
-				<div class="rounded-sm border border-border bg-surface p-5">
-					<div class="flex items-center justify-between mb-3">
-						<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Child Items ({children.length})</h3>
-						<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-primary px-2.5 text-[11px] font-medium text-white hover:bg-primary-hover" onclick={() => (showAddChild = !showAddChild)}><i class="fas fa-plus text-[9px]"></i> Add</button>
-					</div>
-					{#if showAddChild}
-						<div class="mb-3 space-y-2">
-							<input type="search" bind:value={searchItemsQuery} oninput={searchToAdd} placeholder="Search existing items..." class="w-full h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
-							{#if searchItemsResults.length > 0}
-								<div class="max-h-32 overflow-y-auto space-y-0.5">
-									{#each searchItemsResults.slice(0, 5) as result}
-										<button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-muted" onclick={() => addChildExisting(result.id)}>
-											<i class="fas fa-cube w-3 text-center text-fg-subdued"></i> {result.name}
-										</button>
-									{/each}
+				<!-- Child Items / Tree View -->
+				{#if !showTree}
+					<div class="rounded-sm border border-border bg-surface p-5">
+						<div class="flex items-center justify-between mb-3">
+							<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Child Items ({children.length})</h3>
+							<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-primary px-2.5 text-[11px] font-medium text-white hover:bg-primary-hover" onclick={() => (showAddChild = !showAddChild)}><i class="fas fa-plus text-[9px]"></i> Add</button>
+						</div>
+						{#if showAddChild}
+							<div class="mb-3 space-y-2">
+								<input type="search" bind:value={searchItemsQuery} oninput={searchToAdd} placeholder="Search existing items..." class="w-full h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
+								{#if searchItemsResults.length > 0}
+									<div class="max-h-32 overflow-y-auto space-y-0.5">
+										{#each searchItemsResults.slice(0, 5) as result}
+											<button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-muted" onclick={() => addChildExisting(result.id)}>
+												<i class="fas fa-cube w-3 text-center text-fg-subdued"></i> {result.name}
+											</button>
+										{/each}
+									</div>
+								{/if}
+								<div class="flex gap-1.5">
+									<input type="text" bind:value={newChildName} placeholder="Or create new item" class="flex-1 min-w-0 h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
+									<button type="button" class="h-8 shrink-0 rounded-sm bg-primary px-2 text-xs text-white hover:bg-primary-hover" onclick={addChildNew}>Create</button>
+									<button type="button" class="h-8 shrink-0 rounded-sm bg-muted px-2 text-xs text-fg hover:bg-border" onclick={() => { showAddChild = false; newChildName = ''; searchItemsQuery = ''; }}>Cancel</button>
 								</div>
-							{/if}
-							<div class="flex gap-1.5">
-								<input type="text" bind:value={newChildName} placeholder="Or create new item" class="flex-1 min-w-0 h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
-								<button type="button" class="h-8 shrink-0 rounded-sm bg-primary px-2 text-xs text-white hover:bg-primary-hover" onclick={addChildNew}>Create</button>
-								<button type="button" class="h-8 shrink-0 rounded-sm bg-muted px-2 text-xs text-fg hover:bg-border" onclick={() => { showAddChild = false; newChildName = ''; searchItemsQuery = ''; }}>Cancel</button>
 							</div>
+						{/if}
+						{#if children.length > 0}
+							<div class="grid gap-1 grid-cols-1 sm:grid-cols-2">
+								{#each children as child}
+									<div class="group flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-muted">
+										<a href="/app/item/{child.id}" class="flex flex-1 items-center gap-2 text-fg">
+											<i class="fas fa-cube w-3 text-center text-fg-subdued"></i>
+											{child.name}
+										</a>
+										<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={() => removeChild(child.id)}><i class="fas fa-times text-[9px]"></i></button>
+									</div>
+								{/each}
+							</div>
+						{:else if !showAddChild}
+							<p class="text-xs text-fg-subdued text-center py-4">No child items yet.</p>
+						{/if}
+					</div>
+				{:else if children.length > 0}
+					<div class="rounded-sm border border-border bg-surface p-5">
+						<div class="flex items-center justify-between mb-3">
+							<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Tree View</h3>
+							<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={toggleTreeView}><i class="fas fa-list text-[9px]"></i> List</button>
 						</div>
-					{/if}
-					{#if children.length > 0}
-						<div class="grid gap-1 grid-cols-1 sm:grid-cols-2">
-							{#each children as child}
-								<div class="group flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-muted">
-									<a href="/app/item/{child.id}" class="flex flex-1 items-center gap-2 text-fg">
-										<i class="fas fa-cube w-3 text-center text-fg-subdued"></i>
-										{child.name}
-									</a>
-									<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={() => removeChild(child.id)}><i class="fas fa-times text-[9px]"></i></button>
-								</div>
-							{/each}
+						<div class="rounded-sm border border-border overflow-hidden" style="height: 400px;">
+							<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />
 						</div>
-					{:else if !showAddChild}
-						<p class="text-xs text-fg-subdued text-center py-4">No child items yet.</p>
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 
 			<!-- Right sidebar -->

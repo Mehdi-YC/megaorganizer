@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { formatTime, formatPace } from '$lib/utils';
+	import RunMap from '$lib/components/ui/RunMap.svelte';
 
 	let { data } = $props();
 	let session = $state(data.session);
@@ -9,6 +10,25 @@
 	let editing = $state(false);
 	let title = $state(session?.title ?? '');
 	let notes = $state(session?.notes ?? '');
+
+	let runningData = $state<any[]>([]);
+	let loadingRunning = $state(false);
+
+	$effect(() => {
+		if (session) {
+			loadingRunning = true;
+			fetch(`/api/running?sessionId=${session.id}`)
+				.then((r) => r.json())
+				.then((data) => {
+					runningData = Array.isArray(data) ? data : [];
+					loadingRunning = false;
+				})
+				.catch(() => {
+					runningData = [];
+					loadingRunning = false;
+				});
+		}
+	});
 
 	async function saveSession() {
 		if (!session) return;
@@ -50,6 +70,7 @@
 
 <svelte:head>
 	<title>{session?.title || 'Training Session'} - MegaOrganize</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
 <div class="p-4 sm:p-8">
@@ -137,6 +158,45 @@
 		<div class="mb-8 rounded-sm border border-border bg-surface p-4">
 			<h3 class="mb-2 text-sm font-medium text-fg">Notes</h3>
 			<p class="text-sm text-fg-subdued whitespace-pre-wrap">{session.notes}</p>
+			</div>
+		{/if}
+
+		{#if runningData.length > 0}
+			<div class="mb-8">
+				<h2 class="mb-4 text-sm font-semibold text-fg-accent uppercase tracking-wide">Route Map</h2>
+				{#each runningData as run}
+					{#if run.trackPoints && run.trackPoints.length > 0}
+						<div class="rounded-sm border border-border overflow-hidden" style="height: 400px;">
+							<RunMap
+								points={run.trackPoints.map((p: any) => ({
+									latitude: p.latitude,
+									longitude: p.longitude
+								}))}
+								showRoute={true}
+							/>
+						</div>
+						{#if run.runningActivity}
+							<div class="mt-3 grid grid-cols-4 gap-4 rounded-sm border border-border bg-surface p-4">
+								<div class="text-center">
+									<div class="text-xl font-bold">{((run.runningActivity.distance || 0) / 1000).toFixed(2)}</div>
+									<div class="text-xs text-fg-subdued">km</div>
+								</div>
+								<div class="text-center">
+									<div class="text-xl font-bold">{formatTime(run.runningActivity.elapsedDuration || 0)}</div>
+									<div class="text-xs text-fg-subdued">duration</div>
+								</div>
+								<div class="text-center">
+									<div class="text-xl font-bold">{formatPace(run.runningActivity.averagePace || 0)}</div>
+									<div class="text-xs text-fg-subdued">avg pace</div>
+								</div>
+								<div class="text-center">
+									<div class="text-xl font-bold">{((run.runningActivity.averageSpeed || 0) * 3.6).toFixed(1)}</div>
+									<div class="text-xs text-fg-subdued">avg km/h</div>
+								</div>
+							</div>
+						{/if}
+					{/if}
+				{/each}
 			</div>
 		{/if}
 
