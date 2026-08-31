@@ -5,7 +5,7 @@ import {
 	trainingActivityItem,
 	trainingExerciseRecord
 } from '$lib/server/db/schema';
-import { eq, and, asc, desc } from 'drizzle-orm';
+import { eq, and, asc, desc, inArray } from 'drizzle-orm';
 
 export async function createTrainingSession(
 	userId: string,
@@ -40,6 +40,31 @@ export async function getTrainingSessions(userId: string, limit = 50) {
 		.orderBy(desc(trainingSession.startedAt))
 		.limit(limit)
 		.all();
+}
+
+export async function getTrainingSessionsWithActivities(userId: string, limit = 50) {
+	const sessions = await getTrainingSessions(userId, limit);
+	if (sessions.length === 0) return [];
+
+	const sessionIds = sessions.map((s) => s.id);
+	const allActivities = await db
+		.select()
+		.from(trainingActivity)
+		.where(inArray(trainingActivity.sessionId, sessionIds))
+		.all();
+
+	const activitiesBySession = new Map<string, string[]>();
+	for (const act of allActivities) {
+		if (!sessionIds.includes(act.sessionId)) continue;
+		const types = activitiesBySession.get(act.sessionId) ?? [];
+		if (!types.includes(act.type)) types.push(act.type);
+		activitiesBySession.set(act.sessionId, types);
+	}
+
+	return sessions.map((s) => ({
+		...s,
+		activityTypes: activitiesBySession.get(s.id) ?? []
+	}));
 }
 
 export async function getTrainingSessionById(userId: string, sessionId: string) {

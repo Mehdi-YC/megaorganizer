@@ -5,10 +5,24 @@
 	let sessions = $state(data.sessions ?? []);
 	let filterType = $state('all');
 
+	const activityIcons: Record<string, { icon: string; color: string }> = {
+		strength: { icon: 'fa-dumbbell', color: 'text-blue-500' },
+		running: { icon: 'fa-person-running', color: 'text-green-500' },
+		cycling: { icon: 'fa-bicycle', color: 'text-orange-500' },
+		walking: { icon: 'fa-person-walking', color: 'text-yellow-500' },
+		swimming: { icon: 'fa-person-swimming', color: 'text-cyan-500' },
+		other: { icon: 'fa-circle-dot', color: 'text-fg-subdued' }
+	};
+
+	function getSessionIcon(activityTypes: string[]) {
+		if (!activityTypes || activityTypes.length === 0) return activityIcons.other;
+		return activityIcons[activityTypes[0]] ?? activityIcons.other;
+	}
+
 	let filteredSessions = $derived(
 		filterType === 'all'
 			? sessions
-			: sessions.filter(() => true)
+			: sessions.filter((s) => s.activityTypes?.includes(filterType))
 	);
 </script>
 
@@ -59,27 +73,28 @@
 		</div>
 	{:else}
 		<div class="space-y-2">
-			{#each filteredSessions as session}
+		{#each filteredSessions as session}
+				{@const icon = getSessionIcon(session.activityTypes)}
 				<a
 					href="/app/training/session/{session.id}"
-				class="flex items-center justify-between rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary"
-			>
+					class="flex items-center justify-between rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary"
+				>
 					<div class="flex items-center gap-4">
 						<div class="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">
-							<i class="fas fa-dumbbell text-primary"></i>
+							<i class="fas {icon.icon} {icon.color}"></i>
 						</div>
 						<div>
 							<p class="font-medium text-fg">{session.title || 'Training Session'}</p>
 							<p class="text-sm text-fg-subdued">
-									{new Date(session.startedAt).toLocaleDateString()}
-									{#if session.duration}
-										· {Math.floor(session.duration / 60)}m
-									{/if}
-								</p>
-							</div>
+								{new Date(session.startedAt).toLocaleDateString()}
+								{#if session.duration}
+									· {Math.floor(session.duration / 60)}m
+								{/if}
+							</p>
 						</div>
+					</div>
 					<div class="flex items-center gap-4">
-						{#if session.status === 'completed'}
+						{#if session.status === 'completed' || (session.duration && session.duration > 0)}
 							<span class="inline-flex items-center rounded-sm bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
 								Completed
 							</span>
