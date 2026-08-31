@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
 	import RunMap from '$lib/components/ui/RunMap.svelte';
 
@@ -14,13 +15,13 @@
 	let runningData = $state<any[]>([]);
 	let loadingRunning = $state(false);
 
-	$effect(() => {
-		if (session) {
+	onMount(() => {
+		if (session?.id) {
 			loadingRunning = true;
 			fetch(`/api/running?sessionId=${session.id}`)
 				.then((r) => r.json())
-				.then((data) => {
-					runningData = Array.isArray(data) ? data : [];
+				.then((d) => {
+					runningData = Array.isArray(d) ? d : [];
 					loadingRunning = false;
 				})
 				.catch(() => {

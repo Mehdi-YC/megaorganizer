@@ -13,6 +13,7 @@ import {
 import {
 	createTrainingSession,
 	createTrainingActivity,
+	updateTrainingSession,
 	getTrainingActivities
 } from '$lib/server/services/training.service';
 
@@ -117,6 +118,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			maxSpeed: data.maxSpeed,
 			averagePace: data.averagePace,
 			bestPace: data.bestPace
+		});
+
+		await updateTrainingSession(session.id, {
+			status: 'completed',
+			endedAt: data.gpsPoints?.length > 0 ? new Date(data.gpsPoints[data.gpsPoints.length - 1].timestamp) : new Date(),
+			duration: data.elapsedDuration
 		});
 
 		return json({ sessionId: session.id, activityId: activity.id }, { status: 201 });

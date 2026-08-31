@@ -4,8 +4,41 @@
 	let { data } = $props();
 	let sessions = $state(data.sessions ?? []);
 
-	const recentSessions = sessions.slice(0, 5);
+	function getWeekStart(date: Date): Date {
+		const d = new Date(date);
+		const day = d.getDay();
+		const diff = (day + 6) % 7;
+		d.setDate(d.getDate() - diff);
+		d.setHours(0, 0, 0, 0);
+		return d;
+	}
+
+	const weekStart = getWeekStart(new Date());
+	const weekEnd = new Date(weekStart);
+	weekEnd.setDate(weekEnd.getDate() + 7);
+
+	const thisWeekSessions = $derived(
+		sessions.filter((s) => {
+			const d = new Date(s.startedAt);
+			return d >= weekStart && d < weekEnd;
+		})
+	);
+
 	const totalDuration = sessions.reduce((acc, s) => acc + (s.duration ?? 0), 0);
+
+	const activityIcons: Record<string, { icon: string; color: string }> = {
+		strength: { icon: 'fa-dumbbell', color: 'text-blue-500' },
+		running: { icon: 'fa-person-running', color: 'text-green-500' },
+		cycling: { icon: 'fa-bicycle', color: 'text-orange-500' },
+		walking: { icon: 'fa-person-walking', color: 'text-yellow-500' },
+		swimming: { icon: 'fa-person-swimming', color: 'text-cyan-500' },
+		other: { icon: 'fa-circle-dot', color: 'text-fg-subdued' }
+	};
+
+	function getSessionIcon(activityTypes: string[]) {
+		if (!activityTypes || activityTypes.length === 0) return activityIcons.other;
+		return activityIcons[activityTypes[0]] ?? activityIcons.other;
+	}
 </script>
 
 <svelte:head>
@@ -69,33 +102,34 @@
 	<div class="mt-8 grid gap-6 lg:grid-cols-3">
 		<div class="lg:col-span-2">
 			<div class="flex items-center justify-between">
-				<h2 class="text-sm font-semibold text-fg-accent uppercase tracking-wide">Recent Activity</h2>
+				<h2 class="text-sm font-semibold text-fg-accent uppercase tracking-wide">This Week</h2>
 				<a href="/app/training/history" class="text-sm text-primary hover:text-primary-hover">
 					View All
 				</a>
 			</div>
 
-			{#if recentSessions.length === 0}
+			{#if thisWeekSessions.length === 0}
 			<div class="mt-4 rounded-sm border border-border bg-surface py-12 text-center">
 				<i class="fas fa-dumbbell mb-4 text-4xl text-fg-subdued"></i>
-				<p class="text-fg-subdued">No training sessions yet</p>
+				<p class="text-fg-subdued">No sessions this week</p>
 				<a
 					href="/app/training/session/new"
 					class="mt-4 inline-flex h-[36px] items-center justify-center rounded-sm bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
 					>
-						Start Your First Session
+						Start a Session
 					</a>
 				</div>
 			{:else}
 				<div class="mt-4 space-y-2">
-					{#each recentSessions as session}
+					{#each thisWeekSessions as session}
+						{@const icon = getSessionIcon(session.activityTypes)}
 						<a
 							href="/app/training/session/{session.id}"
 					class="flex items-center justify-between rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary"
 				>
 					<div class="flex items-center gap-4">
 						<div class="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">
-							<i class="fas fa-dumbbell text-primary"></i>
+							<i class="fas {icon.icon} {icon.color}"></i>
 						</div>
 						<div>
 							<p class="font-medium text-fg">{session.title || 'Training Session'}</p>

@@ -212,7 +212,7 @@
 
 	{:else if status === 'running' || status === 'paused'}
 		<div class="flex flex-1 flex-col">
-			<div class="relative" style="height: 45%;">
+			<div class="relative overflow-hidden" style="height: 45%;">
 				<RunMap
 					points={gpsPoints}
 					center={currentPosition}
@@ -296,7 +296,7 @@
 
 	{:else if status === 'finished'}
 		<div class="flex flex-1 flex-col">
-			<div class="relative" style="height: 40%;">
+			<div class="relative overflow-hidden" style="height: 40%;">
 				<RunMap
 					points={gpsPoints}
 					center={gpsPoints.length > 0 ? gpsPoints[0] : undefined}

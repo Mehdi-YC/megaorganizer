@@ -12,6 +12,20 @@
 
 	const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+	const activityIcons: Record<string, { icon: string; color: string }> = {
+		strength: { icon: 'fa-dumbbell', color: 'text-blue-500' },
+		running: { icon: 'fa-person-running', color: 'text-green-500' },
+		cycling: { icon: 'fa-bicycle', color: 'text-orange-500' },
+		walking: { icon: 'fa-person-walking', color: 'text-yellow-500' },
+		swimming: { icon: 'fa-person-swimming', color: 'text-cyan-500' },
+		other: { icon: 'fa-circle-dot', color: 'text-fg-subdued' }
+	};
+
+	function getSessionIcon(activityTypes: string[]) {
+		if (!activityTypes || activityTypes.length === 0) return activityIcons.other;
+		return activityIcons[activityTypes[0]] ?? activityIcons.other;
+	}
+
 	function getDaysInMonth(date: Date) {
 		const year = date.getFullYear();
 		const month = date.getMonth();
@@ -111,10 +125,12 @@
 						</div>
 
 						{#each getSessionsForDate(date) as session}
+							{@const icon = getSessionIcon(session.activityTypes)}
 							<a
 								href="/app/training/session/{session.id}"
-								class="mb-1 block rounded-sm bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20"
+								class="mb-1 flex items-center gap-1 rounded-sm bg-primary/10 px-2 py-1 text-xs text-primary hover:bg-primary/20"
 							>
+								<i class="fas {icon.icon} {icon.color} text-[10px]"></i>
 								{session.title || 'Training'}
 							</a>
 						{/each}
@@ -150,10 +166,15 @@
 		{:else}
 			<div class="mt-4 space-y-2">
 				{#each sessions.slice(0, 10) as session}
+					{@const icon = getSessionIcon(session.activityTypes)}
 					<a
 						href="/app/training/session/{session.id}"
 				class="flex items-center justify-between rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary"
 			>
+				<div class="flex items-center gap-4">
+					<div class="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">
+						<i class="fas {icon.icon} {icon.color}"></i>
+					</div>
 					<div>
 						<p class="font-medium text-fg">{session.title || 'Training Session'}</p>
 						<p class="text-sm text-fg-subdued">
@@ -161,10 +182,11 @@
 								{session.duration ? `${Math.floor(session.duration / 60)}m` : 'In progress'}
 							</p>
 						</div>
-						<i class="fas fa-chevron-right text-fg-subdued"></i>
-					</a>
-				{/each}
-			</div>
-		{/if}
+					</div>
+					<i class="fas fa-chevron-right text-fg-subdued"></i>
+				</a>
+			{/each}
+		</div>
+	{/if}
 	</div>
 </div>
