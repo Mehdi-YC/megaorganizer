@@ -72,12 +72,12 @@
 
 		<div class="rounded-sm border border-border bg-surface p-6">
 			<div class="mb-2 flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">
-				<i class="fas fa-clock text-primary"></i>
+				<i class="fas fa-fire text-primary"></i>
 			</div>
 			<p class="text-2xl font-semibold text-fg">
-				{Math.floor(totalDuration / 3600)}h {Math.floor((totalDuration % 3600) / 60)}m
+				{sessions.length > 0 ? Math.floor(totalDuration / sessions.length / 60) : 0}m
 			</p>
-			<p class="text-sm text-fg-subdued">Total Time</p>
+			<p class="text-sm text-fg-subdued">Avg Duration</p>
 		</div>
 
 		<div class="rounded-sm border border-border bg-surface p-6">

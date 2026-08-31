@@ -173,6 +173,59 @@ body {
 	animation: scaleIn 200ms ease-out;
 }
 
+.ygo-card-enlarged {
+	perspective: 1200px;
+}
+
+.ygo-card-enlarged .ygo-card-inner {
+	position: relative;
+	transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+	transform-style: preserve-3d;
+	border-radius: 0.5rem;
+	overflow: hidden;
+	will-change: transform;
+	box-shadow:
+		0 4px 20px rgba(0, 0, 0, 0.5),
+		0 0 40px rgba(90, 49, 244, 0.15);
+}
+
+.ygo-card-enlarged .ygo-card-inner img {
+	display: block;
+	border-radius: 0.5rem;
+}
+
+.ygo-card-enlarged .ygo-card-inner::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: 0.5rem;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	pointer-events: none;
+	z-index: 3;
+}
+
+.ygo-card-enlarged .ygo-card-inner::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: 0.5rem;
+	background: radial-gradient(
+		circle at var(--shine-x, 50%) var(--shine-y, 50%),
+		rgba(255, 255, 255, 0.35) 0%,
+		rgba(255, 255, 255, 0.12) 25%,
+		transparent 55%
+	);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	pointer-events: none;
+	z-index: 2;
+	mix-blend-mode: overlay;
+}
+
+.ygo-card-enlarged:hover .ygo-card-inner::after {
+	opacity: 1;
+}
+
 /* Markdown content rendering */
 .markdown-content {
 	line-height: 1.7;

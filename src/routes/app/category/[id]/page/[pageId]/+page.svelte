@@ -33,6 +33,7 @@
 	let editPageName = $state('');
 	let editPageDescription = $state('');
 	let smallImages = $state(new Set<string>());
+	let nodeDragIdx = $state<number | null>(null);
 
 	function toggleNode(id: string) {
 		const next = new Set(expandedNodes);
@@ -236,6 +237,39 @@
 		const res = await fetch('/api/pages', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: pageData.id }) });
 		if (res.ok) goto(`/app/category/${category?.id}`);
 	}
+
+	async function persistNodeReorder(fromIdx: number, toIdx: number) {
+		const moved = topLevelNodes[fromIdx];
+		const target = topLevelNodes[toIdx];
+		if (!moved || !target) return;
+		await fetch('/api/tree', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'move', parentType: 'page', parentId: pageData?.id, childId: moved.id, position: toIdx }) });
+		await fetch('/api/tree', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'move', parentType: 'page', parentId: pageData?.id, childId: target.id, position: fromIdx }) });
+	}
+
+	function handleNodeDragStart(e: DragEvent, idx: number) {
+		nodeDragIdx = idx;
+		if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(idx)); }
+	}
+
+	function handleNodeDragOver(e: DragEvent, idx: number) {
+		e.preventDefault();
+		if (nodeDragIdx === null || nodeDragIdx === idx) return;
+		const topLevel = treeElements.filter((el: any) => el.type === 'node');
+		const moved = topLevel[nodeDragIdx];
+		const target = topLevel[idx];
+		const allIdx = treeElements.map((el: any) => el.id);
+		const movedAllIdx = allIdx.indexOf(moved.id);
+		const targetAllIdx = allIdx.indexOf(target.id);
+		if (movedAllIdx === -1 || targetAllIdx === -1) return;
+		const next = [...treeElements];
+		const [movedEl] = next.splice(movedAllIdx, 1);
+		next.splice(targetAllIdx, 0, movedEl);
+		treeElements = next;
+		persistNodeReorder(nodeDragIdx, idx);
+		nodeDragIdx = idx;
+	}
+
+	function handleNodeDragEnd() { nodeDragIdx = null; }
 </script>
 
 <svelte:head><title>{pageData?.name || 'Page'} - MegaOrganize</title></svelte:head>
@@ -330,7 +364,7 @@
 		{:else}
 			{#if treeElements.length > 0}
 				<div class="space-y-0">
-					{#each topLevelNodes as node (node.id)}
+					{#each topLevelNodes as node, nodeIdx (node.id)}
 						{@const isExpanded = expandedNodes.has(node.id)}
 						{@const nodeColor = getNodeColor(node)}
 						{@const nodeIcon = getNodeIcon(node)}
@@ -339,7 +373,13 @@
 						{@const childNodes = children.filter((c: any) => c.type === 'node')}
 						{@const results = nodeSearchResults[node.id] ?? []}
 
-						<div>
+						<div
+							class="group/node"
+							draggable="true"
+							ondragstart={(e) => handleNodeDragStart(e, nodeIdx)}
+							ondragover={(e) => handleNodeDragOver(e, nodeIdx)}
+							ondragend={handleNodeDragEnd}
+						>
 							<div
 								role="button"
 								tabindex="0"
@@ -347,6 +387,7 @@
 								onclick={() => toggleNode(node.id)}
 								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleNode(node.id); }}
 							>
+								<i class="fas fa-grip-vertical text-[8px] text-fg-subdued/30 opacity-0 group-hover/node:opacity-100 transition-opacity cursor-move shrink-0"></i>
 								<i class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isExpanded ? 'rotate-90' : ''}" style="color: {nodeColor}"></i>
 								<i class="fas {nodeIcon} text-[11px]" style="color: {nodeColor}"></i>
 								<span class="text-sm font-semibold truncate" style="color: {nodeColor}">{node.name}</span>
