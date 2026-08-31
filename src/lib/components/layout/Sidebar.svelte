@@ -28,7 +28,7 @@
 	let newPageName = $state('');
 	let showSearch = $state(false);
 	let searchQuery = $state('');
-	let searchResults = $state<Array<{ id: string; name: string; type: string }>>([]);
+	let searchResults = $state<Array<{ id: string; name: string; type: string; imageUrl?: string; categoryId?: string }>>([]);
 
 	function toggleCategory(id: string) {
 		const next = new Set(expandedCategories);
@@ -104,7 +104,11 @@
 		searchQuery = '';
 		searchResults = [];
 		onNavigate();
-		goto(`/app/item/${result.id}`);
+		if (result.type === 'page') {
+			goto(`/app/category/${result.categoryId}/page/${result.id}`);
+		} else {
+			goto(`/app/item/${result.id}`);
+		}
 	}
 </script>
 
@@ -113,29 +117,43 @@
 {#if showSearch}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh] sm:pt-[15vh] bg-surface-overlay" onclick={() => (showSearch = false)}>
+	<div class="fixed inset-0 flex items-start justify-center p-4 pt-[10vh] sm:pt-[15vh] overflow-hidden" style="z-index: 100; background: var(--color-bg); opacity: 0.97;" onclick={() => (showSearch = false)}>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="w-full max-w-md rounded-sm border border-border bg-surface shadow-xl" onclick={(e) => e.stopPropagation()}>
-			<div class="flex items-center gap-3 border-b border-border px-4 py-3">
-				<i class="fas fa-search text-sm text-fg-subdued"></i>
-				<input type="text" bind:value={searchQuery} oninput={doSearch} placeholder="Search..." class="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subdued focus:outline-none" />
-				<kbd class="hidden sm:inline rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-fg-subdued">ESC</kbd>
+		<div class="w-full max-w-md overflow-hidden rounded-sm border border-border bg-surface shadow-xl" onclick={(e) => e.stopPropagation()}>
+			<div class="flex items-center gap-3 px-4 py-3">
+				<i class="fas fa-search text-sm text-fg-subdued shrink-0"></i>
+				<input type="text" bind:value={searchQuery} oninput={doSearch} placeholder="Search items, pages..." class="min-w-0 flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subdued outline-none" autofocus />
+				<kbd class="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-fg-subdued">ESC</kbd>
 			</div>
 			{#if searchResults.length > 0}
-				<div class="max-h-60 overflow-y-auto py-1">
+				<div class="border-t border-border max-h-60 overflow-y-auto py-1">
 					{#each searchResults as result}
-						<button type="button" class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-muted" onclick={() => navigateSearchResult(result)}>
-							<i class="fas {result.type === 'node' ? 'fa-folder' : 'fa-cube'} w-4 text-center text-xs text-fg-subdued"></i>
-							<div class="flex-1 min-w-0">
-								<p class="truncate text-fg">{result.name}</p>
-								<p class="text-[11px] capitalize text-fg-subdued">{result.type}</p>
+						<button type="button" class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors" onclick={() => navigateSearchResult(result)}>
+						{#if result.imageUrl}
+							<img src={result.imageUrl} alt={result.name} class="h-7 w-7 rounded-sm object-cover shrink-0" />
+						{:else}
+							<div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-muted">
+								<i class="fas {result.type === 'page' ? 'fa-file-alt' : result.type === 'node' ? 'fa-folder' : 'fa-cube'} text-[10px] text-fg-subdued"></i>
 							</div>
+						{/if}
+							<div class="flex-1 min-w-0">
+								<p class="truncate text-fg text-sm">{result.name}</p>
+								<p class="text-[10px] capitalize text-fg-subdued">{result.type}</p>
+							</div>
+							<i class="fas fa-arrow-right text-[9px] text-fg-subdued/50"></i>
 						</button>
 					{/each}
 				</div>
 			{:else if searchQuery.trim()}
-				<div class="px-4 py-8 text-center text-sm text-fg-subdued">No results found</div>
+				<div class="border-t border-border px-4 py-8 text-center">
+					<i class="fas fa-search mb-2 text-xl text-fg-subdued/30"></i>
+					<p class="text-sm text-fg-subdued">No results found</p>
+				</div>
+			{:else}
+				<div class="border-t border-border px-4 py-6 text-center">
+					<p class="text-xs text-fg-subdued">Type to search across all items and pages</p>
+				</div>
 			{/if}
 		</div>
 	</div>

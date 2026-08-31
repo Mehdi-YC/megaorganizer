@@ -83,6 +83,10 @@ body {
 	transform: scale(1.06);
 }
 
+.ygo-card:not(.ygo-card-large):hover .ygo-count-badge {
+	transform: translateX(-50%) scale(1.06);
+}
+
 .ygo-card-large .ygo-card-inner::after {
 	content: '';
 	position: absolute;
@@ -104,10 +108,60 @@ body {
 	opacity: 1;
 }
 
-/* Stacked card effect */
-.ygo-stack {
+/* Card count badge - tilted rectangles */
+.ygo-count-badge {
+	position: absolute;
+	bottom: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+	pointer-events: none;
+	z-index: 10;
+	transition: transform 0.2s ease;
+}
+
+.ygo-count-rects {
 	position: relative;
-	display: inline-block;
+	display: flex;
+	justify-content: center;
+	height: 22px;
+	width: 36px;
+}
+
+.ygo-count-rect {
+	position: absolute;
+	width: 14px;
+	height: 20px;
+	border-radius: 2px;
+	border: 0.5px solid #865C40;
+	background: #802913;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+	bottom: 0;
+}
+
+.ygo-count-rect:nth-child(1) {
+	transform: rotate(-12deg) translateX(-6px);
+	transform-origin: bottom center;
+}
+
+.ygo-count-rect:nth-child(2) {
+	transform: rotate(0deg) translateX(0px);
+}
+
+.ygo-count-rect:nth-child(3) {
+	transform: rotate(12deg) translateX(6px);
+	transform-origin: bottom center;
+}
+
+.ygo-count-label {
+	position: absolute;
+	z-index: 2;
+	font-size: 10px;
+	font-weight: 700;
+	color: white;
+	text-shadow: 0 0 2px rgba(0,0,0,0.5);
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 /* Card enlarge modal */

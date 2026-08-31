@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { treeElement, treeRelationship } from '$lib/server/db/schema';
+import { treeElement, treeRelationship, page } from '$lib/server/db/schema';
 import { eq, and, asc, like, sql } from 'drizzle-orm';
 
 export type TreeElementType = 'node' | 'item';
@@ -165,7 +165,7 @@ export async function searchTreeElements(userId: string, query: string) {
 	}
 
 	const searchTerm = `%${query.trim()}%`;
-	return db
+	const treeResults = await db
 		.select()
 		.from(treeElement)
 		.where(
@@ -175,4 +175,24 @@ export async function searchTreeElements(userId: string, query: string) {
 			)
 		)
 		.all();
+
+	const pageResults = (await db
+		.select({
+			id: page.id,
+			userId: page.userId,
+			categoryId: page.categoryId,
+			name: page.name,
+			description: page.description,
+			imageUrl: page.imageUrl,
+		})
+		.from(page)
+		.where(
+			and(
+				eq(page.userId, userId),
+				like(page.name, searchTerm)
+			)
+		)
+		.all()).map((p) => ({ ...p, type: 'page' as const }));
+
+	return [...treeResults, ...pageResults];
 }

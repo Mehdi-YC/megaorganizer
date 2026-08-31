@@ -20,6 +20,7 @@
 
 	<main class="flex-1 overflow-y-auto overflow-x-hidden">
 		<div class="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-bg-subdued px-4 lg:hidden">
+			<a href="/app" class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-xs font-bold text-white">M</a>
 			<button type="button" class="flex h-8 w-8 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted" onclick={() => (sidebarOpen = !sidebarOpen)}>
 				<i class="fas fa-bars text-sm"></i>
 			</button>

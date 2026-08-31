@@ -11,6 +11,7 @@
 	let filterTagIds = $state<string[]>([]);
 	let filterYdk = $state(false);
 	let showFilters = $state(false);
+	let smallImages = $state(new Set<string>());
 
 	onMount(async () => {
 		const [itemsRes, tagsRes] = await Promise.all([fetch('/api/tree'), fetch('/api/tags')]);
@@ -18,10 +19,20 @@
 		if (tagsRes.ok) allTags = await tagsRes.json();
 		loading = false;
 		filterItems();
+		allItems.forEach((item: any) => {
+			if (!item.imageUrl) return;
+			const img = new Image();
+			img.onload = () => {
+				if (img.naturalWidth < 200 || img.naturalHeight < 150) {
+					smallImages = new Set([...smallImages, item.id]);
+				}
+			};
+			img.src = item.imageUrl;
+		});
 	});
 
 	function filterItems() {
-		let result = allItems;
+		let result = allItems.filter((item: any) => item.type !== 'node');
 
 		if (searchQuery.trim()) {
 			const q = searchQuery.toLowerCase();
@@ -178,9 +189,16 @@
 				{@const itemTags = getAssignedTags(item)}
 				<a href="/app/item/{item.id}" class="group rounded-sm border border-border bg-surface transition-all hover:border-primary/50">
 					{#if item.imageUrl}
-						<div class="h-24 overflow-hidden rounded-t-sm">
-							<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover transition-transform group-hover:scale-105" />
-						</div>
+						{#if smallImages.has(item.id)}
+							<div class="relative h-24 overflow-hidden rounded-t-sm">
+								<img src={item.imageUrl} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
+								<img src={item.imageUrl} alt={item.name} class="relative h-full w-full object-contain p-1" />
+							</div>
+						{:else}
+							<div class="h-24 overflow-hidden rounded-t-sm">
+								<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover transition-transform group-hover:scale-105" />
+							</div>
+						{/if}
 					{:else}
 						<div class="flex h-20 items-center justify-center bg-bg-subdued rounded-t-sm">
 							<i class="fas {item.ydkData ? 'fa-layer-group' : 'fa-cube'} text-lg text-fg-subdued"></i>

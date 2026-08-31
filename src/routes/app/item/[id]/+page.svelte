@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import snarkdown from 'snarkdown';
 
 	let { data } = $props();
@@ -26,6 +27,7 @@
 	let searchItemsResults = $state<any[]>([]);
 	let enlargedCard = $state<any>(null);
 	let showTagPicker = $state(false);
+	let isSmallImage = $state(false);
 
 	let isDeck = $derived(!!ydkData);
 	let parsedDeck = $derived(() => {
@@ -33,6 +35,13 @@
 	});
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
 	let renderedContent = $derived(content ? snarkdown(content) : '');
+
+	onMount(() => {
+		if (!item?.imageUrl) return;
+		const img = new Image();
+		img.onload = () => { if (img.naturalWidth < 200 || img.naturalHeight < 150) isSmallImage = true; };
+		img.src = item.imageUrl;
+	});
 
 	function handleModalMousemove(e: MouseEvent) {
 		const el = e.currentTarget as HTMLElement;
@@ -118,12 +127,20 @@
 		for (const id of deck.extraDeck) ydk += `${id}\n`;
 		ydk += '!side\n';
 		for (const id of deck.sideDeck) ydk += `${id}\n`;
-		const blob = new Blob([ydk], { type: 'text/plain' });
+		return ydk;
+	}
+
+	function downloadYdk() {
+		const text = ydkInput || exportYdk();
+		if (!text) return;
+		const blob = new Blob([text], { type: 'text/plain' });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url; a.download = `${name || 'deck'}.ydk`; a.click();
 		URL.revokeObjectURL(url);
 	}
+
+	let ydkEditText = $derived(ydkInput || (isDeck ? (exportYdk() || '') : ''));
 
 	async function saveItem() {
 		if (!item) return;
@@ -247,7 +264,7 @@
 						<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Deck Viewer</h2>
 						{#if loadingCards}<span class="text-xs text-fg-subdued">Loading...</span>{/if}
 					</div>
-					<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg-subdued hover:bg-border hover:text-fg" onclick={exportYdk}><i class="fas fa-download text-[10px]"></i> Export</button>
+					<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg-subdued hover:bg-border hover:text-fg" onclick={downloadYdk}><i class="fas fa-download text-[10px]"></i> Export</button>
 				</div>
 				<div class="p-4 sm:p-5">
 					{#if parsedDeck()}
@@ -256,7 +273,7 @@
 							{#if cards.length > 0}
 								<div class="mb-5">
 									<h3 class="mb-2 text-[11px] font-bold text-fg-subdued uppercase tracking-wider">{label} · {cards.length}</h3>
-									<div class="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5">
+									<div class="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12">
 										{#each getUniqueCards(cards) as cardId}
 											{@const count = getCardCounts(cards).get(cardId)}
 											{@const card = cardCache.get(cardId)}
@@ -276,9 +293,16 @@
 														<span class="text-[8px] text-fg-subdued font-mono text-center px-0.5">{cardId}</span>
 													</div>
 												{/if}
-												{#if count && count > 1}
-													<span class="absolute bottom-1 right-1 z-10 flex h-5 min-w-5 items-center justify-center rounded-sm bg-primary px-1 text-[10px] font-bold text-white shadow-md">x{count}</span>
-												{/if}
+											{#if count && count > 1}
+												<div class="ygo-count-badge">
+													<div class="ygo-count-rects">
+														{#each { length: Math.min(count, 3) } as _}
+															<div class="ygo-count-rect"></div>
+														{/each}
+													</div>
+													<div class="ygo-count-label">x{count}</div>
+												</div>
+											{/if}
 											</div>
 										{/each}
 									</div>
@@ -330,7 +354,14 @@
 			<div class="rounded-sm border border-border bg-surface p-4">
 				<div class="flex items-start gap-3">
 					{#if item.imageUrl}
-						<img src={item.imageUrl} alt={item.name} class="h-14 w-14 rounded-sm object-cover shrink-0" />
+						{#if isSmallImage}
+							<div class="relative h-14 w-14 shrink-0 overflow-hidden rounded">
+								<img src={item.imageUrl} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
+								<img src={item.imageUrl} alt={item.name} class="relative h-full w-full object-contain" />
+							</div>
+						{:else}
+							<img src={item.imageUrl} alt={item.name} class="h-14 w-14 rounded object-cover shrink-0" />
+						{/if}
 					{:else}
 						<div class="flex h-14 w-14 items-center justify-center rounded-sm bg-muted shrink-0">
 							<i class="fas fa-cube text-lg text-fg-subdued"></i>
@@ -402,6 +433,23 @@
 					<div class="flex flex-col gap-1.5">
 						<label for="externalUrl" class="text-xs font-semibold text-fg-accent tracking-wide">External URL</label>
 						<input type="url" id="externalUrl" bind:value={externalUrl} class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" placeholder="https://..." />
+					</div>
+					<div class="flex flex-col gap-1.5">
+						<label class="text-xs font-semibold text-fg-accent tracking-wide">YDK Deck</label>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="checkbox" bind:checked={ydkEnabled} class="h-4 w-4 rounded-sm border-border bg-bg text-primary focus:ring-primary" />
+							<span class="text-sm text-fg">Enable YDK</span>
+							{#if isDeck && !ydkEnabled}
+								<button type="button" class="text-xs text-error hover:text-error/80" onclick={clearYdk}>Clear</button>
+							{/if}
+						</label>
+						{#if ydkEnabled}
+							<textarea value={ydkEditText} oninput={(e) => { ydkInput = (e.target as HTMLTextAreaElement).value; }} rows="5" class="w-full rounded-sm border border-border bg-bg px-3 py-2.5 font-mono text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0 resize-none" placeholder="#main&#10;12345678&#10;#extra&#10;87654321&#10;!side&#10;11111111"></textarea>
+							<div class="flex items-center gap-3">
+								<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-primary px-3 text-xs font-medium text-white hover:bg-primary-hover" onclick={applyYdkPaste}><i class="fas fa-paste text-[10px]"></i> Apply</button>
+								<label class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border cursor-pointer"><i class="fas fa-upload text-[10px]"></i> Import .ydk<input type="file" accept=".ydk,.txt" class="hidden" onchange={handleYdkFileImport} /></label>
+							</div>
+						{/if}
 					</div>
 				</div>
 			{/if}
@@ -557,7 +605,14 @@
 					<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Details</h3>
 					<div class="flex items-start gap-3">
 						{#if item.imageUrl}
-							<img src={item.imageUrl} alt={item.name} class="h-16 w-16 rounded-sm object-cover shrink-0" />
+							{#if isSmallImage}
+								<div class="relative h-16 w-16 shrink-0 overflow-hidden rounded">
+									<img src={item.imageUrl} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
+									<img src={item.imageUrl} alt={item.name} class="relative h-full w-full object-contain" />
+								</div>
+							{:else}
+								<img src={item.imageUrl} alt={item.name} class="h-16 w-16 rounded object-cover shrink-0" />
+							{/if}
 						{:else}
 							<div class="flex h-16 w-16 items-center justify-center rounded-sm bg-muted shrink-0">
 								<i class="fas fa-cube text-lg text-fg-subdued"></i>
@@ -626,6 +681,23 @@
 						<div class="flex flex-col gap-1.5">
 							<label for="externalUrl" class="text-[10px] font-semibold text-fg-subdued tracking-wide">External URL</label>
 							<input type="url" id="externalUrl" bind:value={externalUrl} class="h-[32px] w-full rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" placeholder="https://..." />
+						</div>
+						<div class="flex flex-col gap-1.5">
+							<label class="text-[10px] font-semibold text-fg-subdued tracking-wide">YDK Deck</label>
+							<label class="flex items-center gap-2 cursor-pointer">
+								<input type="checkbox" bind:checked={ydkEnabled} class="h-4 w-4 rounded-sm border-border bg-bg text-primary focus:ring-primary" />
+								<span class="text-sm text-fg">Enable YDK</span>
+								{#if isDeck && !ydkEnabled}
+									<button type="button" class="text-xs text-error hover:text-error/80" onclick={clearYdk}>Clear</button>
+								{/if}
+							</label>
+							{#if ydkEnabled}
+							<textarea value={ydkEditText} oninput={(e) => { ydkInput = (e.target as HTMLTextAreaElement).value; }} rows="5" class="w-full rounded-sm border border-border bg-bg px-3 py-2.5 font-mono text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0 resize-none" placeholder="#main&#10;12345678&#10;#extra&#10;87654321&#10;!side&#10;11111111"></textarea>
+								<div class="flex items-center gap-3">
+									<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-primary px-3 text-xs font-medium text-white hover:bg-primary-hover" onclick={applyYdkPaste}><i class="fas fa-paste text-[10px]"></i> Apply</button>
+									<label class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border cursor-pointer"><i class="fas fa-upload text-[10px]"></i> Import .ydk<input type="file" accept=".ydk,.txt" class="hidden" onchange={handleYdkFileImport} /></label>
+								</div>
+							{/if}
 						</div>
 					</div>
 				{/if}
