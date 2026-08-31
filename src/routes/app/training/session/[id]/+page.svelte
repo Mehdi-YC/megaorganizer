@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { formatTime, formatPace } from '$lib/utils';
 
 	let { data } = $props();
 	let session = $state(data.session);
@@ -45,24 +46,6 @@
 			goto('/app/training/calendar');
 		}
 	}
-
-	function formatDuration(seconds?: number | null) {
-		if (!seconds) return '--';
-		const hrs = Math.floor(seconds / 3600);
-		const mins = Math.floor((seconds % 3600) / 60);
-		const secs = seconds % 60;
-		if (hrs > 0) {
-			return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-		}
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	}
-
-	function formatPace(secondsPerKm?: number | null) {
-		if (!secondsPerKm) return '--:--';
-		const mins = Math.floor(secondsPerKm / 60);
-		const secs = Math.floor(secondsPerKm % 60);
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	}
 </script>
 
 <svelte:head>
@@ -99,7 +82,7 @@
 						month: 'long',
 						day: 'numeric'
 					})}
-					· {formatDuration(session.duration)}
+					· {formatTime(session.duration)}
 				</p>
 			</div>
 			<div class="flex gap-2">

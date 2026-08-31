@@ -2,6 +2,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import snarkdown from 'snarkdown';
+	import { isSmallImage as checkIsSmallImage, getTagIds, toggleArrayItem, searchTree, DEFAULT_TAG_COLOR } from '$lib/utils';
+	import { ItemImage, TagChips } from '$lib/components/ui';
 
 	let { data } = $props();
 	let item = $state(data.item);
@@ -14,7 +16,7 @@
 	let imageUrl = $state(item?.imageUrl ?? '');
 	let videoUrl = $state(item?.videoUrl ?? '');
 	let externalUrl = $state(item?.externalUrl ?? '');
-	let tagIds = $state<string[]>((() => { try { return item?.tags ? JSON.parse(item.tags) : []; } catch { return []; } })());
+	let tagIds = $state<string[]>(getTagIds(item));
 	let ydkData = $state(item?.ydkData ?? '');
 	let ydkInput = $state('');
 	let cardCache = $state(new Map<string, any>());
@@ -27,7 +29,7 @@
 	let searchItemsResults = $state<any[]>([]);
 	let enlargedCard = $state<any>(null);
 	let showTagPicker = $state(false);
-	let isSmallImage = $state(false);
+	let isSmall = $state(false);
 
 	let isDeck = $derived(!!ydkData);
 	let parsedDeck = $derived(() => {
@@ -36,11 +38,8 @@
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
 	let renderedContent = $derived(content ? snarkdown(content) : '');
 
-	onMount(() => {
-		if (!item?.imageUrl) return;
-		const img = new Image();
-		img.onload = () => { if (img.naturalWidth < 200 || img.naturalHeight < 150) isSmallImage = true; };
-		img.src = item.imageUrl;
+	onMount(async () => {
+		if (item?.imageUrl) isSmall = await checkIsSmallImage(item.imageUrl);
 	});
 
 	function handleModalMousemove(e: MouseEvent) {
@@ -158,17 +157,13 @@
 	}
 
 	function toggleTag(tagId: string) {
-		if (tagIds.includes(tagId)) tagIds = tagIds.filter((id) => id !== tagId);
-		else tagIds = [...tagIds, tagId];
+		tagIds = toggleArrayItem(tagIds, tagId);
 	}
 
 	async function searchToAdd() {
 		if (!searchItemsQuery.trim()) { searchItemsResults = []; return; }
-		const res = await fetch(`/api/tree?search=${encodeURIComponent(searchItemsQuery)}`);
-		if (res.ok) {
-			const all = await res.json();
-			searchItemsResults = all.filter((r: any) => r.type === 'item' && r.id !== item?.id);
-		}
+		const results = await searchTree(searchItemsQuery, 'item');
+		searchItemsResults = results.filter((r: any) => r.id !== item?.id);
 	}
 
 	async function addChildExisting(childId: string) {
@@ -241,7 +236,7 @@
 	<!-- Header bar -->
 	<div class="border-b border-border bg-bg-subdued px-4 sm:px-6 py-2">
 		<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
-			<a href="javascript:history.back()" class="hover:text-primary"><i class="fas fa-arrow-left text-[10px]"></i></a>
+			<button type="button" class="hover:text-primary" onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button>
 			<i class="fas fa-chevron-right text-[8px]"></i>
 			<span class="text-fg truncate">{item.name}</span>
 		</div>
@@ -354,7 +349,7 @@
 			<div class="rounded-sm border border-border bg-surface p-4">
 				<div class="flex items-start gap-3">
 					{#if item.imageUrl}
-						{#if isSmallImage}
+						{#if isSmall}
 							<div class="relative h-14 w-14 shrink-0 overflow-hidden rounded">
 								<img src={item.imageUrl} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
 								<img src={item.imageUrl} alt={item.name} class="relative h-full w-full object-contain" />
@@ -605,7 +600,7 @@
 					<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Details</h3>
 					<div class="flex items-start gap-3">
 						{#if item.imageUrl}
-							{#if isSmallImage}
+							{#if isSmall}
 								<div class="relative h-16 w-16 shrink-0 overflow-hidden rounded">
 									<img src={item.imageUrl} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
 									<img src={item.imageUrl} alt={item.name} class="relative h-full w-full object-contain" />

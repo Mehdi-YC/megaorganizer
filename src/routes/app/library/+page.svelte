@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { checkSmallImages, getAssignedTags, toggleArrayItem, DEFAULT_TAG_COLOR } from '$lib/utils';
+	import { GridItemImage, SearchInput, EmptyState, TagChips } from '$lib/components/ui';
 
 	let items = $state<any[]>([]);
 	let allTags = $state<any[]>([]);
@@ -19,16 +21,7 @@
 		if (tagsRes.ok) allTags = await tagsRes.json();
 		loading = false;
 		filterItems();
-		allItems.forEach((item: any) => {
-			if (!item.imageUrl) return;
-			const img = new Image();
-			img.onload = () => {
-				if (img.naturalWidth < 200 || img.naturalHeight < 150) {
-					smallImages = new Set([...smallImages, item.id]);
-				}
-			};
-			img.src = item.imageUrl;
-		});
+		checkSmallImages(allItems, (ids) => smallImages = ids, smallImages);
 	});
 
 	function filterItems() {
@@ -58,15 +51,8 @@
 		items = result;
 	}
 
-	function getAssignedTags(item: any): any[] {
-		let ids: string[] = [];
-		try { ids = item.tags ? JSON.parse(item.tags) : []; } catch { ids = []; }
-		return allTags.filter((t) => ids.includes(t.id));
-	}
-
 	function toggleFilterTag(tagId: string) {
-		if (filterTagIds.includes(tagId)) filterTagIds = filterTagIds.filter((id) => id !== tagId);
-		else filterTagIds = [...filterTagIds, tagId];
+		filterTagIds = toggleArrayItem(filterTagIds, tagId);
 		filterItems();
 	}
 
@@ -186,32 +172,17 @@
 	{:else}
 		<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each items as item}
-				{@const itemTags = getAssignedTags(item)}
+				{@const itemTags = getAssignedTags(item, allTags)}
 				<a href="/app/item/{item.id}" class="group rounded-sm border border-border bg-surface transition-all hover:border-primary/50">
-					{#if item.imageUrl}
-						{#if smallImages.has(item.id)}
-							<div class="relative h-24 overflow-hidden rounded-t-sm">
-								<img src={item.imageUrl} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
-								<img src={item.imageUrl} alt={item.name} class="relative h-full w-full object-contain p-1" />
-							</div>
-						{:else}
-							<div class="h-24 overflow-hidden rounded-t-sm">
-								<img src={item.imageUrl} alt={item.name} class="h-full w-full object-cover transition-transform group-hover:scale-105" />
-							</div>
-						{/if}
-					{:else}
-						<div class="flex h-20 items-center justify-center bg-bg-subdued rounded-t-sm">
-							<i class="fas {item.ydkData ? 'fa-layer-group' : 'fa-cube'} text-lg text-fg-subdued"></i>
-						</div>
-					{/if}
+					<div class="h-24 overflow-hidden rounded-t-sm">
+						<GridItemImage src={item.imageUrl} alt={item.name} height="h-24" icon={item.ydkData ? 'fa-layer-group' : 'fa-cube'} />
+					</div>
 					<div class="p-2.5">
 						<h3 class="truncate text-xs font-medium text-fg-accent group-hover:text-primary">{item.name}</h3>
 						<p class="mt-0.5 text-[10px] capitalize text-fg-subdued">{item.type}{#if item.ydkData} · Deck{/if}</p>
 						{#if itemTags.length > 0}
 							<div class="mt-1.5 flex flex-wrap gap-1">
-								{#each itemTags.slice(0, 3) as t}
-									<span class="rounded-sm px-1 py-0.5 text-[9px] font-medium text-white" style="background: {t.color || '#5A31F4'}">{t.name}</span>
-								{/each}
+								<TagChips tags={itemTags.slice(0, 3)} size="xs" />
 								{#if itemTags.length > 3}
 									<span class="rounded-sm bg-muted px-1 py-0.5 text-[9px] text-fg-subdued">+{itemTags.length - 3}</span>
 								{/if}

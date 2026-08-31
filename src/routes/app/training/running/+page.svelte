@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { formatTime, formatPace } from '$lib/utils';
 
 	let status = $state<'idle' | 'requesting' | 'running' | 'paused' | 'finished'>('idle');
 	let startTime = $state<number>(0);
@@ -174,23 +175,6 @@
 					goto(`/app/training/session/${data.sessionId}`);
 				}
 			});
-	}
-
-	function formatTime(seconds: number) {
-		const hrs = Math.floor(seconds / 3600);
-		const mins = Math.floor((seconds % 3600) / 60);
-		const secs = seconds % 60;
-		if (hrs > 0) {
-			return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-		}
-		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-	}
-
-	function formatPace(secondsPerKm: number) {
-		if (!secondsPerKm || !isFinite(secondsPerKm)) return '--:--';
-		const mins = Math.floor(secondsPerKm / 60);
-		const secs = Math.floor(secondsPerKm % 60);
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
 </script>
 
