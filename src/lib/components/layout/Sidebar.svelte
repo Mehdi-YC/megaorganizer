@@ -31,6 +31,7 @@
 	let searchQuery = $state('');
 	let searchResults = $state<Array<{ id: string; name: string; type: string; imageUrl?: string; categoryId?: string }>>([]);
 	let showUserMenu = $state(false);
+	let confirmDeleteCatId = $state<string | null>(null);
 
 	function toggleCategory(id: string) {
 		const next = new Set(expandedCategories);
@@ -48,6 +49,21 @@
 
 	function isPageActive(pgId: string): boolean {
 		return page.url.pathname.includes(`/page/${pgId}`);
+	}
+
+	async function deleteCategory(catId: string) {
+		const res = await fetch('/api/categories', {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: catId })
+		});
+		if (res.ok) {
+			confirmDeleteCatId = null;
+			await invalidateAll();
+			if (page.url.pathname.includes(`/category/${catId}`)) {
+				goto('/app');
+			}
+		}
 	}
 
 	$effect(() => {
@@ -96,6 +112,9 @@
 			}
 			if (showUserMenu) {
 				showUserMenu = false;
+			}
+			if (confirmDeleteCatId) {
+				confirmDeleteCatId = null;
 			}
 		}
 	}
@@ -217,6 +236,9 @@
 				<a href="/app/training/history" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith('/app/training/history') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
 					<i class="fas fa-clock-rotate-left w-3 text-center text-[10px]"></i> History
 				</a>
+				<a href="/app/training/stats" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith('/app/training/stats') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+					<i class="fas fa-chart-line w-3 text-center text-[10px]"></i> Stats
+				</a>
 			</div>
 		</div>
 
@@ -258,11 +280,32 @@
 				</a>
 				<button
 					type="button"
-					class="mr-1 h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted"
+					class="mr-1 h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg"
 					title="Add Page"
 					onclick={(e) => { e.stopPropagation(); e.preventDefault(); creatingPageFor = creatingPageFor === cat.id ? null : cat.id; newPageName = ''; }}
 				>
 					<i class="fas fa-plus text-[9px]"></i>
+				</button>
+				<button
+					type="button"
+					class="mr-1 h-5 w-5 shrink-0 items-center justify-center rounded-sm {confirmDeleteCatId === cat.id ? 'text-error' : 'text-fg-subdued hover:text-error'}"
+					title={confirmDeleteCatId === cat.id ? 'Click again to confirm' : 'Delete Category'}
+					onclick={(e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						if (confirmDeleteCatId === cat.id) {
+							deleteCategory(cat.id);
+						} else {
+							confirmDeleteCatId = cat.id;
+							setTimeout(() => { if (confirmDeleteCatId === cat.id) confirmDeleteCatId = null; }, 3000);
+						}
+					}}
+				>
+					{#if confirmDeleteCatId === cat.id}
+						<i class="fas fa-check text-[9px]"></i>
+					{:else}
+						<i class="fas fa-trash text-[8px]"></i>
+					{/if}
 				</button>
 			</div>
 
