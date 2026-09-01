@@ -20,6 +20,7 @@
 	let editingNode = $state<string | null>(null);
 	let editColor = $state('');
 	let editIcon = $state('');
+	let editNodeMarkdown = $state('');
 	let nodeAddName = $state<Record<string, string>>({});
 	let nodeSearchResults = $state<Record<string, any[]>>({});
 	let editingPageContent = $state(false);
@@ -140,9 +141,9 @@
 		const meta = parseMetadata(node.metadata);
 		meta.color = editColor;
 		meta.icon = editIcon;
-		const res = await fetch('/api/tree', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: nodeId, metadata: JSON.stringify(meta) }) });
+		const res = await fetch('/api/tree', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: nodeId, metadata: JSON.stringify(meta), markdown: editNodeMarkdown || null }) });
 		if (res.ok) {
-			treeElements = treeElements.map((el: any) => el.id === nodeId ? { ...el, metadata: JSON.stringify(meta) } : el);
+			treeElements = treeElements.map((el: any) => el.id === nodeId ? { ...el, metadata: JSON.stringify(meta), markdown: editNodeMarkdown || null } : el);
 			editingNode = null;
 		}
 	}
@@ -151,6 +152,7 @@
 		const meta = parseMetadata(node.metadata);
 		editColor = meta.color || getNodeColor(node);
 		editIcon = meta.icon || 'fa-folder';
+		editNodeMarkdown = node.markdown ?? '';
 		editingNode = node.id;
 	}
 
@@ -393,32 +395,36 @@
 								<span class="text-sm font-semibold truncate" style="color: {nodeColor}">{node.name}</span>
 								<span class="text-[11px] text-fg-subdued">{childItems.length + childNodes.length} items</span>
 								<div class="flex-1"></div>
-								<button type="button" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); nodeAddOpen = { ...nodeAddOpen, [node.id]: true }; }}>
-									<i class="fas fa-plus text-[8px]"></i>
-								</button>
-								<button type="button" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); startEditNode(node); }}>
-									<i class="fas fa-pen text-[8px]"></i>
-								</button>
-								<button type="button" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm opacity-0 group-hover:opacity-100 {confirmDeleteId === node.id ? 'text-error' : 'text-fg-subdued hover:text-error'}" onclick={(e) => { e.stopPropagation(); removeElement(node.id, true); }}>
-									{#if confirmDeleteId === node.id}
-										<i class="fas fa-check text-[9px]"></i>
-									{:else}
-										<i class="fas fa-times text-[9px]"></i>
-									{/if}
-								</button>
+							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); nodeAddOpen = { ...nodeAddOpen, [node.id]: true }; }}>
+								<i class="fas fa-plus text-[10px]"></i>
+							</button>
+							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); startEditNode(node); }}>
+								<i class="fas fa-pen text-[10px]"></i>
+							</button>
+							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm opacity-0 group-hover:opacity-100 {confirmDeleteId === node.id ? 'text-error' : 'text-fg-subdued hover:text-error'}" onclick={(e) => { e.stopPropagation(); removeElement(node.id, true); }}>
+								{#if confirmDeleteId === node.id}
+									<i class="fas fa-check text-[11px]"></i>
+								{:else}
+									<i class="fas fa-times text-[11px]"></i>
+								{/if}
+							</button>
 							</div>
 							<hr style="border-color: {nodeColor}40" />
 
 							{#if isExpanded}
 								<div class="py-2 space-y-2">
-									{#each childNodes as subNode}
-										<div class="flex items-center gap-2 py-1.5">
-											<i class="fas {getNodeIcon(subNode)} text-[10px]" style="color: {getNodeColor(subNode)}"></i>
-											<span class="text-xs font-medium" style="color: {getNodeColor(subNode)}">{subNode.name}</span>
-										</div>
-									{/each}
+								{#each childNodes as subNode}
+									<div class="flex items-center gap-2 py-1.5">
+										<i class="fas {getNodeIcon(subNode)} text-[10px]" style="color: {getNodeColor(subNode)}"></i>
+										<span class="text-xs font-medium" style="color: {getNodeColor(subNode)}">{subNode.name}</span>
+									</div>
+								{/each}
 
-									<div class="grid gap-1.5 grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
+							{#if node.markdown}
+								<div class="markdown-content text-xs text-fg leading-relaxed">{@html snarkdown(node.markdown)}</div>
+							{/if}
+
+								<div class="grid gap-1.5 grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
 										{#each childItems as item}
 											<a
 												href="/app/item/{item.id}"
@@ -552,6 +558,10 @@
 							<i class="fas {editIcon} text-sm" style="color: {editColor}"></i>
 						</div>
 						<span class="text-sm font-medium" style="color: {editColor}">{node.name}</span>
+					</div>
+					<div class="mb-4">
+						<p class="mb-2 text-[10px] font-bold uppercase tracking-widest text-fg-subdued">Content (Markdown)</p>
+						<textarea bind:value={editNodeMarkdown} rows="6" class="w-full rounded-sm border border-border bg-bg px-3 py-2 text-sm text-fg font-mono placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0 resize-none" placeholder="Optional markdown content..."></textarea>
 					</div>
 					<div class="flex justify-end gap-2">
 						<button type="button" class="rounded-sm bg-muted px-4 py-2 text-xs font-medium text-fg hover:bg-border" onclick={() => (editingNode = null)}>Cancel</button>

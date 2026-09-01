@@ -3,6 +3,7 @@
 	import type { ActionData, PageData } from './$types';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
+	// svelte-ignore state_referenced_locally
 	let name = $state(data.user?.name ?? '');
 </script>
 
