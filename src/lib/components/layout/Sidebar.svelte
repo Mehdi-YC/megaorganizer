@@ -162,7 +162,7 @@
 		<div class="w-full max-w-md overflow-hidden rounded-sm border border-border bg-surface shadow-xl" onclick={(e) => e.stopPropagation()}>
 			<div class="flex items-center gap-3 px-4 py-3">
 				<i class="fas fa-search text-sm text-fg-subdued shrink-0"></i>
-				<input type="text" bind:value={searchQuery} oninput={doSearch} placeholder="Search items, pages..." class="min-w-0 flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subdued outline-none" autofocus />
+				<input type="text" bind:value={searchQuery} oninput={doSearch} placeholder="Search items, pages..." class="min-w-0 flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subdued outline-none" />
 				<kbd class="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-fg-subdued">ESC</kbd>
 			</div>
 			{#if searchResults.length > 0}
@@ -261,6 +261,7 @@
 			<div class="flex items-center">
 				<button
 					type="button"
+					aria-label="Toggle category"
 					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted transition-colors"
 					onclick={(e) => { e.stopPropagation(); e.preventDefault(); toggleCategory(cat.id); }}
 				>
@@ -329,8 +330,8 @@
 					{#if creatingPageFor === cat.id}
 						<form onsubmit={(e) => { e.preventDefault(); createPage(cat.id); }} class="flex items-center gap-1 px-1.5 py-1">
 							<input type="text" bind:value={newPageName} placeholder="Page name" class="flex-1 h-7 rounded-sm border border-border bg-bg px-2 text-[11px] text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
-							<button type="submit" class="h-7 w-7 shrink-0 rounded-sm bg-primary flex items-center justify-center text-white hover:bg-primary-hover"><i class="fas fa-check text-[9px]"></i></button>
-							<button type="button" class="h-7 w-7 shrink-0 rounded-sm bg-muted flex items-center justify-center text-fg hover:bg-border" onclick={() => { creatingPageFor = null; newPageName = ''; }}><i class="fas fa-times text-[9px]"></i></button>
+							<button type="submit" aria-label="Create page" class="h-7 w-7 shrink-0 rounded-sm bg-primary flex items-center justify-center text-white hover:bg-primary-hover"><i class="fas fa-check text-[9px]"></i></button>
+							<button type="button" aria-label="Cancel" class="h-7 w-7 shrink-0 rounded-sm bg-muted flex items-center justify-center text-fg hover:bg-border" onclick={() => { creatingPageFor = null; newPageName = ''; }}><i class="fas fa-times text-[9px]"></i></button>
 						</form>
 					{/if}
 				</div>

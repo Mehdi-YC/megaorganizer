@@ -3,7 +3,9 @@
 	import { page } from '$app/state';
 
 	let { data } = $props();
+	// svelte-ignore state_referenced_locally
 	let category = $state(data.category);
+	// svelte-ignore state_referenced_locally
 	let pages = $state(data.pages ?? []);
 	let showNewPage = $state(false);
 	let newPageName = $state('');
@@ -98,7 +100,7 @@
 		{#if showNewPage}
 			<div class="mb-6 rounded-sm border border-border bg-surface p-4">
 				<form onsubmit={(e) => { e.preventDefault(); createPage(); }} class="flex flex-col sm:flex-row gap-2">
-					<input type="text" bind:value={newPageName} placeholder="Page name" class="flex-1 h-[36px] rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors focus:border-primary focus:outline-none focus:ring-0" autofocus />
+					<input type="text" bind:value={newPageName} placeholder="Page name" class="flex-1 h-[36px] rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors focus:border-primary focus:outline-none focus:ring-0" />
 					<div class="flex gap-2">
 						<button type="submit" class="inline-flex h-[36px] items-center justify-center rounded-sm bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover">Create</button>
 						<button type="button" class="inline-flex h-[36px] items-center justify-center rounded-sm border border-border bg-surface px-4 text-sm font-medium text-fg transition-colors hover:bg-muted" onclick={() => { showNewPage = false; newPageName = ''; }}>Cancel</button>
@@ -123,7 +125,6 @@
 						ondragstart={(e) => handleDragStart(e, idx)}
 						ondragover={(e) => handleDragOver(e, idx)}
 						ondragend={handleDragEnd}
-						role="listitem"
 					>
 						<div class="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
 							<i class="fas fa-grip-vertical text-[10px] text-fg-subdued/40"></i>

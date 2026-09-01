@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 
 	let { data } = $props();
+	// svelte-ignore state_referenced_locally
 	let sessions = $state(data.sessions ?? []);
 
 	function getWeekStart(date: Date): Date {
