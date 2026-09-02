@@ -11,15 +11,21 @@
 	} = $props();
 
 	let showAdd = $state(false);
-	let searchQuery = $state('');
-	let searchResults = $state<any[]>([]);
-	let newChildName = $state('');
+	let addQuery = $state('');
+	let addResults = $state<any[]>([]);
 	let dragIdx = $state<number | null>(null);
+	let addInput = $state<HTMLInputElement | null>(null);
+
+	$effect(() => {
+		if (showAdd && addInput) {
+			addInput.focus();
+		}
+	});
 
 	async function searchToAdd() {
-		if (!searchQuery.trim()) { searchResults = []; return; }
-		const results = await searchTree(searchQuery, 'item');
-		searchResults = results.filter((r: any) => r.id !== parentId && !children.some((c) => c.id === r.id));
+		if (!addQuery.trim() || addQuery.trim().length < 3) { addResults = []; return; }
+		const results = await searchTree(addQuery, 'item');
+		addResults = results.filter((r: any) => r.id !== parentId && !children.some((c) => c.id === r.id));
 	}
 
 	async function addExisting(childId: string) {
@@ -31,18 +37,18 @@
 		if (res.ok) {
 			const el = await fetch(`/api/tree?id=${childId}`).then(r => r.json());
 			onAdd?.(el);
-			searchQuery = '';
-			searchResults = [];
+			addQuery = '';
+			addResults = [];
 			showAdd = false;
 		}
 	}
 
-	async function addNew() {
-		if (!newChildName.trim()) return;
+	async function createAndAdd() {
+		if (!addQuery.trim()) return;
 		const createRes = await fetch('/api/tree', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ action: 'create', type: 'item', name: newChildName })
+			body: JSON.stringify({ action: 'create', type: 'item', name: addQuery })
 		});
 		if (createRes.ok) {
 			const child = await createRes.json();
@@ -51,7 +57,22 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ action: 'addChild', parentType, parentId, childType: 'item', childId: child.id })
 			});
-			if (linkRes.ok) { onAdd?.(child); newChildName = ''; showAdd = false; }
+			if (linkRes.ok) { onAdd?.(child); addQuery = ''; showAdd = false; }
+		}
+	}
+
+	function closeAdd() {
+		showAdd = false;
+		addQuery = '';
+		addResults = [];
+	}
+
+	function handleAddKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter' && addQuery.trim() && addResults.length === 0) {
+			createAndAdd();
+		}
+		if (e.key === 'Escape') {
+			closeAdd();
 		}
 	}
 
@@ -101,22 +122,39 @@
 	</div>
 
 	{#if showAdd}
-		<div class="mb-3 space-y-2">
-			<input type="search" bind:value={searchQuery} oninput={searchToAdd} placeholder="Search existing items..." class="w-full h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
-			{#if searchResults.length > 0}
-				<div class="max-h-32 overflow-y-auto space-y-0.5">
-					{#each searchResults.slice(0, 5) as result}
-						<button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px] hover:bg-muted" onclick={() => addExisting(result.id)}>
-							<i class="fas fa-cube w-3 text-center text-fg-subdued"></i> {result.name}
+		<div class="mb-3 space-y-1.5">
+			<div class="relative">
+				<i class="fas fa-search absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-fg-subdued pointer-events-none"></i>
+				<input
+					type="text"
+					placeholder="Search or create item..."
+					bind:this={addInput}
+					value={addQuery}
+					oninput={(e) => { addQuery = (e.target as HTMLInputElement).value; searchToAdd(); }}
+					onkeydown={handleAddKeydown}
+					class="w-full h-7 rounded-sm border border-border bg-bg pl-6 pr-2 text-[11px] text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
+				/>
+			</div>
+			{#if addResults.length > 0}
+				<div class="max-h-28 overflow-y-auto rounded-sm border border-border bg-surface">
+					{#each addResults.slice(0, 5) as result}
+						<button type="button" class="flex w-full items-center gap-2 px-2 py-1.5 text-left text-[11px] hover:bg-muted" onclick={() => addExisting(result.id)}>
+							{#if result.imageUrl}
+								<img src={result.imageUrl} alt={result.name} class="h-6 w-6 rounded-sm object-cover shrink-0" />
+							{:else}
+								<i class="fas fa-cube w-3 text-center text-fg-subdued shrink-0"></i>
+							{/if}
+							{result.name}
 						</button>
 					{/each}
 				</div>
 			{/if}
-			<div class="flex gap-1.5">
-				<input type="text" bind:value={newChildName} placeholder="Or create new item" class="flex-1 min-w-0 h-8 rounded-sm border border-border bg-bg px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
-				<button type="button" class="h-8 shrink-0 rounded-sm bg-primary px-2 text-xs text-white hover:bg-primary-hover" onclick={addNew}>Create</button>
-				<button type="button" class="h-8 shrink-0 rounded-sm bg-muted px-2 text-xs text-fg hover:bg-border" onclick={() => { showAdd = false; newChildName = ''; searchQuery = ''; }}>Cancel</button>
-			</div>
+			{#if addQuery.trim() && addResults.length === 0}
+				<button type="button" class="w-full h-7 rounded-sm bg-primary text-[11px] font-medium text-white hover:bg-primary-hover" onclick={createAndAdd}>
+					<i class="fas fa-plus text-[8px] mr-1"></i> Create "{addQuery}"
+				</button>
+			{/if}
+			<button type="button" class="w-full h-6 rounded-sm text-[10px] text-fg-subdued hover:text-fg hover:bg-muted" onclick={closeAdd}>Cancel</button>
 		</div>
 	{/if}
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import snarkdown from 'snarkdown';
+	import { renderMarkdown } from '$lib/utils/markdown';
 	import { isSmallImage as checkIsSmallImage, getTagIds, toggleArrayItem, DEFAULT_TAG_COLOR } from '$lib/utils';
 	import { YdkDeckViewer, ChildItemList, TagPicker } from '$lib/components/item';
 	import MindMap from '$lib/components/ui/MindMap.svelte';
@@ -27,7 +27,11 @@
 
 	let isDeck = $derived(!!ydkData);
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
-	let renderedContent = $derived(content ? snarkdown(content) : '');
+	let renderedContent = $state('');
+
+	$effect(() => {
+		renderMarkdown(content).then((html) => { renderedContent = html; });
+	});
 
 	onMount(async () => {
 		if (item?.imageUrl) isSmall = await checkIsSmallImage(item.imageUrl);
@@ -142,8 +146,92 @@
 
 	{#if isDeck && !editing}
 		<!-- DECK VIEW -->
-		<div class="p-4 sm:p-6">
+		<!-- Mobile: single column -->
+		<div class="lg:hidden p-4 sm:p-6 space-y-4">
+			<div class="flex items-center gap-3">
+				<div class="flex-1 min-w-0">
+					<h1 class="text-lg font-semibold text-fg-accent">{item.name}</h1>
+					{#if item.description}<p class="text-sm text-fg-subdued mt-0.5">{item.description}</p>{/if}
+					<p class="text-[10px] text-fg-subdued capitalize mt-1">{item.type}</p>
+				</div>
+				<div class="flex gap-1.5 shrink-0">
+					<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
+					<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
+				</div>
+			</div>
+
 			<YdkDeckViewer {ydkData} onEdit={() => (editing = true)} onDelete={deleteItem} {assignedTags} />
+
+			{#if content}
+				<div class="rounded-sm border border-border bg-surface p-4">
+					<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Content</h3>
+					<div class="markdown-content text-sm text-fg leading-relaxed">{@html renderedContent}</div>
+				</div>
+			{/if}
+
+			{#if item.videoUrl}
+				<div class="rounded-sm border border-border bg-surface p-4">
+					<div class="aspect-video"><iframe src={item.videoUrl} class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
+				</div>
+			{/if}
+
+			{#if item.externalUrl}
+				<div class="rounded-sm border border-border bg-surface p-3">
+					<a href={item.externalUrl} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-xs text-primary hover:text-primary-hover"><i class="fas fa-external-link text-[10px]"></i> {item.externalUrl}</a>
+				</div>
+			{/if}
+
+			<ChildItemList parentType="item" parentId={item.id} {children} onAdd={handleChildAdd} onRemove={handleChildRemove} onReorder={handleChildReorder} />
+		</div>
+
+		<!-- Desktop: content left + sidebar right -->
+		<div class="hidden lg:flex gap-0 min-h-[calc(100vh-49px)]">
+			<div class="flex-1 p-8 overflow-y-auto">
+				<div class="flex items-center gap-3 mb-6">
+					<h1 class="flex-1 text-xl font-semibold text-fg-accent">{item.name}</h1>
+					{#if item.description}<p class="mt-1 text-sm text-fg-subdued">{item.description}</p>{/if}
+					<div class="flex gap-1.5 shrink-0">
+						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
+						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
+					</div>
+				</div>
+
+				<YdkDeckViewer {ydkData} onEdit={() => (editing = true)} onDelete={deleteItem} {assignedTags} />
+
+				{#if content}
+					<div class="mt-6 rounded-sm border border-border bg-surface p-4">
+						<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Content</h3>
+						<div class="markdown-content text-sm text-fg leading-relaxed">{@html renderedContent}</div>
+					</div>
+				{/if}
+
+				{#if item.videoUrl}
+					<div class="mt-6 rounded-sm border border-border bg-surface p-4">
+						<div class="aspect-video"><iframe src={item.videoUrl} class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
+					</div>
+				{/if}
+
+				{#if item.externalUrl}
+					<div class="mt-6 rounded-sm border border-border bg-surface p-3">
+						<a href={item.externalUrl} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-xs text-primary hover:text-primary-hover"><i class="fas fa-external-link text-[10px]"></i> {item.externalUrl}</a>
+					</div>
+				{/if}
+
+				<ChildItemList parentType="item" parentId={item.id} {children} onAdd={handleChildAdd} onRemove={handleChildRemove} onReorder={handleChildReorder} />
+			</div>
+
+			<!-- Right sidebar -->
+			<div class="w-72 xl:w-80 shrink-0 border-l border-border bg-surface p-5 space-y-5 overflow-y-auto">
+				<div>
+					<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Details</h3>
+					<dl class="space-y-2 text-xs">
+						<div class="flex justify-between"><dt class="text-fg-subdued">Type</dt><dd class="capitalize text-fg">{item.type}</dd></div>
+						<div class="flex justify-between"><dt class="text-fg-subdued">Created</dt><dd class="text-fg">{new Date(item.createdAt).toLocaleDateString()}</dd></div>
+						<div class="flex justify-between"><dt class="text-fg-subdued">Updated</dt><dd class="text-fg">{new Date(item.updatedAt).toLocaleDateString()}</dd></div>
+					</dl>
+				</div>
+				<TagPicker {tagIds} {allTags} {editing} onToggle={toggleTag} />
+			</div>
 		</div>
 	{:else}
 		<!-- NON-DECK VIEW -->

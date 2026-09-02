@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { checkSmallImages, getAssignedTags, toggleArrayItem, DEFAULT_TAG_COLOR } from '$lib/utils';
-	import { GridItemImage, SearchInput, EmptyState, TagChips } from '$lib/components/ui';
+	import { GridItemImage, TagChips } from '$lib/components/ui';
 
 	let items = $state<any[]>([]);
 	let allTags = $state<any[]>([]);
@@ -14,6 +14,8 @@
 	let filterYdk = $state(false);
 	let showFilters = $state(false);
 	let smallImages = $state(new Set<string>());
+	let currentPage = $state(1);
+	const PAGE_SIZE = 50;
 
 	onMount(async () => {
 		const [itemsRes, tagsRes] = await Promise.all([fetch('/api/tree'), fetch('/api/tags')]);
@@ -49,6 +51,7 @@
 		}
 
 		items = result;
+		currentPage = 1;
 	}
 
 	function toggleFilterTag(tagId: string) {
@@ -69,6 +72,8 @@
 	}
 
 	let hasActiveFilters = $derived(filterTagIds.length > 0 || filterYdk);
+	let totalPages = $derived(Math.max(1, Math.ceil(items.length / PAGE_SIZE)));
+	let paginatedItems = $derived(items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE));
 
 	async function createItem() {
 		if (!newItemName.trim()) return;
@@ -158,6 +163,17 @@
 						</button>
 					</div>
 				</div>
+		</div>
+		{/if}
+		{#if totalPages > 1}
+			<div class="mt-4 flex items-center justify-center gap-2">
+				<button type="button" class="h-8 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed" disabled={currentPage <= 1} onclick={() => (currentPage = currentPage - 1)}>
+					<i class="fas fa-chevron-left text-[9px]"></i> Prev
+				</button>
+				<span class="text-xs text-fg-subdued">Page {currentPage} of {totalPages}</span>
+				<button type="button" class="h-8 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border disabled:opacity-40 disabled:cursor-not-allowed" disabled={currentPage >= totalPages} onclick={() => (currentPage = currentPage + 1)}>
+					Next <i class="fas fa-chevron-right text-[9px]"></i>
+				</button>
 			</div>
 		{/if}
 	</div>
@@ -171,7 +187,7 @@
 		</div>
 	{:else}
 		<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-			{#each items as item}
+			{#each paginatedItems as item}
 				{@const itemTags = getAssignedTags(item, allTags)}
 				<a href="/app/item/{item.id}" class="group rounded-sm border border-border bg-surface transition-all hover:border-primary/50">
 					<div class="h-24 overflow-hidden rounded-t-sm">

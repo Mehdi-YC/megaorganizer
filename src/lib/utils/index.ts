@@ -50,6 +50,7 @@ export async function checkSmallImages(items: any[], onUpdate: (ids: Set<string>
 }
 
 export async function searchTree(query: string, typeFilter?: string): Promise<any[]> {
+	if (!query.trim() || query.trim().length < 3) return [];
 	const res = await fetch(`/api/tree?search=${encodeURIComponent(query)}`);
 	if (!res.ok) return [];
 	let results = await res.json();
