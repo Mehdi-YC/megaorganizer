@@ -99,6 +99,14 @@
 		}
 	}
 
+	let searchInput = $state<HTMLInputElement | null>(null);
+
+	$effect(() => {
+		if (showSearch && searchInput) {
+			searchInput.focus();
+		}
+	});
+
 	function handleKeydown(e: KeyboardEvent) {
 		if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 			e.preventDefault();
@@ -120,7 +128,7 @@
 	}
 
 	async function doSearch() {
-		if (!searchQuery.trim()) { searchResults = []; return; }
+		if (!searchQuery.trim() || searchQuery.trim().length < 3) { searchResults = []; return; }
 		const res = await fetch(`/api/tree?search=${encodeURIComponent(searchQuery)}`);
 		if (res.ok) searchResults = await res.json();
 	}
@@ -162,7 +170,7 @@
 		<div class="w-full max-w-md overflow-hidden rounded-sm border border-border bg-surface shadow-xl" onclick={(e) => e.stopPropagation()}>
 			<div class="flex items-center gap-3 px-4 py-3">
 				<i class="fas fa-search text-sm text-fg-subdued shrink-0"></i>
-				<input type="text" bind:value={searchQuery} oninput={doSearch} placeholder="Search items, pages..." class="min-w-0 flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subdued outline-none" />
+				<input type="text" bind:this={searchInput} bind:value={searchQuery} oninput={doSearch} placeholder="Search items, pages..." class="min-w-0 flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subdued outline-none" />
 				<kbd class="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-fg-subdued">ESC</kbd>
 			</div>
 			{#if searchResults.length > 0}
@@ -212,13 +220,15 @@
 		</button>
 	</div>
 
-	<nav class="flex-1 overflow-y-auto py-2 px-2">
-		<a href="/app" onclick={onNavigate} class="mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+	<nav class="flex-1 overflow-y-auto py-3 px-2">
+		<a href="/app" onclick={onNavigate} class="mb-3 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
 			<i class="fas fa-home w-4 text-center text-xs"></i>
 			Dashboard
 		</a>
 
-		<div class="mb-1">
+		<div class="h-px bg-border/50 my-1"></div>
+
+		<div class="mt-2 mb-2">
 			<div class="flex items-center gap-2.5 px-3 py-1.5 text-[13px] text-fg-subdued">
 				<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
 				<span class="font-medium">Training</span>
@@ -242,17 +252,19 @@
 			</div>
 		</div>
 
-		<a href="/app/library" onclick={onNavigate} class="mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/library' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+		<div class="h-px bg-border/50 my-1"></div>
+
+		<a href="/app/library" onclick={onNavigate} class="mt-2 mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/library' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
 			<i class="fas fa-cubes w-4 text-center text-xs"></i>
 			Item Library
 		</a>
 
-		<a href="/app/tags" onclick={onNavigate} class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/tags' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+		<a href="/app/tags" onclick={onNavigate} class="mb-3 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/tags' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
 			<i class="fas fa-tags w-4 text-center text-xs"></i>
 			Tags
 		</a>
 
-		<div class="h-px bg-border my-1"></div>
+		<div class="h-px bg-border/50 my-1"></div>
 
 		{#each categories as cat}
 			{@const isActive = isCategoryActive(cat)}
@@ -262,7 +274,7 @@
 				<button
 					type="button"
 					aria-label="Toggle category"
-					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted transition-colors"
+					class="flex  w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted transition-colors"
 					onclick={(e) => { e.stopPropagation(); e.preventDefault(); toggleCategory(cat.id); }}
 				>
 					<i class="fas fa-chevron-right text-[9px] transition-transform duration-150 {isExpanded ? 'rotate-90' : ''}"></i>
@@ -281,7 +293,7 @@
 				</a>
 				<button
 					type="button"
-					class="mr-1 h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg"
+					class="mr-1  w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg"
 					title="Add Page"
 					onclick={(e) => { e.stopPropagation(); e.preventDefault(); creatingPageFor = creatingPageFor === cat.id ? null : cat.id; newPageName = ''; }}
 				>
@@ -289,7 +301,7 @@
 				</button>
 				<button
 					type="button"
-					class="mr-1 h-5 w-5 shrink-0 items-center justify-center rounded-sm {confirmDeleteCatId === cat.id ? 'text-error' : 'text-fg-subdued hover:text-error'}"
+					class="mr-1 w-5 shrink-0 items-center justify-center rounded-sm {confirmDeleteCatId === cat.id ? 'text-error' : 'text-fg-subdued hover:text-error'}"
 					title={confirmDeleteCatId === cat.id ? 'Click again to confirm' : 'Delete Category'}
 					onclick={(e) => {
 						e.stopPropagation();
@@ -336,6 +348,8 @@
 					{/if}
 				</div>
 			{/if}
+			
+			<hr class="w-50 m-auto h-4 mt-2 opacity-10">
 		{/each}
 
 		<div class="mt-2 px-2">

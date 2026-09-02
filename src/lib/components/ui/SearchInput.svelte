@@ -1,5 +1,12 @@
 <script lang="ts">
-	let { value = $bindable(''), placeholder = 'Search...', onsearch }: { value?: string; placeholder?: string; onsearch?: () => void } = $props();
+	let { value = $bindable(''), placeholder = 'Search...', onsearch, autofocus = false }: { value?: string; placeholder?: string; onsearch?: () => void; autofocus?: boolean } = $props();
+	let inputEl = $state<HTMLInputElement | null>(null);
+
+	$effect(() => {
+		if (autofocus && inputEl) {
+			inputEl.focus();
+		}
+	});
 </script>
 
 <div class="relative">
@@ -7,6 +14,7 @@
 	<input
 		type="search"
 		{placeholder}
+		bind:this={inputEl}
 		bind:value
 		oninput={() => onsearch?.()}
 		onkeydown={(e) => { if (e.key === 'Enter') onsearch?.(); }}

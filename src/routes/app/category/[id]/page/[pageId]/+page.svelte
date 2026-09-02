@@ -1,7 +1,7 @@
 <script lang="ts">
-	import snarkdown from 'snarkdown';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { renderMarkdown } from '$lib/utils/markdown';
 	import { parseMetadata, getNodeColor, getNodeIcon, checkSmallImages, searchTree, NODE_COLORS, NODE_ICONS } from '$lib/utils';
 	import { GridItemImage } from '$lib/components/ui';
 
@@ -35,6 +35,23 @@
 	let editPageDescription = $state('');
 	let smallImages = $state(new Set<string>());
 	let nodeDragIdx = $state<number | null>(null);
+	let addMenuSearchInput = $state<HTMLInputElement | null>(null);
+	let nodeMarkdownHtml = $state<Record<string, string>>({});
+
+	async function renderNodeMarkdown() {
+		const entries: [string, string][] = [];
+		for (const node of treeElements) {
+			if (node.type === 'node' && node.markdown) {
+				const html = await renderMarkdown(node.markdown);
+				entries.push([node.id, html]);
+			}
+		}
+		nodeMarkdownHtml = Object.fromEntries(entries);
+	}
+
+	$effect(() => {
+		renderNodeMarkdown();
+	});
 
 	function toggleNode(id: string) {
 		const next = new Set(expandedNodes);
@@ -54,10 +71,14 @@
 
 	let topLevelNodes = $derived(treeElements.filter((el: any) => el.type === 'node'));
 	let topLevelItems = $derived(treeElements.filter((el: any) => el.type === 'item'));
-	let renderedContent = $derived(pageContent ? snarkdown(pageContent) : '');
+	let renderedContent = $state('');
+
+	$effect(() => {
+		renderMarkdown(pageContent).then((html) => { renderedContent = html; });
+	});
 
 	async function searchItems() {
-		if (!searchQuery.trim()) { searchResults = []; return; }
+		if (!searchQuery.trim() || searchQuery.trim().length < 3) { searchResults = []; return; }
 		searchResults = await searchTree(searchQuery, 'item');
 	}
 
@@ -162,8 +183,14 @@
 		}
 	});
 
+	$effect(() => {
+		if (showAddMenu && addMenuSearchInput) {
+			addMenuSearchInput.focus();
+		}
+	});
+
 	async function searchForNode(nodeId: string, query: string) {
-		if (!query.trim()) { nodeSearchResults = { ...nodeSearchResults, [nodeId]: [] }; return; }
+		if (!query.trim() || query.trim().length < 3) { nodeSearchResults = { ...nodeSearchResults, [nodeId]: [] }; return; }
 		const results = await searchTree(query, 'item');
 		nodeSearchResults = { ...nodeSearchResults, [nodeId]: results };
 	}
@@ -314,7 +341,7 @@
 						</button>
 						{#if showAddMenu}
 							<div class="absolute right-0 top-12 z-50 w-72 sm:w-80 rounded-sm border border-border bg-surface p-3 sm:p-4 max-h-[70vh] overflow-y-auto">
-								<input type="search" placeholder="Search existing items..." bind:value={searchQuery} oninput={searchItems} class="mb-3 h-9 w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
+								<input type="search" placeholder="Search existing items..." bind:this={addMenuSearchInput} bind:value={searchQuery} oninput={searchItems} class="mb-3 h-9 w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
 								{#if searchResults.length > 0}
 									<div class="mb-3 max-h-40 overflow-y-auto">
 									{#each searchResults as result}
@@ -367,6 +394,9 @@
 			{#if treeElements.length > 0}
 				<div class="space-y-0">
 					{#each topLevelNodes as node, nodeIdx (node.id)}
+						{#if nodeIdx > 0}
+							<hr class="border-border my-3" />
+						{/if}
 						{@const isExpanded = expandedNodes.has(node.id)}
 						{@const nodeColor = getNodeColor(node)}
 						{@const nodeIcon = getNodeIcon(node)}
@@ -421,7 +451,7 @@
 								{/each}
 
 							{#if node.markdown}
-								<div class="markdown-content text-xs text-fg leading-relaxed">{@html snarkdown(node.markdown)}</div>
+								<div class="markdown-content text-xs text-fg leading-relaxed">{@html nodeMarkdownHtml[node.id] || ''}</div>
 							{/if}
 
 								<div class="grid gap-1.5 grid-cols-4 sm:grid-cols-6 md:grid-cols-8">
@@ -475,6 +505,7 @@
 					{/each}
 
 					{#if topLevelItems.length > 0}
+						<hr class="border-border my-3" />
 						<div class="mt-4">
 							<h3 class="mb-2 text-[10px] font-bold uppercase tracking-widest text-fg-subdued">Items</h3>
 							<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
