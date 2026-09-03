@@ -88,53 +88,75 @@
 		return `M 0 ${height} L ${points.join(' L ')} L ${(data.length - 1) * stepX} ${height} Z`;
 	}
 
+	function getYTicks(maxValue: number, count = 4): number[] {
+		if (maxValue <= 0) return [0];
+		const step = maxValue / count;
+		const ticks = [];
+		for (let i = 0; i <= count; i++) {
+			ticks.push(Math.round(step * i));
+		}
+		return ticks;
+	}
+
 	let weeklyData = $derived(getWeeklyData());
 	let monthlyData = $derived(getMonthlyData());
 	let runningDistanceData = $derived(getRunningDistanceData());
 
+	let chartW = $derived(chartWidth - padding.left - padding.right);
+	let chartH = $derived(chartHeight - padding.top - padding.bottom);
+
+	let weeklyMaxDur = $derived(Math.max(...weeklyData.map((d) => d.duration / 60), 1));
+	let weeklyYTicks = $derived(getYTicks(weeklyMaxDur));
+
+	let monthlyMaxDur = $derived(Math.max(...monthlyData.map((d) => d.duration / 60), 1));
+	let monthlyYTicks = $derived(getYTicks(monthlyMaxDur));
+
+	let runningMaxDist = $derived(Math.max(...runningDistanceData.map((d) => d.distance), 1));
+	let runningYTicks = $derived(getYTicks(runningMaxDist));
+
 	let weeklyDurationPath = $derived(buildSvgPath(
 		weeklyData.map((d) => d.duration / 60),
-		chartWidth - padding.left - padding.right,
-		chartHeight - padding.top - padding.bottom,
+		chartW,
+		chartH,
 		0,
-		Math.max(...weeklyData.map((d) => d.duration / 60), 1)
+		weeklyMaxDur
 	));
 	let weeklyDurationArea = $derived(buildSvgArea(
 		weeklyData.map((d) => d.duration / 60),
-		chartWidth - padding.left - padding.right,
-		chartHeight - padding.top - padding.bottom,
+		chartW,
+		chartH,
 		0,
-		Math.max(...weeklyData.map((d) => d.duration / 60), 1)
+		weeklyMaxDur
 	));
 
 	let monthlyDurationPath = $derived(buildSvgPath(
 		monthlyData.map((d) => d.duration / 60),
-		chartWidth - padding.left - padding.right,
-		chartHeight - padding.top - padding.bottom,
+		chartW,
+		chartH,
 		0,
-		Math.max(...monthlyData.map((d) => d.duration / 60), 1)
+		monthlyMaxDur
 	));
 	let monthlyDurationArea = $derived(buildSvgArea(
 		monthlyData.map((d) => d.duration / 60),
-		chartWidth - padding.left - padding.right,
-		chartHeight - padding.top - padding.bottom,
+		chartW,
+		chartH,
 		0,
-		Math.max(...monthlyData.map((d) => d.duration / 60), 1)
+		monthlyMaxDur
 	));
 
 	let runningPath = $derived(buildSvgPath(
 		runningDistanceData.map((d) => d.distance),
-		chartWidth - padding.left - padding.right,
-		chartHeight - padding.top - padding.bottom,
+		chartW,
+		chartH,
 		0,
-		Math.max(...runningDistanceData.map((d) => d.distance), 1)
+		runningMaxDist
 	));
 	let runningArea = $derived(buildSvgArea(
 		runningDistanceData.map((d) => d.distance),
-		chartWidth - padding.left - padding.right,
-		chartHeight - padding.top - padding.bottom,
+		chartW,
+		chartH,
 		0,
-		Math.max(...runningDistanceData.map((d) => d.distance), 1)
+		runningMaxDist
 	));
 </script>
 
@@ -163,17 +185,21 @@
 			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide mb-4">Weekly Training (minutes)</h2>
 			<svg viewBox="0 0 {chartWidth} {chartHeight}" class="w-full h-auto">
 				<g transform="translate({padding.left}, {padding.top})">
+					{#each weeklyYTicks as tick}
+						{@const y = chartH - (tick / weeklyMaxDur) * chartH}
+						<line x1="-5" y1={y} x2={chartW} y2={y} stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3" />
+						<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9">{tick}</text>
+					{/each}
 					<path d={weeklyDurationArea} fill="var(--color-primary)" opacity="0.1" />
 					<path d={weeklyDurationPath} fill="none" stroke="var(--color-primary)" stroke-width="2" />
 					{#each weeklyData as d, i}
-						{@const x = i * ((chartWidth - padding.left - padding.right) / (weeklyData.length - 1 || 1))}
-						{@const maxDur = Math.max(...weeklyData.map((w) => w.duration / 60), 1)}
-						{@const y = (chartHeight - padding.top - padding.bottom) - (d.duration / 60 / maxDur) * (chartHeight - padding.top - padding.bottom)}
+						{@const x = i * (chartW / (weeklyData.length - 1 || 1))}
+						{@const y = chartH - (d.duration / 60 / weeklyMaxDur) * chartH}
 						<circle cx={x} cy={y} r="3" fill="var(--color-primary)" />
-						<text x={x} y={chartHeight - padding.top - padding.bottom + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
+						<text x={x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
 					{/each}
-					<line x1="0" y1="0" x2="0" y2={chartHeight - padding.top - padding.bottom} stroke="var(--color-border)" stroke-width="0.5" />
-					<line x1="0" y1={chartHeight - padding.top - padding.bottom} x2={chartWidth - padding.left - padding.right} y2={chartHeight - padding.top - padding.bottom} stroke="var(--color-border)" stroke-width="0.5" />
+					<line x1="0" y1="0" x2="0" y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
+					<line x1="0" y1={chartH} x2={chartW} y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
 				</g>
 			</svg>
 		</div>
@@ -183,17 +209,21 @@
 			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide mb-4">Monthly Training (minutes)</h2>
 			<svg viewBox="0 0 {chartWidth} {chartHeight}" class="w-full h-auto">
 				<g transform="translate({padding.left}, {padding.top})">
+					{#each monthlyYTicks as tick}
+						{@const y = chartH - (tick / monthlyMaxDur) * chartH}
+						<line x1="-5" y1={y} x2={chartW} y2={y} stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3" />
+						<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9">{tick}</text>
+					{/each}
 					<path d={monthlyDurationArea} fill="#10b981" opacity="0.1" />
 					<path d={monthlyDurationPath} fill="none" stroke="#10b981" stroke-width="2" />
 					{#each monthlyData as d, i}
-						{@const x = i * ((chartWidth - padding.left - padding.right) / (monthlyData.length - 1 || 1))}
-						{@const maxDur = Math.max(...monthlyData.map((m) => m.duration / 60), 1)}
-						{@const y = (chartHeight - padding.top - padding.bottom) - (d.duration / 60 / maxDur) * (chartHeight - padding.top - padding.bottom)}
+						{@const x = i * (chartW / (monthlyData.length - 1 || 1))}
+						{@const y = chartH - (d.duration / 60 / monthlyMaxDur) * chartH}
 						<circle cx={x} cy={y} r="3" fill="#10b981" />
-						<text x={x} y={chartHeight - padding.top - padding.bottom + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
+						<text x={x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
 					{/each}
-					<line x1="0" y1="0" x2="0" y2={chartHeight - padding.top - padding.bottom} stroke="var(--color-border)" stroke-width="0.5" />
-					<line x1="0" y1={chartHeight - padding.top - padding.bottom} x2={chartWidth - padding.left - padding.right} y2={chartHeight - padding.top - padding.bottom} stroke="var(--color-border)" stroke-width="0.5" />
+					<line x1="0" y1="0" x2="0" y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
+					<line x1="0" y1={chartH} x2={chartW} y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
 				</g>
 			</svg>
 		</div>
@@ -204,17 +234,21 @@
 				<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide mb-4">Running Distance (km)</h2>
 				<svg viewBox="0 0 {chartWidth} {chartHeight}" class="w-full h-auto">
 					<g transform="translate({padding.left}, {padding.top})">
+						{#each runningYTicks as tick}
+							{@const y = chartH - (tick / runningMaxDist) * chartH}
+							<line x1="-5" y1={y} x2={chartW} y2={y} stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3" />
+							<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9">{tick.toFixed(1)}</text>
+						{/each}
 						<path d={runningArea} fill="#f59e0b" opacity="0.1" />
 						<path d={runningPath} fill="none" stroke="#f59e0b" stroke-width="2" />
 						{#each runningDistanceData as d, i}
-							{@const x = i * ((chartWidth - padding.left - padding.right) / (runningDistanceData.length - 1 || 1))}
-							{@const maxDist = Math.max(...runningDistanceData.map((r) => r.distance), 1)}
-							{@const y = (chartHeight - padding.top - padding.bottom) - (d.distance / maxDist) * (chartHeight - padding.top - padding.bottom)}
+							{@const x = i * (chartW / (runningDistanceData.length - 1 || 1))}
+							{@const y = chartH - (d.distance / runningMaxDist) * chartH}
 							<circle cx={x} cy={y} r="3" fill="#f59e0b" />
-							<text x={x} y={chartHeight - padding.top - padding.bottom + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
+							<text x={x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
 						{/each}
-						<line x1="0" y1="0" x2="0" y2={chartHeight - padding.top - padding.bottom} stroke="var(--color-border)" stroke-width="0.5" />
-						<line x1="0" y1={chartHeight - padding.top - padding.bottom} x2={chartWidth - padding.left - padding.right} y2={chartHeight - padding.top - padding.bottom} stroke="var(--color-border)" stroke-width="0.5" />
+						<line x1="0" y1="0" x2="0" y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
+						<line x1="0" y1={chartH} x2={chartW} y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
 					</g>
 				</svg>
 			</div>
