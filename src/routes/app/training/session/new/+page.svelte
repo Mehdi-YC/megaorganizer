@@ -46,6 +46,8 @@
 	let averageSpeed = $state(0);
 	let averagePace = $state(0);
 	let currentPace = $state(0);
+	let maxSpeed = $state(0);
+	let bestPace = $state(0);
 	let watchId: number | null = null;
 	let lastPoint: typeof gpsPoints[0] | null = null;
 
@@ -110,6 +112,7 @@
 						if (speed < 20) {
 							distance += dist;
 							currentSpeed = speed * 3.6;
+							maxSpeed = Math.max(maxSpeed, currentSpeed);
 						}
 					}
 				}
@@ -135,6 +138,9 @@
 			averageSpeed = (distance / elapsedTime) * 3.6;
 			averagePace = elapsedTime / (distance / 1000);
 			currentPace = currentSpeed > 0 ? 3600 / currentSpeed : 0;
+			if (averagePace > 0 && (bestPace === 0 || averagePace < bestPace)) {
+				bestPace = averagePace;
+			}
 		}
 	}
 
@@ -162,9 +168,9 @@
 					distance,
 					elapsedDuration: elapsedTime,
 					averageSpeed: averageSpeed / 3.6,
-					maxSpeed: currentSpeed / 3.6,
+					maxSpeed: maxSpeed / 3.6,
 					averagePace,
-					bestPace: 0,
+					bestPace,
 					gpsPoints: gpsPoints.map((p, i) => ({
 						sequence: i,
 						timestamp: new Date(p.timestamp),
@@ -258,6 +264,7 @@
 			goto(`/app/training/session/${session.id}`);
 		} catch (e) {
 			console.error('Failed to save session:', e);
+			alert('Failed to save session. Please try again.');
 			saving = false;
 		}
 	}

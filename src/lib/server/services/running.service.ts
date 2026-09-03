@@ -75,7 +75,8 @@ export async function addTrackPoint(
 		.insert(runningTrackPoint)
 		.values({
 			activityId,
-			...data
+			...data,
+			timestamp: data.timestamp instanceof Date ? data.timestamp : new Date(data.timestamp)
 		})
 		.returning();
 
@@ -99,7 +100,8 @@ export async function batchAddTrackPoints(
 
 	const values = points.map((p) => ({
 		activityId,
-		...p
+		...p,
+		timestamp: p.timestamp instanceof Date ? p.timestamp : new Date(p.timestamp)
 	}));
 
 	return db.insert(runningTrackPoint).values(values).returning().all();

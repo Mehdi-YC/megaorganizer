@@ -177,7 +177,7 @@
 							/>
 						</div>
 						{#if run.runningActivity}
-							<div class="mt-3 grid grid-cols-4 gap-4 rounded-sm border border-border bg-surface p-4">
+							<div class="mt-3 grid grid-cols-3 gap-4 rounded-sm border border-border bg-surface p-4">
 								<div class="text-center">
 									<div class="text-xl font-bold">{((run.runningActivity.distance || 0) / 1000).toFixed(2)}</div>
 									<div class="text-xs text-fg-subdued">km</div>
@@ -193,6 +193,14 @@
 								<div class="text-center">
 									<div class="text-xl font-bold">{((run.runningActivity.averageSpeed || 0) * 3.6).toFixed(1)}</div>
 									<div class="text-xs text-fg-subdued">avg km/h</div>
+								</div>
+								<div class="text-center">
+									<div class="text-xl font-bold">{((run.runningActivity.maxSpeed || 0) * 3.6).toFixed(1)}</div>
+									<div class="text-xs text-fg-subdued">max km/h</div>
+								</div>
+								<div class="text-center">
+									<div class="text-xl font-bold">{formatPace(run.runningActivity.bestPace || 0)}</div>
+									<div class="text-xs text-fg-subdued">best pace</div>
 								</div>
 							</div>
 						{/if}

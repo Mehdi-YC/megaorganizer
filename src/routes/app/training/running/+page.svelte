@@ -22,6 +22,7 @@
 		speed?: number;
 		timestamp: number;
 	}>>([]);
+	let bestPace = $state(0);
 	let watchId: number | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let lastPoint: typeof gpsPoints[0] | null = null;
@@ -92,9 +93,9 @@
 					}
 				}
 
-				gpsPoints.push(point);
-				lastPoint = point;
-				updateStats();
+			gpsPoints = [...gpsPoints, point];
+			lastPoint = point;
+			updateStats();
 			},
 			(error) => {
 				console.error('GPS error:', error);
@@ -129,6 +130,9 @@
 			averageSpeed = (distance / elapsed) * 3.6;
 			averagePace = elapsed / (distance / 1000);
 			currentPace = currentSpeed > 0 ? 3600 / currentSpeed : 0;
+			if (averagePace > 0 && (bestPace === 0 || averagePace < bestPace)) {
+				bestPace = averagePace;
+			}
 		}
 	}
 
@@ -156,7 +160,7 @@
 			averageSpeed: averageSpeed / 3.6,
 			maxSpeed: maxSpeed / 3.6,
 			averagePace,
-			bestPace: 0,
+			bestPace,
 			gpsPoints: gpsPoints.map((p, i) => ({
 				sequence: i,
 				timestamp: new Date(p.timestamp),
@@ -177,7 +181,14 @@
 			.then((data) => {
 				if (data.sessionId) {
 					goto(`/app/training/session/${data.sessionId}`);
+				} else {
+					alert('Failed to save run. Please try again.');
+					status = 'idle';
 				}
+			})
+			.catch(() => {
+				alert('Failed to save run. Please check your connection and try again.');
+				status = 'idle';
 			});
 	}
 </script>
@@ -338,19 +349,20 @@
 					<button
 						type="button"
 						class="h-12 rounded-sm border border-border bg-surface px-6 font-medium text-fg transition-colors hover:bg-border"
-						onclick={() => {
-							status = 'idle';
-							distance = 0;
-							elapsed = 0;
-							currentSpeed = 0;
-							averageSpeed = 0;
-							maxSpeed = 0;
-							currentPace = 0;
-							averagePace = 0;
-							currentPosition = null;
-							gpsPoints = [];
-							lastPoint = null;
-						}}
+					onclick={() => {
+						status = 'idle';
+						distance = 0;
+						elapsed = 0;
+						currentSpeed = 0;
+						averageSpeed = 0;
+						maxSpeed = 0;
+						currentPace = 0;
+						averagePace = 0;
+						bestPace = 0;
+						currentPosition = null;
+						gpsPoints = [];
+						lastPoint = null;
+					}}
 					>
 						New Run
 					</button>
