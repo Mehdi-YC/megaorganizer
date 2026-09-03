@@ -2,10 +2,12 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
+	import { calculateDistance, computeRunStats, buildRunPayload, saveRunApi, MS_TO_KMH, MAX_GPS_SPEED_MS, TIMER_INTERVAL_MS, GPS_WATCH_OPTIONS } from '$lib/utils/gps';
 	import RunMap from '$lib/components/ui/RunMap.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	let status = $state<'idle' | 'requesting' | 'running' | 'paused' | 'finished'>('idle');
-	let startTime = $state<number>(0);
+	let startTime = $state(0);
 	let elapsed = $state(0);
 	let distance = $state(0);
 	let currentSpeed = $state(0);
@@ -13,6 +15,7 @@
 	let maxSpeed = $state(0);
 	let currentPace = $state(0);
 	let averagePace = $state(0);
+	let bestPace = $state(0);
 	let currentPosition = $state<{ latitude: number; longitude: number } | null>(null);
 	let gpsPoints = $state<Array<{
 		latitude: number;
@@ -22,19 +25,14 @@
 		speed?: number;
 		timestamp: number;
 	}>>([]);
-	let bestPace = $state(0);
 	let watchId: number | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let lastPoint: typeof gpsPoints[0] | null = null;
 
 	onMount(() => {
 		return () => {
-			if (watchId !== null) {
-				navigator.geolocation.clearWatch(watchId);
-			}
-			if (timerInterval) {
-				clearInterval(timerInterval);
-			}
+			if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+			if (timerInterval) clearInterval(timerInterval);
 		};
 	});
 
@@ -45,21 +43,15 @@
 		}
 		status = 'requesting';
 		navigator.geolocation.getCurrentPosition(
-			(position) => {
-				status = 'running';
-				startTracking();
-			},
-			(error) => {
-				status = 'idle';
-				alert('Location permission denied. Please enable location services.');
-			},
+			() => { status = 'running'; startTracking(); },
+			() => { status = 'idle'; alert('Location permission denied. Please enable location services.'); },
 			{ enableHighAccuracy: true }
 		);
 	}
 
 	function startTracking() {
 		startTime = Date.now();
-		timerInterval = setInterval(updateTimer, 1000);
+		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
 
 		watchId = navigator.geolocation.watchPosition(
 			(position) => {
@@ -75,47 +67,25 @@
 				currentPosition = { latitude: point.latitude, longitude: point.longitude };
 
 				if (lastPoint) {
-					const dist = calculateDistance(
-						lastPoint.latitude,
-						lastPoint.longitude,
-						point.latitude,
-						point.longitude
-					);
-
+					const dist = calculateDistance(lastPoint.latitude, lastPoint.longitude, point.latitude, point.longitude);
 					const timeDiff = (point.timestamp - lastPoint.timestamp) / 1000;
 					if (timeDiff > 0 && dist > 0) {
 						const speed = dist / timeDiff;
-						if (speed < 20) {
+						if (speed < MAX_GPS_SPEED_MS) {
 							distance += dist;
-							currentSpeed = speed * 3.6;
+							currentSpeed = speed * MS_TO_KMH;
 							maxSpeed = Math.max(maxSpeed, currentSpeed);
 						}
 					}
 				}
 
-			gpsPoints = [...gpsPoints, point];
-			lastPoint = point;
-			updateStats();
+				gpsPoints = [...gpsPoints, point];
+				lastPoint = point;
+				updateStats();
 			},
-			(error) => {
-				console.error('GPS error:', error);
-			},
-			{ enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+			(error) => console.error('GPS error:', error),
+			GPS_WATCH_OPTIONS
 		);
-	}
-
-	function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-		const R = 6371;
-		const dLat = ((lat2 - lat1) * Math.PI) / 180;
-		const dLon = ((lon2 - lon1) * Math.PI) / 180;
-		const a =
-			Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-			Math.cos((lat1 * Math.PI) / 180) *
-				Math.cos((lat2 * Math.PI) / 180) *
-				Math.sin(dLon / 2) *
-				Math.sin(dLon / 2);
-		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		return R * c * 1000;
 	}
 
 	function updateTimer() {
@@ -126,13 +96,12 @@
 	}
 
 	function updateStats() {
-		if (distance > 0 && elapsed > 0) {
-			averageSpeed = (distance / elapsed) * 3.6;
-			averagePace = elapsed / (distance / 1000);
-			currentPace = currentSpeed > 0 ? 3600 / currentSpeed : 0;
-			if (averagePace > 0 && (bestPace === 0 || averagePace < bestPace)) {
-				bestPace = averagePace;
-			}
+		const stats = computeRunStats({ distance, elapsed, currentSpeed });
+		averageSpeed = stats.averageSpeed;
+		averagePace = stats.averagePace;
+		currentPace = stats.currentPace;
+		if (averagePace > 0 && (bestPace === 0 || averagePace < bestPace)) {
+			bestPace = averagePace;
 		}
 	}
 
@@ -145,7 +114,7 @@
 	function resumeRun() {
 		status = 'running';
 		startTime = Date.now() - elapsed * 1000;
-		timerInterval = setInterval(updateTimer, 1000);
+		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
 		startTracking();
 	}
 
@@ -154,30 +123,17 @@
 		if (timerInterval) clearInterval(timerInterval);
 		if (watchId !== null) navigator.geolocation.clearWatch(watchId);
 
-		const runData = {
+		const runData = buildRunPayload({
+			gpsPoints,
 			distance,
 			elapsedDuration: elapsed,
-			averageSpeed: averageSpeed / 3.6,
-			maxSpeed: maxSpeed / 3.6,
+			averageSpeed: averageSpeed / MS_TO_KMH,
+			maxSpeed: maxSpeed / MS_TO_KMH,
 			averagePace,
-			bestPace,
-			gpsPoints: gpsPoints.map((p, i) => ({
-				sequence: i,
-				timestamp: new Date(p.timestamp),
-				latitude: p.latitude,
-				longitude: p.longitude,
-				altitude: p.altitude,
-				accuracy: p.accuracy,
-				speed: p.speed
-			}))
-		};
+			bestPace
+		});
 
-		fetch('/api/running', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ action: 'saveRun', ...runData })
-		})
-			.then((res) => res.json())
+		saveRunApi(runData)
 			.then((data) => {
 				if (data.sessionId) {
 					goto(`/app/training/session/${data.sessionId}`);
@@ -191,11 +147,25 @@
 				status = 'idle';
 			});
 	}
+
+	function resetRun() {
+		status = 'idle';
+		distance = 0;
+		elapsed = 0;
+		currentSpeed = 0;
+		averageSpeed = 0;
+		maxSpeed = 0;
+		currentPace = 0;
+		averagePace = 0;
+		bestPace = 0;
+		currentPosition = null;
+		gpsPoints = [];
+		lastPoint = null;
+	}
 </script>
 
 <svelte:head>
 	<title>Running - MegaOrganize</title>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </svelte:head>
 
 <div class="flex h-full flex-col bg-bg text-fg">
@@ -204,14 +174,10 @@
 			<i class="fas fa-person-running mb-6 text-6xl text-primary"></i>
 			<h1 class="mb-2 text-lg font-semibold text-fg-accent">Ready to Run?</h1>
 			<p class="mb-8 text-fg-subdued">GPS permission is required to track your run</p>
-			<button
-				type="button"
-				class="h-14 w-full max-w-xs rounded-sm bg-primary text-lg font-medium text-white transition-colors hover:bg-primary-hover"
-				onclick={requestGpsPermission}
-			>
+			<Button variant="primary" size="lg" onclick={requestGpsPermission}>
 				<i class="fas fa-location-crosshairs mr-2"></i>
 				Enable Location
-			</button>
+			</Button>
 		</div>
 
 	{:else if status === 'requesting'}
@@ -224,13 +190,7 @@
 	{:else if status === 'running' || status === 'paused'}
 		<div class="flex flex-1 flex-col">
 			<div class="relative overflow-hidden" style="height: 45%;">
-				<RunMap
-					points={gpsPoints}
-					center={currentPosition}
-					followPosition={true}
-					showRoute={true}
-					className="rounded-b-lg"
-				/>
+				<RunMap points={gpsPoints} center={currentPosition} followPosition={true} showRoute={true} className="rounded-b-lg" />
 				{#if status === 'paused'}
 					<div class="absolute top-3 left-3 z-[1000] rounded-sm bg-yellow-500/90 px-4 py-2 text-sm font-medium text-white shadow-lg">
 						PAUSED
@@ -275,32 +235,17 @@
 
 				<div class="flex gap-4">
 					{#if status === 'running'}
-						<button
-							type="button"
-							class="h-14 w-28 rounded-sm bg-yellow-500 text-lg font-medium text-white transition-colors hover:bg-yellow-600"
-							onclick={pauseRun}
-						>
-							<i class="fas fa-pause mr-2"></i>
-							Pause
-						</button>
+						<Button variant="secondary" size="lg" onclick={pauseRun}>
+							<i class="fas fa-pause mr-2"></i> Pause
+						</Button>
 					{:else}
-						<button
-							type="button"
-							class="h-14 w-28 rounded-sm bg-primary text-lg font-medium text-white transition-colors hover:bg-primary-hover"
-							onclick={resumeRun}
-						>
-							<i class="fas fa-play mr-2"></i>
-							Resume
-						</button>
+						<Button variant="primary" size="lg" onclick={resumeRun}>
+							<i class="fas fa-play mr-2"></i> Resume
+						</Button>
 					{/if}
-					<button
-						type="button"
-						class="h-14 w-28 rounded-sm bg-error text-lg font-medium text-white transition-colors hover:bg-error/80"
-						onclick={finishRun}
-					>
-						<i class="fas fa-stop mr-2"></i>
-						Finish
-					</button>
+					<Button variant="danger" size="lg" onclick={finishRun}>
+						<i class="fas fa-stop mr-2"></i> Finish
+					</Button>
 				</div>
 			</div>
 		</div>
@@ -308,12 +253,7 @@
 	{:else if status === 'finished'}
 		<div class="flex flex-1 flex-col">
 			<div class="relative overflow-hidden" style="height: 40%;">
-				<RunMap
-					points={gpsPoints}
-					center={gpsPoints.length > 0 ? gpsPoints[0] : undefined}
-					showRoute={true}
-					className="rounded-b-lg"
-				/>
+				<RunMap points={gpsPoints} center={gpsPoints.length > 0 ? gpsPoints[0] : undefined} showRoute={true} className="rounded-b-lg" />
 			</div>
 
 			<div class="flex flex-1 flex-col items-center justify-center p-6">
@@ -340,32 +280,12 @@
 				</div>
 
 				<div class="flex gap-4">
-					<a
-						href="/app/training/calendar"
-						class="h-12 rounded-sm bg-primary px-6 font-medium text-white transition-colors hover:bg-primary-hover inline-flex items-center"
-					>
+					<a href="/app/training/calendar" class="h-12 rounded-sm bg-primary px-6 font-medium text-white transition-colors hover:bg-primary-hover inline-flex items-center">
 						View History
 					</a>
-					<button
-						type="button"
-						class="h-12 rounded-sm border border-border bg-surface px-6 font-medium text-fg transition-colors hover:bg-border"
-					onclick={() => {
-						status = 'idle';
-						distance = 0;
-						elapsed = 0;
-						currentSpeed = 0;
-						averageSpeed = 0;
-						maxSpeed = 0;
-						currentPace = 0;
-						averagePace = 0;
-						bestPace = 0;
-						currentPosition = null;
-						gpsPoints = [];
-						lastPoint = null;
-					}}
-					>
+					<Button variant="secondary" onclick={resetRun}>
 						New Run
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>

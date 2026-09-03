@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
+	import { calculateDistance, computeRunStats, buildRunPayload, saveRunApi, MS_TO_KMH, MAX_GPS_SPEED_MS, TIMER_INTERVAL_MS, GPS_WATCH_OPTIONS } from '$lib/utils/gps';
 	import RunMap from '$lib/components/ui/RunMap.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
 
 	let { data } = $props();
 	let title = $state('');
@@ -63,7 +67,7 @@
 		timerInterval = setInterval(() => {
 			elapsedTime = Math.floor((Date.now() - startTime) / 1000);
 			updateStats();
-		}, 1000);
+		}, TIMER_INTERVAL_MS);
 	}
 
 	function pauseTimer() {
@@ -73,20 +77,13 @@
 
 	function startGpsTracking() {
 		if (!navigator.geolocation) {
-			alert('Geolocation is not supported');
+			alert('Geolocation is not supported by your browser');
 			return;
 		}
 		gpsStatus = 'requesting';
 		navigator.geolocation.getCurrentPosition(
-			() => {
-				gpsStatus = 'tracking';
-				startTimer();
-				beginWatch();
-			},
-			() => {
-				gpsStatus = 'idle';
-				alert('Location permission denied');
-			},
+			() => { gpsStatus = 'tracking'; startTimer(); beginWatch(); },
+			() => { gpsStatus = 'idle'; alert('Location permission denied. Please enable location services.'); },
 			{ enableHighAccuracy: true }
 		);
 	}
@@ -105,13 +102,13 @@
 				currentPosition = { latitude: point.latitude, longitude: point.longitude };
 
 				if (lastPoint) {
-					const dist = calcDistance(lastPoint.latitude, lastPoint.longitude, point.latitude, point.longitude);
+					const dist = calculateDistance(lastPoint.latitude, lastPoint.longitude, point.latitude, point.longitude);
 					const timeDiff = (point.timestamp - lastPoint.timestamp) / 1000;
 					if (timeDiff > 0 && dist > 0) {
 						const speed = dist / timeDiff;
-						if (speed < 20) {
+						if (speed < MAX_GPS_SPEED_MS) {
 							distance += dist;
-							currentSpeed = speed * 3.6;
+							currentSpeed = speed * MS_TO_KMH;
 							maxSpeed = Math.max(maxSpeed, currentSpeed);
 						}
 					}
@@ -121,26 +118,17 @@
 				updateStats();
 			},
 			(error) => console.error('GPS error:', error),
-			{ enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+			GPS_WATCH_OPTIONS
 		);
 	}
 
-	function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-		const R = 6371;
-		const dLat = ((lat2 - lat1) * Math.PI) / 180;
-		const dLon = ((lon2 - lon1) * Math.PI) / 180;
-		const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-		return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1000;
-	}
-
 	function updateStats() {
-		if (distance > 0 && elapsedTime > 0) {
-			averageSpeed = (distance / elapsedTime) * 3.6;
-			averagePace = elapsedTime / (distance / 1000);
-			currentPace = currentSpeed > 0 ? 3600 / currentSpeed : 0;
-			if (averagePace > 0 && (bestPace === 0 || averagePace < bestPace)) {
-				bestPace = averagePace;
-			}
+		const stats = computeRunStats({ distance, elapsed: elapsedTime, currentSpeed });
+		averageSpeed = stats.averageSpeed;
+		averagePace = stats.averagePace;
+		currentPace = stats.currentPace;
+		if (averagePace > 0 && (bestPace === 0 || averagePace < bestPace)) {
+			bestPace = averagePace;
 		}
 	}
 
@@ -164,31 +152,17 @@
 
 		try {
 			if (isGpsActivity && gpsPoints.length > 0) {
-				const runData = {
+				const runData = buildRunPayload({
+					gpsPoints,
 					distance,
 					elapsedDuration: elapsedTime,
-					averageSpeed: averageSpeed / 3.6,
-					maxSpeed: maxSpeed / 3.6,
+					averageSpeed: averageSpeed / MS_TO_KMH,
+					maxSpeed: maxSpeed / MS_TO_KMH,
 					averagePace,
-					bestPace,
-					gpsPoints: gpsPoints.map((p, i) => ({
-						sequence: i,
-						timestamp: new Date(p.timestamp),
-						latitude: p.latitude,
-						longitude: p.longitude,
-						altitude: p.altitude,
-						accuracy: p.accuracy,
-						speed: p.speed
-					}))
-				};
-
-				const res = await fetch('/api/running', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ action: 'saveRun', ...runData })
+					bestPace
 				});
 
-				const result = await res.json();
+				const result = await saveRunApi(runData);
 				if (result.sessionId) {
 					if (title) {
 						await fetch('/api/training', {
@@ -272,9 +246,6 @@
 
 <svelte:head>
 	<title>New Session - Training - MegaOrganize</title>
-	{#if isGpsActivity}
-		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-	{/if}
 </svelte:head>
 
 <div class="p-4 sm:p-8 max-w-2xl">
@@ -293,13 +264,9 @@
 					<div class="text-center py-8">
 						<i class="fas fa-location-crosshairs mb-4 text-4xl text-primary"></i>
 						<p class="text-fg-subdued mb-4">GPS tracking for {activityType}</p>
-						<button
-							type="button"
-							class="h-12 px-8 rounded-sm bg-primary text-sm font-medium text-white hover:bg-primary-hover transition-colors"
-							onclick={startGpsTracking}
-						>
+						<Button variant="primary" onclick={startGpsTracking}>
 							<i class="fas fa-play mr-2"></i> Start {activityType}
-						</button>
+						</Button>
 					</div>
 				{:else if gpsStatus === 'requesting'}
 					<div class="text-center py-8">
@@ -308,13 +275,7 @@
 					</div>
 				{:else}
 					<div class="relative overflow-hidden rounded-sm mb-4" style="height: 300px;">
-						<RunMap
-							points={gpsPoints}
-							center={currentPosition}
-							followPosition={true}
-							showRoute={true}
-							className="rounded-sm"
-						/>
+						<RunMap points={gpsPoints} center={currentPosition} followPosition={true} showRoute={true} className="rounded-sm" />
 					</div>
 
 					<div class="text-center mb-4">
@@ -353,44 +314,27 @@
 				<div class="text-center mb-6">
 					<div class="text-5xl font-bold tabular-nums text-fg mb-2">{formatTime(elapsedTime)}</div>
 					{#if timerRunning}
-						<button
-							type="button"
-							class="h-10 px-6 rounded-sm bg-yellow-500 text-sm font-medium text-white hover:bg-yellow-600 transition-colors"
-							onclick={pauseTimer}
-						>
+						<Button variant="secondary" onclick={pauseTimer}>
 							<i class="fas fa-pause mr-2"></i> Pause
-						</button>
+						</Button>
 					{:else}
-						<button
-							type="button"
-							class="h-10 px-6 rounded-sm bg-primary text-sm font-medium text-white hover:bg-primary-hover transition-colors"
-							onclick={startTimer}
-						>
+						<Button variant="primary" onclick={startTimer}>
 							<i class="fas fa-play mr-2"></i> {elapsedTime > 0 ? 'Resume' : 'Start'}
-						</button>
+						</Button>
 					{/if}
 				</div>
 			</div>
 		{/if}
 
 		<div class="space-y-6">
-			<div>
-				<label for="title" class="mb-1 block text-sm font-medium text-fg">Title</label>
-				<input
-					id="title"
-					type="text"
-					bind:value={title}
-					placeholder="e.g. Upper Body, Leg Day, Morning Run..."
-					class="w-full h-10 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-				/>
-			</div>
+			<Input label="Title" bind:value={title} placeholder="e.g. Upper Body, Leg Day, Morning Run..." />
 
 			<div>
-				<label for="type" class="mb-1 block text-sm font-medium text-fg">Activity Type</label>
+				<label for="type" class="mb-1 block text-xs font-semibold text-fg-accent tracking-wide">Activity Type</label>
 				<select
 					id="type"
 					bind:value={activityType}
-					class="w-full h-10 rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none focus:ring-0"
+					class="w-full h-[36px] rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
 				>
 					<option value="strength">Strength</option>
 					<option value="running">Running</option>
@@ -432,31 +376,31 @@
 								<p class="text-sm font-medium text-fg mb-2">{item?.name || 'Exercise'}</p>
 								<div class="grid grid-cols-3 gap-2">
 									<div>
-										<label class="text-[10px] text-fg-subdued">Sets</label>
-										<input type="number" value={record.sets} onchange={(e) => updateRecord(record.itemId, 'sets', parseInt(e.currentTarget.value) || 3)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
+										<label for="sets-{record.itemId}" class="text-[10px] text-fg-subdued">Sets</label>
+										<input id="sets-{record.itemId}" type="number" value={record.sets} onchange={(e) => updateRecord(record.itemId, 'sets', parseInt(e.currentTarget.value) || 3)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
 									</div>
 									<div>
-										<label class="text-[10px] text-fg-subdued">Reps</label>
-										<input type="text" value={record.reps} onchange={(e) => updateRecord(record.itemId, 'reps', e.currentTarget.value)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
+										<label for="reps-{record.itemId}" class="text-[10px] text-fg-subdued">Reps</label>
+										<input id="reps-{record.itemId}" type="text" value={record.reps} onchange={(e) => updateRecord(record.itemId, 'reps', e.currentTarget.value)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
 									</div>
 									<div>
-										<label class="text-[10px] text-fg-subdued">Weight</label>
+										<label for="weight-{record.itemId}" class="text-[10px] text-fg-subdued">Weight</label>
 										<div class="flex">
-											<input type="number" value={record.weight} onchange={(e) => updateRecord(record.itemId, 'weight', parseFloat(e.currentTarget.value) || 0)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
+											<input id="weight-{record.itemId}" type="number" value={record.weight} onchange={(e) => updateRecord(record.itemId, 'weight', parseFloat(e.currentTarget.value) || 0)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
 											<span class="ml-1 text-[10px] text-fg-subdued self-center">kg</span>
 										</div>
 									</div>
 									<div>
-										<label class="text-[10px] text-fg-subdued">RPE</label>
-										<input type="number" min="1" max="10" value={record.rpe} onchange={(e) => updateRecord(record.itemId, 'rpe', parseInt(e.currentTarget.value) || 7)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
+										<label for="rpe-{record.itemId}" class="text-[10px] text-fg-subdued">RPE</label>
+										<input id="rpe-{record.itemId}" type="number" min="1" max="10" value={record.rpe} onchange={(e) => updateRecord(record.itemId, 'rpe', parseInt(e.currentTarget.value) || 7)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
 									</div>
 									<div>
-										<label class="text-[10px] text-fg-subdued">Rest (s)</label>
-										<input type="number" value={record.restTime} onchange={(e) => updateRecord(record.itemId, 'restTime', parseInt(e.currentTarget.value) || 90)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
+										<label for="rest-{record.itemId}" class="text-[10px] text-fg-subdued">Rest (s)</label>
+										<input id="rest-{record.itemId}" type="number" value={record.restTime} onchange={(e) => updateRecord(record.itemId, 'restTime', parseInt(e.currentTarget.value) || 90)} class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none" />
 									</div>
 									<div>
-										<label class="text-[10px] text-fg-subdued">Notes</label>
-										<input type="text" value={record.notes} onchange={(e) => updateRecord(record.itemId, 'notes', e.currentTarget.value)} placeholder="optional" class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none" />
+										<label for="notes-{record.itemId}" class="text-[10px] text-fg-subdued">Notes</label>
+										<input id="notes-{record.itemId}" type="text" value={record.notes} onchange={(e) => updateRecord(record.itemId, 'notes', e.currentTarget.value)} placeholder="optional" class="w-full h-8 rounded-sm border border-border bg-surface px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none" />
 									</div>
 								</div>
 							</div>
@@ -465,16 +409,7 @@
 				{/if}
 			{/if}
 
-			<div>
-				<label for="notes" class="mb-1 block text-sm font-medium text-fg">Notes</label>
-				<textarea
-					id="notes"
-					bind:value={notes}
-					rows="3"
-					placeholder="Optional notes..."
-					class="w-full rounded-sm border border-border bg-bg px-3 py-2 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-				></textarea>
-			</div>
+			<Textarea label="Notes" bind:value={notes} rows={3} placeholder="Optional notes..." />
 		</div>
 	{:else}
 		<div class="text-center py-12">
@@ -485,31 +420,17 @@
 
 	<div class="mt-6 flex gap-3">
 		{#if isGpsActivity && gpsStatus === 'tracking'}
-			<button
-				type="button"
-				disabled={saving}
-				class="h-10 px-6 rounded-sm bg-error text-sm font-medium text-white hover:bg-error/80 transition-colors disabled:opacity-50"
-				onclick={saveSession}
-			>
+			<Button variant="danger" disabled={saving} onclick={saveSession}>
+				{#if saving}<i class="fas fa-spinner fa-spin mr-2"></i>{/if}
 				<i class="fas fa-stop mr-2"></i> Finish
-			</button>
+			</Button>
 		{:else}
-			<button
-				type="button"
-				disabled={saving}
-				class="h-10 px-6 rounded-sm bg-primary text-sm font-medium text-white hover:bg-primary-hover transition-colors disabled:opacity-50"
-				onclick={saveSession}
-			>
-				{#if saving}
-					<i class="fas fa-spinner fa-spin mr-2"></i>
-				{/if}
+			<Button variant="primary" disabled={saving} onclick={saveSession}>
+				{#if saving}<i class="fas fa-spinner fa-spin mr-2"></i>{/if}
 				Save Session
-			</button>
+			</Button>
 		{/if}
-		<a
-			href="/app/training"
-			class="h-10 px-6 rounded-sm border border-border bg-surface text-sm font-medium text-fg hover:bg-muted transition-colors inline-flex items-center"
-		>
+		<a href="/app/training" class="h-[36px] px-4 rounded-sm border border-border bg-surface text-sm font-medium text-fg hover:bg-muted transition-colors inline-flex items-center">
 			Cancel
 		</a>
 	</div>
