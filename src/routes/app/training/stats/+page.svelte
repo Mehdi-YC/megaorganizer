@@ -1,18 +1,11 @@
 <script lang="ts">
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import AreaChart from '$lib/components/ui/AreaChart.svelte';
+
 	let { data } = $props();
 
 	let sessions = $derived(data.sessions ?? []);
 	let runningData = $derived(data.runningData ?? []);
-
-	const chartWidth = 600;
-	const chartHeight = 200;
-	const padding = { top: 20, right: 20, bottom: 30, left: 50 };
-
-	function formatDuration(seconds: number) {
-		const h = Math.floor(seconds / 3600);
-		const m = Math.floor((seconds % 3600) / 60);
-		return h > 0 ? `${h}h ${m}m` : `${m}m`;
-	}
 
 	function getWeeklyData() {
 		const now = new Date();
@@ -57,107 +50,66 @@
 
 	function getRunningDistanceData() {
 		if (runningData.length === 0) return [];
-		return runningData
-			.map((r) => ({
-				label: new Date(r.startedAt).toLocaleDateString('default', { month: 'short', day: 'numeric' }),
-				distance: (r.distance ?? 0) / 1000,
-				pace: r.averagePace ?? 0
-			}));
+		return runningData.map((r) => ({
+			label: new Date(r.startedAt).toLocaleDateString('default', { month: 'short', day: 'numeric' }),
+			distance: (r.distance ?? 0) / 1000,
+			pace: r.averagePace ?? 0
+		}));
 	}
 
-	function buildSvgPath(data: number[], width: number, height: number, minY: number, maxY: number) {
-		if (data.length === 0) return '';
+	function buildSvgPath(values: number[], width: number, height: number, minY: number, maxY: number) {
+		if (values.length === 0) return '';
 		const range = maxY - minY || 1;
-		const stepX = width / (data.length - 1 || 1);
-		return data.map((v, i) => {
+		const stepX = width / (values.length - 1 || 1);
+		return values.map((v, i) => {
 			const x = i * stepX;
 			const y = height - ((v - minY) / range) * height;
 			return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
 		}).join(' ');
 	}
 
-	function buildSvgArea(data: number[], width: number, height: number, minY: number, maxY: number) {
-		if (data.length === 0) return '';
+	function buildSvgArea(values: number[], width: number, height: number, minY: number, maxY: number) {
+		if (values.length === 0) return '';
 		const range = maxY - minY || 1;
-		const stepX = width / (data.length - 1 || 1);
-		const points = data.map((v, i) => {
+		const stepX = width / (values.length - 1 || 1);
+		const points = values.map((v, i) => {
 			const x = i * stepX;
 			const y = height - ((v - minY) / range) * height;
 			return `${x},${y}`;
 		});
-		return `M 0 ${height} L ${points.join(' L ')} L ${(data.length - 1) * stepX} ${height} Z`;
+		return `M 0 ${height} L ${points.join(' L ')} L ${(values.length - 1) * stepX} ${height} Z`;
 	}
 
 	function getYTicks(maxValue: number, count = 4): number[] {
 		if (maxValue <= 0) return [0];
 		const step = maxValue / count;
-		const ticks = [];
-		for (let i = 0; i <= count; i++) {
-			ticks.push(Math.round(step * i));
-		}
-		return ticks;
+		return Array.from({ length: count + 1 }, (_, i) => Math.round(step * i));
 	}
+
+	function formatMinutes(v: number) { return String(v); }
+	function formatKm(v: number) { return v.toFixed(1); }
 
 	let weeklyData = $derived(getWeeklyData());
 	let monthlyData = $derived(getMonthlyData());
 	let runningDistanceData = $derived(getRunningDistanceData());
 
-	let chartW = $derived(chartWidth - padding.left - padding.right);
-	let chartH = $derived(chartHeight - padding.top - padding.bottom);
+	let weeklyChart = $derived((() => {
+		const values = weeklyData.map((d) => d.duration / 60);
+		const max = Math.max(...values, 1);
+		return { values, max, ticks: getYTicks(max), path: buildSvgPath(values, 530, 150, 0, max), area: buildSvgArea(values, 530, 150, 0, max) };
+	})());
 
-	let weeklyMaxDur = $derived(Math.max(...weeklyData.map((d) => d.duration / 60), 1));
-	let weeklyYTicks = $derived(getYTicks(weeklyMaxDur));
+	let monthlyChart = $derived((() => {
+		const values = monthlyData.map((d) => d.duration / 60);
+		const max = Math.max(...values, 1);
+		return { values, max, ticks: getYTicks(max), path: buildSvgPath(values, 530, 150, 0, max), area: buildSvgArea(values, 530, 150, 0, max) };
+	})());
 
-	let monthlyMaxDur = $derived(Math.max(...monthlyData.map((d) => d.duration / 60), 1));
-	let monthlyYTicks = $derived(getYTicks(monthlyMaxDur));
-
-	let runningMaxDist = $derived(Math.max(...runningDistanceData.map((d) => d.distance), 1));
-	let runningYTicks = $derived(getYTicks(runningMaxDist));
-
-	let weeklyDurationPath = $derived(buildSvgPath(
-		weeklyData.map((d) => d.duration / 60),
-		chartW,
-		chartH,
-		0,
-		weeklyMaxDur
-	));
-	let weeklyDurationArea = $derived(buildSvgArea(
-		weeklyData.map((d) => d.duration / 60),
-		chartW,
-		chartH,
-		0,
-		weeklyMaxDur
-	));
-
-	let monthlyDurationPath = $derived(buildSvgPath(
-		monthlyData.map((d) => d.duration / 60),
-		chartW,
-		chartH,
-		0,
-		monthlyMaxDur
-	));
-	let monthlyDurationArea = $derived(buildSvgArea(
-		monthlyData.map((d) => d.duration / 60),
-		chartW,
-		chartH,
-		0,
-		monthlyMaxDur
-	));
-
-	let runningPath = $derived(buildSvgPath(
-		runningDistanceData.map((d) => d.distance),
-		chartW,
-		chartH,
-		0,
-		runningMaxDist
-	));
-	let runningArea = $derived(buildSvgArea(
-		runningDistanceData.map((d) => d.distance),
-		chartW,
-		chartH,
-		0,
-		runningMaxDist
-	));
+	let runningChart = $derived((() => {
+		const values = runningDistanceData.map((d) => d.distance);
+		const max = Math.max(...values, 1);
+		return { values, max, ticks: getYTicks(max), path: buildSvgPath(values, 530, 150, 0, max), area: buildSvgArea(values, 530, 150, 0, max) };
+	})());
 </script>
 
 <svelte:head>
@@ -174,84 +126,40 @@
 	<h1 class="text-lg font-semibold text-fg-accent mb-6">Training Stats</h1>
 
 	{#if sessions.length === 0}
-		<div class="rounded-sm border border-dashed border-border py-16 text-center">
-			<i class="fas fa-chart-line mb-3 text-3xl text-fg-subdued/30"></i>
-			<p class="text-sm text-fg-subdued">No completed sessions yet</p>
-			<a href="/app/training/session/new" class="mt-3 inline-block text-xs text-primary hover:text-primary-hover">Start your first session</a>
-		</div>
+		<EmptyState icon="fa-chart-line" message="No completed sessions yet" submessage="Start your first session to see stats" />
 	{:else}
-		<!-- Weekly Training Duration -->
-		<div class="mb-6 rounded-sm border border-border bg-surface p-5">
-			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide mb-4">Weekly Training (minutes)</h2>
-			<svg viewBox="0 0 {chartWidth} {chartHeight}" class="w-full h-auto">
-				<g transform="translate({padding.left}, {padding.top})">
-					{#each weeklyYTicks as tick}
-						{@const y = chartH - (tick / weeklyMaxDur) * chartH}
-						<line x1="-5" y1={y} x2={chartW} y2={y} stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3" />
-						<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9">{tick}</text>
-					{/each}
-					<path d={weeklyDurationArea} fill="var(--color-primary)" opacity="0.1" />
-					<path d={weeklyDurationPath} fill="none" stroke="var(--color-primary)" stroke-width="2" />
-					{#each weeklyData as d, i}
-						{@const x = i * (chartW / (weeklyData.length - 1 || 1))}
-						{@const y = chartH - (d.duration / 60 / weeklyMaxDur) * chartH}
-						<circle cx={x} cy={y} r="3" fill="var(--color-primary)" />
-						<text x={x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
-					{/each}
-					<line x1="0" y1="0" x2="0" y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
-					<line x1="0" y1={chartH} x2={chartW} y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
-				</g>
-			</svg>
-		</div>
+		<AreaChart
+			title="Weekly Training (minutes)"
+			data={weeklyData.map((d) => ({ value: d.duration / 60 }))}
+			xLabels={weeklyData.map((d) => d.label)}
+			yTicks={weeklyChart.ticks}
+			path={weeklyChart.path}
+			area={weeklyChart.area}
+			yFormat={formatMinutes}
+		/>
 
-		<!-- Monthly Training Duration -->
-		<div class="mb-6 rounded-sm border border-border bg-surface p-5">
-			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide mb-4">Monthly Training (minutes)</h2>
-			<svg viewBox="0 0 {chartWidth} {chartHeight}" class="w-full h-auto">
-				<g transform="translate({padding.left}, {padding.top})">
-					{#each monthlyYTicks as tick}
-						{@const y = chartH - (tick / monthlyMaxDur) * chartH}
-						<line x1="-5" y1={y} x2={chartW} y2={y} stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3" />
-						<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9">{tick}</text>
-					{/each}
-					<path d={monthlyDurationArea} fill="#10b981" opacity="0.1" />
-					<path d={monthlyDurationPath} fill="none" stroke="#10b981" stroke-width="2" />
-					{#each monthlyData as d, i}
-						{@const x = i * (chartW / (monthlyData.length - 1 || 1))}
-						{@const y = chartH - (d.duration / 60 / monthlyMaxDur) * chartH}
-						<circle cx={x} cy={y} r="3" fill="#10b981" />
-						<text x={x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
-					{/each}
-					<line x1="0" y1="0" x2="0" y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
-					<line x1="0" y1={chartH} x2={chartW} y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
-				</g>
-			</svg>
-		</div>
+		<AreaChart
+			title="Monthly Training (minutes)"
+			data={monthlyData.map((d) => ({ value: d.duration / 60 }))}
+			xLabels={monthlyData.map((d) => d.label)}
+			yTicks={monthlyChart.ticks}
+			path={monthlyChart.path}
+			area={monthlyChart.area}
+			color="#10b981"
+			yFormat={formatMinutes}
+		/>
 
-		<!-- Running Distance Over Time -->
 		{#if runningDistanceData.length > 0}
-			<div class="mb-6 rounded-sm border border-border bg-surface p-5">
-				<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide mb-4">Running Distance (km)</h2>
-				<svg viewBox="0 0 {chartWidth} {chartHeight}" class="w-full h-auto">
-					<g transform="translate({padding.left}, {padding.top})">
-						{#each runningYTicks as tick}
-							{@const y = chartH - (tick / runningMaxDist) * chartH}
-							<line x1="-5" y1={y} x2={chartW} y2={y} stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3" />
-							<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9">{tick.toFixed(1)}</text>
-						{/each}
-						<path d={runningArea} fill="#f59e0b" opacity="0.1" />
-						<path d={runningPath} fill="none" stroke="#f59e0b" stroke-width="2" />
-						{#each runningDistanceData as d, i}
-							{@const x = i * (chartW / (runningDistanceData.length - 1 || 1))}
-							{@const y = chartH - (d.distance / runningMaxDist) * chartH}
-							<circle cx={x} cy={y} r="3" fill="#f59e0b" />
-							<text x={x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{d.label}</text>
-						{/each}
-						<line x1="0" y1="0" x2="0" y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
-						<line x1="0" y1={chartH} x2={chartW} y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
-					</g>
-				</svg>
-			</div>
+			<AreaChart
+				title="Running Distance (km)"
+				data={runningDistanceData.map((d) => ({ value: d.distance }))}
+				xLabels={runningDistanceData.map((d) => d.label)}
+				yTicks={runningChart.ticks}
+				path={runningChart.path}
+				area={runningChart.area}
+				color="#f59e0b"
+				yFormat={formatKm}
+			/>
 		{/if}
 
 		<!-- Session Type Breakdown -->
