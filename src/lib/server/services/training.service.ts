@@ -7,12 +7,19 @@ import {
 } from '$lib/server/db/schema';
 import { eq, and, asc, desc, inArray } from 'drizzle-orm';
 
+function toDate(value: Date | string | number | undefined | null): Date {
+	if (value instanceof Date) return value;
+	if (typeof value === 'number') return new Date(value);
+	if (typeof value === 'string') return new Date(value);
+	return new Date();
+}
+
 export async function createTrainingSession(
 	userId: string,
 	data: {
 		title?: string;
 		notes?: string;
-		startedAt?: Date;
+		startedAt?: Date | string;
 		sourcePageId?: string;
 		sourceNodeId?: string;
 	}
@@ -23,7 +30,7 @@ export async function createTrainingSession(
 			userId,
 			title: data.title,
 			notes: data.notes,
-			startedAt: data.startedAt ?? new Date(),
+			startedAt: toDate(data.startedAt),
 			sourcePageId: data.sourcePageId,
 			sourceNodeId: data.sourceNodeId
 		})
@@ -84,13 +91,16 @@ export async function updateTrainingSession(
 		title?: string;
 		notes?: string;
 		status?: 'active' | 'paused' | 'completed' | 'cancelled';
-		endedAt?: Date;
+		endedAt?: Date | string;
 		duration?: number;
 	}
 ) {
+	const updateData: Record<string, unknown> = { ...data };
+	if (data.endedAt) updateData.endedAt = toDate(data.endedAt);
+
 	const [result] = await db
 		.update(trainingSession)
-		.set(data)
+		.set(updateData)
 		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)))
 		.returning();
 
@@ -117,7 +127,7 @@ export async function createTrainingActivity(
 	sessionId: string,
 	data: {
 		type: 'strength' | 'running' | 'cycling' | 'walking' | 'swimming' | 'other';
-		startedAt?: Date;
+		startedAt?: Date | string;
 		notes?: string;
 	}
 ) {
@@ -129,7 +139,7 @@ export async function createTrainingActivity(
 		.values({
 			sessionId,
 			type: data.type,
-			startedAt: data.startedAt ?? new Date(),
+			startedAt: toDate(data.startedAt),
 			notes: data.notes
 		})
 		.returning();
