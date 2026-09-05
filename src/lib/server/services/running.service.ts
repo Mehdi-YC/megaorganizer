@@ -2,6 +2,22 @@ import { db } from '$lib/server/db';
 import { runningActivity, runningTrackPoint, trainingActivity, trainingSession } from '$lib/server/db/schema';
 import { eq, and, asc, desc } from 'drizzle-orm';
 
+async function verifyActivityOwnership(userId: string, activityId: string): Promise<boolean> {
+	const activity = await db
+		.select({ sessionId: trainingActivity.sessionId })
+		.from(trainingActivity)
+		.where(eq(trainingActivity.id, activityId))
+		.get();
+	if (!activity) return false;
+
+	const session = await db
+		.select({ id: trainingSession.id })
+		.from(trainingSession)
+		.where(and(eq(trainingSession.id, activity.sessionId), eq(trainingSession.userId, userId)))
+		.get();
+	return !!session;
+}
+
 export async function createRunningActivity(
 	activityId: string,
 	data: {
@@ -28,6 +44,7 @@ export async function createRunningActivity(
 }
 
 export async function updateRunningActivity(
+	userId: string,
 	activityId: string,
 	data: {
 		distance?: number;
@@ -41,6 +58,9 @@ export async function updateRunningActivity(
 		elevationLoss?: number;
 	}
 ) {
+	const owned = await verifyActivityOwnership(userId, activityId);
+	if (!owned) return null;
+
 	const [result] = await db
 		.update(runningActivity)
 		.set(data)
@@ -50,7 +70,10 @@ export async function updateRunningActivity(
 	return result;
 }
 
-export async function getRunningActivity(activityId: string) {
+export async function getRunningActivity(userId: string, activityId: string) {
+	const owned = await verifyActivityOwnership(userId, activityId);
+	if (!owned) return null;
+
 	return db
 		.select()
 		.from(runningActivity)
@@ -59,6 +82,7 @@ export async function getRunningActivity(activityId: string) {
 }
 
 export async function addTrackPoint(
+	userId: string,
 	activityId: string,
 	data: {
 		sequence: number;
@@ -71,6 +95,9 @@ export async function addTrackPoint(
 		heading?: number;
 	}
 ) {
+	const owned = await verifyActivityOwnership(userId, activityId);
+	if (!owned) return null;
+
 	const [result] = await db
 		.insert(runningTrackPoint)
 		.values({
@@ -84,6 +111,7 @@ export async function addTrackPoint(
 }
 
 export async function batchAddTrackPoints(
+	userId: string,
 	activityId: string,
 	points: Array<{
 		sequence: number;
@@ -98,6 +126,9 @@ export async function batchAddTrackPoints(
 ) {
 	if (points.length === 0) return [];
 
+	const owned = await verifyActivityOwnership(userId, activityId);
+	if (!owned) return [];
+
 	const values = points.map((p) => ({
 		activityId,
 		...p,
@@ -107,7 +138,10 @@ export async function batchAddTrackPoints(
 	return db.insert(runningTrackPoint).values(values).returning().all();
 }
 
-export async function getTrackPoints(activityId: string) {
+export async function getTrackPoints(userId: string, activityId: string) {
+	const owned = await verifyActivityOwnership(userId, activityId);
+	if (!owned) return [];
+
 	return db
 		.select()
 		.from(runningTrackPoint)
@@ -116,7 +150,10 @@ export async function getTrackPoints(activityId: string) {
 		.all();
 }
 
-export async function deleteTrackPoints(activityId: string) {
+export async function deleteTrackPoints(userId: string, activityId: string) {
+	const owned = await verifyActivityOwnership(userId, activityId);
+	if (!owned) return;
+
 	await db
 		.delete(runningTrackPoint)
 		.where(eq(runningTrackPoint.activityId, activityId));

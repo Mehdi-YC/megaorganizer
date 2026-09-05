@@ -14,7 +14,11 @@ const SECURITY_HEADERS: Record<string, string> = {
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/api/auth')) {
-		return svelteKitHandler({ event, resolve, auth, building });
+		const response = await svelteKitHandler({ event, resolve, auth, building });
+		for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+			response.headers.set(key, value);
+		}
+		return response;
 	}
 
 	const session = await auth.api.getSession({

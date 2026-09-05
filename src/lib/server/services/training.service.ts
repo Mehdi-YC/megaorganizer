@@ -113,13 +113,22 @@ export async function deleteTrainingSession(userId: string, sessionId: string) {
 		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)));
 }
 
-export async function verifySessionOwnership(userId: string, sessionId: string): Promise<boolean> {
+async function verifySessionOwnership(userId: string, sessionId: string): Promise<boolean> {
 	const session = await db
 		.select({ id: trainingSession.id })
 		.from(trainingSession)
 		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)))
 		.get();
 	return !!session;
+}
+
+async function resolveActivitySession(activityId: string): Promise<string | null> {
+	const activity = await db
+		.select({ sessionId: trainingActivity.sessionId })
+		.from(trainingActivity)
+		.where(eq(trainingActivity.id, activityId))
+		.get();
+	return activity?.sessionId ?? null;
 }
 
 export async function createTrainingActivity(
@@ -147,7 +156,10 @@ export async function createTrainingActivity(
 	return result;
 }
 
-export async function getTrainingActivities(sessionId: string) {
+export async function getTrainingActivities(userId: string, sessionId: string) {
+	const owned = await verifySessionOwnership(userId, sessionId);
+	if (!owned) return [];
+
 	return db
 		.select()
 		.from(trainingActivity)
@@ -164,14 +176,10 @@ export async function updateTrainingActivity(
 		notes?: string;
 	}
 ) {
-	const activity = await db
-		.select({ sessionId: trainingActivity.sessionId })
-		.from(trainingActivity)
-		.where(eq(trainingActivity.id, activityId))
-		.get();
-	if (!activity) return null;
+	const sessionId = await resolveActivitySession(activityId);
+	if (!sessionId) return null;
 
-	const owned = await verifySessionOwnership(userId, activity.sessionId);
+	const owned = await verifySessionOwnership(userId, sessionId);
 	if (!owned) return null;
 
 	const [result] = await db
@@ -183,7 +191,13 @@ export async function updateTrainingActivity(
 	return result;
 }
 
-export async function linkItemToActivity(activityId: string, itemId: string) {
+export async function linkItemToActivity(userId: string, activityId: string, itemId: string) {
+	const sessionId = await resolveActivitySession(activityId);
+	if (!sessionId) return null;
+
+	const owned = await verifySessionOwnership(userId, sessionId);
+	if (!owned) return null;
+
 	const [result] = await db
 		.insert(trainingActivityItem)
 		.values({ activityId, itemId })
@@ -192,7 +206,13 @@ export async function linkItemToActivity(activityId: string, itemId: string) {
 	return result;
 }
 
-export async function unlinkItemFromActivity(activityId: string, itemId: string) {
+export async function unlinkItemFromActivity(userId: string, activityId: string, itemId: string) {
+	const sessionId = await resolveActivitySession(activityId);
+	if (!sessionId) return;
+
+	const owned = await verifySessionOwnership(userId, sessionId);
+	if (!owned) return;
+
 	await db
 		.delete(trainingActivityItem)
 		.where(
@@ -203,7 +223,13 @@ export async function unlinkItemFromActivity(activityId: string, itemId: string)
 		);
 }
 
-export async function getActivityItems(activityId: string) {
+export async function getActivityItems(userId: string, activityId: string) {
+	const sessionId = await resolveActivitySession(activityId);
+	if (!sessionId) return [];
+
+	const owned = await verifySessionOwnership(userId, sessionId);
+	if (!owned) return [];
+
 	return db
 		.select()
 		.from(trainingActivityItem)
@@ -226,14 +252,10 @@ export async function createExerciseRecord(
 		position?: number;
 	}
 ) {
-	const activity = await db
-		.select({ sessionId: trainingActivity.sessionId })
-		.from(trainingActivity)
-		.where(eq(trainingActivity.id, activityId))
-		.get();
-	if (!activity) return null;
+	const sessionId = await resolveActivitySession(activityId);
+	if (!sessionId) return null;
 
-	const owned = await verifySessionOwnership(userId, activity.sessionId);
+	const owned = await verifySessionOwnership(userId, sessionId);
 	if (!owned) return null;
 
 	const [result] = await db
@@ -277,14 +299,10 @@ export async function updateExerciseRecord(
 		.get();
 	if (!record) return null;
 
-	const activity = await db
-		.select({ sessionId: trainingActivity.sessionId })
-		.from(trainingActivity)
-		.where(eq(trainingActivity.id, record.activityId))
-		.get();
-	if (!activity) return null;
+	const sessionId = await resolveActivitySession(record.activityId);
+	if (!sessionId) return null;
 
-	const owned = await verifySessionOwnership(userId, activity.sessionId);
+	const owned = await verifySessionOwnership(userId, sessionId);
 	if (!owned) return null;
 
 	const [result] = await db
@@ -307,14 +325,10 @@ export async function deleteExerciseRecord(
 		.get();
 	if (!record) return;
 
-	const activity = await db
-		.select({ sessionId: trainingActivity.sessionId })
-		.from(trainingActivity)
-		.where(eq(trainingActivity.id, record.activityId))
-		.get();
-	if (!activity) return;
+	const sessionId = await resolveActivitySession(record.activityId);
+	if (!sessionId) return;
 
-	const owned = await verifySessionOwnership(userId, activity.sessionId);
+	const owned = await verifySessionOwnership(userId, sessionId);
 	if (!owned) return;
 
 	await db.delete(trainingExerciseRecord).where(eq(trainingExerciseRecord.id, recordId));

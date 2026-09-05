@@ -66,15 +66,19 @@ export const POST: RequestHandler = async (event) => {
 	}
 
 	if (data.action === 'addChild') {
-		if (!data.parentType || !data.parentId || !data.childType || !data.childId) {
+		if (!data.parentType || !['page', 'node', 'item'].includes(data.parentType)) {
+			return json({ error: 'Valid parentType required (page|node|item)' }, { status: 400 });
+		}
+		if (!data.parentId || !data.childId) {
 			return json({ error: 'Missing required fields' }, { status: 400 });
 		}
-		const result = await addChildToParent(
-			data.parentType,
-			data.parentId,
-			data.childType,
-			data.childId
-		);
+		if (!data.childType || !['node', 'item'].includes(data.childType)) {
+			return json({ error: 'Valid childType required (node|item)' }, { status: 400 });
+		}
+		const result = await addChildToParent(user.id, data.parentType, data.parentId, data.childType, data.childId);
+		if (!result) {
+			return json({ error: 'Child element not found or access denied' }, { status: 404 });
+		}
 		return json(result, { status: 201 });
 	}
 
@@ -86,10 +90,13 @@ export const PUT: RequestHandler = async (event) => {
 	const data = await event.request.json();
 
 	if (data.action === 'move') {
-		if (!data.parentType || !data.parentId || !data.childId || data.position === undefined) {
+		if (!data.parentType || !['page', 'node', 'item'].includes(data.parentType)) {
+			return json({ error: 'Valid parentType required' }, { status: 400 });
+		}
+		if (!data.parentId || !data.childId || data.position === undefined) {
 			return json({ error: 'Missing required fields' }, { status: 400 });
 		}
-		await moveChild(data.parentType, data.parentId, data.childId, data.position);
+		await moveChild(user.id, data.parentType, data.parentId, data.childId, data.position);
 		return json({ success: true });
 	}
 
@@ -106,10 +113,13 @@ export const DELETE: RequestHandler = async (event) => {
 	const data = await event.request.json();
 
 	if (data.action === 'removeChild') {
-		if (!data.parentType || !data.parentId || !data.childId) {
+		if (!data.parentType || !['page', 'node', 'item'].includes(data.parentType)) {
+			return json({ error: 'Valid parentType required' }, { status: 400 });
+		}
+		if (!data.parentId || !data.childId) {
 			return json({ error: 'Missing required fields' }, { status: 400 });
 		}
-		await removeChildFromParent(data.parentType, data.parentId, data.childId);
+		await removeChildFromParent(user.id, data.parentType, data.parentId, data.childId);
 		return json({ success: true });
 	}
 

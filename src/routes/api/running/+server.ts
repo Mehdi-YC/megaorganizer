@@ -33,12 +33,12 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	if (sessionId) {
-		const activities = await getTrainingActivities(sessionId);
+		const activities = await getTrainingActivities(user.id, sessionId);
 		const allTrackPoints: any[] = [];
 		for (const act of activities) {
-			const runningAct = await getRunningActivity(act.id);
+			const runningAct = await getRunningActivity(user.id, act.id);
 			if (runningAct) {
-				const points = await getTrackPoints(act.id);
+				const points = await getTrackPoints(user.id, act.id);
 				allTrackPoints.push({
 					activityId: act.id,
 					runningActivity: runningAct,
@@ -50,11 +50,11 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	if (activityId) {
-		const activity = await getRunningActivity(activityId);
+		const activity = await getRunningActivity(user.id, activityId);
 		if (!activity) {
 			return json({ error: 'Activity not found' }, { status: 404 });
 		}
-		const points = await getTrackPoints(activityId);
+		const points = await getTrackPoints(user.id, activityId);
 		return json({ activity, trackPoints: points });
 	}
 
@@ -77,7 +77,10 @@ export const POST: RequestHandler = async (event) => {
 		if (!data.activityId) {
 			return json({ error: 'Activity ID is required' }, { status: 400 });
 		}
-		const point = await addTrackPoint(data.activityId, data);
+		const point = await addTrackPoint(user.id, data.activityId, data);
+		if (!point) {
+			return json({ error: 'Activity not found or access denied' }, { status: 404 });
+		}
 		return json(point, { status: 201 });
 	}
 
@@ -88,7 +91,7 @@ export const POST: RequestHandler = async (event) => {
 		if (data.points.length > MAX_GPS_POINTS) {
 			return json({ error: `Too many GPS points (max ${MAX_GPS_POINTS})` }, { status: 400 });
 		}
-		const points = await batchAddTrackPoints(data.activityId, data.points);
+		const points = await batchAddTrackPoints(user.id, data.activityId, data.points);
 		return json(points, { status: 201 });
 	}
 
@@ -96,7 +99,7 @@ export const POST: RequestHandler = async (event) => {
 		if (!data.activityId) {
 			return json({ error: 'Activity ID is required' }, { status: 400 });
 		}
-		const points = await getTrackPoints(data.activityId);
+		const points = await getTrackPoints(user.id, data.activityId);
 		return json(points);
 	}
 
@@ -129,7 +132,7 @@ export const POST: RequestHandler = async (event) => {
 		});
 
 		if (data.gpsPoints && data.gpsPoints.length > 0) {
-			await batchAddTrackPoints(activity.id, data.gpsPoints);
+			await batchAddTrackPoints(user.id, activity.id, data.gpsPoints);
 		}
 
 		await updateTrainingSession(user.id, session.id, {
@@ -152,7 +155,10 @@ export const PUT: RequestHandler = async (event) => {
 		if (!data.activityId) {
 			return json({ error: 'Activity ID is required' }, { status: 400 });
 		}
-		const activity = await updateRunningActivity(data.activityId, data);
+		const activity = await updateRunningActivity(user.id, data.activityId, data);
+		if (!activity) {
+			return json({ error: 'Activity not found or access denied' }, { status: 404 });
+		}
 		return json(activity);
 	}
 
@@ -167,7 +173,7 @@ export const DELETE: RequestHandler = async (event) => {
 		if (!data.activityId) {
 			return json({ error: 'Activity ID is required' }, { status: 400 });
 		}
-		await deleteTrackPoints(data.activityId);
+		await deleteTrackPoints(user.id, data.activityId);
 		return json({ success: true });
 	}
 

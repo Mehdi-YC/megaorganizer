@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { page } from '$lib/server/db/schema';
+import { page, category } from '$lib/server/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
 export async function createPage(
@@ -17,10 +17,18 @@ export async function createPage(
 		coverImageUrl?: string;
 	}
 ) {
+	// Verify category belongs to this user
+	const cat = await db
+		.select({ id: category.id })
+		.from(category)
+		.where(and(eq(category.id, categoryId), eq(category.userId, userId)))
+		.get();
+	if (!cat) return null;
+
 	const maxPosition = await db
 		.select({ position: page.position })
 		.from(page)
-		.where(eq(page.categoryId, categoryId))
+		.where(and(eq(page.categoryId, categoryId), eq(page.userId, userId)))
 		.orderBy(asc(page.position))
 		.all();
 

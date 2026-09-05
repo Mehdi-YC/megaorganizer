@@ -3,13 +3,17 @@ const attempts = new Map<string, { count: number; resetAt: number }>();
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 const MAX_ATTEMPTS = 10;
 
-// Cleanup stale entries every 5 minutes
-setInterval(() => {
-	const now = Date.now();
-	for (const [key, entry] of attempts) {
-		if (now > entry.resetAt) attempts.delete(key);
-	}
-}, 5 * 60 * 1000);
+// Prevent duplicate intervals on HMR reload
+const CLEANUP_KEY = '__rateLimitCleanup';
+if (!(globalThis as any)[CLEANUP_KEY]) {
+	(globalThis as any)[CLEANUP_KEY] = true;
+	setInterval(() => {
+		const now = Date.now();
+		for (const [key, entry] of attempts) {
+			if (now > entry.resetAt) attempts.delete(key);
+		}
+	}, 5 * 60 * 1000);
+}
 
 export function checkRateLimit(key: string): { allowed: boolean; retryAfterMs: number } {
 	const now = Date.now();

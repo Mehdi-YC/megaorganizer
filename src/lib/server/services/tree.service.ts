@@ -1,9 +1,18 @@
 import { db } from '$lib/server/db';
 import { treeElement, treeRelationship, page } from '$lib/server/db/schema';
-import { eq, and, asc, like } from 'drizzle-orm';
+import { eq, and, or, asc, like } from 'drizzle-orm';
 
 export type TreeElementType = 'node' | 'item';
 export type TreeParentType = 'page' | 'node' | 'item';
+
+async function verifyElementOwnership(userId: string, elementId: string): Promise<boolean> {
+	const el = await db
+		.select({ id: treeElement.id })
+		.from(treeElement)
+		.where(and(eq(treeElement.id, elementId), eq(treeElement.userId, userId)))
+		.get();
+	return !!el;
+}
 
 export async function createTreeElement(
 	userId: string,
@@ -65,6 +74,14 @@ export async function updateTreeElement(
 }
 
 export async function deleteTreeElement(userId: string, id: string) {
+	const owned = await verifyElementOwnership(userId, id);
+	if (!owned) return;
+
+	// Clean up relationships where this element is parent or child
+	await db
+		.delete(treeRelationship)
+		.where(or(eq(treeRelationship.parentId, id), eq(treeRelationship.childId, id)));
+
 	await db
 		.delete(treeElement)
 		.where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)));
@@ -87,11 +104,17 @@ export async function getSubtreeForItem(userId: string, itemId: string): Promise
 		.from(treeElement)
 		.where(eq(treeElement.userId, userId))
 		.all();
+
+	// Only load relationships relevant to this user's elements
+	const elementIds = new Set(allElements.map((e) => e.id));
 	const allRels = await db.select().from(treeRelationship).all();
+	const userRels = allRels.filter(
+		(r) => elementIds.has(r.parentId) && elementIds.has(r.childId)
+	);
 
 	const byId = new Map(allElements.map((e) => [e.id, { ...e, children: [] as any[] }]));
 
-	for (const rel of allRels) {
+	for (const rel of userRels) {
 		const parent = byId.get(rel.parentId);
 		const child = byId.get(rel.childId);
 		if (parent && child) {
@@ -130,11 +153,16 @@ export async function getChildren(userId: string, parentType: TreeParentType, pa
 }
 
 export async function addChildToParent(
+	userId: string,
 	parentType: TreeParentType,
 	parentId: string,
 	childType: TreeElementType,
 	childId: string
 ) {
+	// Verify the child element belongs to this user
+	const childOwned = await verifyElementOwnership(userId, childId);
+	if (!childOwned) return null;
+
 	const maxPosition = await db
 		.select({ position: treeRelationship.position })
 		.from(treeRelationship)
@@ -164,10 +192,15 @@ export async function addChildToParent(
 }
 
 export async function removeChildFromParent(
+	userId: string,
 	parentType: TreeParentType,
 	parentId: string,
 	childId: string
 ) {
+	// Verify the child element belongs to this user
+	const childOwned = await verifyElementOwnership(userId, childId);
+	if (!childOwned) return;
+
 	await db
 		.delete(treeRelationship)
 		.where(
@@ -180,11 +213,16 @@ export async function removeChildFromParent(
 }
 
 export async function moveChild(
+	userId: string,
 	parentType: TreeParentType,
 	parentId: string,
 	childId: string,
 	newPosition: number
 ) {
+	// Verify the child element belongs to this user
+	const childOwned = await verifyElementOwnership(userId, childId);
+	if (!childOwned) return;
+
 	await db
 		.update(treeRelationship)
 		.set({ position: newPosition })
@@ -204,10 +242,11 @@ export async function getFullTree(userId: string) {
 		.where(eq(treeElement.userId, userId))
 		.all();
 
-	const relationships = await db
-		.select()
-		.from(treeRelationship)
-		.all();
+	const elementIds = new Set(elements.map((e) => e.id));
+	const allRels = await db.select().from(treeRelationship).all();
+	const relationships = allRels.filter(
+		(r) => elementIds.has(r.parentId) && elementIds.has(r.childId)
+	);
 
 	const elementMap = new Map(elements.map((e) => [e.id, { ...e, children: [] as any[] }]));
 

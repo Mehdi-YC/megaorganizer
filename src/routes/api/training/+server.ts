@@ -33,7 +33,7 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	if (activityId) {
-		const items = await getActivityItems(activityId);
+		const items = await getActivityItems(user.id, activityId);
 		return json(items);
 	}
 
@@ -65,7 +65,10 @@ export const POST: RequestHandler = async (event) => {
 		if (!data.activityId || !data.itemId) {
 			return json({ error: 'Activity ID and Item ID are required' }, { status: 400 });
 		}
-		await linkItemToActivity(data.activityId, data.itemId);
+		const result = await linkItemToActivity(user.id, data.activityId, data.itemId);
+		if (!result) {
+			return json({ error: 'Activity not found or access denied' }, { status: 404 });
+		}
 		return json({ success: true }, { status: 201 });
 	}
 
@@ -130,7 +133,7 @@ export const DELETE: RequestHandler = async (event) => {
 		if (!data.activityId || !data.itemId) {
 			return json({ error: 'Activity ID and Item ID are required' }, { status: 400 });
 		}
-		await unlinkItemFromActivity(data.activityId, data.itemId);
+		await unlinkItemFromActivity(user.id, data.activityId, data.itemId);
 		return json({ success: true });
 	}
 

@@ -7,6 +7,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		return { session: null, activities: [] };
 	}
 
-	const activities = await getTrainingActivities(session.id);
+	const activities = await getTrainingActivities(locals.user.id, session.id);
 	return { session, activities };
 };
