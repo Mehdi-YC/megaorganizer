@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
-import { APIError } from 'better-auth/api';
+import { handleAuthError } from '$lib/server/api-helpers';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
@@ -34,10 +34,8 @@ export const actions: Actions = {
 				headers: event.request.headers
 			});
 		} catch (error) {
-			if (error instanceof APIError) {
-				return fail(400, { profileMessage: error.message || 'Failed to update profile' });
-			}
-			return fail(500, { profileMessage: 'An unexpected error occurred' });
+			const { status, message } = handleAuthError(error, 'Failed to update profile');
+			return fail(status, { profileMessage: message });
 		}
 
 		return { profileMessage: 'Profile updated successfully' };
@@ -71,10 +69,8 @@ export const actions: Actions = {
 				headers: event.request.headers
 			});
 		} catch (error) {
-			if (error instanceof APIError) {
-				return fail(400, { passwordMessage: error.message || 'Failed to change password' });
-			}
-			return fail(500, { passwordMessage: 'An unexpected error occurred' });
+			const { status, message } = handleAuthError(error, 'Failed to change password');
+			return fail(status, { passwordMessage: message });
 		}
 
 		return { passwordMessage: 'Password changed successfully' };

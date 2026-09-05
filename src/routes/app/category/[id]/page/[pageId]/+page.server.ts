@@ -14,6 +14,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		return { category, pageData: null, treeElements: [] };
 	}
 
-	const treeElements = await getChildren('page', pageData.id);
+	const treeElements = await getChildren(locals.user.id, 'page', pageData.id);
 	return { category, pageData, treeElements };
 };

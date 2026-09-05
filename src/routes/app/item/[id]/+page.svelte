@@ -138,7 +138,7 @@
 	<!-- Header -->
 	<div class="border-b border-border bg-bg-subdued px-4 sm:px-6 py-2">
 		<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
-			<button type="button" class="hover:text-primary" onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button>
+			<button type="button" aria-label="Go back" class="hover:text-primary" onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button>
 			<i class="fas fa-chevron-right text-[8px]"></i>
 			<span class="text-fg truncate">{item.name}</span>
 		</div>
@@ -155,8 +155,8 @@
 					<p class="text-[10px] text-fg-subdued capitalize mt-1">{item.type}</p>
 				</div>
 				<div class="flex gap-1.5 shrink-0">
-					<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
-					<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
+					<button type="button" aria-label="Edit" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
+					<button type="button" aria-label="Delete" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
 				</div>
 			</div>
 
@@ -171,7 +171,7 @@
 
 			{#if item.videoUrl}
 				<div class="rounded-sm border border-border bg-surface p-4">
-					<div class="aspect-video"><iframe src={item.videoUrl} class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
+					<div class="aspect-video"><iframe src={item.videoUrl} title="Video" class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
 				</div>
 			{/if}
 
@@ -191,8 +191,8 @@
 					<h1 class="flex-1 text-xl font-semibold text-fg-accent">{item.name}</h1>
 					{#if item.description}<p class="mt-1 text-sm text-fg-subdued">{item.description}</p>{/if}
 					<div class="flex gap-1.5 shrink-0">
-						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
-						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
+						<button type="button" aria-label="Edit" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
+						<button type="button" aria-label="Delete" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
 					</div>
 				</div>
 
@@ -207,7 +207,7 @@
 
 				{#if item.videoUrl}
 					<div class="mt-6 rounded-sm border border-border bg-surface p-4">
-						<div class="aspect-video"><iframe src={item.videoUrl} class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
+						<div class="aspect-video"><iframe src={item.videoUrl} title="Video" class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
 					</div>
 				{/if}
 
@@ -254,11 +254,11 @@
 						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover" onclick={saveItem}><i class="fas fa-check text-xs"></i> Save</button>
 						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => { editing = false; if (item) { name = item.name; description = item.description ?? ''; content = item.markdown ?? ''; imageUrl = item.imageUrl ?? ''; videoUrl = item.videoUrl ?? ''; externalUrl = item.externalUrl ?? ''; tagIds = getTagIds(item); ydkData = item.ydkData ?? ''; ydkEnabled = !!item.ydkData; } }}>Cancel</button>
 					{:else}
-						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm {showTree ? 'bg-primary text-white' : 'bg-muted text-fg'} px-3 text-sm font-medium hover:bg-border transition-colors" onclick={toggleTreeView}>
+						<button type="button" aria-label="Toggle tree view" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm {showTree ? 'bg-primary text-white' : 'bg-muted text-fg'} px-3 text-sm font-medium hover:bg-border transition-colors" onclick={toggleTreeView}>
 							<i class="fas fa-project-diagram text-xs"></i>
 						</button>
-						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
-						<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
+						<button type="button" aria-label="Edit" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
+						<button type="button" aria-label="Delete" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
 					{/if}
 				</div>
 			</div>
@@ -322,9 +322,9 @@
 						<input type="url" id="externalUrl-m" bind:value={externalUrl} class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" placeholder="https://..." />
 					</div>
 					<div class="flex flex-col gap-1.5">
-						<label class="text-[10px] font-semibold text-fg-subdued tracking-wide">YDK Deck</label>
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input type="checkbox" bind:checked={ydkEnabled} class="h-4 w-4 rounded-sm border-border bg-bg text-primary focus:ring-primary" />
+						<span class="text-[10px] font-semibold text-fg-subdued tracking-wide" id="ydk-label-m">YDK Deck</span>
+						<label for="ydk-toggle-m" class="flex items-center gap-2 cursor-pointer">
+							<input type="checkbox" id="ydk-toggle-m" bind:checked={ydkEnabled} class="h-4 w-4 rounded-sm border-border bg-bg text-primary focus:ring-primary" />
 							<span class="text-sm text-fg">Enable YDK</span>
 							{#if isDeck && !ydkEnabled}
 								<button type="button" class="text-xs text-error hover:text-error/80" onclick={clearYdk}>Clear</button>
@@ -344,7 +344,7 @@
 			<!-- Video -->
 			{#if item.videoUrl && !editing}
 				<div class="rounded-sm border border-border bg-surface p-4">
-					<div class="aspect-video"><iframe src={item.videoUrl} class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
+					<div class="aspect-video"><iframe src={item.videoUrl} title="Video" class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
 				</div>
 			{/if}
 
@@ -362,7 +362,7 @@
 				<div class="rounded-sm border border-border bg-surface p-4">
 					<div class="flex items-center justify-between mb-3">
 						<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Tree View</h3>
-						<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={toggleTreeView}><i class="fas fa-list text-[9px]"></i> List</button>
+						<button type="button" aria-label="Switch to list view" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={toggleTreeView}><i class="fas fa-list text-[9px]"></i> List</button>
 					</div>
 					<div class="rounded-sm border border-border overflow-hidden" style="height: 350px;">
 						<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />
@@ -389,11 +389,11 @@
 							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover" onclick={saveItem}><i class="fas fa-check text-xs"></i> Save</button>
 							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => { editing = false; if (item) { name = item.name; description = item.description ?? ''; content = item.markdown ?? ''; imageUrl = item.imageUrl ?? ''; videoUrl = item.videoUrl ?? ''; externalUrl = item.externalUrl ?? ''; tagIds = getTagIds(item); ydkData = item.ydkData ?? ''; ydkEnabled = !!item.ydkData; } }}>Cancel</button>
 						{:else}
-							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm {showTree ? 'bg-primary text-white' : 'bg-muted text-fg'} px-3 text-sm font-medium hover:bg-border transition-colors" onclick={toggleTreeView}>
+							<button type="button" aria-label="Toggle tree view" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm {showTree ? 'bg-primary text-white' : 'bg-muted text-fg'} px-3 text-sm font-medium hover:bg-border transition-colors" onclick={toggleTreeView}>
 								<i class="fas fa-project-diagram text-xs"></i>
 							</button>
-							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
-							<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
+							<button type="button" aria-label="Edit" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></button>
+							<button type="button" aria-label="Delete" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-error/15 px-4 text-sm font-medium text-error hover:bg-error/25" onclick={deleteItem}><i class="fas fa-trash text-xs"></i></button>
 						{/if}
 					</div>
 				</div>
@@ -416,7 +416,7 @@
 				<!-- Video -->
 				{#if item.videoUrl && !editing}
 					<div class="mb-6 rounded-sm border border-border bg-surface p-4">
-						<div class="aspect-video"><iframe src={item.videoUrl} class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
+						<div class="aspect-video"><iframe src={item.videoUrl} title="Video" class="h-full w-full rounded-sm" allowfullscreen></iframe></div>
 					</div>
 				{/if}
 
@@ -446,9 +446,9 @@
 							</div>
 						</div>
 						<div class="flex flex-col gap-1.5">
-							<label class="text-[10px] font-semibold text-fg-subdued tracking-wide">YDK Deck</label>
-							<label class="flex items-center gap-2 cursor-pointer">
-								<input type="checkbox" bind:checked={ydkEnabled} class="h-4 w-4 rounded-sm border-border bg-bg text-primary focus:ring-primary" />
+							<span class="text-[10px] font-semibold text-fg-subdued tracking-wide" id="ydk-label-d">YDK Deck</span>
+							<label for="ydk-toggle-d" class="flex items-center gap-2 cursor-pointer">
+								<input type="checkbox" id="ydk-toggle-d" bind:checked={ydkEnabled} class="h-4 w-4 rounded-sm border-border bg-bg text-primary focus:ring-primary" />
 								<span class="text-sm text-fg">Enable YDK</span>
 								{#if isDeck && !ydkEnabled}
 									<button type="button" class="text-xs text-error hover:text-error/80" onclick={clearYdk}>Clear</button>
@@ -472,7 +472,7 @@
 					<div class="rounded-sm border border-border bg-surface p-5">
 						<div class="flex items-center justify-between mb-3">
 							<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Tree View</h3>
-							<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={toggleTreeView}><i class="fas fa-list text-[9px]"></i> List</button>
+							<button type="button" aria-label="Switch to list view" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={toggleTreeView}><i class="fas fa-list text-[9px]"></i> List</button>
 						</div>
 						<div class="rounded-sm border border-border overflow-hidden" style="height: 400px;">
 							<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />

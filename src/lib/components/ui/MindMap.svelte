@@ -255,6 +255,9 @@
 				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<g
+					role="button"
+					tabindex="0"
+					aria-label={nd.node.name}
 					transform="translate({pos.x}, {pos.y})"
 					class="cursor-pointer"
 					onmousedown={(e) => handleNodeMouseDown(e, nd.id)}

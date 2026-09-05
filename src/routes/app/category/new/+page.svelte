@@ -47,7 +47,7 @@
 
 <div class="p-4 sm:p-6">
 	<div class="mb-4 sm:mb-6 flex items-center gap-3">
-		<a href="/app" class="text-fg-subdued hover:text-fg transition-colors">
+		<a href="/app" aria-label="Go back" class="text-fg-subdued hover:text-fg transition-colors">
 			<i class="fas fa-arrow-left text-sm"></i>
 		</a>
 		<h1 class="text-lg font-semibold text-fg-accent">Create Category</h1>
@@ -87,8 +87,8 @@
 				</div>
 
 				<div class="flex flex-col gap-1.5">
-					<label class="text-xs font-semibold text-fg-accent tracking-wide">Icon</label>
-					<div class="grid grid-cols-5 gap-1.5">
+					<span class="text-xs font-semibold text-fg-accent tracking-wide" id="icon-label">Icon</span>
+					<div class="grid grid-cols-5 gap-1.5" role="radiogroup" aria-labelledby="icon-label">
 						{#each iconOptions as opt}
 							<button
 								type="button"

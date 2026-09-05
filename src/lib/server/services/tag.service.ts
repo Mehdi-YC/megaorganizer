@@ -6,10 +6,6 @@ export async function getTagsByUser(userId: string) {
 	return db.select().from(tag).where(eq(tag.userId, userId)).all();
 }
 
-export async function getTagById(id: string) {
-	return db.select().from(tag).where(eq(tag.id, id)).get();
-}
-
 export async function createTag(userId: string, name: string, color?: string) {
 	const [result] = await db
 		.insert(tag)
@@ -18,17 +14,17 @@ export async function createTag(userId: string, name: string, color?: string) {
 	return result;
 }
 
-export async function updateTag(id: string, data: { name?: string; color?: string }) {
-	const [result] = await db.update(tag).set(data).where(eq(tag.id, id)).returning();
+export async function updateTag(userId: string, tagId: string, data: { name?: string; color?: string }) {
+	const [result] = await db
+		.update(tag)
+		.set(data)
+		.where(and(eq(tag.id, tagId), eq(tag.userId, userId)))
+		.returning();
 	return result;
 }
 
-export async function deleteTag(id: string) {
-	await db.delete(tag).where(eq(tag.id, id));
-}
-
-export async function getTagsByIds(ids: string[]) {
-	if (ids.length === 0) return [];
-	const { inArray } = await import('drizzle-orm');
-	return db.select().from(tag).where(inArray(tag.id, ids)).all();
+export async function deleteTag(userId: string, tagId: string) {
+	await db
+		.delete(tag)
+		.where(and(eq(tag.id, tagId), eq(tag.userId, userId)));
 }

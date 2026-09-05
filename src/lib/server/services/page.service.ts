@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { page } from '$lib/server/db/schema';
-import { eq, asc } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 
 export async function createPage(
 	userId: string,
@@ -48,7 +48,11 @@ export async function createPage(
 }
 
 export async function getPageById(userId: string, pageId: string) {
-	return db.select().from(page).where(eq(page.id, pageId)).get();
+	return db
+		.select()
+		.from(page)
+		.where(and(eq(page.id, pageId), eq(page.userId, userId)))
+		.get();
 }
 
 export async function updatePage(
@@ -70,12 +74,14 @@ export async function updatePage(
 	const [result] = await db
 		.update(page)
 		.set(data)
-		.where(eq(page.id, pageId))
+		.where(and(eq(page.id, pageId), eq(page.userId, userId)))
 		.returning();
 
 	return result;
 }
 
 export async function deletePage(userId: string, pageId: string) {
-	await db.delete(page).where(eq(page.id, pageId));
+	await db
+		.delete(page)
+		.where(and(eq(page.id, pageId), eq(page.userId, userId)));
 }

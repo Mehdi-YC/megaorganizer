@@ -164,6 +164,7 @@
 				<div
 					class="group flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-muted cursor-move"
 					draggable="true"
+					role="listitem"
 					ondragstart={(e) => handleDragStart(e, idx)}
 					ondragover={(e) => handleDragOver(e, idx)}
 					ondragend={handleDragEnd}
@@ -177,7 +178,7 @@
 						{/if}
 						{child.name}
 					</a>
-					<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={() => onRemove?.(child.id)}>
+					<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={() => onRemove?.(child.id)} aria-label="Remove">
 						<i class="fas fa-times text-[9px]"></i>
 					</button>
 				</div>

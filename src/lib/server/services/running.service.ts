@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { runningActivity, runningTrackPoint, trainingActivity } from '$lib/server/db/schema';
-import { eq, asc, desc } from 'drizzle-orm';
+import { runningActivity, runningTrackPoint, trainingActivity, trainingSession } from '$lib/server/db/schema';
+import { eq, and, asc, desc } from 'drizzle-orm';
 
 export async function createRunningActivity(
 	activityId: string,
@@ -124,12 +124,23 @@ export async function deleteTrackPoints(activityId: string) {
 
 export async function getRunningHistory(userId: string, limit = 20) {
 	return db
-		.select()
+		.select({
+			activityId: runningActivity.activityId,
+			distance: runningActivity.distance,
+			elapsedDuration: runningActivity.elapsedDuration,
+			averagePace: runningActivity.averagePace,
+			startedAt: trainingActivity.startedAt
+		})
 		.from(runningActivity)
 		.innerJoin(
 			trainingActivity,
 			eq(runningActivity.activityId, trainingActivity.id)
 		)
+		.innerJoin(
+			trainingSession,
+			eq(trainingActivity.sessionId, trainingSession.id)
+		)
+		.where(eq(trainingSession.userId, userId))
 		.orderBy(desc(trainingActivity.startedAt))
 		.limit(limit)
 		.all();

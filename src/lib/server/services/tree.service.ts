@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { treeElement, treeRelationship, page } from '$lib/server/db/schema';
-import { eq, and, asc, like, sql } from 'drizzle-orm';
+import { eq, and, asc, like } from 'drizzle-orm';
 
 export type TreeElementType = 'node' | 'item';
 export type TreeParentType = 'page' | 'node' | 'item';
@@ -32,11 +32,16 @@ export async function createTreeElement(
 	return result;
 }
 
-export async function getTreeElementById(id: string) {
-	return db.select().from(treeElement).where(eq(treeElement.id, id)).get();
+export async function getTreeElementById(userId: string, id: string) {
+	return db
+		.select()
+		.from(treeElement)
+		.where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)))
+		.get();
 }
 
 export async function updateTreeElement(
+	userId: string,
 	id: string,
 	data: {
 		name?: string;
@@ -53,35 +58,16 @@ export async function updateTreeElement(
 	const [result] = await db
 		.update(treeElement)
 		.set(data)
-		.where(eq(treeElement.id, id))
+		.where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)))
 		.returning();
 
 	return result;
 }
 
-export async function deleteTreeElement(id: string) {
-	await db.delete(treeElement).where(eq(treeElement.id, id));
-}
-
-export async function getChildrenRecursive(parentType: TreeParentType, parentId: string): Promise<any[]> {
-	const allElements = await db.select().from(treeElement).all();
-	const allRels = await db.select().from(treeRelationship).all();
-
-	const byId = new Map(allElements.map((e) => [e.id, { ...e, children: [] as any[] }]));
-
-	for (const rel of allRels) {
-		const parent = byId.get(rel.parentId);
-		const child = byId.get(rel.childId);
-		if (parent && child) {
-			parent.children.push(child);
-		}
-	}
-
-	const root = byId.get(parentId);
-	if (!root) return [];
-
-	const built = buildTree(root, byId);
-	return built.children || [];
+export async function deleteTreeElement(userId: string, id: string) {
+	await db
+		.delete(treeElement)
+		.where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)));
 }
 
 function buildTree(node: any, byId: Map<string, any>): any {
@@ -95,8 +81,12 @@ function buildTree(node: any, byId: Map<string, any>): any {
 	return result;
 }
 
-export async function getSubtreeForItem(itemId: string): Promise<any> {
-	const allElements = await db.select().from(treeElement).all();
+export async function getSubtreeForItem(userId: string, itemId: string): Promise<any> {
+	const allElements = await db
+		.select()
+		.from(treeElement)
+		.where(eq(treeElement.userId, userId))
+		.all();
 	const allRels = await db.select().from(treeRelationship).all();
 
 	const byId = new Map(allElements.map((e) => [e.id, { ...e, children: [] as any[] }]));
@@ -115,7 +105,7 @@ export async function getSubtreeForItem(itemId: string): Promise<any> {
 	return buildTree(root, byId);
 }
 
-export async function getChildren(parentType: TreeParentType, parentId: string) {
+export async function getChildren(userId: string, parentType: TreeParentType, parentId: string) {
 	const relationships = await db
 		.select()
 		.from(treeRelationship)
@@ -130,7 +120,7 @@ export async function getChildren(parentType: TreeParentType, parentId: string) 
 
 	const children = [];
 	for (const rel of relationships) {
-		const element = await getTreeElementById(rel.childId);
+		const element = await getTreeElementById(userId, rel.childId);
 		if (element) {
 			children.push({ ...element, position: rel.position });
 		}

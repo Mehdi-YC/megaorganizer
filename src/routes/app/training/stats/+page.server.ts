@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { getTrainingSessionsWithActivities } from '$lib/server/services/training.service';
 import { db } from '$lib/server/db';
-import { runningActivity, trainingActivity, trainingSession } from '$lib/server/db/schema';
+import { runningActivity, trainingActivity } from '$lib/server/db/schema';
 import { eq, asc } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ locals }) => {

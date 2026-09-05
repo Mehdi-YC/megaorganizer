@@ -70,13 +70,13 @@
 
 	<div class="rounded-sm border border-border bg-surface p-3 sm:p-6">
 		<div class="mb-4 sm:mb-6 flex items-center justify-between">
-			<button type="button" class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted" onclick={prevMonth}>
+			<button type="button" aria-label="Previous month" class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted" onclick={prevMonth}>
 				<i class="fas fa-chevron-left"></i>
 			</button>
 			<h2 class="text-lg font-semibold text-fg">
 				{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
 			</h2>
-			<button type="button" class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted" onclick={nextMonth}>
+			<button type="button" aria-label="Next month" class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted" onclick={nextMonth}>
 				<i class="fas fa-chevron-right"></i>
 			</button>
 		</div>

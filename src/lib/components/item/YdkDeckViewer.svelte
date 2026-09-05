@@ -98,8 +98,8 @@
 		</div>
 		<div class="flex gap-1.5">
 			<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg-subdued hover:bg-border hover:text-fg" onclick={downloadYdk}><i class="fas fa-download text-[10px]"></i> Export</button>
-			<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg-subdued hover:bg-border hover:text-fg" onclick={onEdit}><i class="fas fa-pen text-[10px]"></i></button>
-			<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-error/15 px-3 text-xs font-medium text-error hover:bg-error/25" onclick={onDelete}><i class="fas fa-trash text-[10px]"></i></button>
+			<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg-subdued hover:bg-border hover:text-fg" onclick={onEdit} aria-label="Edit"><i class="fas fa-pen text-[10px]"></i></button>
+			<button type="button" class="inline-flex h-8 items-center gap-1.5 rounded-sm bg-error/15 px-3 text-xs font-medium text-error hover:bg-error/25" onclick={onDelete} aria-label="Delete"><i class="fas fa-trash text-[10px]"></i></button>
 		</div>
 	</div>
 	<div class="p-4 sm:p-5">

@@ -379,7 +379,7 @@
 					<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => (editingPage = false)}>Cancel</button>
 				{:else}
 					<button type="button" class="inline-flex h-[36px] items-center gap-1.5 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={startEditPage}><i class="fas fa-pen text-xs"></i> Edit</button>
-					<button type="button" class="inline-flex h-[36px] w-[36px] items-center justify-center rounded-sm bg-error/15 text-sm font-medium text-error hover:bg-error/25" onclick={deletePage}><i class="fas fa-trash text-xs"></i></button>
+					<button type="button" aria-label="Delete" class="inline-flex h-[36px] w-[36px] items-center justify-center rounded-sm bg-error/15 text-sm font-medium text-error hover:bg-error/25" onclick={deletePage}><i class="fas fa-trash text-xs"></i></button>
 				{/if}
 			</div>
 		</div>
@@ -406,6 +406,7 @@
 						{@const results = nodeSearchResults[node.id] ?? []}
 
 						<div
+							role="listitem"
 							class="group/node"
 							draggable="true"
 							ondragstart={(e) => handleNodeDragStart(e, nodeIdx)}
@@ -425,10 +426,10 @@
 								<span class="text-sm font-semibold truncate" style="color: {nodeColor}">{node.name}</span>
 								<span class="text-[11px] text-fg-subdued">{childItems.length + childNodes.length} items</span>
 								<div class="flex-1"></div>
-							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); nodeAddOpen = { ...nodeAddOpen, [node.id]: true }; }}>
+							<button type="button" aria-label="Add" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); nodeAddOpen = { ...nodeAddOpen, [node.id]: true }; }}>
 								<i class="fas fa-plus text-[10px]"></i>
 							</button>
-							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); startEditNode(node); }}>
+							<button type="button" aria-label="Edit" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); startEditNode(node); }}>
 								<i class="fas fa-pen text-[10px]"></i>
 							</button>
 							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm opacity-0 group-hover:opacity-100 {confirmDeleteId === node.id ? 'text-error' : 'text-fg-subdued hover:text-error'}" onclick={(e) => { e.stopPropagation(); removeElement(node.id, true); }}>
@@ -517,7 +518,7 @@
 										<div class="min-w-0 flex-1">
 											<p class="truncate text-xs font-medium text-fg-accent group-hover:text-primary">{item.name}</p>
 										</div>
-										<button type="button" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={(e) => { e.preventDefault(); removeElement(item.id); }}>
+										<button type="button" aria-label="Remove" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={(e) => { e.preventDefault(); removeElement(item.id); }}>
 											<i class="fas fa-times text-[9px]"></i>
 										</button>
 									</a>
@@ -569,7 +570,7 @@
 						<p class="mb-2 text-[10px] font-bold uppercase tracking-widest text-fg-subdued">Color</p>
 						<div class="flex flex-wrap gap-2">
 							{#each NODE_COLORS as c}
-								<button type="button" class="h-7 w-7 rounded-sm border-2 transition-all {editColor === c ? 'border-fg scale-110' : 'border-transparent hover:border-fg-subdued'}" style="background: {c}" onclick={() => (editColor = c)}></button>
+								<button type="button" aria-label={c} class="h-7 w-7 rounded-sm border-2 transition-all {editColor === c ? 'border-fg scale-110' : 'border-transparent hover:border-fg-subdued'}" style="background: {c}" onclick={() => (editColor = c)}></button>
 							{/each}
 							<input type="color" bind:value={editColor} class="h-7 w-9 cursor-pointer rounded-sm border-0 bg-transparent" />
 						</div>
@@ -578,7 +579,7 @@
 						<p class="mb-2 text-[10px] font-bold uppercase tracking-widest text-fg-subdued">Icon</p>
 						<div class="grid grid-cols-7 sm:grid-cols-10 gap-1.5">
 							{#each NODE_ICONS as icon}
-								<button type="button" class="flex h-8 w-8 items-center justify-center rounded-sm border transition-all {editIcon === icon ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-bg text-fg-subdued hover:bg-muted hover:text-fg'}" onclick={() => (editIcon = icon)}>
+								<button type="button" aria-label={icon} class="flex h-8 w-8 items-center justify-center rounded-sm border transition-all {editIcon === icon ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-bg text-fg-subdued hover:bg-muted hover:text-fg'}" onclick={() => (editIcon = icon)}>
 									<i class="fas {icon} text-xs"></i>
 								</button>
 							{/each}

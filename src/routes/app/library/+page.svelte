@@ -110,9 +110,9 @@
 	{#if showNewItem}
 		<div class="mb-4 rounded-sm border border-border bg-surface p-3 sm:p-4">
 			<form onsubmit={(e) => { e.preventDefault(); createItem(); }} class="flex gap-2">
-				<input type="text" bind:value={newItemName} placeholder="Item name" class="flex-1 min-w-0 h-9 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" autofocus />
+				<input type="text" bind:value={newItemName} placeholder="Item name" class="flex-1 min-w-0 h-9 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
 				<button type="submit" class="h-9 shrink-0 rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover">Create</button>
-				<button type="button" class="h-9 shrink-0 rounded-sm bg-muted px-3 text-sm font-medium text-fg hover:bg-border" onclick={() => { showNewItem = false; newItemName = ''; }}><i class="fas fa-times text-xs"></i></button>
+				<button type="button" aria-label="Close" class="h-9 shrink-0 rounded-sm bg-muted px-3 text-sm font-medium text-fg hover:bg-border" onclick={() => { showNewItem = false; newItemName = ''; }}><i class="fas fa-times text-xs"></i></button>
 			</form>
 		</div>
 	{/if}

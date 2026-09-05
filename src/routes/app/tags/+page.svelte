@@ -85,7 +85,7 @@
 		<div class="mb-4 rounded-sm border border-border bg-surface p-3 sm:p-4">
 			<div class="flex flex-col gap-3">
 				<div class="flex flex-col sm:flex-row gap-2">
-					<input type="text" bind:value={newName} placeholder="Tag name" class="flex-1 h-9 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" autofocus onkeydown={(e) => { if (e.key === 'Enter') create(); }} />
+					<input type="text" bind:value={newName} placeholder="Tag name" class="flex-1 h-9 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" onkeydown={(e) => { if (e.key === 'Enter') create(); }} />
 					<div class="flex gap-2">
 						<button type="button" class="h-9 rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover" onclick={create}>Create</button>
 						<button type="button" class="h-9 rounded-sm bg-muted px-4 text-sm font-medium text-fg hover:bg-border" onclick={() => { showNew = false; newName = ''; }}>Cancel</button>
@@ -94,7 +94,7 @@
 				<div class="flex items-center gap-2">
 					<span class="text-xs text-fg-subdued">Color:</span>
 					{#each presets as c}
-						<button type="button" class="h-5 w-5 rounded-sm border-2 transition-all {newColor === c ? 'border-fg scale-110' : 'border-transparent hover:border-fg-subdued'}" style="background: {c}" onclick={() => (newColor = c)}></button>
+						<button type="button" aria-label={c} class="h-5 w-5 rounded-sm border-2 transition-all {newColor === c ? 'border-fg scale-110' : 'border-transparent hover:border-fg-subdued'}" style="background: {c}" onclick={() => (newColor = c)}></button>
 					{/each}
 					<input type="color" bind:value={newColor} class="h-5 w-8 cursor-pointer rounded-sm border-0 bg-transparent" />
 				</div>
@@ -121,7 +121,7 @@
 							<input type="text" bind:value={editName} class="h-8 w-full rounded-sm border border-border bg-bg px-2 text-sm text-fg focus:border-primary focus:outline-none focus:ring-0" onkeydown={(e) => { if (e.key === 'Enter') update(t.id); if (e.key === 'Escape') editingId = null; }} />
 							<div class="flex items-center gap-2">
 								{#each presets as c}
-									<button type="button" class="h-4 w-4 rounded-sm border transition-all {editColor === c ? 'border-fg scale-110' : 'border-transparent'}" style="background: {c}" onclick={() => (editColor = c)}></button>
+									<button type="button" aria-label={c} class="h-4 w-4 rounded-sm border transition-all {editColor === c ? 'border-fg scale-110' : 'border-transparent'}" style="background: {c}" onclick={() => (editColor = c)}></button>
 								{/each}
 								<input type="color" bind:value={editColor} class="h-4 w-6 cursor-pointer rounded-sm border-0 bg-transparent" />
 							</div>
@@ -134,8 +134,8 @@
 						<div class="h-4 w-4 shrink-0 rounded-full" style="background: {t.color || '#5A31F4'}"></div>
 						<span class="flex-1 text-sm font-medium text-fg">{t.name}</span>
 						<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-							<button type="button" class="h-6 w-6 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted" onclick={() => startEdit(t)}><i class="fas fa-pen text-[9px]"></i></button>
-							<button type="button" class="h-6 w-6 items-center justify-center rounded-sm text-fg-subdued hover:text-error hover:bg-error/10" onclick={() => remove(t.id)}><i class="fas fa-trash text-[9px]"></i></button>
+							<button type="button" aria-label="Edit" class="h-6 w-6 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted" onclick={() => startEdit(t)}><i class="fas fa-pen text-[9px]"></i></button>
+							<button type="button" aria-label="Delete" class="h-6 w-6 items-center justify-center rounded-sm text-fg-subdued hover:text-error hover:bg-error/10" onclick={() => remove(t.id)}><i class="fas fa-trash text-[9px]"></i></button>
 						</div>
 					{/if}
 				</div>
