@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
 	import { calculateDistance, computeRunStats, buildRunPayload, saveRunApi, MS_TO_KMH, MAX_GPS_SPEED_MS, TIMER_INTERVAL_MS, GPS_WATCH_OPTIONS } from '$lib/utils/gps';
+	import { saveRunningState, loadRunningState, clearRunningState } from '$lib/utils/session-persist';
 	import RunMap from '$lib/components/ui/RunMap.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -28,13 +29,95 @@
 	let watchId: number | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let lastPoint: typeof gpsPoints[0] | null = null;
+	let wakeLock: WakeLockSentinel | null = null;
+	let visibilityHandler: (() => void) | null = null;
 
 	onMount(() => {
+		const saved = loadRunningState();
+		if (saved && (saved.status === 'running' || saved.status === 'paused')) {
+			status = saved.status as typeof status;
+			startTime = saved.startTime;
+			elapsed = saved.elapsed;
+			distance = saved.distance;
+			currentSpeed = saved.currentSpeed;
+			averageSpeed = saved.averageSpeed;
+			maxSpeed = saved.maxSpeed;
+			currentPace = saved.currentPace;
+			averagePace = saved.averagePace;
+			bestPace = saved.bestPace;
+			currentPosition = saved.currentPosition;
+			gpsPoints = saved.gpsPoints;
+			lastPoint = saved.gpsPoints.length > 0 ? saved.gpsPoints[saved.gpsPoints.length - 1] : null;
+			timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
+			watchId = navigator.geolocation.watchPosition(
+				(position) => {
+					const point = {
+						latitude: position.coords.latitude,
+						longitude: position.coords.longitude,
+						altitude: position.coords.altitude ?? undefined,
+						accuracy: position.coords.accuracy,
+						speed: position.coords.speed ?? undefined,
+						timestamp: position.timestamp
+					};
+					currentPosition = { latitude: point.latitude, longitude: point.longitude };
+					if (lastPoint) {
+						const dist = calculateDistance(lastPoint.latitude, lastPoint.longitude, point.latitude, point.longitude);
+						const timeDiff = (point.timestamp - lastPoint.timestamp) / 1000;
+						if (timeDiff > 0 && dist > 0) {
+							const speed = dist / timeDiff;
+							if (speed < MAX_GPS_SPEED_MS) {
+								distance += dist;
+								currentSpeed = speed * MS_TO_KMH;
+								maxSpeed = Math.max(maxSpeed, currentSpeed);
+							}
+						}
+					}
+					gpsPoints = [...gpsPoints, point];
+					lastPoint = point;
+					updateStats();
+					persistState();
+				},
+				(error) => console.error('GPS error:', error),
+				GPS_WATCH_OPTIONS
+			);
+			acquireWakeLock();
+			setupVisibilityHandler();
+		}
+
 		return () => {
 			if (watchId !== null) navigator.geolocation.clearWatch(watchId);
 			if (timerInterval) clearInterval(timerInterval);
+			releaseWakeLock();
+			if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 		};
 	});
+
+	async function acquireWakeLock() {
+		if (!('wakeLock' in navigator)) return;
+		try {
+			wakeLock = await navigator.wakeLock.request('screen');
+			wakeLock.addEventListener('release', () => { wakeLock = null; });
+		} catch (err) {
+			console.warn('Wake Lock failed:', err);
+		}
+	}
+
+	function releaseWakeLock() {
+		if (wakeLock) {
+			wakeLock.release();
+			wakeLock = null;
+		}
+	}
+
+	function setupVisibilityHandler() {
+		visibilityHandler = async () => {
+			if (document.visibilityState === 'visible' && status === 'running') {
+				await acquireWakeLock();
+				elapsed = Math.floor((Date.now() - startTime) / 1000);
+			}
+		};
+		document.addEventListener('visibilitychange', visibilityHandler);
+	}
 
 	function requestGpsPermission() {
 		if (!navigator.geolocation) {
@@ -52,6 +135,8 @@
 	function startTracking() {
 		startTime = Date.now();
 		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
+		acquireWakeLock();
+		setupVisibilityHandler();
 
 		watchId = navigator.geolocation.watchPosition(
 			(position) => {
@@ -82,6 +167,7 @@
 				gpsPoints = [...gpsPoints, point];
 				lastPoint = point;
 				updateStats();
+				persistState();
 			},
 			(error) => console.error('GPS error:', error),
 			GPS_WATCH_OPTIONS
@@ -92,7 +178,15 @@
 		if (status === 'running') {
 			elapsed = Math.floor((Date.now() - startTime) / 1000);
 			updateStats();
+			persistState();
 		}
+	}
+
+	function persistState() {
+		saveRunningState({
+			status, startTime, elapsed, distance, currentSpeed, averageSpeed, maxSpeed,
+			currentPace, averagePace, bestPace, currentPosition, gpsPoints
+		});
 	}
 
 	function updateStats() {
@@ -109,12 +203,14 @@
 		status = 'paused';
 		if (timerInterval) clearInterval(timerInterval);
 		if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+		releaseWakeLock();
 	}
 
 	function resumeRun() {
 		status = 'running';
 		startTime = Date.now() - elapsed * 1000;
 		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
+		acquireWakeLock();
 		startTracking();
 	}
 
@@ -122,6 +218,9 @@
 		status = 'finished';
 		if (timerInterval) clearInterval(timerInterval);
 		if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+		releaseWakeLock();
+		if (visibilityHandler) { document.removeEventListener('visibilitychange', visibilityHandler); visibilityHandler = null; }
+		clearRunningState();
 
 		const runData = buildRunPayload({
 			gpsPoints,
@@ -161,6 +260,7 @@
 		currentPosition = null;
 		gpsPoints = [];
 		lastPoint = null;
+		clearRunningState();
 	}
 </script>
 
