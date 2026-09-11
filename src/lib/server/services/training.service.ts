@@ -39,18 +39,28 @@ export async function createTrainingSession(
 	return result;
 }
 
-export async function getTrainingSessions(userId: string, limit = 50) {
+export async function getTrainingSessions(userId: string, limit = 50, offset = 0) {
 	return db
 		.select()
 		.from(trainingSession)
 		.where(eq(trainingSession.userId, userId))
 		.orderBy(desc(trainingSession.startedAt))
 		.limit(limit)
+		.offset(offset)
 		.all();
 }
 
-export async function getTrainingSessionsWithActivities(userId: string, limit = 50) {
-	const sessions = await getTrainingSessions(userId, limit);
+export async function getTrainingSessionsCount(userId: string): Promise<number> {
+	const result = await db
+		.select({ count: trainingSession.id })
+		.from(trainingSession)
+		.where(eq(trainingSession.userId, userId))
+		.all();
+	return result.length;
+}
+
+export async function getTrainingSessionsWithActivities(userId: string, limit = 50, offset = 0) {
+	const sessions = await getTrainingSessions(userId, limit, offset);
 	if (sessions.length === 0) return [];
 
 	const sessionIds = sessions.map((s) => s.id);
@@ -277,6 +287,45 @@ export async function getExerciseRecords(activityId: string) {
 		.where(eq(trainingExerciseRecord.activityId, activityId))
 		.orderBy(asc(trainingExerciseRecord.position))
 		.all();
+}
+
+export async function batchCreateExerciseRecords(
+	userId: string,
+	activityId: string,
+	records: Array<{
+		itemId: string;
+		sets?: number;
+		reps?: string;
+		weight?: number;
+		unit?: string;
+		rpe?: number;
+		restTime?: number;
+		notes?: string;
+		position?: number;
+	}>
+) {
+	if (records.length === 0) return [];
+
+	const sessionId = await resolveActivitySession(activityId);
+	if (!sessionId) return null;
+
+	const owned = await verifySessionOwnership(userId, sessionId);
+	if (!owned) return null;
+
+	const values = records.map((r, i) => ({
+		activityId,
+		itemId: r.itemId,
+		sets: r.sets,
+		reps: r.reps,
+		weight: r.weight,
+		unit: r.unit,
+		rpe: r.rpe,
+		restTime: r.restTime,
+		notes: r.notes,
+		position: r.position ?? i
+	}));
+
+	return db.insert(trainingExerciseRecord).values(values).returning().all();
 }
 
 export async function updateExerciseRecord(

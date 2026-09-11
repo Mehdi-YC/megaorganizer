@@ -2,53 +2,59 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createCategory, getCategories, updateCategory, deleteCategory } from '$lib/server/services/category.service';
 import { requireUser } from '$lib/server/api-helpers';
+import { parseJson, validateBody, isString, isNonEmptyString } from '$lib/server/validate';
 
 export const GET: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const categories = await getCategories(user.id);
-	return json(categories);
+	return json(await getCategories(user.id));
 };
 
 export const POST: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const data = await event.request.json();
-
-	if (!data.name?.trim()) {
-		return json({ error: 'Name is required' }, { status: 400 });
-	}
-
-	const category = await createCategory(user.id, {
-		name: data.name.trim(),
-		description: data.description,
-		icon: data.icon,
-		iconColor: data.iconColor,
-		accentColor: data.accentColor,
-		backgroundColor: data.backgroundColor,
-		imageUrl: data.imageUrl
+	const body = await parseJson(event.request);
+	const v = validateBody(body, {
+		name: { validate: isNonEmptyString, label: 'Name' },
+		description: { validate: isString, required: false },
+		icon: { validate: isString, required: false },
+		iconColor: { validate: isString, required: false },
+		accentColor: { validate: isString, required: false },
+		backgroundColor: { validate: isString, required: false },
+		imageUrl: { validate: isString, required: false }
 	});
+	if (!v.ok) return v.error;
+
+	const category = await createCategory(user.id, v.data as any);
 	return json(category, { status: 201 });
 };
 
 export const PUT: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const { id, ...data } = await event.request.json();
+	const body = await parseJson(event.request);
+	const v = validateBody(body, {
+		id: { validate: isNonEmptyString, label: 'ID' },
+		name: { validate: isString, required: false },
+		description: { validate: isString, required: false },
+		icon: { validate: isString, required: false },
+		iconColor: { validate: isString, required: false },
+		accentColor: { validate: isString, required: false },
+		backgroundColor: { validate: isString, required: false },
+		imageUrl: { validate: isString, required: false }
+	});
+	if (!v.ok) return v.error;
 
-	if (!id) {
-		return json({ error: 'ID is required' }, { status: 400 });
-	}
-
-	const category = await updateCategory(user.id, id, data);
+	const { id, ...data } = v.data;
+	const category = await updateCategory(user.id, id as string, data);
 	return json(category);
 };
 
 export const DELETE: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const { id } = await event.request.json();
+	const body = await parseJson(event.request);
+	const v = validateBody(body, {
+		id: { validate: isNonEmptyString, label: 'ID' }
+	});
+	if (!v.ok) return v.error;
 
-	if (!id) {
-		return json({ error: 'ID is required' }, { status: 400 });
-	}
-
-	await deleteCategory(user.id, id);
+	await deleteCategory(user.id, v.data.id);
 	return json({ success: true });
 };

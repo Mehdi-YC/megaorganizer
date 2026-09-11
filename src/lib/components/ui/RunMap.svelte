@@ -21,11 +21,16 @@
 	let map: any;
 	let marker: any;
 	let routeLine: any;
+	let startMarker: any;
+	let endMarker: any;
 	let L: any;
+	let mounted = false;
 
 	onMount(async () => {
 		L = await import('leaflet');
 		await import('leaflet/dist/leaflet.css');
+
+		if (!mapEl) return; // guard against unmount race
 
 		const initialCenter = center
 			? [center.latitude, center.longitude]
@@ -47,32 +52,7 @@
 		}).addTo(map);
 
 		if (points.length > 0 && showRoute) {
-			const latLngs = points.map((p) => [p.latitude, p.longitude] as [number, number]);
-			routeLine = L.polyline(latLngs, {
-				color: '#3b82f6',
-				weight: 4,
-				opacity: 0.8,
-				lineJoin: 'round',
-				lineCap: 'round'
-			}).addTo(map);
-
-			L.circleMarker(latLngs[0], {
-				radius: 8,
-				fillColor: '#22c55e',
-				color: '#fff',
-				weight: 2,
-				fillOpacity: 1
-			}).addTo(map);
-
-			L.circleMarker(latLngs[latLngs.length - 1], {
-				radius: 8,
-				fillColor: '#ef4444',
-				color: '#fff',
-				weight: 2,
-				fillOpacity: 1
-			}).addTo(map);
-
-			map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+			drawRoute(points);
 		} else if (center) {
 			marker = L.circleMarker([center.latitude, center.longitude], {
 				radius: 8,
@@ -83,15 +63,64 @@
 			}).addTo(map);
 		}
 
-		setTimeout(() => map.invalidateSize(), 100);
+		mounted = true;
+		setTimeout(() => map?.invalidateSize(), 100);
 	});
 
 	onDestroy(() => {
-		if (map) map.remove();
+		mounted = false;
+		if (map) {
+			map.remove();
+			map = null;
+		}
 	});
 
+	function drawRoute(pts: Array<{ latitude: number; longitude: number }>) {
+		if (!map || !L || pts.length < 2) return;
+
+		const latLngs = pts.map((p) => [p.latitude, p.longitude] as [number, number]);
+
+		if (routeLine) {
+			routeLine.setLatLngs(latLngs);
+		} else {
+			routeLine = L.polyline(latLngs, {
+				color: '#3b82f6',
+				weight: 4,
+				opacity: 0.8,
+				lineJoin: 'round',
+				lineCap: 'round'
+			}).addTo(map);
+		}
+
+		// Update or create start marker
+		if (startMarker) {
+			startMarker.setLatLng(latLngs[0]);
+		} else {
+			startMarker = L.circleMarker(latLngs[0], {
+				radius: 8,
+				fillColor: '#22c55e',
+				color: '#fff',
+				weight: 2,
+				fillOpacity: 1
+			}).addTo(map);
+		}
+
+		// Update or create end marker
+		if (endMarker) {
+			endMarker.setLatLng(latLngs[latLngs.length - 1]);
+		} else {
+			endMarker = L.circleMarker(latLngs[latLngs.length - 1], {
+				radius: 8,
+				fillColor: '#ef4444',
+				color: '#fff',
+				weight: 2,
+				fillOpacity: 1
+			}).addTo(map);
+		}
+	}
+
 	$effect(() => {
-		if (!map || !L) return;
+		if (!mounted || !map || !L) return;
 
 		if (followPosition && center) {
 			map.setView([center.latitude, center.longitude], map.getZoom());
@@ -110,18 +139,7 @@
 		}
 
 		if (points.length > 1 && showRoute) {
-			const latLngs = points.map((p) => [p.latitude, p.longitude] as [number, number]);
-			if (routeLine) {
-				routeLine.setLatLngs(latLngs);
-			} else {
-				routeLine = L.polyline(latLngs, {
-					color: '#3b82f6',
-					weight: 4,
-					opacity: 0.8,
-					lineJoin: 'round',
-					lineCap: 'round'
-				}).addTo(map);
-			}
+			drawRoute(points);
 		}
 	});
 </script>
