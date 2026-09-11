@@ -33,11 +33,15 @@ bun run dev
 ## Database Commands
 
 ```sh
-bun run db:push      # push schema changes to SQLite
-bun run db:generate  # generate migration files
+bun run db:generate  # generate migration files from schema changes
 bun run db:migrate   # run pending migrations
+bun run db:push      # push schema directly (dev only — skips migration files)
 bun run db:studio    # open Drizzle Studio
 ```
+
+> **⚠️ Production workflow:** Always use `db:generate` + `db:migrate` for production databases.
+> `db:push` is convenient for local development but does not create migration files,
+> which means you lose the ability to safely evolve your schema with existing data.
 
 ## Project Structure
 

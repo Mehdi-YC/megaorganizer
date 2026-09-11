@@ -14,21 +14,23 @@ import {
 	getActivityItems,
 	createExerciseRecord,
 	updateExerciseRecord,
-	deleteExerciseRecord
+	deleteExerciseRecord,
+	batchCreateExerciseRecords
 } from '$lib/server/services/training.service';
 import { requireUser } from '$lib/server/api-helpers';
+import { parseJson, validateBody, isString, isNonEmptyString, isOneOf, isNumber, isArray, hasFields } from '$lib/server/validate';
+
+const activityTypes = ['strength', 'running', 'cycling', 'walking', 'swimming', 'other'] as const;
+const sessionStatuses = ['active', 'paused', 'completed', 'cancelled'] as const;
 
 export const GET: RequestHandler = async (event) => {
 	const user = requireUser(event);
-
 	const sessionId = event.url.searchParams.get('sessionId');
 	const activityId = event.url.searchParams.get('activityId');
 
 	if (sessionId) {
 		const session = await getTrainingSessionById(user.id, sessionId);
-		if (!session) {
-			return json({ error: 'Session not found' }, { status: 404 });
-		}
+		if (!session) return json({ error: 'Session not found' }, { status: 404 });
 		return json(session);
 	}
 
@@ -37,113 +39,177 @@ export const GET: RequestHandler = async (event) => {
 		return json(items);
 	}
 
-	const sessions = await getTrainingSessions(user.id);
-	return json(sessions);
+	return json(await getTrainingSessions(user.id));
 };
 
 export const POST: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const data = await event.request.json();
+	const body = await parseJson(event.request);
+	const action = validateBody(body, { action: { validate: isNonEmptyString } });
+	if (!action.ok) return action.error;
 
-	if (data.action === 'createSession') {
-		const session = await createTrainingSession(user.id, data);
-		return json(session, { status: 201 });
+	switch (body.action) {
+		case 'createSession': {
+			const v = validateBody(body, {
+				title: { validate: isString, required: false },
+				notes: { validate: isString, required: false },
+				startedAt: { validate: isString, required: false }
+			});
+			if (!v.ok) return v.error;
+			const session = await createTrainingSession(user.id, v.data as any);
+			return json(session, { status: 201 });
+		}
+
+		case 'createActivity': {
+			const v = validateBody(body, {
+				sessionId: { validate: isNonEmptyString, label: 'Session ID' },
+				type: { validate: isOneOf(activityTypes), label: 'Activity type' },
+				startedAt: { validate: isString, required: false },
+				notes: { validate: isString, required: false }
+			});
+			if (!v.ok) return v.error;
+			const activity = await createTrainingActivity(user.id, v.data.sessionId, v.data as any);
+			if (!activity) return json({ error: 'Session not found or access denied' }, { status: 404 });
+			return json(activity, { status: 201 });
+		}
+
+		case 'linkItem': {
+			const v = validateBody(body, {
+				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
+				itemId: { validate: isNonEmptyString, label: 'Item ID' }
+			});
+			if (!v.ok) return v.error;
+			const result = await linkItemToActivity(user.id, v.data.activityId, v.data.itemId);
+			if (!result) return json({ error: 'Activity not found or access denied' }, { status: 404 });
+			return json({ success: true }, { status: 201 });
+		}
+
+		case 'createExerciseRecord': {
+			const v = validateBody(body, {
+				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
+				itemId: { validate: isNonEmptyString, label: 'Item ID' },
+				sets: { validate: isNumber, required: false },
+				reps: { validate: isString, required: false },
+				weight: { validate: isNumber, required: false },
+				unit: { validate: isString, required: false },
+				rpe: { validate: isNumber, required: false },
+				restTime: { validate: isNumber, required: false },
+				notes: { validate: isString, required: false }
+			});
+			if (!v.ok) return v.error;
+			const record = await createExerciseRecord(user.id, v.data.activityId, v.data.itemId, v.data as any);
+			if (!record) return json({ error: 'Activity not found or access denied' }, { status: 404 });
+			return json(record, { status: 201 });
+		}
+
+		case 'batchCreateExerciseRecords': {
+			const v = validateBody(body, {
+				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
+				records: {
+					validate: isArray((r): r is Record<string, unknown> => hasFields(r) && typeof r.itemId === 'string'),
+					label: 'Records'
+				}
+			});
+			if (!v.ok) return v.error;
+			if (v.data.records.length > 50) return json({ error: 'Too many records (max 50)' }, { status: 400 });
+			const result = await batchCreateExerciseRecords(user.id, v.data.activityId, v.data.records as any);
+			if (!result) return json({ error: 'Activity not found or access denied' }, { status: 404 });
+			return json(result, { status: 201 });
+		}
+
+		default:
+			return json({ error: 'Invalid action' }, { status: 400 });
 	}
-
-	if (data.action === 'createActivity') {
-		if (!data.sessionId || !data.type) {
-			return json({ error: 'Session ID and type are required' }, { status: 400 });
-		}
-		const activity = await createTrainingActivity(user.id, data.sessionId, data);
-		if (!activity) {
-			return json({ error: 'Session not found or access denied' }, { status: 404 });
-		}
-		return json(activity, { status: 201 });
-	}
-
-	if (data.action === 'linkItem') {
-		if (!data.activityId || !data.itemId) {
-			return json({ error: 'Activity ID and Item ID are required' }, { status: 400 });
-		}
-		const result = await linkItemToActivity(user.id, data.activityId, data.itemId);
-		if (!result) {
-			return json({ error: 'Activity not found or access denied' }, { status: 404 });
-		}
-		return json({ success: true }, { status: 201 });
-	}
-
-	if (data.action === 'createExerciseRecord') {
-		if (!data.activityId || !data.itemId) {
-			return json({ error: 'Activity ID and Item ID are required' }, { status: 400 });
-		}
-		const record = await createExerciseRecord(user.id, data.activityId, data.itemId, data);
-		if (!record) {
-			return json({ error: 'Activity not found or access denied' }, { status: 404 });
-		}
-		return json(record, { status: 201 });
-	}
-
-	return json({ error: 'Invalid action' }, { status: 400 });
 };
 
 export const PUT: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const data = await event.request.json();
+	const body = await parseJson(event.request);
+	const action = validateBody(body, { action: { validate: isNonEmptyString } });
+	if (!action.ok) return action.error;
 
-	if (data.action === 'updateSession') {
-		if (!data.sessionId) {
-			return json({ error: 'Session ID is required' }, { status: 400 });
+	switch (body.action) {
+		case 'updateSession': {
+			const v = validateBody(body, {
+				sessionId: { validate: isNonEmptyString, label: 'Session ID' },
+				title: { validate: isString, required: false },
+				notes: { validate: isString, required: false },
+				status: { validate: isOneOf(sessionStatuses), required: false },
+				endedAt: { validate: isString, required: false },
+				duration: { validate: isNumber, required: false }
+			});
+			if (!v.ok) return v.error;
+			const session = await updateTrainingSession(user.id, v.data.sessionId, v.data as any);
+			return json(session);
 		}
-		const session = await updateTrainingSession(user.id, data.sessionId, data);
-		return json(session);
-	}
 
-	if (data.action === 'updateActivity') {
-		if (!data.activityId) {
-			return json({ error: 'Activity ID is required' }, { status: 400 });
+		case 'updateActivity': {
+			const v = validateBody(body, {
+				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
+				notes: { validate: isString, required: false }
+			});
+			if (!v.ok) return v.error;
+			const activity = await updateTrainingActivity(user.id, v.data.activityId, v.data as any);
+			return json(activity);
 		}
-		const activity = await updateTrainingActivity(user.id, data.activityId, data);
-		return json(activity);
-	}
 
-	if (data.action === 'updateExerciseRecord') {
-		if (!data.recordId) {
-			return json({ error: 'Record ID is required' }, { status: 400 });
+		case 'updateExerciseRecord': {
+			const v = validateBody(body, {
+				recordId: { validate: isNonEmptyString, label: 'Record ID' },
+				sets: { validate: isNumber, required: false },
+				reps: { validate: isString, required: false },
+				weight: { validate: isNumber, required: false },
+				unit: { validate: isString, required: false },
+				rpe: { validate: isNumber, required: false },
+				restTime: { validate: isNumber, required: false },
+				notes: { validate: isString, required: false }
+			});
+			if (!v.ok) return v.error;
+			const record = await updateExerciseRecord(user.id, v.data.recordId, v.data as any);
+			return json(record);
 		}
-		const record = await updateExerciseRecord(user.id, data.recordId, data);
-		return json(record);
-	}
 
-	return json({ error: 'Invalid action' }, { status: 400 });
+		default:
+			return json({ error: 'Invalid action' }, { status: 400 });
+	}
 };
 
 export const DELETE: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const data = await event.request.json();
+	const body = await parseJson(event.request);
+	const action = validateBody(body, { action: { validate: isNonEmptyString } });
+	if (!action.ok) return action.error;
 
-	if (data.action === 'deleteSession') {
-		if (!data.sessionId) {
-			return json({ error: 'Session ID is required' }, { status: 400 });
+	switch (body.action) {
+		case 'deleteSession': {
+			const v = validateBody(body, {
+				sessionId: { validate: isNonEmptyString, label: 'Session ID' }
+			});
+			if (!v.ok) return v.error;
+			await deleteTrainingSession(user.id, v.data.sessionId);
+			return json({ success: true });
 		}
-		await deleteTrainingSession(user.id, data.sessionId);
-		return json({ success: true });
-	}
 
-	if (data.action === 'unlinkItem') {
-		if (!data.activityId || !data.itemId) {
-			return json({ error: 'Activity ID and Item ID are required' }, { status: 400 });
+		case 'unlinkItem': {
+			const v = validateBody(body, {
+				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
+				itemId: { validate: isNonEmptyString, label: 'Item ID' }
+			});
+			if (!v.ok) return v.error;
+			await unlinkItemFromActivity(user.id, v.data.activityId, v.data.itemId);
+			return json({ success: true });
 		}
-		await unlinkItemFromActivity(user.id, data.activityId, data.itemId);
-		return json({ success: true });
-	}
 
-	if (data.action === 'deleteExerciseRecord') {
-		if (!data.recordId) {
-			return json({ error: 'Record ID is required' }, { status: 400 });
+		case 'deleteExerciseRecord': {
+			const v = validateBody(body, {
+				recordId: { validate: isNonEmptyString, label: 'Record ID' }
+			});
+			if (!v.ok) return v.error;
+			await deleteExerciseRecord(user.id, v.data.recordId);
+			return json({ success: true });
 		}
-		await deleteExerciseRecord(user.id, data.recordId);
-		return json({ success: true });
-	}
 
-	return json({ error: 'Invalid action' }, { status: 400 });
+		default:
+			return json({ error: 'Invalid action' }, { status: 400 });
+	}
 };

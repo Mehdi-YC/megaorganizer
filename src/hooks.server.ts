@@ -1,8 +1,9 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { building } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { logError } from '$lib/server/error-log';
 
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Content-Type-Options': 'nosniff',
@@ -47,3 +48,17 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 };
 
 export const handle: Handle = handleBetterAuth;
+
+export const handleError: HandleServerError = async ({ error, event }) => {
+	const errorId = crypto.randomUUID();
+	logError('unhandled', error, {
+		errorId,
+		path: event.url.pathname,
+		method: event.request.method,
+		userId: event.locals.user?.id
+	});
+	return {
+		message: 'An unexpected error occurred',
+		errorId
+	};
+};

@@ -159,7 +159,7 @@ export async function deleteTrackPoints(userId: string, activityId: string) {
 		.where(eq(runningTrackPoint.activityId, activityId));
 }
 
-export async function getRunningHistory(userId: string, limit = 20) {
+export async function getRunningHistory(userId: string, limit = 20, offset = 0) {
 	return db
 		.select({
 			activityId: runningActivity.activityId,
@@ -180,5 +180,6 @@ export async function getRunningHistory(userId: string, limit = 20) {
 		.where(eq(trainingSession.userId, userId))
 		.orderBy(desc(trainingActivity.startedAt))
 		.limit(limit)
+		.offset(offset)
 		.all();
 }

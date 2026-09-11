@@ -13,31 +13,34 @@ import {
 	searchTreeElements
 } from '$lib/server/services/tree.service';
 import { requireUser } from '$lib/server/api-helpers';
+import { parseJson, validateBody, isString, isNonEmptyString, isOneOf, isNumber } from '$lib/server/validate';
+
+const treeTypes = ['node', 'item'] as const;
+const parentTypes = ['page', 'node', 'item'] as const;
 
 export const GET: RequestHandler = async (event) => {
 	const user = requireUser(event);
 
 	const id = event.url.searchParams.get('id');
-	const parentType = event.url.searchParams.get('parentType') as 'page' | 'node' | 'item' | null;
+	const parentType = event.url.searchParams.get('parentType');
 	const parentId = event.url.searchParams.get('parentId');
 	const search = event.url.searchParams.get('search');
 
 	if (search) {
-		const results = await searchTreeElements(user.id, search);
-		return json(results);
+		return json(await searchTreeElements(user.id, search));
 	}
 
 	if (id) {
 		const element = await getTreeElementById(user.id, id);
-		if (!element) {
-			return json({ error: 'Not found' }, { status: 404 });
-		}
+		if (!element) return json({ error: 'Not found' }, { status: 404 });
 		return json(element);
 	}
 
 	if (parentType && parentId) {
-		const children = await getChildren(user.id, parentType, parentId);
-		return json(children);
+		if (!['page', 'node', 'item'].includes(parentType)) {
+			return json({ error: 'Invalid parentType' }, { status: 400 });
+		}
+		return json(await getChildren(user.id, parentType as 'page' | 'node' | 'item', parentId));
 	}
 
 	const subtreeId = event.url.searchParams.get('subtree');
@@ -46,86 +49,90 @@ export const GET: RequestHandler = async (event) => {
 		return json(subtree ? [subtree] : []);
 	}
 
-	const all = await searchTreeElements(user.id, '');
-	return json(all);
+	return json(await searchTreeElements(user.id, ''));
 };
 
 export const POST: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const data = await event.request.json();
+	const body = await parseJson(event.request);
+	const action = validateBody(body, { action: { validate: isNonEmptyString } });
+	if (!action.ok) return action.error;
 
-	if (data.action === 'create') {
-		if (!data.type || !['node', 'item'].includes(data.type)) {
-			return json({ error: 'Valid type required (node|item)' }, { status: 400 });
+	switch (body.action) {
+		case 'create': {
+			const v = validateBody(body, {
+				type: { validate: isOneOf(treeTypes), label: 'Type' },
+				name: { validate: isNonEmptyString, label: 'Name' }
+			});
+			if (!v.ok) return v.error;
+			const element = await createTreeElement(user.id, v.data.type, v.data as any);
+			return json(element, { status: 201 });
 		}
-		if (!data.name?.trim()) {
-			return json({ error: 'Name is required' }, { status: 400 });
+
+		case 'addChild': {
+			const v = validateBody(body, {
+				parentType: { validate: isOneOf(parentTypes), label: 'Parent type' },
+				parentId: { validate: isNonEmptyString, label: 'Parent ID' },
+				childType: { validate: isOneOf(treeTypes), label: 'Child type' },
+				childId: { validate: isNonEmptyString, label: 'Child ID' }
+			});
+			if (!v.ok) return v.error;
+			const result = await addChildToParent(user.id, v.data.parentType, v.data.parentId, v.data.childType, v.data.childId);
+			if (!result) return json({ error: 'Child element not found or access denied' }, { status: 404 });
+			return json(result, { status: 201 });
 		}
-		const element = await createTreeElement(user.id, data.type, data);
-		return json(element, { status: 201 });
+
+		default:
+			return json({ error: 'Invalid action' }, { status: 400 });
 	}
-
-	if (data.action === 'addChild') {
-		if (!data.parentType || !['page', 'node', 'item'].includes(data.parentType)) {
-			return json({ error: 'Valid parentType required (page|node|item)' }, { status: 400 });
-		}
-		if (!data.parentId || !data.childId) {
-			return json({ error: 'Missing required fields' }, { status: 400 });
-		}
-		if (!data.childType || !['node', 'item'].includes(data.childType)) {
-			return json({ error: 'Valid childType required (node|item)' }, { status: 400 });
-		}
-		const result = await addChildToParent(user.id, data.parentType, data.parentId, data.childType, data.childId);
-		if (!result) {
-			return json({ error: 'Child element not found or access denied' }, { status: 404 });
-		}
-		return json(result, { status: 201 });
-	}
-
-	return json({ error: 'Invalid action' }, { status: 400 });
 };
 
 export const PUT: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const data = await event.request.json();
+	const body = await parseJson(event.request);
 
-	if (data.action === 'move') {
-		if (!data.parentType || !['page', 'node', 'item'].includes(data.parentType)) {
-			return json({ error: 'Valid parentType required' }, { status: 400 });
-		}
-		if (!data.parentId || !data.childId || data.position === undefined) {
-			return json({ error: 'Missing required fields' }, { status: 400 });
-		}
-		await moveChild(user.id, data.parentType, data.parentId, data.childId, data.position);
+	if (body.action === 'move') {
+		const v = validateBody(body, {
+			parentType: { validate: isOneOf(parentTypes), label: 'Parent type' },
+			parentId: { validate: isNonEmptyString, label: 'Parent ID' },
+			childId: { validate: isNonEmptyString, label: 'Child ID' },
+			position: { validate: isNumber, label: 'Position' }
+		});
+		if (!v.ok) return v.error;
+		await moveChild(user.id, v.data.parentType, v.data.parentId, v.data.childId, v.data.position);
 		return json({ success: true });
 	}
 
-	const { id, ...updateData } = data;
-	if (!id) {
-		return json({ error: 'ID is required' }, { status: 400 });
-	}
-	const element = await updateTreeElement(user.id, id, updateData);
+	const v = validateBody(body, {
+		id: { validate: isNonEmptyString, label: 'ID' }
+	});
+	if (!v.ok) return v.error;
+
+	const { id, action: _action, ...updateData } = body;
+	const element = await updateTreeElement(user.id, id as string, updateData);
 	return json(element);
 };
 
 export const DELETE: RequestHandler = async (event) => {
 	const user = requireUser(event);
-	const data = await event.request.json();
+	const body = await parseJson(event.request);
 
-	if (data.action === 'removeChild') {
-		if (!data.parentType || !['page', 'node', 'item'].includes(data.parentType)) {
-			return json({ error: 'Valid parentType required' }, { status: 400 });
-		}
-		if (!data.parentId || !data.childId) {
-			return json({ error: 'Missing required fields' }, { status: 400 });
-		}
-		await removeChildFromParent(user.id, data.parentType, data.parentId, data.childId);
+	if (body.action === 'removeChild') {
+		const v = validateBody(body, {
+			parentType: { validate: isOneOf(parentTypes), label: 'Parent type' },
+			parentId: { validate: isNonEmptyString, label: 'Parent ID' },
+			childId: { validate: isNonEmptyString, label: 'Child ID' }
+		});
+		if (!v.ok) return v.error;
+		await removeChildFromParent(user.id, v.data.parentType, v.data.parentId, v.data.childId);
 		return json({ success: true });
 	}
 
-	if (!data.id) {
-		return json({ error: 'ID is required' }, { status: 400 });
-	}
-	await deleteTreeElement(user.id, data.id);
+	const v = validateBody(body, {
+		id: { validate: isNonEmptyString, label: 'ID' }
+	});
+	if (!v.ok) return v.error;
+
+	await deleteTreeElement(user.id, v.data.id);
 	return json({ success: true });
 };
