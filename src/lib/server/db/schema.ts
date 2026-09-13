@@ -119,6 +119,33 @@ export const treeRelationship = sqliteTable(
 	]
 );
 
+// ─── Attachments ─────────────────────────────────────────────────────────────
+export const attachment = sqliteTable(
+	'attachment',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		pageId: text('page_id')
+			.notNull()
+			.references(() => page.id, { onDelete: 'cascade' }),
+		originalName: text('original_name').notNull(),
+		storedName: text('stored_name').notNull(),
+		mimeType: text('mime_type').notNull(),
+		size: integer('size').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [
+		index('attachment_userId_idx').on(table.userId),
+		index('attachment_pageId_idx').on(table.pageId)
+	]
+);
+
 // ─── Tags ────────────────────────────────────────────────────────────────────
 export const tag = sqliteTable(
 	'tag',
@@ -439,7 +466,13 @@ export const categoryRelations = relations(category, ({ one, many }) => ({
 export const pageRelations = relations(page, ({ one, many }) => ({
 	user: one(user, { fields: [page.userId], references: [user.id] }),
 	category: one(category, { fields: [page.categoryId], references: [category.id] }),
-	children: many(treeRelationship)
+	children: many(treeRelationship),
+	attachments: many(attachment)
+}));
+
+export const attachmentRelations = relations(attachment, ({ one }) => ({
+	user: one(user, { fields: [attachment.userId], references: [user.id] }),
+	page: one(page, { fields: [attachment.pageId], references: [page.id] })
 }));
 
 export const treeElementRelations = relations(treeElement, ({ one, many }) => ({
