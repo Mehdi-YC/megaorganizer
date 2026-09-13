@@ -16,6 +16,13 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	}
 
 	const treeElements = await getChildren(locals.user.id, 'page', pageData.id);
-	const attachments = await getAttachmentsByPage(locals.user.id, pageData.id);
+
+	let attachments: Awaited<ReturnType<typeof getAttachmentsByPage>> = [];
+	try {
+		attachments = await getAttachmentsByPage(locals.user.id, pageData.id);
+	} catch {
+		// attachment table may not exist yet
+	}
+
 	return { category, pageData, treeElements, attachments };
 };
