@@ -5,6 +5,69 @@
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 	// svelte-ignore state_referenced_locally
 	let name = $state(data.user?.name ?? '');
+
+	let importStatus = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
+	let importMessage = $state('');
+	let importCounts = $state<Record<string, number> | null>(null);
+	let importInput = $state<HTMLInputElement | null>(null);
+
+	async function exportBackup() {
+		try {
+			const res = await fetch('/api/backup');
+			if (!res.ok) throw new Error('Export failed');
+			const data = await res.json();
+			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `megaorganize-backup-${new Date().toISOString().split('T')[0]}.json`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		} catch (err) {
+			importStatus = 'error';
+			importMessage = 'Failed to export data';
+		}
+	}
+
+	function triggerImport() {
+		importInput?.click();
+	}
+
+	async function handleImportFile(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		importStatus = 'loading';
+		importMessage = '';
+		importCounts = null;
+
+		try {
+			const text = await file.text();
+			const jsonData = JSON.parse(text);
+			const res = await fetch('/api/backup', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(jsonData)
+			});
+			const result = await res.json();
+			if (result.success) {
+				importStatus = 'success';
+				importMessage = result.message;
+				importCounts = result.counts;
+			} else {
+				importStatus = 'error';
+				importMessage = result.message || 'Import failed';
+			}
+		} catch (err) {
+			importStatus = 'error';
+			importMessage = 'Invalid backup file';
+		}
+
+		input.value = '';
+	}
 </script>
 
 <svelte:head>
@@ -119,6 +182,62 @@
 					Change Password
 				</button>
 			</form>
+		</div>
+	</div>
+
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Backup & Restore</h2>
+		</div>
+		<div class="px-6 py-5 space-y-4">
+			<p class="text-xs text-fg-subdued">Export all your data as a JSON file, or restore from a previous backup.</p>
+
+			<div class="flex flex-col sm:flex-row gap-2">
+				<button
+					type="button"
+					class="inline-flex h-[36px] items-center justify-center gap-2 rounded-sm bg-primary px-5 font-medium text-white text-sm transition-all hover:bg-primary-hover active:scale-[0.98]"
+					onclick={exportBackup}
+				>
+					<i class="fas fa-download text-xs"></i> Export Backup
+				</button>
+				<button
+					type="button"
+					class="inline-flex h-[36px] items-center justify-center gap-2 rounded-sm border border-border bg-surface px-5 font-medium text-sm text-fg transition-colors hover:bg-muted active:scale-[0.98]"
+					onclick={triggerImport}
+				>
+					<i class="fas fa-upload text-xs"></i> Import Backup
+				</button>
+				<input
+					type="file"
+					accept=".json"
+					class="hidden"
+					bind:this={importInput}
+					onchange={handleImportFile}
+				/>
+			</div>
+
+			{#if importStatus === 'loading'}
+				<div class="flex items-center gap-2 text-xs text-fg-subdued">
+					<i class="fas fa-spinner fa-spin text-xs"></i> Importing...
+				</div>
+			{:else if importStatus === 'success'}
+				<div class="rounded-sm border border-green-500/30 bg-green-500/10 px-4 py-3">
+					<p class="text-xs font-medium text-green-500">{importMessage}</p>
+					{#if importCounts}
+						<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-fg-subdued">
+							{#if importCounts.categories}<span>{importCounts.categories} categories</span>{/if}
+							{#if importCounts.pages}<span>{importCounts.pages} pages</span>{/if}
+							{#if importCounts.elements}<span>{importCounts.elements} elements</span>{/if}
+							{#if importCounts.tags}<span>{importCounts.tags} tags</span>{/if}
+							{#if importCounts.relationships}<span>{importCounts.relationships} links</span>{/if}
+						</div>
+					{/if}
+				</div>
+			{:else if importStatus === 'error'}
+				<div class="rounded-sm border border-error/30 bg-error/10 px-4 py-3">
+					<p class="text-xs font-medium text-error">{importMessage}</p>
+				</div>
+			{/if}
 		</div>
 	</div>
 </div>

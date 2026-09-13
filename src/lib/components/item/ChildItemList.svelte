@@ -169,7 +169,7 @@
 					ondragover={(e) => handleDragOver(e, idx)}
 					ondragend={handleDragEnd}
 				>
-					<i class="fas fa-grip-vertical w-3 text-center text-fg-subdued/40 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+					<i class="fas fa-grip-vertical w-3 text-center text-fg-subdued/40 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"></i>
 					<a href="/app/item/{child.id}" class="flex flex-1 items-center gap-2 text-fg">
 						{#if child.imageUrl}
 							<img src={child.imageUrl} alt="" class="h-5 w-5 rounded-sm object-cover shrink-0" />
@@ -178,7 +178,7 @@
 						{/if}
 						{child.name}
 					</a>
-					<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={() => onRemove?.(child.id)} aria-label="Remove">
+					<button type="button" class="h-5 w-5 items-center justify-center rounded-sm text-fg-subdued hover:text-error flex sm:hidden sm:group-hover:flex" onclick={() => onRemove?.(child.id)} aria-label="Remove">
 						<i class="fas fa-times text-[9px]"></i>
 					</button>
 				</div>
