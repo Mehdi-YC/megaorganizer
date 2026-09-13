@@ -1,5 +1,5 @@
-const CACHE_NAME = 'megorganize-v1';
-const RUNTIME_CACHE = 'megorganize-runtime-v1';
+const CACHE_NAME = 'megorganize-v2';
+const RUNTIME_CACHE = 'megorganize-runtime-v2';
 
 // Assets to pre-cache on install
 const PRECACHE_URLS = [
@@ -75,8 +75,11 @@ self.addEventListener('fetch', (event) => {
 		event.respondWith(
 			fetch(request)
 				.then((response) => {
-					const cloned = response.clone();
-					caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, cloned));
+					// Only cache successful responses
+					if (response.ok) {
+						const cloned = response.clone();
+						caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, cloned));
+					}
 					return response;
 				})
 				.catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
