@@ -1,26 +1,20 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { exportUserData, importUserData, type BackupData } from '$lib/server/services/backup.service';
+import { exportUserData, importUserData } from '$lib/server/services/backup.service';
 
 export const GET: RequestHandler = async ({ locals }) => {
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
-	const data = await exportUserData(locals.user.id);
-	return json(data);
+	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+	return json(await exportUserData(locals.user.id));
 };
 
 export const POST: RequestHandler = async ({ locals, request }) => {
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
 	try {
 		const body = await request.json();
-		const result = await importUserData(locals.user.id, body as BackupData);
+		const result = await importUserData(locals.user.id, body);
 		return json(result);
-	} catch (err) {
-		return json({ success: false, message: 'Failed to import data: invalid format' }, { status: 400 });
+	} catch {
+		return json({ success: false, message: 'Invalid backup file' }, { status: 400 });
 	}
 };

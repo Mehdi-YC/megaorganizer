@@ -190,7 +190,7 @@
 			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Backup & Restore</h2>
 		</div>
 		<div class="px-6 py-5 space-y-4">
-			<p class="text-xs text-fg-subdued">Export all your data as a JSON file, or restore from a previous backup.</p>
+			<p class="text-xs text-fg-subdued">Export all your data as a JSON file, or restore from a previous backup. Existing items with the same name will be skipped.</p>
 
 			<div class="flex flex-col sm:flex-row gap-2">
 				<button
@@ -215,6 +215,7 @@
 					onchange={handleImportFile}
 				/>
 			</div>
+			<p class="text-[10px] text-fg-subdued/60">Includes all categories, pages, items, tags, and file attachments.</p>
 
 			{#if importStatus === 'loading'}
 				<div class="flex items-center gap-2 text-xs text-fg-subdued">
@@ -229,7 +230,8 @@
 							{#if importCounts.pages}<span>{importCounts.pages} pages</span>{/if}
 							{#if importCounts.elements}<span>{importCounts.elements} elements</span>{/if}
 							{#if importCounts.tags}<span>{importCounts.tags} tags</span>{/if}
-							{#if importCounts.relationships}<span>{importCounts.relationships} links</span>{/if}
+							{#if importCounts.attachments}<span>{importCounts.attachments} files</span>{/if}
+							{#if importCounts.skipped}<span class="text-fg-subdued/60">({importCounts.skipped} skipped)</span>{/if}
 						</div>
 					{/if}
 				</div>

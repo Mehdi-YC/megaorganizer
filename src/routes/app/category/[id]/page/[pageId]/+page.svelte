@@ -730,15 +730,10 @@
 							<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={() => (selectedAttachments = new Set())}>
 								Cancel
 							</button>
-						{:else}
-							<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={() => fileInput?.click()}>
-								<i class="fas fa-upload text-[9px]"></i> Upload
+						{:else if attachments.length > 1}
+							<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={selectAllAttachments}>
+								<i class="fas fa-check-double text-[9px]"></i> Select All
 							</button>
-							{#if attachments.length > 1}
-								<button type="button" class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border" onclick={selectAllAttachments}>
-									<i class="fas fa-check-double text-[9px]"></i> Select All
-								</button>
-							{/if}
 						{/if}
 					</div>
 				</div>
