@@ -126,7 +126,7 @@
 						ondragover={(e) => handleDragOver(e, idx)}
 						ondragend={handleDragEnd}
 					>
-						<div class="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+						<div class="absolute top-2 left-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
 							<i class="fas fa-grip-vertical text-[10px] text-fg-subdued/40"></i>
 						</div>
 						<div class="mb-3 flex items-center gap-2">

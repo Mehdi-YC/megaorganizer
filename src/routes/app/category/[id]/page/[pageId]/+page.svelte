@@ -340,7 +340,7 @@
 							<i class="fas fa-plus text-xs"></i> Add
 						</button>
 						{#if showAddMenu}
-							<div class="absolute right-0 top-12 z-50 w-72 sm:w-80 rounded-sm border border-border bg-surface p-3 sm:p-4 max-h-[70vh] overflow-y-auto">
+							<div class="fixed left-4 right-4 top-16 sm:absolute sm:right-0 sm:top-12 z-50 sm:w-80 rounded-sm border border-border bg-surface p-3 sm:p-4 max-h-[70vh] overflow-y-auto">
 								<input type="search" placeholder="Search existing items..." bind:this={addMenuSearchInput} bind:value={searchQuery} oninput={searchItems} class="mb-3 h-9 w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none focus:ring-0" />
 								{#if searchResults.length > 0}
 									<div class="mb-3 max-h-40 overflow-y-auto">
@@ -420,19 +420,19 @@
 								onclick={() => toggleNode(node.id)}
 								onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleNode(node.id); }}
 							>
-								<i class="fas fa-grip-vertical text-[8px] text-fg-subdued/30 opacity-0 group-hover/node:opacity-100 transition-opacity cursor-move shrink-0"></i>
+								<i class="fas fa-grip-vertical text-[8px] text-fg-subdued/30 sm:opacity-0 sm:group-hover/node:opacity-100 transition-opacity cursor-move shrink-0"></i>
 								<i class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isExpanded ? 'rotate-90' : ''}" style="color: {nodeColor}"></i>
 								<i class="fas {nodeIcon} text-[11px]" style="color: {nodeColor}"></i>
 								<span class="text-sm font-semibold truncate" style="color: {nodeColor}">{node.name}</span>
 								<span class="text-[11px] text-fg-subdued">{childItems.length + childNodes.length} items</span>
 								<div class="flex-1"></div>
-							<button type="button" aria-label="Add" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); nodeAddOpen = { ...nodeAddOpen, [node.id]: true }; }}>
+							<button type="button" aria-label="Add" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg sm:opacity-0 sm:group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); nodeAddOpen = { ...nodeAddOpen, [node.id]: true }; }}>
 								<i class="fas fa-plus text-[10px]"></i>
 							</button>
-							<button type="button" aria-label="Edit" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg opacity-0 group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); startEditNode(node); }}>
+							<button type="button" aria-label="Edit" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-fg sm:opacity-0 sm:group-hover:opacity-100" onclick={(e) => { e.stopPropagation(); startEditNode(node); }}>
 								<i class="fas fa-pen text-[10px]"></i>
 							</button>
-							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm opacity-0 group-hover:opacity-100 {confirmDeleteId === node.id ? 'text-error' : 'text-fg-subdued hover:text-error'}" onclick={(e) => { e.stopPropagation(); removeElement(node.id, true); }}>
+							<button type="button" class="h-7 w-7 shrink-0 items-center justify-center rounded-sm sm:opacity-0 sm:group-hover:opacity-100 {confirmDeleteId === node.id ? 'text-error' : 'text-fg-subdued hover:text-error'}" onclick={(e) => { e.stopPropagation(); removeElement(node.id, true); }}>
 								{#if confirmDeleteId === node.id}
 									<i class="fas fa-check text-[11px]"></i>
 								{:else}
@@ -518,7 +518,7 @@
 										<div class="min-w-0 flex-1">
 											<p class="truncate text-xs font-medium text-fg-accent group-hover:text-primary">{item.name}</p>
 										</div>
-										<button type="button" aria-label="Remove" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-error hidden group-hover:flex" onclick={(e) => { e.preventDefault(); removeElement(item.id); }}>
+										<button type="button" aria-label="Remove" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-error flex sm:hidden sm:group-hover:flex" onclick={(e) => { e.preventDefault(); removeElement(item.id); }}>
 											<i class="fas fa-times text-[9px]"></i>
 										</button>
 									</a>

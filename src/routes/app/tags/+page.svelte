@@ -133,7 +133,7 @@
 					{:else}
 						<div class="h-4 w-4 shrink-0 rounded-full" style="background: {t.color || '#5A31F4'}"></div>
 						<span class="flex-1 text-sm font-medium text-fg">{t.name}</span>
-						<div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+						<div class="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
 							<button type="button" aria-label="Edit" class="h-6 w-6 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted" onclick={() => startEdit(t)}><i class="fas fa-pen text-[9px]"></i></button>
 							<button type="button" aria-label="Delete" class="h-6 w-6 items-center justify-center rounded-sm text-fg-subdued hover:text-error hover:bg-error/10" onclick={() => remove(t.id)}><i class="fas fa-trash text-[9px]"></i></button>
 						</div>
