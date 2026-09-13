@@ -786,7 +786,7 @@
 											<p class="text-[9px] text-fg-subdued">{formatFileSize(att.size)}</p>
 										</div>
 									</button>
-									<button type="button" class="h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:opacity-0 sm:group-hover:opacity-100" onclick={async () => { await fetch('/api/attachments', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: att.id }) }); attachments = attachments.filter((a) => a.id !== att.id); selectedAttachments.delete(att.id); selectedAttachments = selectedAttachments; }}>
+									<button type="button" aria-label="Delete" class="h-6 w-6 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:opacity-0 sm:group-hover:opacity-100" onclick={async () => { await fetch('/api/attachments', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: att.id }) }); attachments = attachments.filter((a) => a.id !== att.id); selectedAttachments.delete(att.id); selectedAttachments = selectedAttachments; }}>
 										<i class="fas fa-times text-[9px]"></i>
 									</button>
 								</div>
@@ -887,7 +887,7 @@
 						<a href={previewFile.url} download={previewFile.originalName} class="inline-flex h-7 items-center gap-1.5 rounded-sm bg-muted px-2.5 text-[11px] font-medium text-fg hover:bg-border">
 							<i class="fas fa-download text-[9px]"></i> Download
 						</a>
-						<button type="button" class="inline-flex h-7 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted" onclick={closePreview}>
+						<button type="button" aria-label="Close preview" class="inline-flex h-7 items-center justify-center rounded-sm text-fg-subdued hover:text-fg hover:bg-muted" onclick={closePreview}>
 							<i class="fas fa-times text-xs"></i>
 						</button>
 					</div>
@@ -904,7 +904,7 @@
 							<div class="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
 								<i class="fas fa-file-audio text-2xl text-fg-subdued"></i>
 							</div>
-							<audio src={previewFile.url} controls class="w-80" />
+							<audio src={previewFile.url} controls class="w-80"></audio>
 						</div>
 					{:else if previewFile.category === 'pdf'}
 						<iframe src={previewFile.url} class="h-[75vh] w-[70vw] rounded-sm border-0" title={previewFile.originalName}></iframe>
