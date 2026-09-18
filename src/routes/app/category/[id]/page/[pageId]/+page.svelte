@@ -617,7 +617,7 @@
 										{#each childItems as item}
 											<a
 												href="/app/item/{item.id}"
-												class="group rounded-sm border border-border bg-surface p-1.5 transition-all hover:border-primary/50"
+												class="group rounded-sm border {item.favorite ? 'border-yellow-400/40 bg-yellow-500/5' : 'border-border bg-surface'} p-1.5 transition-all hover:border-primary/50"
 												onmouseenter={(e) => onItemHover(e, item)}
 												onmousemove={onItemHoverMove}
 												onmouseleave={onItemHoverLeave}
@@ -625,7 +625,12 @@
 											<div class="mb-1">
 												<GridItemImage src={item.imageUrl} alt={item.name} height="h-14" icon={item.ydkData ? 'fa-layer-group' : 'fa-cube'} />
 											</div>
-												<p class="truncate text-[9px] font-medium text-fg-accent group-hover:text-primary">{item.name}</p>
+												<div class="flex items-center gap-0.5">
+													<p class="flex-1 truncate text-[9px] font-medium text-fg-accent group-hover:text-primary">{item.name}</p>
+													{#if item.favorite}
+														<i class="fas fa-star text-[8px] text-yellow-400 shrink-0"></i>
+													{/if}
+												</div>
 											</a>
 										{/each}
 									</div>
@@ -669,13 +674,16 @@
 							<h3 class="mb-2 text-[10px] font-bold uppercase tracking-widest text-fg-subdued">Items</h3>
 							<div class="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
 								{#each topLevelItems as item}
-									<a href="/app/item/{item.id}" class="group flex items-center gap-2.5 rounded-sm border border-border bg-surface p-2.5 transition-all hover:border-primary/50">
+									<a href="/app/item/{item.id}" class="group flex items-center gap-2.5 rounded-sm border {item.favorite ? 'border-yellow-400/40 bg-yellow-500/5' : 'border-border bg-surface'} p-2.5 transition-all hover:border-primary/50">
 										<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-muted">
-											<i class="fas {item.ydkData ? 'fa-layer-group' : 'fa-cube'} text-[10px] text-fg-subdued"></i>
+											<i class="fas {item.ydkData ? 'fa-layer-group' : item.favorite ? 'fa-star text-yellow-400' : 'fa-cube text-fg-subdued'} text-[10px]"></i>
 										</div>
 										<div class="min-w-0 flex-1">
 											<p class="truncate text-xs font-medium text-fg-accent group-hover:text-primary">{item.name}</p>
 										</div>
+										{#if item.favorite}
+											<i class="fas fa-star text-[10px] text-yellow-400 shrink-0"></i>
+										{/if}
 										<button type="button" aria-label="Remove" class="h-5 w-5 shrink-0 items-center justify-center rounded-sm text-fg-subdued hover:text-error flex sm:hidden sm:group-hover:flex" onclick={(e) => { e.preventDefault(); removeElement(item.id); }}>
 											<i class="fas fa-times text-[9px]"></i>
 										</button>

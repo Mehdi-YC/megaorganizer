@@ -65,16 +65,21 @@
 			{#if data.recentItems && data.recentItems.length > 0}
 				<div class="grid gap-2 grid-cols-2 sm:grid-cols-3">
 					{#each data.recentItems as item}
-						<a href="/app/item/{item.id}" class="group flex items-center gap-3 rounded-sm border border-border bg-surface p-3 transition-all hover:border-primary/50">
+						<a href="/app/item/{item.id}" class="group flex items-center gap-3 rounded-sm border {item.favorite ? 'border-yellow-400/40 bg-yellow-500/5' : 'border-border bg-surface'} p-3 transition-all hover:border-primary/50">
 							{#if item.imageUrl}
 								<img src={item.imageUrl} alt="" class="h-10 w-10 rounded-sm object-cover shrink-0" />
 							{:else}
 								<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-muted">
-									<i class="fas fa-cube text-sm text-fg-subdued"></i>
+									<i class="fas {item.favorite ? 'fa-star text-yellow-400' : 'fa-cube text-fg-subdued'} text-sm"></i>
 								</div>
 							{/if}
 							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-medium text-fg group-hover:text-primary">{item.name}</p>
+								<div class="flex items-center gap-1">
+									<p class="flex-1 truncate text-sm font-medium text-fg group-hover:text-primary">{item.name}</p>
+									{#if item.favorite}
+										<i class="fas fa-star text-[10px] text-yellow-400 shrink-0"></i>
+									{/if}
+								</div>
 								<p class="text-[10px] text-fg-subdued capitalize">{item.type}</p>
 							</div>
 						</a>

@@ -27,6 +27,7 @@ export async function createTreeElement(
 		tags?: string;
 		metadata?: string;
 		ydkData?: string;
+		favorite?: boolean;
 	}
 ) {
 	const [result] = await db
@@ -62,6 +63,7 @@ export async function updateTreeElement(
 		tags?: string;
 		metadata?: string;
 		ydkData?: string;
+		favorite?: boolean;
 	}
 ) {
 	const [result] = await db

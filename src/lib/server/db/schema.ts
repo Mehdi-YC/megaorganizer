@@ -84,6 +84,7 @@ export const treeElement = sqliteTable(
 		tags: text('tags'), // JSON array of tag IDs (references tag table)
 		metadata: text('metadata'), // JSON object stored as text
 		ydkData: text('ydk_data'), // JSON: { mainDeck: string[], extraDeck: string[], sideDeck: string[] }
+		favorite: integer('favorite', { mode: 'boolean' }).default(false).notNull(),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 			.notNull(),

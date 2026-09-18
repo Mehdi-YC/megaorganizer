@@ -12,6 +12,7 @@
 	let allItems = $state<any[]>([]);
 	let filterTagIds = $state<string[]>([]);
 	let filterYdk = $state(false);
+	let filterFavorite = $state(false);
 	let showFilters = $state(false);
 	let smallImages = $state(new Set<string>());
 	let currentPage = $state(1);
@@ -46,6 +47,10 @@
 			});
 		}
 
+		if (filterFavorite) {
+			result = result.filter((item: any) => !!item.favorite);
+		}
+
 		if (filterYdk) {
 			result = result.filter((item: any) => !!item.ydkData);
 		}
@@ -64,14 +69,20 @@
 		filterItems();
 	}
 
+	function toggleFilterFavorite() {
+		filterFavorite = !filterFavorite;
+		filterItems();
+	}
+
 	function clearFilters() {
 		filterTagIds = [];
 		filterYdk = false;
+		filterFavorite = false;
 		searchQuery = '';
 		filterItems();
 	}
 
-	let hasActiveFilters = $derived(filterTagIds.length > 0 || filterYdk);
+	let hasActiveFilters = $derived(filterTagIds.length > 0 || filterYdk || filterFavorite);
 	let totalPages = $derived(Math.max(1, Math.ceil(items.length / PAGE_SIZE)));
 	let paginatedItems = $derived(items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE));
 
@@ -131,7 +142,7 @@
 			</div>
 			<button type="button" class="inline-flex h-9 items-center justify-center gap-1.5 rounded-sm border {hasActiveFilters ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-bg text-fg-subdued hover:bg-muted hover:text-fg'} px-3 text-xs font-medium transition-colors" onclick={() => (showFilters = !showFilters)}>
 				<i class="fas fa-filter text-[10px]"></i>
-				{#if hasActiveFilters}<span class="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[9px] text-white">{filterTagIds.length + (filterYdk ? 1 : 0)}</span>{/if}
+				{#if hasActiveFilters}<span class="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[9px] text-white">{filterTagIds.length + (filterYdk ? 1 : 0) + (filterFavorite ? 1 : 0)}</span>{/if}
 			</button>
 		</div>
 
@@ -158,6 +169,9 @@
 						</div>
 					</div>
 					<div>
+						<button type="button" class="inline-flex items-center gap-1.5 rounded-sm px-2 py-1 text-[10px] font-medium transition-all {filterFavorite ? 'bg-yellow-400 text-white' : 'bg-muted text-fg-subdued hover:text-fg'}" onclick={toggleFilterFavorite}>
+							<i class="fas fa-star text-[9px]"></i> Favorites only
+						</button>
 						<button type="button" class="inline-flex items-center gap-1.5 rounded-sm px-2 py-1 text-[10px] font-medium transition-all {filterYdk ? 'bg-primary text-white' : 'bg-muted text-fg-subdued hover:text-fg'}" onclick={toggleFilterYdk}>
 							<i class="fas fa-layer-group text-[9px]"></i> Decks only
 						</button>
@@ -189,12 +203,17 @@
 		<div class="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{#each paginatedItems as item}
 				{@const itemTags = getAssignedTags(item, allTags)}
-				<a href="/app/item/{item.id}" class="group rounded-sm border border-border bg-surface transition-all hover:border-primary/50">
+				<a href="/app/item/{item.id}" class="group rounded-sm border {item.favorite ? 'border-yellow-400/40 bg-yellow-500/5' : 'border-border bg-surface'} transition-all hover:border-primary/50">
 					<div class="h-24 overflow-hidden rounded-t-sm">
 						<GridItemImage src={item.imageUrl} alt={item.name} height="h-24" icon={item.ydkData ? 'fa-layer-group' : 'fa-cube'} />
 					</div>
 					<div class="p-2.5">
-						<h3 class="truncate text-xs font-medium text-fg-accent group-hover:text-primary">{item.name}</h3>
+						<div class="flex items-center gap-1">
+							<h3 class="flex-1 truncate text-xs font-medium text-fg-accent group-hover:text-primary">{item.name}</h3>
+							{#if item.favorite}
+								<i class="fas fa-star text-[10px] text-yellow-400 shrink-0"></i>
+							{/if}
+						</div>
 						<p class="mt-0.5 text-[10px] capitalize text-fg-subdued">{item.type}{#if item.ydkData} · Deck{/if}</p>
 						{#if itemTags.length > 0}
 							<div class="mt-1.5 flex flex-wrap gap-1">

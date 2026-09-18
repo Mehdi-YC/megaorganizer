@@ -24,6 +24,7 @@
 	let isSmall = $state(false);
 	let showTree = $state(false);
 	let subtree = $state<any[]>([]);
+	let favorite = $state(item?.favorite ?? false);
 
 	let isDeck = $derived(!!ydkData);
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
@@ -122,6 +123,15 @@
 	}
 
 	function clearYdk() { ydkData = ''; ydkEnabled = false; ydkInput = ''; }
+
+	async function toggleFavorite() {
+		if (!item) return;
+		const newVal = !favorite;
+		favorite = newVal;
+		const res = await fetch('/api/tree', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: item.id, favorite: newVal }) });
+		if (res.ok) item = { ...item, favorite: newVal };
+		else favorite = !newVal; // revert on error
+	}
 </script>
 
 <svelte:head><title>{item?.name || 'Item'} - MegaOrganize</title></svelte:head>
@@ -229,6 +239,12 @@
 						<div class="flex justify-between"><dt class="text-fg-subdued">Created</dt><dd class="text-fg">{new Date(item.createdAt).toLocaleDateString()}</dd></div>
 						<div class="flex justify-between"><dt class="text-fg-subdued">Updated</dt><dd class="text-fg">{new Date(item.updatedAt).toLocaleDateString()}</dd></div>
 					</dl>
+				</div>
+				<div>
+					<button type="button" aria-label="Toggle favorite" onclick={toggleFavorite} class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {favorite ? 'bg-yellow-400/10 text-yellow-500' : 'bg-muted text-fg-subdued hover:text-fg hover:bg-border'}">
+						<i class="fas fa-star"></i>
+						<span>{favorite ? 'Favorited' : 'Add to favorites'}</span>
+					</button>
 				</div>
 				<TagPicker {tagIds} {allTags} {editing} onToggle={toggleTag} />
 			</div>
@@ -509,6 +525,13 @@
 						<div class="flex justify-between"><dt class="text-fg-subdued">Created</dt><dd class="text-fg">{new Date(item.createdAt).toLocaleDateString()}</dd></div>
 						<div class="flex justify-between"><dt class="text-fg-subdued">Updated</dt><dd class="text-fg">{new Date(item.updatedAt).toLocaleDateString()}</dd></div>
 					</dl>
+				</div>
+
+				<div>
+					<button type="button" aria-label="Toggle favorite" onclick={toggleFavorite} class="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {favorite ? 'bg-yellow-400/10 text-yellow-500' : 'bg-muted text-fg-subdued hover:text-fg hover:bg-border'}">
+						<i class="fas fa-star"></i>
+						<span>{favorite ? 'Favorited' : 'Add to favorites'}</span>
+					</button>
 				</div>
 
 				<!-- Tags -->

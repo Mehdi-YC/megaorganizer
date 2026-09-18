@@ -11,6 +11,7 @@ export async function getDashboardData(userId: string) {
 				name: treeElement.name,
 				type: treeElement.type,
 				imageUrl: treeElement.imageUrl,
+				favorite: treeElement.favorite,
 				updatedAt: treeElement.updatedAt
 			})
 			.from(treeElement)
