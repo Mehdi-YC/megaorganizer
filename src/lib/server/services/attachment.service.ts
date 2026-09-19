@@ -8,6 +8,34 @@ import path from 'path';
 const UPLOAD_DIR = path.resolve('static/uploads');
 const MAX_SIZE = 100 * 1024 * 1024;
 
+// Allowed mime types for security
+const ALLOWED_MIME_TYPES = new Set([
+	// Images
+	'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp',
+	// Videos
+	'tvideo/mp4', 'video/webm', 'video/quicktime',
+	// Audio
+	'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm',
+	// Documents
+	'application/pdf',
+	'text/plain', 'text/markdown', 'text/csv',
+	'application/json',
+	// Archives (for backups)
+	'application/zip', 'application/gzip',
+	// Office (common)
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+]);
+
+// Dangerous file extensions to block
+const BLOCKED_EXTENSIONS = new Set([
+	'.exe', '.bat', '.cmd', '.com', '.msi', '.ps1', '.sh', '.bash',
+	'.php', '.asp', '.aspx', '.jsp', '.cgi',
+	'.js', '.mjs', '.ts', '.jsx', '.tsx',
+	'.vbs', '.wsf', '.scr', '.pif'
+]);
+
 function userDir(userId: string) {
 	return path.join(UPLOAD_DIR, userId);
 }
@@ -47,12 +75,36 @@ export async function uploadAttachment(userId: string, pageId: string, file: Fil
 	if (!pageRecord) return { success: false as const, error: 'Page not found' };
 	if (file.size > MAX_SIZE) return { success: false as const, error: 'File size exceeds 100MB limit' };
 
+	// Validate file extension
+	const ext = path.extname(file.name).toLowerCase();
+	if (BLOCKED_EXTENSIONS.has(ext)) {
+		return { success: false as const, error: 'File type not allowed for security reasons' };
+	}
+
+	// Validate mime type (if provided)
+	if (file.type && !ALLOWED_MIME_TYPES.has(file.type)) {
+		return { success: false as const, error: 'File type not allowed' };
+	}
+
+	// Sanitize filename - remove path separators and null bytes
+	const sanitizedName = file.name.replace(/[\/\\:*?"<>|\x00]/g, '_');
+	if (!sanitizedName || sanitizedName.trim().length === 0) {
+		return { success: false as const, error: 'Invalid filename' };
+	}
+
 	const dir = userDir(userId);
 	if (!existsSync(dir)) await mkdir(dir, { recursive: true });
 
-	const ext = path.extname(file.name);
 	const storedName = `${crypto.randomUUID()}${ext}`;
-	await writeFile(path.join(dir, storedName), Buffer.from(await file.arrayBuffer()));
+	const filePath = path.join(dir, storedName);
+	
+	// Verify the resolved path is within the upload directory (prevent path traversal)
+	const resolvedPath = path.resolve(filePath);
+	if (!resolvedPath.startsWith(path.resolve(dir))) {
+		return { success: false as const, error: 'Invalid file path' };
+	}
+	
+	await writeFile(resolvedPath, Buffer.from(await file.arrayBuffer()));
 
 	const [result] = await db.insert(attachment).values({
 		userId, pageId, originalName: file.name, storedName,

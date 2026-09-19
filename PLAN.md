@@ -1,202 +1,93 @@
-# MegaOrganize - New Features Plan
+# Production Readiness Audit
 
 ## Context
-Add four major features to MegaOrganize:
-1. **Global Search** - Search across ALL content types (items, pages, reminders, expenses, training)
-2. **Quick Capture** - Floating button to quickly add expenses, reminders, items, notes
-3. **Analytics Dashboard** - Insights into training, spending, habits, productivity
-4. **PWA Support** - Installable as mobile app (no offline mode)
+Make MegaOrganize production-ready by fixing security issues, code inconsistencies, and deployment problems. Excluding SQLite limitations and caching (per user request).
 
-## Chunk 1: Global Search
+## Critical Issues Found
 
-### Current State
-- Sidebar has a search (Cmd+K) but only searches items via `/api/tree?search=`
-- No search for reminders, expenses, training, or pages
+### 1. Dockerfile Runs Dev Mode (CRITICAL)
+**File**: `Dockerfile`, `entrypoint.sh`
+- Current: `exec bun run dev --host 0.0.0.0`
+- Problem: Dev server is not secure, slow, exposes source maps
+- Fix: Build and use production server with `adapter-node`
 
-### Approach
-Create a unified search API that queries all tables and returns categorized results.
+### 2. No Content Security Policy (SECURITY)
+**File**: `src/hooks.server.ts`
+- Missing CSP headers allow XSS attacks
+- Fix: Add CSP header to security headers
 
-### Files to Create
-- `src/routes/api/search/+server.ts` - Unified search endpoint
+### 3. File Upload Validation (SECURITY)
+**File**: `src/lib/server/services/attachment.service.ts`
+- Only checks file size, not mime type
+- No validation on storedName (though UUID is safe)
+- Fix: Add allowed mime types list, validate extensions
 
-### Files to Modify
-- `src/lib/components/layout/Sidebar.svelte` - Enhance search UI with categories
-- `src/lib/server/services/` - Add search functions to existing services
+### 4. No Request Body Size Limit (PERFORMANCE)
+- API endpoints don't limit request body size
+- Could lead to memory exhaustion
+- Fix: Add body size check in hooks or per-route
 
-### Search Results Format
-```typescript
-interface SearchResult {
-  type: 'item' | 'page' | 'reminder' | 'expense' | 'training' | 'tag';
-  id: string;
-  title: string;
-  subtitle?: string;
-  icon: string;
-  url: string;
-  imageUrl?: string;
-}
-```
+### 5. Rate Limiting Only on Auth (SECURITY)
+- Only login/register have rate limiting
+- API endpoints are unprotected
+- Fix: Add rate limiting to all API routes
 
-### Implementation
-1. Create `search.service.ts` with queries for each content type
-2. Create `/api/search` endpoint
-3. Update Sidebar search to use new endpoint and show categorized results
+### 6. Error Messages Leak Info (SECURITY)
+- Some error messages expose internal details
+- Fix: Generic error messages in production
 
----
+## Code Inconsistencies Found
 
-## Chunk 2: Quick Capture
+### 7. Inconsistent Error Handling
+- Some services throw, some return error objects
+- Fix: Standardize error handling pattern
 
-### Approach
-Floating action button (FAB) with a modal for quick entry. Supports:
-- Expense (amount + description + date)
-- Reminder (title + due date + recurrence)
-- Item (name + tags)
-- Note (markdown content)
+### 8. Missing Input Sanitization
+- Markdown is sanitized via DOMPurify (good)
+- But some text inputs aren't sanitized
+- Fix: Sanitize user inputs before storage
 
-### Files to Create
-- `src/lib/components/QuickCapture.svelte` - Main component
-- `src/lib/components/quick-capture/ExpenseQuickForm.svelte`
-- `src/lib/components/quick-capture/ReminderQuickForm.svelte`
-- `src/lib/components/quick-capture/ItemQuickForm.svelte`
-- `src/lib/components/quick-capture/NoteQuickForm.svelte`
+### 9. No Request Validation on GET Endpoints
+- POST/PUT have validation via `validateBody()`
+- GET query params are used directly
+- Fix: Validate query parameters
 
-### Files to Modify
-- `src/routes/app/+layout.svelte` - Add FAB and QuickCapture
+### 10. Database Transactions
+- Some multi-step operations aren't atomic
+- Fix: Use transactions for related operations
 
-### UI Design
-- Floating button (bottom-right on mobile, configurable on desktop)
-- Opens modal with tabs: Expense | Reminder | Item | Note
-- Minimal fields for fast entry
-- Keyboard shortcuts: `E` for expense, `R` for reminder, etc.
+## Files to Modify
 
----
+### Critical Fixes
+1. `Dockerfile` - Production build
+2. `entrypoint.sh` - Production start
+3. `src/hooks.server.ts` - CSP headers, body size limit
+4. `src/lib/server/services/attachment.service.ts` - File validation
 
-## Chunk 3: Analytics Dashboard
+### Security Hardening
+5. `src/lib/server/rate-limit.ts` - Generic rate limiter
+6. `src/lib/server/api-helpers.ts` - Add rate limiting helper
+7. `src/lib/server/validate.ts` - Add query param validation
 
-### Approach
-New page `/app/analytics` with charts and insights across all modules.
+### Code Quality
+8. Multiple service files - Standardize error handling
+9. Multiple API routes - Add input validation
 
-### Files to Create
-- `src/routes/app/analytics/+page.svelte`
-- `src/routes/app/analytics/+page.server.ts`
-- `src/lib/server/services/analytics.service.ts`
-- `src/lib/components/analytics/TrainingChart.svelte`
-- `src/lib/components/analytics/SpendingChart.svelte`
-- `src/lib/components/analytics/HabitStreak.svelte`
-- `src/lib/components/analytics/ProductivityScore.svelte`
+## Steps
 
-### Analytics Sections
-1. **Training Overview**
-   - Weekly/monthly session count
-   - Duration trends
-   - Activity type breakdown
-
-2. **Spending Insights**
-   - Monthly spending trend (line chart)
-   - Top expense categories (tags)
-   - Budget vs actual
-
-3. **Habit Tracking**
-   - Reminder completion rate
-   - Current streaks
-   - Best streaks
-
-4. **Productivity Score**
-   - Composite score based on: training, reminders, items created
-   - Daily/weekly trends
-
-### Reuse
-- Existing `AreaChart.svelte` component
-- Existing stat card patterns
-
----
-
-## Chunk 4: PWA Support
-
-### Approach
-Make MegaOrganize installable as a PWA on mobile and desktop.
-
-### Files to Create
-- `static/manifest.json` - PWA manifest
-- `static/icons/` - App icons (multiple sizes)
-- `src/routes/+layout.svelte` - Add manifest link
-
-### Manifest Configuration
-```json
-{
-  "name": "MegaOrganize",
-  "short_name": "MegaOrg",
-  "description": "Your personal knowledge & activity operating system",
-  "start_url": "/app",
-  "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#3b82f6",
-  "icons": [...]
-}
-```
-
-### Implementation
-1. Create manifest.json with app metadata
-2. Generate app icons (192x192, 512x512)
-3. Add meta tags to `app.html`
-4. Add install prompt component (optional)
-
----
-
-## Implementation Order
-
-### Chunk 1: Global Search (1-2 days)
-- Create unified search API
-- Enhance sidebar search UI
-- Add search to mobile layout
-
-### Chunk 2: Quick Capture (1-2 days)
-- Create QuickCapture component
-- Add FAB to layout
-- Create quick forms for each type
-
-### Chunk 3: Analytics (2-3 days)
-- Create analytics service
-- Build chart components
-- Create analytics page
-
-### Chunk 4: PWA (1 day)
-- Create manifest
-- Generate icons
-- Add meta tags
-
----
+- [x] Step 1: Fix Dockerfile for production build
+- [x] Step 2: Add CSP and security headers
+- [x] Step 3: Add file upload validation
+- [x] Step 4: Add API rate limiting
+- [x] Step 5: Add request body size limit
+- [x] Step 6: Standardize error handling
+- [x] Step 7: Add input sanitization
+- [x] Step 8: Test production build
 
 ## Verification
-
-### Global Search
-1. Press Cmd+K or click search
-2. Type "workout" → shows training sessions, items with "workout"
-3. Type "grocery" → shows expenses with "grocery"
-4. Click result → navigates to correct page
-
-### Quick Capture
-1. Click FAB button
-2. Add expense → appears in finance page
-3. Add reminder → appears in reminders
-4. Add item → appears in library
-
-### Analytics
-1. Navigate to Analytics page
-2. See training charts with real data
-3. See spending trends
-4. See habit completion rates
-
-### PWA
-1. Open on mobile browser
-2. See "Add to Home Screen" prompt
-3. App installs with icon
-4. Opens in standalone mode
-
----
-
-## Decisions
-
-- **Analytics**: Simple - stat cards + basic charts
-- **Quick Capture**: Bottom-right FAB (standard mobile pattern)
-- **Analytics Page**: Separate page at `/app/analytics`
-- **Search Scope**: Titles and descriptions (fast, can expand later)
+1. `bun run build` succeeds
+2. Docker build works
+3. Security headers present in responses
+4. File upload rejects invalid types
+5. Rate limiting works on API
+6. No sensitive data in error messages

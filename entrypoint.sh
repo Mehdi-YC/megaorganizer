@@ -1,4 +1,8 @@
 #!/bin/sh
 set -e
+
+# Run database migrations
 bun run db:push
-exec bun run dev --host 0.0.0.0
+
+# Start production server
+exec bun run preview --host 0.0.0.0
