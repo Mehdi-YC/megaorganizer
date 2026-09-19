@@ -1,25 +1,19 @@
 {
 	"name": "MegaOrganize",
-	"short_name": "MegaOrganize",
-	"description": "Personal knowledge, organization, activity, and tracking OS",
-	"start_url": "/",
+	"short_name": "MegaOrg",
+	"description": "Your personal knowledge & activity operating system",
+	"start_url": "/app",
 	"display": "standalone",
-	"background_color": "#0a0a0a",
+	"background_color": "#0f172a",
 	"theme_color": "#3b82f6",
-	"orientation": "portrait",
-	"categories": ["productivity", "health", "fitness"],
+	"orientation": "any",
 	"icons": [
 		{
 			"src": "/icons/icon.svg",
 			"sizes": "any",
 			"type": "image/svg+xml",
-			"purpose": "any"
-		},
-		{
-			"src": "/icons/icon.svg",
-			"sizes": "any",
-			"type": "image/svg+xml",
-			"purpose": "maskable"
+			"purpose": "any maskable"
 		}
-	]
+	],
+	"categories": ["productivity", "utilities"]
 }

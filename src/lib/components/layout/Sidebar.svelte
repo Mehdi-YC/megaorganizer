@@ -46,7 +46,7 @@
 	let newPageName = $state('');
 	let showSearch = $state(false);
 	let searchQuery = $state('');
-	let searchResults = $state<Array<{ id: string; name: string; type: string; imageUrl?: string; categoryId?: string }>>([]);
+	let searchResults = $state<Array<{ id: string; title: string; type: string; subtitle?: string; icon: string; url: string; imageUrl?: string }>>([]);
 	let showUserMenu = $state(false);
 	let confirmDeleteCatId = $state<string | null>(null);
 
@@ -145,8 +145,8 @@
 	}
 
 	async function doSearch() {
-		if (!searchQuery.trim() || searchQuery.trim().length < 3) { searchResults = []; return; }
-		const res = await fetch(`/api/tree?search=${encodeURIComponent(searchQuery)}`);
+		if (!searchQuery.trim() || searchQuery.trim().length < 2) { searchResults = []; return; }
+		const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
 		if (res.ok) searchResults = await res.json();
 	}
 
@@ -155,11 +155,7 @@
 		searchQuery = '';
 		searchResults = [];
 		onNavigate();
-		if (result.type === 'page') {
-			goto(`/app/category/${result.categoryId}/page/${result.id}`);
-		} else {
-			goto(`/app/item/${result.id}`);
-		}
+		goto(result.url);
 	}
 
 	function getUserInitial(): string {
@@ -191,19 +187,19 @@
 				<kbd class="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-fg-subdued">ESC</kbd>
 			</div>
 			{#if searchResults.length > 0}
-				<div class="border-t border-border max-h-60 overflow-y-auto py-1">
+				<div class="border-t border-border max-h-[60vh] overflow-y-auto py-1">
 					{#each searchResults as result}
 						<button type="button" class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-muted transition-colors" onclick={() => navigateSearchResult(result)}>
 						{#if result.imageUrl}
-							<img src={result.imageUrl} alt={result.name} class="h-7 w-7 rounded-sm object-cover shrink-0" />
+							<img src={result.imageUrl} alt={result.title} class="h-7 w-7 rounded-sm object-cover shrink-0" />
 						{:else}
 							<div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-muted">
-								<i class="fas {result.type === 'page' ? 'fa-file-alt' : result.type === 'node' ? 'fa-folder' : 'fa-cube'} text-[10px] text-fg-subdued"></i>
+								<i class="fas {result.icon} text-[10px] text-fg-subdued"></i>
 							</div>
 						{/if}
 							<div class="flex-1 min-w-0">
-								<p class="truncate text-fg text-sm">{result.name}</p>
-								<p class="text-[10px] capitalize text-fg-subdued">{result.type}</p>
+								<p class="truncate text-fg text-sm">{result.title}</p>
+								<p class="text-[10px] text-fg-subdued truncate">{result.subtitle || result.type}</p>
 							</div>
 							<i class="fas fa-arrow-right text-[9px] text-fg-subdued/50"></i>
 						</button>
@@ -216,7 +212,7 @@
 				</div>
 			{:else}
 				<div class="border-t border-border px-4 py-6 text-center">
-					<p class="text-xs text-fg-subdued">Type to search across all items and pages</p>
+					<p class="text-xs text-fg-subdued">Search items, pages, reminders, expenses, training...</p>
 				</div>
 			{/if}
 		</div>
@@ -251,6 +247,11 @@
 		<a href="/app/finance" onclick={onNavigate} class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/finance' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
 			<i class="fas fa-receipt w-4 text-center text-xs"></i>
 			Finance
+		</a>
+
+		<a href="/app/analytics" onclick={onNavigate} class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/analytics' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+			<i class="fas fa-chart-bar w-4 text-center text-xs"></i>
+			Analytics
 		</a>
 
 		<div class="h-px bg-border/50 my-1"></div>
