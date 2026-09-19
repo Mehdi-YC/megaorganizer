@@ -6,9 +6,13 @@
 	import { GridItemImage } from '$lib/components/ui';
 
 	let { data } = $props();
+	// svelte-ignore state_referenced_locally
 	let category = $state(data.category);
+	// svelte-ignore state_referenced_locally
 	let pageData = $state(data.pageData);
+	// svelte-ignore state_referenced_locally
 	let treeElements = $state(data.treeElements ?? []);
+	// svelte-ignore state_referenced_locally
 	let pageContent = $state(data.pageData?.markdown ?? '');
 	let showAddMenu = $state(false);
 	let searchQuery = $state('');
@@ -39,6 +43,7 @@
 	let nodeMarkdownHtml = $state<Record<string, string>>({});
 
 	// Attachments state
+	// svelte-ignore state_referenced_locally
 	let attachments = $state<any[]>(data.attachments ?? []);
 	let selectedAttachments = $state<Set<string>>(new Set());
 	let uploading = $state(false);

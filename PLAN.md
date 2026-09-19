@@ -1,74 +1,97 @@
-# Add Favorite Feature to Items
+# Personal Finance Feature + Code Cleanup
 
 ## Context
-The user wants to mark items as "favorites" with a star toggle. Favorited items should be visually distinct (yellow-ish styling) and filterable in the library view. The star toggle goes in the right sidebar of the item detail page.
+Add personal finance tracking to MegaOrganize. Expenses are like items (markdown + tags) but with amount, date, and currency attached. Includes dashboard with monthly stats, calendar integration with monthly overview, and spending limits in profile.
 
 ## Approach
 
-### 1. Database: Add `favorite` column to `treeElement` table
-- Add `favorite: integer('favorite', { mode: 'boolean' }).default(false).notNull()` to the `treeElement` table in `src/lib/server/db/schema.ts`
-- Generate and push migration with `drizzle-kit push`
+### Data Model
+Expenses are separate from treeElement but follow similar patterns:
+- `expense` table: amount, currency, date, markdown, tags (JSON array like items), userId
+- `user_settings` table: currency, currencyRate, monthlySpendingLimit (stored per user)
 
-### 2. Backend: Update tree service + API
-- **`src/lib/server/services/tree.service.ts`**: Add `favorite` to the `updateTreeElement` data type and `createTreeElement` data type
-- **`src/routes/api/tree/+server.ts`**: No changes needed — the PUT handler already passes through arbitrary update fields to `updateTreeElement`
+Default currency: DZD (Algerian Dinar), configurable in profile with exchange rate.
 
-### 3. Item Detail Page: Star toggle in right sidebar
-**File: `src/routes/app/item/[id]/+page.svelte`**
-- Add `favorite` state variable initialized from `item.favorite`
-- Add `toggleFavorite()` function that calls `PUT /api/tree` with `{ id, favorite: !favorite }` and updates local state
-- In the **right sidebar** (both deck and non-deck views, desktop), add a star button in the "Details" section:
-  ```svelte
-  <button onclick={toggleFavorite} class="...">
-    <i class="fas {favorite ? 'fa-star text-yellow-400' : 'fa-star text-fg-subdued'}"></i>
-  </button>
-  ```
-- Also add in the mobile view near the title/actions area
+### Finance Page (`/app/finance`)
+Dashboard-style layout:
+- Monthly summary card: total spent, limit remaining, daily average
+- Expense list with quick-add form at top
+- Filter by date range and tags
+- Visual indicator when approaching/exceeding limit
 
-### 4. Library Page: Filter by favorites + visual styling on cards
-**File: `src/routes/app/library/+page.svelte`**
-- Add `filterFavorite` state (boolean)
-- Add "Favorites only" toggle button in the filters panel (similar to "Decks only")
-- Update `filterItems()` to filter by `item.favorite` when `filterFavorite` is true
-- Update `hasActiveFilters` to include `filterFavorite`
-- For each item card in the grid, apply yellow-ish styling when `item.favorite`:
-  - Add `border-yellow-400/40 bg-yellow-50/5` classes (or similar) to the card `<a>` tag
-  - Show a small yellow star icon at the right side of the card
+### Calendar Integration
+- Show expenses as events in calendar
+- Add monthly overview header at top of each month showing:
+  - Tasks count (reminders)
+  - Training count
+  - Total expenses
+- Events list becomes scrollable when many events
 
-### 5. Dashboard Page: Visual styling on recent items
-**File: `src/routes/app/+page.svelte`**
-- For each recent item card, if `item.favorite`, apply the yellow-ish border/bg styling and show the star icon
+### Profile Settings
+- Add Finance Settings section
+- Currency selection (text input)
+- Currency rate (for conversion display)
+- Monthly spending limit
 
-### 6. Category Page: Visual styling on items
-**File: `src/routes/app/category/[id]/page/[pageId]/+page.svelte`**
-- For item cards within nodes and top-level items, apply yellow-ish styling when `item.favorite` and show star icon
+## Files to Create
+
+### Database
+1. **`src/lib/server/db/schema.ts`** - Add `expense` and `user_settings` tables
+
+### Services
+2. **`src/lib/server/services/finance.service.ts`** - CRUD for expenses, stats calculations
+
+### API
+3. **`src/routes/api/finance/+server.ts`** - Finance API endpoints
+
+### Pages
+4. **`src/routes/app/finance/+page.svelte`** - Finance dashboard page
+5. **`src/routes/app/finance/+page.server.ts`** - Server load
+
+### Components
+6. **`src/lib/components/finance/ExpenseForm.svelte`** - Add expense form
+7. **`src/lib/components/finance/ExpenseCard.svelte`** - Single expense display
+8. **`src/lib/components/finance/MonthlySummary.svelte`** - Monthly stats widget
 
 ## Files to Modify
-1. `src/lib/server/db/schema.ts` — add `favorite` column
-2. `src/lib/server/services/tree.service.ts` — add `favorite` to data types
-3. `src/routes/app/item/[id]/+page.svelte` — star toggle in sidebar
-4. `src/routes/app/library/+page.svelte` — filter + card styling
-5. `src/routes/app/+page.svelte` — card styling for recent items
-6. `src/routes/app/category/[id]/page/[pageId]/+page.svelte` — card styling
+
+### Calendar
+8. **`src/routes/app/calendar/+page.server.ts`** - Add expense data
+9. **`src/routes/app/calendar/+page.svelte`** - Add expenses filter, monthly header, scrollable list
+
+### Profile
+10. **`src/routes/app/settings/profile/+page.svelte`** - Add finance settings section
+11. **`src/routes/app/settings/profile/+page.server.ts`** - Load/save settings
+
+### Sidebar
+12. **`src/lib/components/layout/Sidebar.svelte`** - Add Finance link
+
+### Code Cleanup
+13. **Multiple files** - Fix `state_referenced_locally` warnings
 
 ## Reuse
-- Existing `toggleArrayItem` pattern for filter toggles (though favorite is a boolean, not array)
-- Existing `fetch('/api/tree', { method: 'PUT' })` pattern for saving
-- Font Awesome `fa-star` icon (already in the icon set used throughout)
+- **Tags system**: Existing `$lib/server/services/tag.service.ts`
+- **Markdown rendering**: `$lib/utils/markdown.ts`
+- **UI components**: `Input`, `Button`, `Textarea`, `Dialog`, `EmptyState`
+- **API patterns**: `requireUser()`, `parseJson()`, `validateBody()`
 
 ## Steps
-- [x] Add `favorite` boolean column to `treeElement` in schema.ts
-- [x] Run `bun run db:push` to apply migration
-- [x] Update `tree.service.ts` create/update data types to include `favorite`
-- [x] Add star toggle button in item detail page right sidebar (desktop + mobile)
-- [x] Add favorite filter to library page filters panel
-- [x] Add yellow-ish card styling in library grid for favorited items
-- [x] Add yellow-ish card styling in dashboard recent items
-- [x] Add yellow-ish card styling in category page items
-- [x] Test: create item, toggle favorite, verify star persists on reload, verify filter works, verify yellow styling appears
+- [x] Step 1: Add expense and user_settings tables to schema, push migration
+- [x] Step 2: Create finance service with CRUD and stats functions
+- [x] Step 3: Create finance API route
+- [x] Step 4: Create finance components (ExpenseForm, ExpenseCard, MonthlySummary)
+- [x] Step 5: Create finance dashboard page (`/app/finance`)
+- [x] Step 6: Add finance settings to profile page
+- [x] Step 7: Integrate expenses into calendar with monthly overview header
+- [x] Step 8: Add Finance link to sidebar
+- [x] Step 9: Fix TypeScript warnings (state_referenced_locally pattern)
+- [x] Step 10: Test full flow
 
 ## Verification
-1. Open an item → right sidebar → click star → save → reload → star should still be filled
-2. Go to Library → see yellow-ish card for favorited item → toggle "Favorites" filter → only favorites shown
-3. Dashboard recent items → favorited items have yellow styling
-4. Category page → favorited items have yellow styling + star icon
+1. Can add expenses with amount, date, markdown content, tags
+2. Finance dashboard shows monthly summary with spending vs limit
+3. Calendar shows expenses as events
+4. Calendar monthly header shows task/training/expense counts
+5. Profile settings allow currency and limit configuration
+6. Sidebar has Finance link
+7. No TypeScript errors

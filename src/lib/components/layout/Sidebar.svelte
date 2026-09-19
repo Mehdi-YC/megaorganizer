@@ -19,11 +19,28 @@
 		JSON.parse(typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('sidebar_expanded') || '[]' : '[]')
 	));
 
+	let expandedSections = $state(new Set<string>(
+		JSON.parse(typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('sidebar_sections') || '[]' : '[]')
+	));
+
 	$effect(() => {
 		if (typeof sessionStorage !== 'undefined') {
 			sessionStorage.setItem('sidebar_expanded', JSON.stringify([...expandedCategories]));
 		}
 	});
+
+	$effect(() => {
+		if (typeof sessionStorage !== 'undefined') {
+			sessionStorage.setItem('sidebar_sections', JSON.stringify([...expandedSections]));
+		}
+	});
+
+	function toggleSection(name: string) {
+		const next = new Set(expandedSections);
+		if (next.has(name)) next.delete(name);
+		else next.add(name);
+		expandedSections = next;
+	}
 
 	let creatingPageFor = $state<string | null>(null);
 	let newPageName = $state('');
@@ -221,45 +238,62 @@
 	</div>
 
 	<nav class="flex-1 overflow-y-auto py-3 px-2">
-		<a href="/app" onclick={onNavigate} class="mb-3 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+		<a href="/app" onclick={onNavigate} class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
 			<i class="fas fa-home w-4 text-center text-xs"></i>
 			Dashboard
 		</a>
 
+		<a href="/app/calendar" onclick={onNavigate} class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/calendar' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+			<i class="fas fa-calendar w-4 text-center text-xs"></i>
+			Calendar
+		</a>
+
+		<a href="/app/finance" onclick={onNavigate} class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/finance' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+			<i class="fas fa-receipt w-4 text-center text-xs"></i>
+			Finance
+		</a>
+
 		<div class="h-px bg-border/50 my-1"></div>
 
-		<div class="mt-2 mb-2">
-			<div class="flex items-center gap-2.5 px-3 py-1.5 text-[13px] text-fg-subdued">
+		<!-- Training Section (Collapsible) -->
+		<div class="mt-2 mb-1">
+			<button
+				type="button"
+				class="flex w-full items-center gap-2.5 px-3 py-1.5 text-[13px] text-fg-subdued hover:text-fg transition-colors"
+				onclick={() => toggleSection('training')}
+			>
 				<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
-				<span class="font-medium">Training</span>
-			</div>
-			<div class="ml-7 space-y-0.5">
-				<a href="/app/training" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname === '/app/training' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
-					<i class="fas fa-calendar w-3 text-center text-[10px]"></i> Overview
-				</a>
-				<a href="/app/training/calendar" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith('/app/training/calendar') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
-					<i class="fas fa-calendar-days w-3 text-center text-[10px]"></i> Calendar
-				</a>
-				<a href="/app/training/running" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith('/app/training/running') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
-					<i class="fas fa-person-running w-3 text-center text-[10px]"></i> Running
-				</a>
-				<a href="/app/training/history" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith('/app/training/history') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
-					<i class="fas fa-clock-rotate-left w-3 text-center text-[10px]"></i> History
-				</a>
-				<a href="/app/training/stats" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith('/app/training/stats') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
-					<i class="fas fa-chart-line w-3 text-center text-[10px]"></i> Stats
-				</a>
-			</div>
+				<span class="flex-1 text-left font-medium">Training</span>
+				<i class="fas fa-chevron-right text-[9px] transition-transform duration-150 {expandedSections.has('training') ? 'rotate-90' : ''}"></i>
+			</button>
+			{#if expandedSections.has('training')}
+				<div class="ml-7 space-y-0.5 mt-1">
+					<a href="/app/training" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname === '/app/training' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+						<i class="fas fa-clock-rotate-left w-3 text-center text-[10px]"></i> Sessions
+					</a>
+					<a href="/app/training/stats" onclick={onNavigate} class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith('/app/training/stats') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+						<i class="fas fa-chart-line w-3 text-center text-[10px]"></i> Stats
+					</a>
+				</div>
+			{/if}
 		</div>
 
 		<div class="h-px bg-border/50 my-1"></div>
 
-		<a href="/app/library" onclick={onNavigate} class="mt-2 mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/library' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
-			<i class="fas fa-cubes w-4 text-center text-xs"></i>
-			Item Library
+		<!-- Reminders (Single link, collapsible not needed) -->
+		<a href="/app/reminders" onclick={onNavigate} class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith('/app/reminders') ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+			<i class="fas fa-bell w-4 text-center text-xs"></i>
+			Reminders
 		</a>
 
-		<a href="/app/tags" onclick={onNavigate} class="mb-3 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/tags' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+		<div class="h-px bg-border/50 my-1"></div>
+
+		<a href="/app/library" onclick={onNavigate} class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/library' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
+			<i class="fas fa-cubes w-4 text-center text-xs"></i>
+			Library
+		</a>
+
+		<a href="/app/tags" onclick={onNavigate} class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname === '/app/tags' ? 'bg-primary-subdued text-primary font-medium' : 'text-fg-subdued hover:text-fg hover:bg-muted'}">
 			<i class="fas fa-tags w-4 text-center text-xs"></i>
 			Tags
 		</a>

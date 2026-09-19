@@ -5,6 +5,14 @@
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 	// svelte-ignore state_referenced_locally
 	let name = $state(data.user?.name ?? '');
+	
+	// Finance settings
+	// svelte-ignore state_referenced_locally
+	let currency = $state(data.financeSettings?.currency ?? 'DZD');
+	// svelte-ignore state_referenced_locally
+	let currencyRate = $state(data.financeSettings?.currencyRate ?? 1);
+	// svelte-ignore state_referenced_locally
+	let monthlySpendingLimit = $state(data.financeSettings?.monthlySpendingLimit ?? '');
 
 	let importStatus = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
 	let importMessage = $state('');
@@ -240,6 +248,67 @@
 					<p class="text-xs font-medium text-error">{importMessage}</p>
 				</div>
 			{/if}
+		</div>
+	</div>
+
+	<!-- Finance Settings -->
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Finance Settings</h2>
+		</div>
+		<div class="px-6 py-5">
+			<form method="post" action="?/updateFinanceSettings" use:enhance class="space-y-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<div class="flex flex-col gap-1.5">
+						<label for="currency" class="text-xs font-semibold text-fg-accent tracking-wide">Currency</label>
+						<input
+							type="text"
+							id="currency"
+							name="currency"
+							bind:value={currency}
+							placeholder="DZD"
+							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
+						/>
+					</div>
+					<div class="flex flex-col gap-1.5">
+						<label for="currencyRate" class="text-xs font-semibold text-fg-accent tracking-wide">Currency Rate (to USD)</label>
+						<input
+							type="number"
+							id="currencyRate"
+							name="currencyRate"
+							bind:value={currencyRate}
+							step="0.0001"
+							min="0"
+							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
+						/>
+					</div>
+				</div>
+				<div class="flex flex-col gap-1.5">
+					<label for="monthlySpendingLimit" class="text-xs font-semibold text-fg-accent tracking-wide">Monthly Spending Limit ({currency})</label>
+					<input
+						type="number"
+						id="monthlySpendingLimit"
+						name="monthlySpendingLimit"
+						bind:value={monthlySpendingLimit}
+						step="0.01"
+						min="0"
+						placeholder="No limit"
+						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
+					/>
+					<p class="text-[10px] text-fg-subdued">Leave empty for no limit</p>
+				</div>
+
+				{#if form?.financeMessage}
+					<p class="text-xs {form.financeMessage.includes('success') ? 'text-green-600' : 'text-error'}">{form.financeMessage}</p>
+				{/if}
+
+				<button
+					type="submit"
+					class="h-[36px] rounded-sm bg-primary px-6 font-medium text-white text-sm transition-all hover:bg-primary-hover active:scale-[0.98]"
+				>
+					Save Finance Settings
+				</button>
+			</form>
 		</div>
 	</div>
 </div>

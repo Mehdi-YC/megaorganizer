@@ -1,12 +1,77 @@
 <script lang="ts">
 	import { getSessionIcon } from '$lib/utils/training';
+	import { ReminderCard } from '$lib/components/reminders';
 
 	let { data } = $props();
+
+	// svelte-ignore state_referenced_locally
+	let dueReminders = $state<any[]>(data.dueReminders ?? []);
 
 	function formatDuration(seconds: number) {
 		if (seconds < 60) return `${seconds}s`;
 		if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
 		return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+	}
+
+	function getWeekDays(): Date[] {
+		const today = new Date();
+		const days: Date[] = [];
+		for (let i = 0; i < 7; i++) {
+			const day = new Date(today);
+			day.setDate(today.getDate() + i);
+			days.push(day);
+		}
+		return days;
+	}
+
+	function isSameDay(d1: Date, d2: Date): boolean {
+		return (
+			d1.getFullYear() === d2.getFullYear() &&
+			d1.getMonth() === d2.getMonth() &&
+			d1.getDate() === d2.getDate()
+		);
+	}
+
+	function getEventsForDay(day: Date, events: any[]): any[] {
+		return events.filter((e) => isSameDay(new Date(e.date), day));
+	}
+
+	async function handleCompleteReminder(id: string) {
+		const res = await fetch('/api/reminders', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ action: 'completeReminder', reminderId: id })
+		});
+		if (res.ok) {
+			dueReminders = dueReminders.map((r) =>
+				r.id === id ? { ...r, completed: true, completedAt: new Date().toISOString() } : r
+			);
+		}
+	}
+
+	async function handleSnoozeReminder(id: string, until: Date) {
+		const res = await fetch('/api/reminders', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ action: 'snoozeReminder', reminderId: id, until: until.toISOString() })
+		});
+		if (res.ok) {
+			dueReminders = dueReminders.filter((r) => r.id !== id);
+		}
+	}
+
+	async function handleTodoToggle(todoId: string, completed: boolean) {
+		const res = await fetch('/api/reminders', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ action: 'updateTodo', todoId, completed })
+		});
+		if (res.ok) {
+			dueReminders = dueReminders.map((r: any) => ({
+				...r,
+				todos: r.todos.map((t: any) => (t.id === todoId ? { ...t, completed } : t))
+			}));
+		}
 	}
 </script>
 
@@ -19,6 +84,61 @@
 		<h1 class="text-xl font-semibold text-fg-accent">Dashboard</h1>
 		<p class="mt-1 text-sm text-fg-subdued">Your personal knowledge & activity operating system</p>
 	</div>
+
+	<!-- Today's Reminders -->
+	{#if dueReminders.length > 0}
+		<div class="mb-6">
+			<div class="flex items-center justify-between mb-3">
+				<h2 class="text-sm font-semibold text-fg-accent uppercase tracking-wide flex items-center gap-2">
+					<i class="fas fa-bell text-primary text-xs"></i>
+					Today's Reminders
+				</h2>
+				<a href="/app/reminders" class="text-xs text-primary hover:text-primary-hover">View All</a>
+			</div>
+			<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+				{#each dueReminders as reminder}
+					<ReminderCard
+						{reminder}
+						onComplete={handleCompleteReminder}
+						onSnooze={handleSnoozeReminder}
+						onTodoToggle={handleTodoToggle}
+					/>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Upcoming Events -->
+	{#if data.upcomingEvents && data.upcomingEvents.length > 0}
+		<div class="mb-6">
+			<div class="flex items-center justify-between mb-3">
+				<h2 class="text-sm font-semibold text-fg-accent uppercase tracking-wide flex items-center gap-2">
+					<i class="fas fa-calendar-week text-primary text-xs"></i>
+					Upcoming This Week
+				</h2>
+				<a href="/app/calendar" class="text-xs text-primary hover:text-primary-hover">View Calendar</a>
+			</div>
+			<div class="flex gap-1 overflow-x-auto pb-2">
+				{#each getWeekDays() as day}
+					{@const dayEvents = getEventsForDay(day, data.upcomingEvents ?? [])}
+					{@const isToday = isSameDay(day, new Date())}
+					<div class="flex flex-col items-center min-w-[60px] rounded-sm border {isToday ? 'border-primary bg-primary/5' : 'border-border bg-surface'} p-2">
+						<span class="text-[10px] font-medium {isToday ? 'text-primary' : 'text-fg-subdued'}">{day.toLocaleDateString([], { weekday: 'short' })}</span>
+						<span class="text-sm font-semibold {isToday ? 'text-primary' : 'text-fg'}">{day.getDate()}</span>
+						<div class="flex gap-0.5 mt-1">
+							{#each dayEvents.slice(0, 3) as event}
+								<a
+									href={event.type === 'training' ? `/app/training/session/${event.id}` : `/app/reminders/${event.id}`}
+									class="h-2 w-2 rounded-full {event.type === 'training' ? 'bg-blue-500' : 'bg-green-500'}"
+									title={event.title}
+								></a>
+							{/each}
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Stats -->
 	<div class="grid gap-3 grid-cols-2 lg:grid-cols-4">

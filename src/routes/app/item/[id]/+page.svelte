@@ -7,23 +7,35 @@
 	import MindMap from '$lib/components/ui/MindMap.svelte';
 
 	let { data } = $props();
+	// svelte-ignore state_referenced_locally
 	let item = $state(data.item);
+	// svelte-ignore state_referenced_locally
 	let children = $state(data.children ?? []);
 	let allTags = $state<any[]>([]);
 	let editing = $state(false);
+	// svelte-ignore state_referenced_locally
 	let name = $state(item?.name ?? '');
+	// svelte-ignore state_referenced_locally
 	let description = $state(item?.description ?? '');
+	// svelte-ignore state_referenced_locally
 	let content = $state(item?.markdown ?? '');
+	// svelte-ignore state_referenced_locally
 	let imageUrl = $state(item?.imageUrl ?? '');
+	// svelte-ignore state_referenced_locally
 	let videoUrl = $state(item?.videoUrl ?? '');
+	// svelte-ignore state_referenced_locally
 	let externalUrl = $state(item?.externalUrl ?? '');
+	// svelte-ignore state_referenced_locally
 	let tagIds = $state<string[]>(getTagIds(item));
+	// svelte-ignore state_referenced_locally
 	let ydkData = $state(item?.ydkData ?? '');
 	let ydkInput = $state('');
+	// svelte-ignore state_referenced_locally
 	let ydkEnabled = $state(!!item?.ydkData);
 	let isSmall = $state(false);
 	let showTree = $state(false);
 	let subtree = $state<any[]>([]);
+	// svelte-ignore state_referenced_locally
 	let favorite = $state(item?.favorite ?? false);
 
 	let isDeck = $derived(!!ydkData);

@@ -8,10 +8,13 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 
 	let { data } = $props();
+	// svelte-ignore state_referenced_locally
 	let session = $state(data.session);
 	let activities = $derived(data.activities ?? []);
 	let editing = $state(false);
+	// svelte-ignore state_referenced_locally
 	let title = $state(session?.title ?? '');
+	// svelte-ignore state_referenced_locally
 	let notes = $state(session?.notes ?? '');
 
 	let runningData = $state<any[]>([]);

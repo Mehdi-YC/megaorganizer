@@ -1,10 +1,19 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { onMount } from 'svelte';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import { page } from '$app/state';
+	import { checkAndNotifyReminders } from '$lib/utils/notifications';
 
 	let { children, data }: { children: Snippet; data: { categories?: any[]; user?: { name: string; email: string; image?: string | null } } } = $props();
 	let sidebarOpen = $state(false);
+
+	onMount(() => {
+		// Check for due reminders and show notifications
+		if (data.user) {
+			checkAndNotifyReminders();
+		}
+	});
 </script>
 
 <div class="flex h-screen overflow-hidden bg-bg">

@@ -1,0 +1,226 @@
+<script lang="ts">
+	let {
+		reminders = [],
+		selectedDate = $bindable(null),
+		onDateClick
+	}: {
+		reminders?: Array<{
+			id: string;
+			title: string;
+			dueAt: Date | string;
+			completed: boolean;
+			templateId: string;
+		}>;
+		selectedDate?: Date | null;
+		onDateClick?: (date: Date, reminders: any[]) => void;
+	} = $props();
+
+	let currentDate = $state(new Date());
+
+	const monthNames = [
+		'January', 'February', 'March', 'April', 'May', 'June',
+		'July', 'August', 'September', 'October', 'November', 'December'
+	];
+
+	const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+	function getDaysInMonth(date: Date) {
+		const year = date.getFullYear();
+		const month = date.getMonth();
+		const firstDay = new Date(year, month, 1);
+		const lastDay = new Date(year, month + 1, 0);
+		const daysInMonth = lastDay.getDate();
+		const startDay = (firstDay.getDay() + 6) % 7; // Monday = 0
+
+		const days = [];
+		for (let i = 0; i < startDay; i++) days.push(null);
+		for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+		return days;
+	}
+
+	function prevMonth() {
+		currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+	}
+
+	function nextMonth() {
+		currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1);
+	}
+
+	function getRemindersForDate(date: Date) {
+		return reminders.filter((r) => {
+			const reminderDate = new Date(r.dueAt);
+			return (
+				reminderDate.getFullYear() === date.getFullYear() &&
+				reminderDate.getMonth() === date.getMonth() &&
+				reminderDate.getDate() === date.getDate()
+			);
+		});
+	}
+
+	function getDateStatus(date: Date): 'completed' | 'missed' | 'upcoming' | 'mixed' {
+		const dayReminders = getRemindersForDate(date);
+		if (dayReminders.length === 0) return 'upcoming';
+
+		const now = new Date();
+		const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+		const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+		if (dateDay > today) return 'upcoming';
+
+		const allCompleted = dayReminders.every((r) => r.completed);
+		const noneCompleted = dayReminders.every((r) => !r.completed);
+
+		if (allCompleted) return 'completed';
+		if (noneCompleted) return 'missed';
+		return 'mixed';
+	}
+
+	function getStatusColor(status: string): string {
+		switch (status) {
+			case 'completed':
+				return 'bg-success/20 border-success/40';
+			case 'missed':
+				return 'bg-error/20 border-error/40';
+			case 'mixed':
+				return 'bg-warning/20 border-warning/40';
+			default:
+				return 'bg-surface border-border';
+		}
+	}
+
+	function getStatusDotColor(status: string): string {
+		switch (status) {
+			case 'completed':
+				return 'bg-success';
+			case 'missed':
+				return 'bg-error';
+			case 'mixed':
+				return 'bg-warning';
+			default:
+				return 'bg-fg-subdued/30';
+		}
+	}
+
+	function isToday(date: Date) {
+		const today = new Date();
+		return (
+			date.getFullYear() === today.getFullYear() &&
+			date.getMonth() === today.getMonth() &&
+			date.getDate() === today.getDate()
+		);
+	}
+
+	function isSelected(date: Date) {
+		if (!selectedDate) return false;
+		return (
+			date.getFullYear() === selectedDate.getFullYear() &&
+			date.getMonth() === selectedDate.getMonth() &&
+			date.getDate() === selectedDate.getDate()
+		);
+	}
+
+	function handleDateClick(date: Date) {
+		selectedDate = date;
+		const dayReminders = getRemindersForDate(date);
+		onDateClick?.(date, dayReminders);
+	}
+</script>
+
+<div class="rounded-sm border border-border bg-surface p-3 sm:p-6">
+	<div class="mb-4 sm:mb-6 flex items-center justify-between">
+		<button
+			type="button"
+			aria-label="Previous month"
+			class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+			onclick={prevMonth}
+		>
+			<i class="fas fa-chevron-left"></i>
+		</button>
+		<h2 class="text-lg font-semibold text-fg">
+			{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+		</h2>
+		<button
+			type="button"
+			aria-label="Next month"
+			class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+			onclick={nextMonth}
+		>
+			<i class="fas fa-chevron-right"></i>
+		</button>
+	</div>
+
+	<div class="grid grid-cols-7 gap-px bg-border">
+		{#each dayNames as day}
+			<div class="bg-muted px-1 sm:px-2 py-1.5 sm:py-2 text-center text-[10px] sm:text-xs font-semibold uppercase text-fg-subdued">
+				{day}
+			</div>
+		{/each}
+
+		{#each getDaysInMonth(currentDate) as date}
+			<div
+				class="min-h-[40px] sm:min-h-[80px] bg-surface p-1 sm:p-2 cursor-pointer transition-colors hover:bg-muted {date ? '' : 'opacity-0'} {date && isSelected(date) ? 'ring-2 ring-primary' : ''}"
+				onclick={() => date && handleDateClick(date)}
+				onkeydown={(e) => e.key === 'Enter' && date && handleDateClick(date)}
+				role="button"
+				tabindex={date ? 0 : -1}
+			>
+				{#if date}
+					{@const status = getDateStatus(date)}
+					{@const dayReminders = getRemindersForDate(date)}
+					<div class="mb-0.5 sm:mb-1 flex items-center justify-between">
+						<span
+							class="text-[11px] sm:text-sm {isToday(date)
+								? 'flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-primary text-white'
+								: 'text-fg'}"
+						>
+							{date.getDate()}
+						</span>
+						{#if dayReminders.length > 0}
+							<div class="flex h-4 w-4 items-center justify-center rounded-full {getStatusDotColor(status)}">
+								<span class="text-[8px] font-bold text-white">{dayReminders.length}</span>
+							</div>
+						{/if}
+					</div>
+
+					{#if dayReminders.length > 0}
+						<div class="hidden sm:block space-y-0.5">
+							{#each dayReminders.slice(0, 2) as r}
+								<div
+									class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {r.completed ? 'bg-success/10 text-success line-through' : 'bg-muted text-fg'}"
+									title={r.title}
+								>
+									{r.title}
+								</div>
+							{/each}
+							{#if dayReminders.length > 2}
+								<div class="text-[9px] text-fg-subdued text-center">
+									+{dayReminders.length - 2} more
+								</div>
+							{/if}
+						</div>
+					{/if}
+				{/if}
+			</div>
+		{/each}
+	</div>
+
+	<!-- Legend -->
+	<div class="mt-4 flex flex-wrap items-center gap-4 text-[10px] text-fg-subdued">
+		<div class="flex items-center gap-1.5">
+			<div class="h-3 w-3 rounded-full bg-success"></div>
+			<span>Completed</span>
+		</div>
+		<div class="flex items-center gap-1.5">
+			<div class="h-3 w-3 rounded-full bg-error"></div>
+			<span>Missed</span>
+		</div>
+		<div class="flex items-center gap-1.5">
+			<div class="h-3 w-3 rounded-full bg-warning"></div>
+			<span>Partial</span>
+		</div>
+		<div class="flex items-center gap-1.5">
+			<div class="h-3 w-3 rounded-full bg-fg-subdued/30"></div>
+			<span>Upcoming</span>
+		</div>
+	</div>
+</div>

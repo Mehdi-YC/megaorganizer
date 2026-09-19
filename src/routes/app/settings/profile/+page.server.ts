@@ -2,16 +2,21 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
 import { handleAuthError } from '$lib/server/api-helpers';
+import { getUserSettings } from '$lib/server/services/finance.service';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth/login');
 	}
+	
+	const settings = await getUserSettings(locals.user.id);
+	
 	return {
 		user: {
 			name: locals.user.name,
 			email: locals.user.email
-		}
+		},
+		financeSettings: settings
 	};
 };
 
@@ -74,5 +79,30 @@ export const actions: Actions = {
 		}
 
 		return { passwordMessage: 'Password changed successfully' };
+	},
+
+	updateFinanceSettings: async (event) => {
+		if (!event.locals.user) {
+			throw redirect(302, '/auth/login');
+		}
+
+		const formData = await event.request.formData();
+		const currency = formData.get('currency')?.toString() || 'DZD';
+		const currencyRate = parseFloat(formData.get('currencyRate')?.toString() || '1');
+		const monthlyLimitStr = formData.get('monthlySpendingLimit')?.toString();
+		const monthlySpendingLimit = monthlyLimitStr ? parseFloat(monthlyLimitStr) : null;
+
+		try {
+			const { updateUserSettings } = await import('$lib/server/services/finance.service');
+			await updateUserSettings(event.locals.user.id, {
+				currency,
+				currencyRate: isNaN(currencyRate) ? 1 : currencyRate,
+				monthlySpendingLimit: monthlySpendingLimit && !isNaN(monthlySpendingLimit) ? monthlySpendingLimit : null
+			});
+		} catch (error) {
+			return fail(500, { financeMessage: 'Failed to update finance settings' });
+		}
+
+		return { financeMessage: 'Finance settings updated successfully' };
 	}
 };

@@ -1,5 +1,6 @@
 import { relations, sql } from 'drizzle-orm';
 import { integer, sqliteTable, text, real, index } from 'drizzle-orm/sqlite-core';
+import { user } from './auth.schema';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 export * from './auth.schema';
@@ -594,5 +595,200 @@ export const ydkEntryRelations = relations(ydkEntry, ({ one }) => ({
 	deck: one(ydkDeck, { fields: [ydkEntry.deckId], references: [ydkDeck.id] })
 }));
 
-// ─── Re-export user for relations ────────────────────────────────────────────
-import { user } from './auth.schema';
+
+
+// ─── Reminders ──────────────────────────────────────────────────────────────
+export const reminderTemplate = sqliteTable(
+	'reminder_template',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		description: text('description'),
+		markdown: text('markdown'),
+		icon: text('icon').default('fa-bell'),
+		iconColor: text('icon_color'),
+		recurrenceType: text('recurrence_type', {
+			enum: ['daily', 'weekly', 'monthly', 'yearly', 'yearly_date', 'monthly_relative']
+		}).notNull(),
+		recurrenceConfig: text('recurrence_config'), // JSON
+		nextDueAt: integer('next_due_at', { mode: 'timestamp_ms' }),
+		active: integer('active', { mode: 'boolean' }).default(true).notNull(),
+		position: integer('position').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('reminderTemplate_userId_idx').on(table.userId),
+		index('reminderTemplate_active_idx').on(table.active),
+		index('reminderTemplate_nextDueAt_idx').on(table.nextDueAt)
+	]
+);
+
+export const reminderTemplateTodo = sqliteTable(
+	'reminder_template_todo',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		templateId: text('template_id')
+			.notNull()
+			.references(() => reminderTemplate.id, { onDelete: 'cascade' }),
+		text: text('text').notNull(),
+		position: integer('position').notNull().default(0)
+	},
+	(table) => [index('reminderTemplateTodo_templateId_idx').on(table.templateId)]
+);
+
+export const reminder = sqliteTable(
+	'reminder',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		templateId: text('template_id')
+			.notNull()
+			.references(() => reminderTemplate.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		description: text('description'),
+		markdown: text('markdown'),
+		dueAt: integer('due_at', { mode: 'timestamp_ms' }).notNull(),
+		completed: integer('completed', { mode: 'boolean' }).default(false).notNull(),
+		completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+		snoozedUntil: integer('snoozed_until', { mode: 'timestamp_ms' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('reminder_userId_idx').on(table.userId),
+		index('reminder_templateId_idx').on(table.templateId),
+		index('reminder_dueAt_idx').on(table.dueAt),
+		index('reminder_completed_idx').on(table.completed)
+	]
+);
+
+export const reminderTodo = sqliteTable(
+	'reminder_todo',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		reminderId: text('reminder_id')
+			.notNull()
+			.references(() => reminder.id, { onDelete: 'cascade' }),
+		text: text('text').notNull(),
+		completed: integer('completed', { mode: 'boolean' }).default(false).notNull(),
+		position: integer('position').notNull().default(0)
+	},
+	(table) => [index('reminderTodo_reminderId_idx').on(table.reminderId)]
+);
+
+export const reminderTemplateRelations = relations(reminderTemplate, ({ one, many }) => ({
+	user: one(user, { fields: [reminderTemplate.userId], references: [user.id] }),
+	todos: many(reminderTemplateTodo),
+	reminders: many(reminder)
+}));
+
+export const reminderTemplateTodoRelations = relations(reminderTemplateTodo, ({ one }) => ({
+	template: one(reminderTemplate, {
+		fields: [reminderTemplateTodo.templateId],
+		references: [reminderTemplate.id]
+	})
+}));
+
+export const reminderRelations = relations(reminder, ({ one, many }) => ({
+	user: one(user, { fields: [reminder.userId], references: [user.id] }),
+	template: one(reminderTemplate, {
+		fields: [reminder.templateId],
+		references: [reminderTemplate.id]
+	}),
+	todos: many(reminderTodo)
+}));
+
+export const reminderTodoRelations = relations(reminderTodo, ({ one }) => ({
+	reminder: one(reminder, {
+		fields: [reminderTodo.reminderId],
+		references: [reminder.id]
+	})
+}));
+
+// ─── Finance ────────────────────────────────────────────────────────────────
+export const expense = sqliteTable(
+	'expense',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		amount: real('amount').notNull(),
+		currency: text('currency').default('DZD').notNull(),
+		description: text('description'),
+		markdown: text('markdown'),
+		tags: text('tags'), // JSON array of tag IDs
+		spentAt: integer('spent_at', { mode: 'timestamp_ms' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('expense_userId_idx').on(table.userId),
+		index('expense_spentAt_idx').on(table.spentAt)
+	]
+);
+
+export const userSettings = sqliteTable(
+	'user_settings',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' })
+			.unique(),
+		currency: text('currency').default('DZD').notNull(),
+		currencyRate: real('currency_rate').default(1).notNull(),
+		monthlySpendingLimit: real('monthly_spending_limit'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('userSettings_userId_idx').on(table.userId)
+	]
+);
+
+export const expenseRelations = relations(expense, ({ one }) => ({
+	user: one(user, { fields: [expense.userId], references: [user.id] })
+}));
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+	user: one(user, { fields: [userSettings.userId], references: [user.id] })
+}));
