@@ -15,17 +15,19 @@ if (!(globalThis as any)[CLEANUP_KEY]) {
 	}, 5 * 60 * 1000);
 }
 
-export function checkRateLimit(key: string): { allowed: boolean; retryAfterMs: number } {
+export function checkRateLimit(key: string, maxAttempts?: number, windowMs?: number): { allowed: boolean; retryAfterMs: number } {
 	const now = Date.now();
 	const entry = attempts.get(key);
+	const max = maxAttempts ?? MAX_ATTEMPTS;
+	const window = windowMs ?? WINDOW_MS;
 
 	if (!entry || now > entry.resetAt) {
-		attempts.set(key, { count: 1, resetAt: now + WINDOW_MS });
+		attempts.set(key, { count: 1, resetAt: now + window });
 		return { allowed: true, retryAfterMs: 0 };
 	}
 
 	entry.count++;
-	if (entry.count > MAX_ATTEMPTS) {
+	if (entry.count > max) {
 		return { allowed: false, retryAfterMs: entry.resetAt - now };
 	}
 
