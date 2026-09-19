@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
+	import QuickCapture from '$lib/components/QuickCapture.svelte';
 	import { page } from '$app/state';
 	import { checkAndNotifyReminders } from '$lib/utils/notifications';
 
@@ -41,3 +42,5 @@
 		{/key}
 	</main>
 </div>
+
+<QuickCapture />

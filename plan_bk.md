@@ -200,3 +200,4 @@ Make MegaOrganize installable as a PWA on mobile and desktop.
 - **Quick Capture**: Bottom-right FAB (standard mobile pattern)
 - **Analytics Page**: Separate page at `/app/analytics`
 - **Search Scope**: Titles and descriptions (fast, can expand later)
+
