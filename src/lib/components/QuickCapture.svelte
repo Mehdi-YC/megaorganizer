@@ -148,7 +148,7 @@
 		{ id: 'expense' as const, label: 'Expense', icon: 'fa-receipt', color: 'text-warning' },
 		{ id: 'reminder' as const, label: 'Reminder', icon: 'fa-bell', color: 'text-primary' },
 		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' },
-		{ id: 'note' as const, label: 'Note', icon: 'fa-sticky-note', color: 'text-purple-500' }
+		{ id: 'note' as const, label: 'Quick Note', icon: 'fa-sticky-note', color: 'text-purple-500' }
 	];
 </script>
 
@@ -157,11 +157,11 @@
 <!-- FAB Button -->
 <button
 	type="button"
-	class="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:bg-primary-hover hover:scale-105 active:scale-95"
+	class="fixed bottom-6 right-6 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:bg-primary-hover hover:scale-105 active:scale-95"
 	onclick={open}
 	aria-label="Quick capture"
 >
-	<i class="fas fa-plus text-xl"></i>
+	<i class="fas fa-plus text-sm"></i>
 </button>
 
 <!-- Modal -->
@@ -330,14 +330,15 @@
 					<!-- Note Form -->
 					{:else if activeTab === 'note'}
 						<div class="space-y-3">
+							<p class="text-[11px] text-fg-subdued">Creates an item in your library with markdown content</p>
 							<div>
-								<label for="qc-note" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">NOTE</label>
+								<label for="qc-note" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">NOTE CONTENT</label>
 								<textarea
 									id="qc-note"
 									bind:value={noteContent}
-									placeholder="Write a quick note..."
+									placeholder="Write your note here (supports markdown)..."
 									rows="4"
-									class="w-full rounded-sm border border-border bg-bg px-3 py-2 text-sm text-fg focus:border-primary focus:outline-none resize-none"
+									class="w-full rounded-sm border border-border bg-bg px-3 py-2 text-sm text-fg font-mono focus:border-primary focus:outline-none resize-none"
 								></textarea>
 							</div>
 							<button
@@ -346,7 +347,7 @@
 								onclick={saveNote}
 								disabled={!noteContent.trim() || saving}
 							>
-								{saving ? 'Saving...' : 'Add Note'}
+								{saving ? 'Saving...' : 'Save to Library'}
 							</button>
 						</div>
 					{/if}
