@@ -236,6 +236,7 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 			const session = await updateTrainingSession(user.id, v.data.sessionId, v.data as any);
+			if (!session) return json({ error: 'Not found' }, { status: 404 });
 			return json(session);
 		}
 
@@ -246,6 +247,7 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 			const activity = await updateTrainingActivity(user.id, v.data.activityId, v.data as any);
+			if (!activity) return json({ error: 'Not found' }, { status: 404 });
 			return json(activity);
 		}
 
@@ -262,6 +264,7 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 			const record = await updateExerciseRecord(user.id, v.data.recordId, v.data as any);
+			if (!record) return json({ error: 'Not found' }, { status: 404 });
 			return json(record);
 		}
 

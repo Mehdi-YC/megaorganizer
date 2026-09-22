@@ -12,7 +12,14 @@ import {
 	updateUserSettings
 } from '$lib/server/services/finance.service';
 import { requireUser } from '$lib/server/api-helpers';
-import { parseJson, validateBody, isString, isNumber, isArray } from '$lib/server/validate';
+import {
+	parseJson,
+	validateBody,
+	isString,
+	isNumber,
+	isArray,
+	intParam
+} from '$lib/server/validate';
 
 export const GET: RequestHandler = async (event) => {
 	const user = requireUser(event);
@@ -24,16 +31,16 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	if (action === 'monthlyStats') {
-		const year = parseInt(event.url.searchParams.get('year') || new Date().getFullYear().toString());
-		const month = parseInt(event.url.searchParams.get('month') || new Date().getMonth().toString());
+		const year = intParam(event.url.searchParams.get('year'), new Date().getFullYear());
+		const month = intParam(event.url.searchParams.get('month'), new Date().getMonth());
 		const stats = await getMonthlyStats(user.id, year, month);
 		const settings = await getUserSettings(user.id);
 		return json({ ...stats, currency: settings.currency, limit: settings.monthlySpendingLimit });
 	}
 
 	if (action === 'dailyStats') {
-		const year = parseInt(event.url.searchParams.get('year') || new Date().getFullYear().toString());
-		const month = parseInt(event.url.searchParams.get('month') || new Date().getMonth().toString());
+		const year = intParam(event.url.searchParams.get('year'), new Date().getFullYear());
+		const month = intParam(event.url.searchParams.get('month'), new Date().getMonth());
 		const stats = await getDailyStats(user.id, year, month);
 		return json(stats);
 	}
@@ -48,8 +55,8 @@ export const GET: RequestHandler = async (event) => {
 	// Get expenses with optional date range
 	const startDateStr = event.url.searchParams.get('startDate');
 	const endDateStr = event.url.searchParams.get('endDate');
-	const limit = parseInt(event.url.searchParams.get('limit') || '50');
-	const offset = parseInt(event.url.searchParams.get('offset') || '0');
+	const limit = intParam(event.url.searchParams.get('limit'), 50);
+	const offset = intParam(event.url.searchParams.get('offset'), 0);
 
 	const expenses = await getExpenses(user.id, {
 		startDate: startDateStr ? new Date(startDateStr) : undefined,
@@ -128,6 +135,7 @@ export const PUT: RequestHandler = async (event) => {
 			if (v.data.tags) updateData.tags = v.data.tags;
 
 			const updated = await updateExpense(user.id, v.data.expenseId, updateData);
+			if (!updated) return json({ error: 'Not found' }, { status: 404 });
 			return json(updated);
 		}
 

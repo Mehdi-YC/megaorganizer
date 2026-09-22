@@ -56,6 +56,7 @@ export const PUT: RequestHandler = async (event) => {
 
 	const { id, ...data } = v.data;
 	const page = await updatePage(user.id, id as string, data);
+	if (!page) return json({ error: 'Not found' }, { status: 404 });
 	return json(page);
 };
 

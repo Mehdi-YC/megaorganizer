@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import { APIError } from 'better-auth/api';
 import type { RequestEvent } from '@sveltejs/kit';
@@ -5,7 +6,9 @@ import { checkRateLimit } from './rate-limit';
 
 export function requireUser(event: RequestEvent) {
 	if (!event.locals.user) {
-		throw json({ error: 'Unauthorized' }, { status: 401 });
+		// Throwing a Response degrades to a 500 in SvelteKit; throw the kit
+		// HttpError instead so the status code survives.
+		throw error(401, { message: 'Unauthorized', error: 'Unauthorized' });
 	}
 	return event.locals.user;
 }
@@ -16,16 +19,13 @@ export function requireUser(event: RequestEvent) {
  */
 export function requireUserWithRateLimit(event: RequestEvent, maxRequests = 100, windowMs = 60000) {
 	const user = requireUser(event);
-	
+
 	// Rate limit by user ID
 	const { allowed, retryAfterMs } = checkRateLimit(`api:${user.id}`, maxRequests, windowMs);
 	if (!allowed) {
-		throw json(
-			{ error: 'Too many requests', retryAfterMs },
-			{ status: 429, headers: { 'Retry-After': Math.ceil(retryAfterMs / 1000).toString() } }
-		);
+		throw error(429, { message: 'Too many requests', error: 'Too many requests', retryAfterMs });
 	}
-	
+
 	return user;
 }
 
@@ -58,12 +58,15 @@ export function apiSuccess(data: unknown, status = 200) {
 export function withErrorHandling(handler: () => Promise<Response>): Promise<Response> {
 	return handler().catch((error) => {
 		console.error('API Error:', error);
-		
+
 		// Don't expose internal error details in production
-		const message = process.env.NODE_ENV === 'production'
-			? 'An unexpected error occurred'
-			: error instanceof Error ? error.message : 'Unknown error';
-		
+		const message =
+			process.env.NODE_ENV === 'production'
+				? 'An unexpected error occurred'
+				: error instanceof Error
+					? error.message
+					: 'Unknown error';
+
 		return json({ error: message }, { status: 500 });
 	});
 }

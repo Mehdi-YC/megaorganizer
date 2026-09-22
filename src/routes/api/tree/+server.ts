@@ -13,7 +13,15 @@ import {
 	searchTreeElements
 } from '$lib/server/services/tree.service';
 import { requireUser } from '$lib/server/api-helpers';
-import { parseJson, validateBody, isString, isNonEmptyString, isOneOf, isNumber } from '$lib/server/validate';
+import {
+	parseJson,
+	validateBody,
+	isString,
+	isNonEmptyString,
+	isOneOf,
+	isNumber,
+	isBoolean
+} from '$lib/server/validate';
 
 const treeTypes = ['node', 'item'] as const;
 const parentTypes = ['page', 'node', 'item'] as const;
@@ -77,8 +85,15 @@ export const POST: RequestHandler = async (event) => {
 				childId: { validate: isNonEmptyString, label: 'Child ID' }
 			});
 			if (!v.ok) return v.error;
-			const result = await addChildToParent(user.id, v.data.parentType, v.data.parentId, v.data.childType, v.data.childId);
-			if (!result) return json({ error: 'Child element not found or access denied' }, { status: 404 });
+			const result = await addChildToParent(
+				user.id,
+				v.data.parentType,
+				v.data.parentId,
+				v.data.childType,
+				v.data.childId
+			);
+			if (!result)
+				return json({ error: 'Child element not found or access denied' }, { status: 404 });
 			return json(result, { status: 201 });
 		}
 
@@ -104,12 +119,24 @@ export const PUT: RequestHandler = async (event) => {
 	}
 
 	const v = validateBody(body, {
-		id: { validate: isNonEmptyString, label: 'ID' }
+		id: { validate: isNonEmptyString, label: 'ID' },
+		name: { validate: isString, required: false },
+		description: { validate: isString, required: false },
+		markdown: { validate: isString, required: false },
+		imageUrl: { validate: isString, required: false },
+		videoUrl: { validate: isString, required: false },
+		externalUrl: { validate: isString, required: false },
+		tags: { validate: isString, required: false },
+		metadata: { validate: isString, required: false },
+		ydkData: { validate: isString, required: false },
+		favorite: { validate: isBoolean, required: false }
 	});
 	if (!v.ok) return v.error;
 
-	const { id, action: _action, ...updateData } = body;
-	const element = await updateTreeElement(user.id, id as string, updateData);
+	// Only whitelisted, validated fields are forwarded — never the raw body.
+	const { id, ...updateData } = v.data;
+	const element = await updateTreeElement(user.id, id, updateData);
+	if (!element) return json({ error: 'Not found' }, { status: 404 });
 	return json(element);
 };
 

@@ -1,4 +1,4 @@
-import { json } from '@sveltejs/kit';
+import { error, json } from '@sveltejs/kit';
 
 type Validator<T> = (value: unknown) => value is T;
 
@@ -47,9 +47,17 @@ type FieldSpec<T> = {
 type Schema = Record<string, FieldSpec<any>>;
 
 type InferSchema<S extends Schema> = {
-	[K in keyof S as S[K]['required'] extends false ? never : K]: S[K]['validate'] extends Validator<infer T> ? T : never;
+	[K in keyof S as S[K]['required'] extends false ? never : K]: S[K]['validate'] extends Validator<
+		infer T
+	>
+		? T
+		: never;
 } & {
-	[K in keyof S as S[K]['required'] extends false ? K : never]?: S[K]['validate'] extends Validator<infer T> ? T : never;
+	[K in keyof S as S[K]['required'] extends false ? K : never]?: S[K]['validate'] extends Validator<
+		infer T
+	>
+		? T
+		: never;
 };
 
 /**
@@ -61,7 +69,10 @@ export function validateBody<S extends Schema>(
 	schema: S
 ): { ok: true; data: InferSchema<S> } | { ok: false; error: Response } {
 	if (!hasFields(body)) {
-		return { ok: false, error: json({ error: 'Request body must be a JSON object' }, { status: 400 }) };
+		return {
+			ok: false,
+			error: json({ error: 'Request body must be a JSON object' }, { status: 400 })
+		};
 	}
 
 	const data: Record<string, unknown> = {};
@@ -95,30 +106,29 @@ export function validateBody<S extends Schema>(
 
 /**
  * Parse request body once and return it.
- * Throws a Response if JSON is invalid.
+ * Throws a kit HttpError (400) if JSON is invalid. Note: throwing a plain
+ * Response would surface as a 500, so this must use error().
  */
 export async function parseJson(request: Request): Promise<Record<string, unknown>> {
+	let body: unknown;
 	try {
-		const body = await request.json();
-		if (!hasFields(body)) {
-			throw json({ error: 'Request body must be a JSON object' }, { status: 400 });
-		}
-		return body;
-	} catch (e) {
-		if (e && typeof e === 'object' && 'status' in e) throw e; // re-throw our json() responses
-		throw json({ error: 'Invalid JSON body' }, { status: 400 });
+		body = await request.json();
+	} catch {
+		throw error(400, { message: 'Invalid JSON body', error: 'Invalid JSON body' });
 	}
+	if (!hasFields(body)) {
+		throw error(400, {
+			message: 'Request body must be a JSON object',
+			error: 'Request body must be a JSON object'
+		});
+	}
+	return body;
 }
 
 /**
- * Parse + validate in one call. Convenience wrapper.
+ * Parse a query-string integer, falling back when missing or invalid.
  */
-export async function parseAndValidate<S extends Schema>(
-	request: Request,
-	schema: S
-): Promise<InferSchema<S>> {
-	const body = await parseJson(request);
-	const result = validateBody(body, schema);
-	if (!result.ok) throw result.error;
-	return result.data;
+export function intParam(value: string | null, fallback: number): number {
+	const n = parseInt(value ?? '', 10);
+	return Number.isNaN(n) ? fallback : n;
 }
