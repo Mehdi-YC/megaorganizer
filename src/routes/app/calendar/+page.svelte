@@ -8,9 +8,17 @@
 	let reminders = $derived<any[]>(data.reminders ?? []);
 	let virtualReminders = $derived<any[]>(data.virtualReminders ?? []);
 	let expenses = $derived<any[]>(data.expenses ?? []);
+	let upcoming = $derived<any[]>(data.upcoming ?? []);
 	let expenseSettings = $derived<any>(data.expenseSettings ?? { currency: 'DZD' });
 	let filter = $derived(data.filter);
-	let currentDate = $state(new Date());
+	let currentDate = $derived.by(() => {
+		const m = data.month;
+		if (m && /^\d{4}-\d{2}$/.test(m)) {
+			const [y, mo] = m.split('-').map(Number);
+			return new Date(y, mo - 1, 1);
+		}
+		return new Date();
+	});
 
 	const monthNames = [
 		'January',
@@ -37,18 +45,31 @@
 		const daysInMonth = lastDay.getDate();
 		const startDay = (firstDay.getDay() + 6) % 7; // Monday = 0
 
-		const days = [];
-		for (let i = 0; i < startDay; i++) days.push(null);
-		for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+		const days: Array<{ key: string; date: Date | null }> = [];
+		for (let i = 0; i < startDay; i++) days.push({ key: `pad-${i}`, date: null });
+		for (let i = 1; i <= daysInMonth; i++)
+			days.push({ key: `d-${i}`, date: new Date(year, month, i) });
 		return days;
 	}
 
+	function changeMonth(delta: number) {
+		const d = new Date(currentDate.getFullYear(), currentDate.getMonth() + delta, 1);
+		const url = new URL(window.location.href);
+		url.searchParams.set(
+			'month',
+			`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+		);
+		selectedDate = null;
+		selectedEvents = [];
+		goto(url.toString(), { replaceState: true });
+	}
+
 	function prevMonth() {
-		currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+		changeMonth(-1);
 	}
 
 	function nextMonth() {
-		currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1);
+		changeMonth(1);
 	}
 
 	function getEventsForDate(date: Date) {
@@ -191,6 +212,47 @@
 		selectedDate = date;
 		selectedEvents = getEventsForDate(date);
 	}
+
+	function clearSelection() {
+		selectedDate = null;
+		selectedEvents = [];
+	}
+
+	function dayLabel(date: Date): string {
+		const startOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+		const diffDays = Math.round((startOf(date) - startOf(new Date())) / 86_400_000);
+		if (diffDays === 0) return 'Today';
+		if (diffDays === 1) return 'Tomorrow';
+		return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+	}
+
+	function isSameCalendarDay(d1: Date, d2: Date): boolean {
+		return (
+			d1.getFullYear() === d2.getFullYear() &&
+			d1.getMonth() === d2.getMonth() &&
+			d1.getDate() === d2.getDate()
+		);
+	}
+
+	type UpcomingItem = {
+		id: string;
+		templateId: string;
+		title: string;
+		dueAt: Date | string;
+		isVirtual: boolean;
+	};
+
+	let upcomingGroups = $derived.by(() => {
+		const groups: Array<{ date: Date; items: UpcomingItem[] }> = [];
+		for (const item of upcoming as UpcomingItem[]) {
+			const d = new Date(item.dueAt);
+			const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+			const last = groups[groups.length - 1];
+			if (last && isSameCalendarDay(last.date, day)) last.items.push(item);
+			else groups.push({ date: day, items: [item] });
+		}
+		return groups;
+	});
 
 	function formatSelectedDate(date: Date): string {
 		return date.toLocaleDateString([], {
@@ -375,7 +437,8 @@
 						</div>
 					{/each}
 
-					{#each getDaysInMonth(currentDate) as date (date)}
+					{#each getDaysInMonth(currentDate) as cell (cell.key)}
+						{@const date = cell.date}
 						{@const events = date ? getEventsForDate(date) : []}
 						{@const hasTraining = events.some((e) => e.type === 'training')}
 						{@const hasReminders = events.some((e) => e.type === 'reminder')}
@@ -475,13 +538,23 @@
 			</div>
 		</div>
 
-		<!-- Selected Day Details -->
+		<!-- Side panel: Upcoming reminders (default) / Selected Day Details -->
 		<div>
-			<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-				{selectedDate ? formatSelectedDate(selectedDate) : 'Select a Day'}
-			</h3>
-
 			{#if selectedDate}
+				<div class="mb-3 flex items-center justify-between gap-2">
+					<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+						{formatSelectedDate(selectedDate)}
+					</h3>
+					<button
+						type="button"
+						class="inline-flex cursor-pointer items-center gap-1 rounded-sm px-2 py-1 text-xs text-primary transition-colors hover:bg-muted"
+						onclick={clearSelection}
+					>
+						<i class="fas fa-arrow-left text-[10px]"></i>
+						Upcoming
+					</button>
+				</div>
+
 				{#if selectedEvents.length === 0}
 					<div class="rounded-sm border border-dashed border-border py-8 text-center">
 						<i class="fas fa-calendar-day mb-2 text-2xl text-fg-subdued/30"></i>
@@ -489,7 +562,7 @@
 					</div>
 				{:else}
 					<div class="max-h-[400px] space-y-2 overflow-y-auto pr-1">
-						{#each selectedEvents as event}
+						{#each selectedEvents as event (event.id)}
 							{@const href =
 								event.type === 'training'
 									? `/app/training/session/${event.id}`
@@ -561,10 +634,73 @@
 					</div>
 				{/if}
 			{:else}
-				<div class="rounded-sm border border-dashed border-border py-12 text-center">
-					<i class="fas fa-calendar mb-2 text-2xl text-fg-subdued/30"></i>
-					<p class="text-sm text-fg-subdued">Click on a day to see events</p>
+				<div class="mb-3 flex items-center justify-between">
+					<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+						Upcoming Reminders
+					</h3>
+					<a href="/app/reminders" class="text-xs text-primary hover:text-primary-hover">View All</a
+					>
 				</div>
+
+				{#if upcomingGroups.length === 0}
+					<div class="rounded-sm border border-dashed border-border py-12 text-center">
+						<i class="fas fa-bell mb-2 text-2xl text-fg-subdued/30"></i>
+						<p class="text-sm text-fg-subdued">No upcoming reminders</p>
+						<p class="mt-1 text-xs text-fg-subdued/70">Tap a day to see its events</p>
+					</div>
+				{:else}
+					<div class="max-h-[440px] space-y-3 overflow-y-auto pr-1">
+						{#each upcomingGroups as group (group.date.getTime())}
+							<div>
+								<button
+									type="button"
+									class="mb-1.5 flex w-full cursor-pointer items-center gap-2 text-left"
+									onclick={() => handleDateClick(group.date)}
+								>
+									<span class="text-xs font-semibold text-fg">{dayLabel(group.date)}</span>
+									<span class="text-[10px] text-fg-subdued">
+										{group.items.length} reminder{group.items.length !== 1 ? 's' : ''}
+									</span>
+									<span class="h-px flex-1 bg-border/50"></span>
+									<i class="fas fa-chevron-right text-[9px] text-fg-subdued/50"></i>
+								</button>
+								<div class="space-y-1">
+									{#each group.items as item (item.id)}
+										{@const time = new Date(item.dueAt).toLocaleTimeString([], {
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
+										<a
+											href={item.isVirtual
+												? `/app/reminders/${item.templateId}`
+												: `/app/reminders/${item.id}`}
+											class="flex items-center gap-2.5 rounded-sm border {item.isVirtual
+												? 'border-muted bg-muted/30'
+												: 'border-error/30 bg-error/5'} px-3 py-2 transition-all hover:border-primary/50"
+										>
+											<span class="w-11 shrink-0 text-[10px] text-fg-subdued">{time}</span>
+											<p
+												class="min-w-0 flex-1 truncate text-sm {item.isVirtual
+													? 'text-fg-subdued italic'
+													: 'text-fg'}"
+											>
+												{item.title}
+											</p>
+											<span
+												class="shrink-0 rounded-sm px-1.5 py-0.5 text-[9px] font-medium {item.isVirtual
+													? 'bg-muted text-fg-subdued'
+													: 'bg-error/10 text-error'}"
+											>
+												{item.isVirtual ? 'Scheduled' : 'Pending'}
+											</span>
+										</a>
+									{/each}
+								</div>
+							</div>
+						{/each}
+					</div>
+					<p class="mt-3 text-center text-[10px] text-fg-subdued/70">Tap a day to see its events</p>
+				{/if}
 			{/if}
 		</div>
 	</div>

@@ -33,34 +33,11 @@
 		)
 	);
 
-	let expandedSections = $state(
-		new Set<string>(
-			JSON.parse(
-				typeof sessionStorage !== 'undefined'
-					? sessionStorage.getItem('sidebar_sections') || '[]'
-					: '[]'
-			)
-		)
-	);
-
 	$effect(() => {
 		if (typeof sessionStorage !== 'undefined') {
 			sessionStorage.setItem('sidebar_expanded', JSON.stringify([...expandedCategories]));
 		}
 	});
-
-	$effect(() => {
-		if (typeof sessionStorage !== 'undefined') {
-			sessionStorage.setItem('sidebar_sections', JSON.stringify([...expandedSections]));
-		}
-	});
-
-	function toggleSection(name: string) {
-		const next = new Set(expandedSections);
-		if (next.has(name)) next.delete(name);
-		else next.add(name);
-		expandedSections = next;
-	}
 
 	let creatingPageFor = $state<string | null>(null);
 	let newPageName = $state('');
@@ -337,62 +314,17 @@
 		</a>
 
 		<a
-			href="/app/analytics"
+			href="/app/training"
 			onclick={onNavigate}
-			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-				.url.pathname === '/app/analytics'
+			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
+				'/app/training'
+			)
 				? 'bg-primary-subdued font-medium text-primary'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
-			<i class="fas fa-chart-bar w-4 text-center text-xs"></i>
-			Analytics
+			<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
+			Training
 		</a>
-
-		<div class="my-1 h-px bg-border/50"></div>
-
-		<!-- Training Section (Collapsible) -->
-		<div class="mt-2 mb-1">
-			<button
-				type="button"
-				class="flex w-full cursor-pointer items-center gap-2.5 px-3 py-1.5 text-[13px] text-fg-subdued transition-colors hover:text-fg"
-				onclick={() => toggleSection('training')}
-			>
-				<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
-				<span class="flex-1 text-left font-medium">Training</span>
-				<i
-					class="fas fa-chevron-right text-[9px] transition-transform duration-150 {expandedSections.has(
-						'training'
-					)
-						? 'rotate-90'
-						: ''}"
-				></i>
-			</button>
-			{#if expandedSections.has('training')}
-				<div class="mt-1 ml-7 space-y-0.5">
-					<a
-						href="/app/training"
-						onclick={onNavigate}
-						class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page
-							.url.pathname === '/app/training'
-							? 'bg-primary-subdued font-medium text-primary'
-							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-					>
-						<i class="fas fa-clock-rotate-left w-3 text-center text-[10px]"></i> Sessions
-					</a>
-					<a
-						href="/app/training/stats"
-						onclick={onNavigate}
-						class="flex items-center gap-2 rounded-sm px-2 py-1 text-[12px] transition-colors {page.url.pathname.startsWith(
-							'/app/training/stats'
-						)
-							? 'bg-primary-subdued font-medium text-primary'
-							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-					>
-						<i class="fas fa-chart-line w-3 text-center text-[10px]"></i> Stats
-					</a>
-				</div>
-			{/if}
-		</div>
 
 		<div class="my-1 h-px bg-border/50"></div>
 

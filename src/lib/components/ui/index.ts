@@ -12,6 +12,6 @@ export { default as Spinner } from './Spinner.svelte';
 export { default as Dialog } from './Dialog.svelte';
 export { default as SearchInput } from './SearchInput.svelte';
 export { default as PageHeader } from './PageHeader.svelte';
-export { default as StatCard } from './StatCard.svelte';
+export { default as StatGroupCard } from './StatGroupCard.svelte';
 export { default as ConfirmButton } from './ConfirmButton.svelte';
 export { default as ConfirmDialog } from './ConfirmDialog.svelte';

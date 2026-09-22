@@ -1,5 +1,5 @@
-const CACHE_NAME = 'megorganize-v2';
-const RUNTIME_CACHE = 'megorganize-runtime-v2';
+const CACHE_NAME = 'megorganize-v3';
+const RUNTIME_CACHE = 'megorganize-runtime-v3';
 
 // Assets to pre-cache on install
 const PRECACHE_URLS = [
