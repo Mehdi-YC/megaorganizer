@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { getSessionIcon } from '$lib/utils/training';
+	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 
 	let { data } = $props();
 	let sessions = $derived<any[]>(data.sessions ?? []);
@@ -14,8 +15,18 @@
 	let currentDate = $state(new Date());
 
 	const monthNames = [
-		'January', 'February', 'March', 'April', 'May', 'June',
-		'July', 'August', 'September', 'October', 'November', 'December'
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December'
 	];
 
 	const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -69,7 +80,10 @@
 					type: 'training',
 					id: session.id,
 					title: session.title || 'Training Session',
-					time: new Date(session.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+					time: new Date(session.startedAt).toLocaleTimeString([], {
+						hour: '2-digit',
+						minute: '2-digit'
+					})
 				});
 			}
 		}
@@ -91,7 +105,10 @@
 					id: reminder.id,
 					title: reminder.title,
 					completed: reminder.completed,
-					time: new Date(reminder.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+					time: new Date(reminder.dueAt).toLocaleTimeString([], {
+						hour: '2-digit',
+						minute: '2-digit'
+					})
 				});
 			}
 
@@ -116,7 +133,10 @@
 						id: vReminder.id,
 						title: vReminder.title,
 						isVirtual: true,
-						time: new Date(vReminder.dueAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+						time: new Date(vReminder.dueAt).toLocaleTimeString([], {
+							hour: '2-digit',
+							minute: '2-digit'
+						})
 					});
 				}
 			}
@@ -231,68 +251,73 @@
 </svelte:head>
 
 <div class="p-4 sm:p-6 lg:p-8">
-	<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-		<div>
-			<h1 class="text-xl font-semibold text-fg-accent">Calendar</h1>
-			<p class="mt-1 text-sm text-fg-subdued">View all your events in one place</p>
-		</div>
-
+	<PageHeader title="Calendar" subtitle="View all your events in one place">
 		<!-- Filter buttons -->
-		<div class="flex gap-2">
-			<button
-				type="button"
-				class="inline-flex items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {!filter ? 'bg-primary text-white' : 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => setFilter(null)}
-			>
-				All
-			</button>
-			<button
-				type="button"
-				class="inline-flex items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter === 'training' ? 'bg-primary text-white' : 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => setFilter('training')}
-			>
-				<i class="fas fa-dumbbell text-[10px]"></i>
-				Training
-			</button>
-			<button
-				type="button"
-				class="inline-flex items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter === 'reminders' ? 'bg-primary text-white' : 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => setFilter('reminders')}
-			>
-				<i class="fas fa-bell text-[10px]"></i>
-				Reminders
-			</button>
-			<button
-				type="button"
-				class="inline-flex items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter === 'finance' ? 'bg-primary text-white' : 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => setFilter('finance')}
-			>
-				<i class="fas fa-receipt text-[10px]"></i>
-				Finance
-			</button>
-		</div>
-	</div>
+		<button
+			type="button"
+			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {!filter
+				? 'bg-primary text-white'
+				: 'bg-muted text-fg hover:bg-border'}"
+			onclick={() => setFilter(null)}
+		>
+			All
+		</button>
+		<button
+			type="button"
+			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
+			'training'
+				? 'bg-primary text-white'
+				: 'bg-muted text-fg hover:bg-border'}"
+			onclick={() => setFilter('training')}
+		>
+			<i class="fas fa-dumbbell text-[10px]"></i>
+			Training
+		</button>
+		<button
+			type="button"
+			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
+			'reminders'
+				? 'bg-primary text-white'
+				: 'bg-muted text-fg hover:bg-border'}"
+			onclick={() => setFilter('reminders')}
+		>
+			<i class="fas fa-bell text-[10px]"></i>
+			Reminders
+		</button>
+		<button
+			type="button"
+			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
+			'finance'
+				? 'bg-primary text-white'
+				: 'bg-muted text-fg hover:bg-border'}"
+			onclick={() => setFilter('finance')}
+		>
+			<i class="fas fa-receipt text-[10px]"></i>
+			Finance
+		</button>
+	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-3">
 		<!-- Calendar -->
 		<div class="lg:col-span-2">
 			<div class="rounded-sm border border-border bg-surface p-3 sm:p-6">
-				<div class="mb-4 sm:mb-6 flex items-center justify-between">
+				<div class="mb-4 flex items-center justify-between sm:mb-6">
 					<button
 						type="button"
 						aria-label="Previous month"
-						class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+						class="cursor-pointer rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
 						onclick={prevMonth}
 					>
 						<i class="fas fa-chevron-left"></i>
 					</button>
 					<h2 class="text-lg font-semibold text-fg">
-						{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+						{monthNames[currentDate.getMonth()]}
+						{currentDate.getFullYear()}
 					</h2>
 					<button
 						type="button"
 						aria-label="Next month"
-						class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+						class="cursor-pointer rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
 						onclick={nextMonth}
 					>
 						<i class="fas fa-chevron-right"></i>
@@ -306,7 +331,9 @@
 							<i class="fas fa-dumbbell text-[10px] text-blue-600"></i>
 						</div>
 						<div>
-							<p class="text-sm font-semibold text-fg">{getMonthOverview(currentDate).trainingCount}</p>
+							<p class="text-sm font-semibold text-fg">
+								{getMonthOverview(currentDate).trainingCount}
+							</p>
 							<p class="text-[10px] text-fg-subdued">Trainings</p>
 						</div>
 					</div>
@@ -318,7 +345,10 @@
 							<p class="text-sm font-semibold text-fg">
 								{getMonthOverview(currentDate).reminderCount}
 								<span class="text-xs font-normal text-fg-subdued">
-									({getMonthOverview(currentDate).completedCount} <i class="fas fa-check text-success"></i> / {getMonthOverview(currentDate).missedCount} <i class="fas fa-times text-error"></i>)
+									({getMonthOverview(currentDate).completedCount}
+									<i class="fas fa-check text-success"></i>
+									/ {getMonthOverview(currentDate).missedCount}
+									<i class="fas fa-times text-error"></i>)
 								</span>
 							</p>
 							<p class="text-[10px] text-fg-subdued">Tasks (completed / missed)</p>
@@ -329,7 +359,10 @@
 							<i class="fas fa-receipt text-[10px] text-warning"></i>
 						</div>
 						<div>
-							<p class="text-sm font-semibold text-fg">{getMonthOverview(currentDate).expenseTotal.toLocaleString()} {expenseSettings.currency}</p>
+							<p class="text-sm font-semibold text-fg">
+								{getMonthOverview(currentDate).expenseTotal.toLocaleString()}
+								{expenseSettings.currency}
+							</p>
 							<p class="text-[10px] text-fg-subdued">Expenses</p>
 						</div>
 					</div>
@@ -337,7 +370,9 @@
 
 				<div class="grid grid-cols-7 gap-px bg-border">
 					{#each dayNames as day}
-						<div class="bg-muted px-1 sm:px-2 py-1.5 sm:py-2 text-center text-[10px] sm:text-xs font-semibold uppercase text-fg-subdued">
+						<div
+							class="bg-muted px-1 py-1.5 text-center text-[10px] font-semibold text-fg-subdued uppercase sm:px-2 sm:py-2 sm:text-xs"
+						>
 							{day}
 						</div>
 					{/each}
@@ -350,17 +385,21 @@
 						{@const hasExpenses = events.some((e) => e.type === 'expense')}
 
 						<div
-							class="min-h-[40px] sm:min-h-[100px] bg-surface p-1 sm:p-2 cursor-pointer transition-colors hover:bg-muted {date ? '' : 'opacity-0'} {selectedDate && date && selectedDate.getTime() === date.getTime() ? 'ring-2 ring-primary' : ''}"
+							class="min-h-[40px] cursor-pointer bg-surface p-1 transition-colors hover:bg-muted sm:min-h-[100px] sm:p-2 {date
+								? ''
+								: 'opacity-0'} {selectedDate && date && selectedDate.getTime() === date.getTime()
+								? 'ring-2 ring-primary'
+								: ''}"
 							onclick={() => date && handleDateClick(date)}
 							onkeydown={(e) => e.key === 'Enter' && date && handleDateClick(date)}
 							role="button"
 							tabindex={date ? 0 : -1}
 						>
 							{#if date}
-								<div class="mb-0.5 sm:mb-1 flex items-center justify-between">
+								<div class="mb-0.5 flex items-center justify-between sm:mb-1">
 									<span
 										class="text-[11px] sm:text-sm {isToday(date)
-											? 'flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-primary text-white'
+											? 'flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white sm:h-6 sm:w-6'
 											: 'text-fg'}"
 									>
 										{date.getDate()}
@@ -370,7 +409,10 @@
 											<div class="h-2 w-2 rounded-full bg-blue-500" title="Training"></div>
 										{/if}
 										{#if hasReminders}
-											<div class="h-2 w-2 rounded-full {hasUncompleted ? 'bg-error' : 'bg-success'}" title="Reminders"></div>
+											<div
+												class="h-2 w-2 rounded-full {hasUncompleted ? 'bg-error' : 'bg-success'}"
+												title="Reminders"
+											></div>
 										{/if}
 									</div>
 									{#if hasExpenses}
@@ -378,25 +420,28 @@
 									{/if}
 								</div>
 
-								<div class="hidden sm:block space-y-0.5">
+								<div class="hidden space-y-0.5 sm:block">
 									{#each events.slice(0, 3) as event}
-									<div
-										class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {event.type === 'training'
-											? 'bg-blue-500/10 text-blue-600'
-											: event.type === 'scheduled'
-												? 'bg-muted text-fg-subdued italic'
-												: event.type === 'expense'
-													? 'bg-warning/10 text-warning'
-													: event.completed
-														? 'bg-success/10 text-success line-through'
-														: 'bg-error/10 text-error'}"
-										title={event.title}
-									>
-										{event.type === 'expense' ? `${event.amount?.toLocaleString()} - ${event.title}` : event.title}
-									</div>
+										<div
+											class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {event.type ===
+											'training'
+												? 'bg-blue-500/10 text-blue-600'
+												: event.type === 'scheduled'
+													? 'bg-muted text-fg-subdued italic'
+													: event.type === 'expense'
+														? 'bg-warning/10 text-warning'
+														: event.completed
+															? 'bg-success/10 text-success line-through'
+															: 'bg-error/10 text-error'}"
+											title={event.title}
+										>
+											{event.type === 'expense'
+												? `${event.amount?.toLocaleString()} - ${event.title}`
+												: event.title}
+										</div>
 									{/each}
 									{#if events.length > 3}
-										<div class="text-[9px] text-fg-subdued text-center">
+										<div class="text-center text-[9px] text-fg-subdued">
 											+{events.length - 3} more
 										</div>
 									{/if}
@@ -434,7 +479,7 @@
 
 		<!-- Selected Day Details -->
 		<div>
-			<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">
+			<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
 				{selectedDate ? formatSelectedDate(selectedDate) : 'Select a Day'}
 			</h3>
 
@@ -445,15 +490,16 @@
 						<p class="text-sm text-fg-subdued">No events for this day</p>
 					</div>
 				{:else}
-					<div class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+					<div class="max-h-[400px] space-y-2 overflow-y-auto pr-1">
 						{#each selectedEvents as event}
-							{@const href = event.type === 'training'
-								? `/app/training/session/${event.id}`
-								: event.type === 'expense'
-									? `/app/finance`
-									: event.type === 'scheduled'
-										? `/app/reminders/${event.templateId || event.id.split('_')[1]}`
-										: `/app/reminders/${event.id}`}
+							{@const href =
+								event.type === 'training'
+									? `/app/training/session/${event.id}`
+									: event.type === 'expense'
+										? `/app/finance`
+										: event.type === 'scheduled'
+											? `/app/reminders/${event.templateId || event.id.split('_')[1]}`
+											: `/app/reminders/${event.id}`}
 							<a
 								{href}
 								class="flex items-center gap-3 rounded-sm border {event.type === 'training'
@@ -466,27 +512,38 @@
 												? 'border-success/30 bg-success/5'
 												: 'border-error/30 bg-error/5'} p-3 transition-all hover:border-primary/50"
 							>
-								<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm {event.type === 'training'
-									? 'bg-blue-500/10'
-									: event.type === 'expense'
-										? 'bg-warning/10'
-										: event.type === 'scheduled'
-											? 'bg-muted'
-											: event.completed
-												? 'bg-success/10'
-												: 'bg-error/10'}">
-									<i class="fas {event.type === 'training'
-										? 'fa-dumbbell text-blue-600'
+								<div
+									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm {event.type ===
+									'training'
+										? 'bg-blue-500/10'
 										: event.type === 'expense'
-											? 'fa-receipt text-warning'
+											? 'bg-warning/10'
 											: event.type === 'scheduled'
-												? 'fa-clock text-fg-subdued'
+												? 'bg-muted'
 												: event.completed
-													? 'fa-check text-success'
-													: 'fa-bell text-error'} text-xs"></i>
+													? 'bg-success/10'
+													: 'bg-error/10'}"
+								>
+									<i
+										class="fas {event.type === 'training'
+											? 'fa-dumbbell text-blue-600'
+											: event.type === 'expense'
+												? 'fa-receipt text-warning'
+												: event.type === 'scheduled'
+													? 'fa-clock text-fg-subdued'
+													: event.completed
+														? 'fa-check text-success'
+														: 'fa-bell text-error'} text-xs"
+									></i>
 								</div>
 								<div class="min-w-0 flex-1">
-									<p class="text-sm font-medium {event.type === 'scheduled' ? 'text-fg-subdued' : 'text-fg'} truncate">{event.title}</p>
+									<p
+										class="text-sm font-medium {event.type === 'scheduled'
+											? 'text-fg-subdued'
+											: 'text-fg'} truncate"
+									>
+										{event.title}
+									</p>
 									<p class="text-[10px] text-fg-subdued">
 										{#if event.type === 'expense'}
 											{event.amount?.toLocaleString()} {expenseSettings.currency}

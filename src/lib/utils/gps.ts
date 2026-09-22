@@ -85,9 +85,7 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
 	const dLon = ((lon2 - lon1) * Math.PI) / 180;
 	const a =
 		Math.sin(dLat / 2) ** 2 +
-		Math.cos((lat1 * Math.PI) / 180) *
-			Math.cos((lat2 * Math.PI) / 180) *
-			Math.sin(dLon / 2) ** 2;
+		Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
 	return EARTH_RADIUS_KM * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 1000;
 }
 
@@ -123,7 +121,8 @@ export function buildRunPayload({
 	maxSpeed,
 	averagePace,
 	bestPace,
-	title
+	title,
+	notes
 }: {
 	gpsPoints: Array<{
 		latitude: number;
@@ -140,6 +139,7 @@ export function buildRunPayload({
 	averagePace: number;
 	bestPace: number;
 	title?: string;
+	notes?: string;
 }) {
 	return {
 		distance,
@@ -149,6 +149,7 @@ export function buildRunPayload({
 		averagePace,
 		bestPace,
 		title,
+		notes,
 		gpsPoints: gpsPoints.map((p, i) => ({
 			sequence: i,
 			timestamp: new Date(p.timestamp),
@@ -161,11 +162,17 @@ export function buildRunPayload({
 	};
 }
 
-export async function saveRunApi(runData: ReturnType<typeof buildRunPayload>): Promise<{ sessionId?: string; activityId?: string }> {
+export async function saveRunApi(
+	runData: ReturnType<typeof buildRunPayload>
+): Promise<{ sessionId?: string; activityId?: string }> {
 	const res = await fetch('/api/running', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ action: 'saveRun', ...runData })
 	});
-	return res.json();
+	const data = await res.json().catch(() => null);
+	if (!res.ok || !data) {
+		throw new Error(data?.error || 'Failed to save run. Please try again.');
+	}
+	return data;
 }

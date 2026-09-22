@@ -1,5 +1,12 @@
 <script lang="ts">
-	let { icon = 'fa-inbox', message, submessage }: { icon?: string; message: string; submessage?: string } = $props();
+	import type { Snippet } from 'svelte';
+
+	let {
+		icon = 'fa-inbox',
+		message,
+		submessage,
+		children
+	}: { icon?: string; message: string; submessage?: string; children?: Snippet } = $props();
 </script>
 
 <div class="rounded-sm border border-border bg-surface py-16 text-center">
@@ -7,5 +14,10 @@
 	<p class="text-sm text-fg-subdued">{message}</p>
 	{#if submessage}
 		<p class="mt-1 text-xs text-fg-subdued">{submessage}</p>
+	{/if}
+	{#if children}
+		<div class="mt-4 flex justify-center gap-2">
+			{@render children()}
+		</div>
 	{/if}
 </div>

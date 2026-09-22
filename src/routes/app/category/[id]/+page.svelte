@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
@@ -72,16 +75,17 @@
 
 <div class="p-4 sm:p-8">
 	{#if !category}
-		<div class="rounded-sm border border-border bg-surface py-16 text-center">
-			<i class="fas fa-exclamation-triangle mb-4 text-4xl text-fg-subdued"></i>
-			<p class="text-fg-subdued">Category not found</p>
-			<a href="/app" class="mt-4 text-primary hover:text-primary-hover">Back to Dashboard</a>
-		</div>
+		<EmptyState icon="fa-exclamation-triangle" message="Category not found">
+			<Button href="/app" variant="primary" size="sm">Back to Dashboard</Button>
+		</EmptyState>
 	{:else}
 		<div class="mb-6 sm:mb-8">
-			<div class="flex items-center gap-3 mb-2">
+			<div class="mb-2 flex items-center gap-3">
 				{#if category.icon}
-					<i class="fas {category.icon} text-2xl" style="color: {category.iconColor || 'var(--color-primary)'}"></i>
+					<i
+						class="fas {category.icon} text-2xl"
+						style="color: {category.iconColor || 'var(--color-primary)'}"
+					></i>
 				{/if}
 				<h1 class="text-lg font-semibold text-fg-accent">{category.name}</h1>
 			</div>
@@ -90,43 +94,58 @@
 			{/if}
 		</div>
 
-		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-			<h2 class="text-sm font-semibold text-fg-accent uppercase tracking-wide">Pages</h2>
-			<button type="button" class="inline-flex h-[36px] items-center justify-center rounded-sm bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover" onclick={() => (showNewPage = true)}>
+		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+			<h2 class="text-sm font-semibold tracking-wide text-fg-accent uppercase">Pages</h2>
+			<Button onclick={() => (showNewPage = true)}>
 				<i class="fas fa-plus mr-2"></i> New Page
-			</button>
+			</Button>
 		</div>
 
 		{#if showNewPage}
 			<div class="mb-6 rounded-sm border border-border bg-surface p-4">
-				<form onsubmit={(e) => { e.preventDefault(); createPage(); }} class="flex flex-col sm:flex-row gap-2">
-					<input type="text" bind:value={newPageName} placeholder="Page name" class="flex-1 h-[36px] rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors focus:border-primary focus:outline-none focus:ring-0" />
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						createPage();
+					}}
+					class="flex flex-col gap-2 sm:flex-row"
+				>
+					<Input class="flex-1" bind:value={newPageName} placeholder="Page name" />
 					<div class="flex gap-2">
-						<button type="submit" class="inline-flex h-[36px] items-center justify-center rounded-sm bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary-hover">Create</button>
-						<button type="button" class="inline-flex h-[36px] items-center justify-center rounded-sm border border-border bg-surface px-4 text-sm font-medium text-fg transition-colors hover:bg-muted" onclick={() => { showNewPage = false; newPageName = ''; }}>Cancel</button>
+						<Button type="submit">Create</Button>
+						<Button
+							type="button"
+							variant="secondary"
+							onclick={() => {
+								showNewPage = false;
+								newPageName = '';
+							}}>Cancel</Button
+						>
 					</div>
 				</form>
 			</div>
 		{/if}
 
 		{#if pages.length === 0}
-			<div class="rounded-sm border border-border bg-surface py-16 text-center">
-				<i class="fas fa-file-alt mb-4 text-4xl text-fg-subdued"></i>
-				<p class="text-fg-subdued">No pages yet</p>
-				<p class="mt-1 text-sm text-fg-subdued">Create your first page to get started</p>
-			</div>
+			<EmptyState
+				icon="fa-file-alt"
+				message="No pages yet"
+				submessage="Create your first page to get started"
+			/>
 		{:else}
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each pages as pg, idx}
+				{#each pages as pg, idx (pg.id)}
 					<a
 						href="/app/category/{category.id}/page/{pg.id}"
-						class="group relative rounded-sm border border-border bg-surface p-6 transition-all hover:border-primary cursor-move"
+						class="group relative cursor-move rounded-sm border border-border bg-surface p-6 transition-all hover:border-primary"
 						draggable="true"
 						ondragstart={(e) => handleDragStart(e, idx)}
 						ondragover={(e) => handleDragOver(e, idx)}
 						ondragend={handleDragEnd}
 					>
-						<div class="absolute top-2 left-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+						<div
+							class="absolute top-2 left-2 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+						>
 							<i class="fas fa-grip-vertical text-[10px] text-fg-subdued/40"></i>
 						</div>
 						<div class="mb-3 flex items-center gap-2">
@@ -138,7 +157,7 @@
 							<h3 class="font-medium text-fg group-hover:text-primary">{pg.name}</h3>
 						</div>
 						{#if pg.description}
-							<p class="text-sm text-fg-subdued line-clamp-2">{pg.description}</p>
+							<p class="line-clamp-2 text-sm text-fg-subdued">{pg.description}</p>
 						{/if}
 					</a>
 				{/each}

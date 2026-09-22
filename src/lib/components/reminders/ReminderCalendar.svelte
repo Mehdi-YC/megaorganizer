@@ -18,8 +18,18 @@
 	let currentDate = $state(new Date());
 
 	const monthNames = [
-		'January', 'February', 'March', 'April', 'May', 'June',
-		'July', 'August', 'September', 'October', 'November', 'December'
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December'
 	];
 
 	const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -127,22 +137,23 @@
 </script>
 
 <div class="rounded-sm border border-border bg-surface p-3 sm:p-6">
-	<div class="mb-4 sm:mb-6 flex items-center justify-between">
+	<div class="mb-4 flex items-center justify-between sm:mb-6">
 		<button
 			type="button"
 			aria-label="Previous month"
-			class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+			class="cursor-pointer rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
 			onclick={prevMonth}
 		>
 			<i class="fas fa-chevron-left"></i>
 		</button>
 		<h2 class="text-lg font-semibold text-fg">
-			{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+			{monthNames[currentDate.getMonth()]}
+			{currentDate.getFullYear()}
 		</h2>
 		<button
 			type="button"
 			aria-label="Next month"
-			class="rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+			class="cursor-pointer rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
 			onclick={nextMonth}
 		>
 			<i class="fas fa-chevron-right"></i>
@@ -151,14 +162,18 @@
 
 	<div class="grid grid-cols-7 gap-px bg-border">
 		{#each dayNames as day}
-			<div class="bg-muted px-1 sm:px-2 py-1.5 sm:py-2 text-center text-[10px] sm:text-xs font-semibold uppercase text-fg-subdued">
+			<div
+				class="bg-muted px-1 py-1.5 text-center text-[10px] font-semibold text-fg-subdued uppercase sm:px-2 sm:py-2 sm:text-xs"
+			>
 				{day}
 			</div>
 		{/each}
 
 		{#each getDaysInMonth(currentDate) as date}
 			<div
-				class="min-h-[40px] sm:min-h-[80px] bg-surface p-1 sm:p-2 cursor-pointer transition-colors hover:bg-muted {date ? '' : 'opacity-0'} {date && isSelected(date) ? 'ring-2 ring-primary' : ''}"
+				class="min-h-[40px] cursor-pointer bg-surface p-1 transition-colors hover:bg-muted sm:min-h-[80px] sm:p-2 {date
+					? ''
+					: 'opacity-0'} {date && isSelected(date) ? 'ring-2 ring-primary' : ''}"
 				onclick={() => date && handleDateClick(date)}
 				onkeydown={(e) => e.key === 'Enter' && date && handleDateClick(date)}
 				role="button"
@@ -167,33 +182,39 @@
 				{#if date}
 					{@const status = getDateStatus(date)}
 					{@const dayReminders = getRemindersForDate(date)}
-					<div class="mb-0.5 sm:mb-1 flex items-center justify-between">
+					<div class="mb-0.5 flex items-center justify-between sm:mb-1">
 						<span
 							class="text-[11px] sm:text-sm {isToday(date)
-								? 'flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-primary text-white'
+								? 'flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white sm:h-6 sm:w-6'
 								: 'text-fg'}"
 						>
 							{date.getDate()}
 						</span>
 						{#if dayReminders.length > 0}
-							<div class="flex h-4 w-4 items-center justify-center rounded-full {getStatusDotColor(status)}">
+							<div
+								class="flex h-4 w-4 items-center justify-center rounded-full {getStatusDotColor(
+									status
+								)}"
+							>
 								<span class="text-[8px] font-bold text-white">{dayReminders.length}</span>
 							</div>
 						{/if}
 					</div>
 
 					{#if dayReminders.length > 0}
-						<div class="hidden sm:block space-y-0.5">
-							{#each dayReminders.slice(0, 2) as r}
+						<div class="hidden space-y-0.5 sm:block">
+							{#each dayReminders.slice(0, 2) as r (r.id)}
 								<div
-									class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {r.completed ? 'bg-success/10 text-success line-through' : 'bg-muted text-fg'}"
+									class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {r.completed
+										? 'bg-success/10 text-success line-through'
+										: 'bg-muted text-fg'}"
 									title={r.title}
 								>
 									{r.title}
 								</div>
 							{/each}
 							{#if dayReminders.length > 2}
-								<div class="text-[9px] text-fg-subdued text-center">
+								<div class="text-center text-[9px] text-fg-subdued">
 									+{dayReminders.length - 2} more
 								</div>
 							{/if}

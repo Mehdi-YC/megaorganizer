@@ -1,31 +1,17 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { EmptyState } from '$lib/components/ui';
+	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import { ExpenseForm, ExpenseCard, MonthlySummary } from '$lib/components/finance';
 
 	let { data } = $props();
 	let expenses = $derived<any[]>(data.expenses ?? []);
 	let monthlyStats = $derived(data.monthlyStats ?? { total: 0, count: 0 });
-	let settings = $derived<any>(data.settings ?? { currency: 'DZD', currencyRate: 1, monthlySpendingLimit: null });
+	let settings = $derived<any>(
+		data.settings ?? { currency: 'DZD', currencyRate: 1, monthlySpendingLimit: null }
+	);
 	let year = $derived(data.year ?? new Date().getFullYear());
 	let month = $derived(data.month ?? new Date().getMonth());
-
-	let currentMonth = $state(new Date());
-
-	function prevMonth() {
-		currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1);
-		loadMonthData();
-	}
-
-	function nextMonth() {
-		currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
-		loadMonthData();
-	}
-
-	async function loadMonthData() {
-		// This would ideally reload data for the selected month
-		// For now, we'll use the server-loaded data
-	}
 
 	async function handleAddExpense(expenseData: any) {
 		const res = await fetch('/api/finance', {
@@ -54,8 +40,18 @@
 	}
 
 	const monthNames = [
-		'January', 'February', 'March', 'April', 'May', 'June',
-		'July', 'August', 'September', 'October', 'November', 'December'
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December'
 	];
 </script>
 
@@ -64,28 +60,21 @@
 </svelte:head>
 
 <div class="p-4 sm:p-6 lg:p-8">
-	<div class="mb-6">
-		<h1 class="text-xl font-semibold text-fg-accent">Finance</h1>
-		<p class="mt-1 text-sm text-fg-subdued">Track your expenses and spending</p>
-	</div>
+	<PageHeader title="Finance" subtitle="Track your expenses and spending" />
 
 	<div class="grid gap-6 lg:grid-cols-3">
 		<!-- Main Content -->
-		<div class="lg:col-span-2 space-y-6">
+		<div class="space-y-6 lg:col-span-2">
 			<!-- Add Expense Form -->
-			<ExpenseForm
-				currency={settings.currency}
-				onSave={handleAddExpense}
-			/>
+			<ExpenseForm currency={settings.currency} onSave={handleAddExpense} />
 
 			<!-- Expense List -->
 			<div>
-				<div class="flex items-center justify-between mb-3">
-					<h2 class="text-sm font-semibold text-fg-accent uppercase tracking-wide">
-						Expenses
-					</h2>
+				<div class="mb-3 flex items-center justify-between">
+					<h2 class="text-sm font-semibold tracking-wide text-fg-accent uppercase">Expenses</h2>
 					<span class="text-xs text-fg-subdued">
-						{monthNames[month]} {year}
+						{monthNames[month]}
+						{year}
 					</span>
 				</div>
 
@@ -97,12 +86,8 @@
 					/>
 				{:else}
 					<div class="space-y-2">
-						{#each expenses as expense}
-							<ExpenseCard
-								{expense}
-								currency={settings.currency}
-								onDelete={handleDeleteExpense}
-							/>
+						{#each expenses as expense (expense.id)}
+							<ExpenseCard {expense} currency={settings.currency} onDelete={handleDeleteExpense} />
 						{/each}
 					</div>
 				{/if}
@@ -123,12 +108,15 @@
 
 			<!-- Quick Stats -->
 			<div class="rounded-sm border border-border bg-surface p-4">
-				<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Quick Stats</h3>
+				<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+					Quick Stats
+				</h3>
 				<div class="space-y-2">
 					<div class="flex items-center justify-between">
 						<span class="text-xs text-fg-subdued">This month</span>
 						<span class="text-sm font-medium text-fg">
-							{monthlyStats.total.toLocaleString()} {settings.currency}
+							{monthlyStats.total.toLocaleString()}
+							{settings.currency}
 						</span>
 					</div>
 					<div class="flex items-center justify-between">
@@ -139,7 +127,8 @@
 						<div class="flex items-center justify-between">
 							<span class="text-xs text-fg-subdued">Avg per expense</span>
 							<span class="text-sm font-medium text-fg">
-								{(monthlyStats.total / monthlyStats.count).toFixed(0)} {settings.currency}
+								{(monthlyStats.total / monthlyStats.count).toFixed(0)}
+								{settings.currency}
 							</span>
 						</div>
 					{/if}

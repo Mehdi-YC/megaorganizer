@@ -34,6 +34,7 @@ export const PUT: RequestHandler = async (event) => {
 
 	const { id, ...data } = v.data;
 	const updated = await updateTag(user.id, id as string, data);
+	if (!updated) return json({ error: 'Not found' }, { status: 404 });
 	return json(updated);
 };
 

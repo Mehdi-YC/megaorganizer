@@ -1,17 +1,20 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import Button from './Button.svelte';
 
 	let {
 		open = $bindable(false),
 		title = undefined,
 		description = undefined,
 		children,
+		footer = undefined,
 		onclose
 	}: {
 		open?: boolean;
 		title?: string;
 		description?: string;
 		children: Snippet;
+		footer?: Snippet;
 		onclose?: () => void;
 	} = $props();
 
@@ -32,16 +35,19 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay animate-fade-in"
+		class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay"
 		onclick={handleBackdropClick}
-		onkeydown={(e) => e.key === 'Escape' && handleClose()}
-		role="dialog"
-		tabindex="-1"
-		aria-modal="true"
-		aria-labelledby={title ? 'dialog-title' : undefined}
+		onkeydown={handleKeydown}
+		role="presentation"
 	>
-		<div class="w-full max-w-md rounded-sm border border-border bg-surface shadow-2xl animate-scale-in">
+		<div
+			class="animate-scale-in w-full max-w-md rounded-sm border border-border bg-surface shadow-2xl"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby={title ? 'dialog-title' : undefined}
+		>
 			{#if title}
 				<div class="border-b border-border px-6 py-4">
 					<h2 id="dialog-title" class="text-base font-semibold text-fg-accent">
@@ -57,14 +63,12 @@
 				{@render children()}
 			</div>
 
-			<div class="border-t border-border px-6 py-3 flex justify-end">
-				<button
-					type="button"
-					class="inline-flex h-[36px] items-center justify-center rounded-sm bg-muted px-4 text-sm font-medium text-fg transition-colors hover:bg-border"
-					onclick={handleClose}
-				>
-					Close
-				</button>
+			<div class="flex justify-end gap-2 border-t border-border px-6 py-3">
+				{#if footer}
+					{@render footer()}
+				{:else}
+					<Button variant="secondary" onclick={handleClose}>Close</Button>
+				{/if}
 			</div>
 		</div>
 	</div>

@@ -6,6 +6,9 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
@@ -25,8 +28,14 @@
 			loadingRunning = true;
 			fetch(`/api/running?sessionId=${session.id}`)
 				.then((r) => r.json())
-				.then((d) => { runningData = Array.isArray(d) ? d : []; loadingRunning = false; })
-				.catch(() => { runningData = []; loadingRunning = false; });
+				.then((d) => {
+					runningData = Array.isArray(d) ? d : [];
+					loadingRunning = false;
+				})
+				.catch(() => {
+					runningData = [];
+					loadingRunning = false;
+				});
 		}
 	});
 
@@ -60,11 +69,11 @@
 
 <div class="p-4 sm:p-8">
 	{#if !session}
-		<div class="rounded-sm border border-border bg-surface py-16 text-center">
-			<i class="fas fa-exclamation-triangle mb-4 text-4xl text-fg-subdued"></i>
-			<p class="text-fg-subdued">Session not found</p>
-			<a href="/app/training/calendar" class="mt-4 text-primary hover:text-primary-hover">Back to Calendar</a>
-		</div>
+		<EmptyState icon="fa-exclamation-triangle" message="Session not found">
+			<a href="/app/training/calendar" class="text-primary hover:text-primary-hover"
+				>Back to Calendar</a
+			>
+		</EmptyState>
 	{:else}
 		<div class="mb-8 flex items-start justify-between">
 			<div>
@@ -77,7 +86,10 @@
 				{/if}
 				<p class="text-fg-subdued">
 					{new Date(session.startedAt).toLocaleDateString('en-US', {
-						weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+						weekday: 'long',
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric'
 					})}
 					· {formatTime(session.duration)}
 				</p>
@@ -99,50 +111,79 @@
 
 		{#if editing}
 			<div class="mb-8">
-				<Textarea label="Notes" bind:value={notes} rows={4} placeholder="Add notes about this session..." />
+				<Textarea
+					label="Notes"
+					bind:value={notes}
+					rows={4}
+					placeholder="Add notes about this session..."
+				/>
 			</div>
 		{:else if session.notes}
 			<div class="mb-8 rounded-sm border border-border bg-surface p-4">
-				<h3 class="mb-2 text-xs font-semibold text-fg-accent uppercase tracking-wide">Notes</h3>
-				<p class="text-sm text-fg-subdued whitespace-pre-wrap">{session.notes}</p>
+				<h3 class="mb-2 text-xs font-semibold tracking-wide text-fg-accent uppercase">Notes</h3>
+				<p class="text-sm whitespace-pre-wrap text-fg-subdued">{session.notes}</p>
 			</div>
 		{/if}
 
-		{#if runningData.length > 0}
+		{#if loadingRunning}
+			<div
+				class="mb-8 flex items-center gap-2 rounded-sm border border-border bg-surface px-4 py-3 text-xs text-fg-subdued"
+			>
+				<Spinner size="sm" />
+				<span>Loading route map...</span>
+			</div>
+		{:else if runningData.length > 0}
 			<div class="mb-8">
-				<h2 class="mb-4 text-xs font-semibold text-fg-accent uppercase tracking-wide">Route Map</h2>
+				<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">Route Map</h2>
 				{#each runningData as run}
 					{#if run.trackPoints && run.trackPoints.length > 0}
-						<div class="rounded-sm border border-border overflow-hidden" style="height: 400px;">
+						<div class="overflow-hidden rounded-sm border border-border" style="height: 400px;">
 							<RunMap
-								points={run.trackPoints.map((p: any) => ({ latitude: p.latitude, longitude: p.longitude }))}
+								points={run.trackPoints.map((p: any) => ({
+									latitude: p.latitude,
+									longitude: p.longitude
+								}))}
 								showRoute={true}
 							/>
 						</div>
 						{#if run.runningActivity}
-							<div class="mt-3 grid grid-cols-3 gap-4 rounded-sm border border-border bg-surface p-4">
+							<div
+								class="mt-3 grid grid-cols-3 gap-4 rounded-sm border border-border bg-surface p-4"
+							>
 								<div class="text-center">
-									<div class="text-xl font-bold">{((run.runningActivity.distance || 0) / 1000).toFixed(2)}</div>
+									<div class="text-xl font-bold">
+										{((run.runningActivity.distance || 0) / 1000).toFixed(2)}
+									</div>
 									<div class="text-xs text-fg-subdued">km</div>
 								</div>
 								<div class="text-center">
-									<div class="text-xl font-bold">{formatTime(run.runningActivity.elapsedDuration || 0)}</div>
+									<div class="text-xl font-bold">
+										{formatTime(run.runningActivity.elapsedDuration || 0)}
+									</div>
 									<div class="text-xs text-fg-subdued">duration</div>
 								</div>
 								<div class="text-center">
-									<div class="text-xl font-bold">{formatPace(run.runningActivity.averagePace || 0)}</div>
+									<div class="text-xl font-bold">
+										{formatPace(run.runningActivity.averagePace || 0)}
+									</div>
 									<div class="text-xs text-fg-subdued">avg pace</div>
 								</div>
 								<div class="text-center">
-									<div class="text-xl font-bold">{((run.runningActivity.averageSpeed || 0) * 3.6).toFixed(1)}</div>
+									<div class="text-xl font-bold">
+										{((run.runningActivity.averageSpeed || 0) * 3.6).toFixed(1)}
+									</div>
 									<div class="text-xs text-fg-subdued">avg km/h</div>
 								</div>
 								<div class="text-center">
-									<div class="text-xl font-bold">{((run.runningActivity.maxSpeed || 0) * 3.6).toFixed(1)}</div>
+									<div class="text-xl font-bold">
+										{((run.runningActivity.maxSpeed || 0) * 3.6).toFixed(1)}
+									</div>
 									<div class="text-xs text-fg-subdued">max km/h</div>
 								</div>
 								<div class="text-center">
-									<div class="text-xl font-bold">{formatPace(run.runningActivity.bestPace || 0)}</div>
+									<div class="text-xl font-bold">
+										{formatPace(run.runningActivity.bestPace || 0)}
+									</div>
 									<div class="text-xs text-fg-subdued">best pace</div>
 								</div>
 							</div>
@@ -153,21 +194,17 @@
 		{/if}
 
 		<div class="mb-8">
-			<h2 class="mb-4 text-xs font-semibold text-fg-accent uppercase tracking-wide">Activities</h2>
+			<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">Activities</h2>
 
 			{#if activities.length === 0}
-				<div class="rounded-sm border border-border bg-surface py-8 text-center">
-					<p class="text-fg-subdued">No activities recorded</p>
-				</div>
+				<EmptyState icon="fa-clipboard-list" message="No activities recorded" />
 			{:else}
 				<div class="space-y-4">
 					{#each activities as activity}
 						<div class="rounded-sm border border-border bg-surface p-4">
 							<div class="mb-2 flex items-center justify-between">
 								<div class="flex items-center gap-2">
-									<span class="inline-flex items-center rounded-sm bg-primary/10 px-2 py-1 text-xs font-medium text-primary capitalize">
-										{activity.type}
-									</span>
+									<Badge variant="primary">{activity.type}</Badge>
 									{#if activity.startedAt}
 										<span class="text-sm text-fg-subdued">
 											{new Date(activity.startedAt).toLocaleTimeString()}

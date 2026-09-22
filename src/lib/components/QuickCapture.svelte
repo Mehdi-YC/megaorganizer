@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
 
 	let show = $state(false);
 	let activeTab = $state<'expense' | 'reminder' | 'item' | 'note'>('expense');
@@ -46,7 +49,7 @@
 	}
 
 	async function saveExpense() {
-		if (expenseAmount <= 0) return;
+		if (saving || expenseAmount <= 0) return;
 		saving = true;
 		const res = await fetch('/api/finance', {
 			method: 'POST',
@@ -67,11 +70,9 @@
 	}
 
 	async function saveReminder() {
-		if (!reminderTitle.trim()) return;
+		if (saving || !reminderTitle.trim()) return;
 		saving = true;
-		const dueAt = reminderDueDate
-			? new Date(`${reminderDueDate}T${reminderDueTime}`)
-			: new Date();
+		const dueAt = reminderDueDate ? new Date(`${reminderDueDate}T${reminderDueTime}`) : new Date();
 		const res = await fetch('/api/reminders', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -92,7 +93,7 @@
 	}
 
 	async function saveItem() {
-		if (!itemName.trim()) return;
+		if (saving || !itemName.trim()) return;
 		saving = true;
 		const res = await fetch('/api/tree', {
 			method: 'POST',
@@ -112,7 +113,7 @@
 	}
 
 	async function saveNote() {
-		if (!noteContent.trim()) return;
+		if (saving || !noteContent.trim()) return;
 		saving = true;
 		// Create as an item with markdown
 		const res = await fetch('/api/tree', {
@@ -134,15 +135,29 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape' && show) {
+		if (!show) return;
+		if (e.key === 'Escape') {
 			close();
+			return;
 		}
-		// Quick shortcuts when modal is open
-		if (show) {
+		const target = e.target as HTMLElement | null;
+		const typing = !!target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+		// Tab shortcuts only outside fields, so typing "2" stays a "2"
+		if (!typing && e.key >= '1' && e.key <= '4') {
 			if (e.key === '1') activeTab = 'expense';
 			if (e.key === '2') activeTab = 'reminder';
 			if (e.key === '3') activeTab = 'item';
 			if (e.key === '4') activeTab = 'note';
+			saved = false;
+			return;
+		}
+		// Enter submits the active tab; textareas keep Enter for newlines
+		if (e.key === 'Enter' && target?.tagName === 'INPUT') {
+			e.preventDefault();
+			if (activeTab === 'expense') saveExpense();
+			else if (activeTab === 'reminder') saveReminder();
+			else if (activeTab === 'item') saveItem();
+			else saveNote();
 		}
 	}
 
@@ -159,7 +174,7 @@
 <!-- FAB Button -->
 <button
 	type="button"
-	class="fixed bottom-6 right-6 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:bg-primary-hover hover:scale-105 active:scale-95"
+	class="fixed right-6 bottom-6 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover active:scale-95"
 	onclick={open}
 	aria-label="Quick capture"
 >
@@ -171,21 +186,21 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
+		class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
 		onclick={close}
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="w-full max-w-md rounded-t-lg sm:rounded-lg bg-surface border border-border shadow-2xl animate-slide-up"
+			class="animate-slide-up w-full max-w-md rounded-t-lg border border-border bg-surface shadow-2xl sm:rounded-lg"
 			onclick={(e) => e.stopPropagation()}
 		>
 			<!-- Header -->
-			<div class="flex items-center justify-between px-4 py-3 border-b border-border">
+			<div class="flex items-center justify-between border-b border-border px-4 py-3">
 				<h2 class="text-sm font-semibold text-fg-accent">Quick Capture</h2>
 				<button
 					type="button"
-					class="h-7 w-7 flex items-center justify-center rounded-sm hover:bg-muted"
+					class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm hover:bg-muted"
 					onclick={close}
 					aria-label="Close"
 				>
@@ -195,13 +210,17 @@
 
 			<!-- Tabs -->
 			<div class="flex border-b border-border">
-				{#each tabs as tab}
+				{#each tabs as tab (tab.id)}
 					<button
 						type="button"
-						class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors {activeTab === tab.id
-							? 'text-primary border-b-2 border-primary bg-primary/5'
+						class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors {activeTab ===
+						tab.id
+							? 'border-b-2 border-primary bg-primary/5 text-primary'
 							: 'text-fg-subdued hover:text-fg'}"
-						onclick={() => { activeTab = tab.id; saved = false; }}
+						onclick={() => {
+							activeTab = tab.id;
+							saved = false;
+						}}
 					>
 						<i class="fas {tab.icon} text-[10px]"></i>
 						<span class="hidden sm:inline">{tab.label}</span>
@@ -213,7 +232,9 @@
 			<div class="p-4">
 				{#if saved}
 					<div class="py-8 text-center">
-						<div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
+						<div
+							class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10"
+						>
 							<i class="fas fa-check text-xl text-success"></i>
 						</div>
 						<p class="text-sm font-medium text-fg">Saved!</p>
@@ -222,30 +243,28 @@
 					<!-- Expense Form -->
 					{#if activeTab === 'expense'}
 						<div class="space-y-3">
+							<Input
+								type="number"
+								name="qc-amount"
+								label="AMOUNT"
+								bind:value={expenseAmount}
+								min={0}
+								step={0.01}
+								placeholder="0.00"
+							/>
+							<Input
+								type="text"
+								name="qc-desc"
+								label="DESCRIPTION"
+								bind:value={expenseDescription}
+								placeholder="What for?"
+							/>
 							<div>
-								<label for="qc-amount" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">AMOUNT</label>
-								<input
-									type="number"
-									id="qc-amount"
-									bind:value={expenseAmount}
-									min="0"
-									step="0.01"
-									placeholder="0.00"
-									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-								/>
-							</div>
-							<div>
-								<label for="qc-desc" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">DESCRIPTION</label>
-								<input
-									type="text"
-									id="qc-desc"
-									bind:value={expenseDescription}
-									placeholder="What for?"
-									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-								/>
-							</div>
-							<div>
-								<label for="qc-date" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">DATE</label>
+								<label
+									for="qc-date"
+									class="mb-1.5 block text-[10px] font-semibold tracking-wide text-fg-subdued"
+									>DATE</label
+								>
 								<input
 									type="date"
 									id="qc-date"
@@ -253,32 +272,28 @@
 									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
 								/>
 							</div>
-							<button
-								type="button"
-								class="w-full h-[36px] rounded-sm bg-primary text-white text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
-								onclick={saveExpense}
-								disabled={expenseAmount <= 0 || saving}
-							>
+							<Button class="w-full" onclick={saveExpense} disabled={expenseAmount <= 0 || saving}>
 								{saving ? 'Saving...' : 'Add Expense'}
-							</button>
+							</Button>
 						</div>
 
-					<!-- Reminder Form -->
+						<!-- Reminder Form -->
 					{:else if activeTab === 'reminder'}
 						<div class="space-y-3">
-							<div>
-								<label for="qc-title" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">TITLE</label>
-								<input
-									type="text"
-									id="qc-title"
-									bind:value={reminderTitle}
-									placeholder="Reminder title"
-									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-								/>
-							</div>
+							<Input
+								type="text"
+								name="qc-title"
+								label="TITLE"
+								bind:value={reminderTitle}
+								placeholder="Reminder title"
+							/>
 							<div class="grid grid-cols-2 gap-3">
 								<div>
-									<label for="qc-duedate" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">DATE</label>
+									<label
+										for="qc-duedate"
+										class="mb-1.5 block text-[10px] font-semibold tracking-wide text-fg-subdued"
+										>DATE</label
+									>
 									<input
 										type="date"
 										id="qc-duedate"
@@ -287,7 +302,11 @@
 									/>
 								</div>
 								<div>
-									<label for="qc-duetime" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">TIME</label>
+									<label
+										for="qc-duetime"
+										class="mb-1.5 block text-[10px] font-semibold tracking-wide text-fg-subdued"
+										>TIME</label
+									>
 									<input
 										type="time"
 										id="qc-duetime"
@@ -296,71 +315,58 @@
 									/>
 								</div>
 							</div>
-							<button
-								type="button"
-								class="w-full h-[36px] rounded-sm bg-primary text-white text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
+							<Button
+								class="w-full"
 								onclick={saveReminder}
 								disabled={!reminderTitle.trim() || saving}
 							>
 								{saving ? 'Saving...' : 'Add Reminder'}
-							</button>
+							</Button>
 						</div>
 
-					<!-- Item Form -->
+						<!-- Item Form -->
 					{:else if activeTab === 'item'}
 						<div class="space-y-3">
-							<div>
-								<label for="qc-item" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">ITEM NAME</label>
-								<input
-									type="text"
-									id="qc-item"
-									bind:value={itemName}
-									placeholder="Item name"
-									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-								/>
-							</div>
-							<button
-								type="button"
-								class="w-full h-[36px] rounded-sm bg-primary text-white text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
-								onclick={saveItem}
-								disabled={!itemName.trim() || saving}
-							>
+							<Input
+								type="text"
+								name="qc-item"
+								label="ITEM NAME"
+								bind:value={itemName}
+								placeholder="Item name"
+							/>
+							<Button class="w-full" onclick={saveItem} disabled={!itemName.trim() || saving}>
 								{saving ? 'Saving...' : 'Add Item'}
-							</button>
+							</Button>
 						</div>
 
-					<!-- Note Form -->
+						<!-- Note Form -->
 					{:else if activeTab === 'note'}
 						<div class="space-y-3">
-							<p class="text-[11px] text-fg-subdued">Creates an item in your library with markdown content</p>
-							<div>
-								<label for="qc-note" class="block text-[10px] font-semibold text-fg-subdued tracking-wide mb-1.5">NOTE CONTENT</label>
-								<textarea
-									id="qc-note"
-									bind:value={noteContent}
-									placeholder="Write your note here (supports markdown)..."
-									rows="4"
-									class="w-full rounded-sm border border-border bg-bg px-3 py-2 text-sm text-fg font-mono focus:border-primary focus:outline-none resize-none"
-								></textarea>
-							</div>
-							<button
-								type="button"
-								class="w-full h-[36px] rounded-sm bg-primary text-white text-sm font-medium hover:bg-primary-hover disabled:opacity-50"
-								onclick={saveNote}
-								disabled={!noteContent.trim() || saving}
-							>
+							<p class="text-[11px] text-fg-subdued">
+								Creates an item in your library with markdown content
+							</p>
+							<Textarea
+								name="qc-note"
+								label="NOTE CONTENT"
+								bind:value={noteContent}
+								placeholder="Write your note here (supports markdown)..."
+								rows={4}
+								class="font-mono"
+							/>
+							<Button class="w-full" onclick={saveNote} disabled={!noteContent.trim() || saving}>
 								{saving ? 'Saving...' : 'Save to Library'}
-							</button>
+							</Button>
 						</div>
 					{/if}
 				{/if}
 			</div>
 
 			<!-- Keyboard hints -->
-			<div class="px-4 py-2 border-t border-border flex items-center justify-center gap-4">
-				{#each tabs as tab, i}
+			<div class="flex items-center justify-center gap-4 border-t border-border px-4 py-2">
+				{#each tabs as tab, i (tab.id)}
 					<span class="text-[10px] text-fg-subdued">
-						<kbd class="px-1 py-0.5 rounded bg-muted text-[9px]">{i + 1}</kbd> {tab.label}
+						<kbd class="rounded bg-muted px-1 py-0.5 text-[9px]">{i + 1}</kbd>
+						{tab.label}
 					</span>
 				{/each}
 			</div>

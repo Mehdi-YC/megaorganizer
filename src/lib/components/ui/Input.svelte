@@ -6,21 +6,41 @@
 		disabled = false,
 		error = undefined,
 		label = undefined,
-		name = undefined
+		name = undefined,
+		size = 'md',
+		min = undefined,
+		max = undefined,
+		step = undefined,
+		oninput = undefined,
+		onchange = undefined,
+		class: className = '',
+		...rest
 	}: {
-		value?: string;
+		value?: string | number;
 		placeholder?: string;
-		type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url';
+		type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url' | 'date';
 		disabled?: boolean;
 		error?: string;
 		label?: string;
 		name?: string;
-	} = $props();
+		size?: 'sm' | 'md';
+		min?: number;
+		max?: number;
+		step?: number;
+		oninput?: (e: Event & { currentTarget: HTMLInputElement }) => void;
+		onchange?: (e: Event & { currentTarget: HTMLInputElement }) => void;
+		class?: string;
+	} & Record<string, unknown> = $props();
+
+	const sizes: Record<string, string> = {
+		sm: 'h-8 px-2 text-xs',
+		md: 'h-[36px] px-3 text-sm'
+	};
 </script>
 
-<div class="flex flex-col gap-1.5">
+<div class="flex flex-col gap-1.5 {className}">
 	{#if label}
-		<label for={name} class="text-xs font-semibold text-fg-accent tracking-wide">
+		<label for={name} class="text-xs font-semibold tracking-wide text-fg-accent">
 			{label}
 		</label>
 	{/if}
@@ -29,10 +49,18 @@
 		{name}
 		{placeholder}
 		{disabled}
+		{min}
+		{max}
+		{step}
+		{oninput}
+		{onchange}
 		bind:value
-		class="h-[36px] rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0 {error
+		{...rest}
+		class="{sizes[
+			size
+		]} w-full rounded-sm border border-border bg-bg text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary focus:ring-0 focus:outline-none {error
 			? 'border-error'
-			: ''} {disabled ? 'opacity-40 cursor-not-allowed' : ''}"
+			: ''} {disabled ? 'cursor-not-allowed opacity-40' : ''}"
 	/>
 	{#if error}
 		<p class="text-xs text-error">{error}</p>

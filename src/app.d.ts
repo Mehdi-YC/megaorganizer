@@ -6,6 +6,12 @@ declare global {
 			user: User;
 			session: Session;
 		}
+		interface Error {
+			message: string;
+			error?: string;
+			errorId?: string;
+			retryAfterMs?: number;
+		}
 	}
 }
 

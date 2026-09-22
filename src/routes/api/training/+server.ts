@@ -18,7 +18,17 @@ import {
 	batchCreateExerciseRecords
 } from '$lib/server/services/training.service';
 import { requireUser } from '$lib/server/api-helpers';
-import { parseJson, validateBody, isString, isNonEmptyString, isOneOf, isNumber, isArray, hasFields } from '$lib/server/validate';
+import {
+	parseJson,
+	validateBody,
+	isString,
+	isNonEmptyString,
+	isOneOf,
+	isNumber,
+	isArray,
+	hasFields
+} from '$lib/server/validate';
+import { db } from '$lib/server/db';
 
 const activityTypes = ['strength', 'running', 'cycling', 'walking', 'swimming', 'other'] as const;
 const sessionStatuses = ['active', 'paused', 'completed', 'cancelled'] as const;
@@ -97,7 +107,12 @@ export const POST: RequestHandler = async (event) => {
 				notes: { validate: isString, required: false }
 			});
 			if (!v.ok) return v.error;
-			const record = await createExerciseRecord(user.id, v.data.activityId, v.data.itemId, v.data as any);
+			const record = await createExerciseRecord(
+				user.id,
+				v.data.activityId,
+				v.data.itemId,
+				v.data as any
+			);
 			if (!record) return json({ error: 'Activity not found or access denied' }, { status: 404 });
 			return json(record, { status: 201 });
 		}
@@ -106,15 +121,96 @@ export const POST: RequestHandler = async (event) => {
 			const v = validateBody(body, {
 				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
 				records: {
-					validate: isArray((r): r is Record<string, unknown> => hasFields(r) && typeof r.itemId === 'string'),
+					validate: isArray(
+						(r): r is Record<string, unknown> => hasFields(r) && typeof r.itemId === 'string'
+					),
 					label: 'Records'
 				}
 			});
 			if (!v.ok) return v.error;
-			if (v.data.records.length > 50) return json({ error: 'Too many records (max 50)' }, { status: 400 });
-			const result = await batchCreateExerciseRecords(user.id, v.data.activityId, v.data.records as any);
+			if (v.data.records.length > 50)
+				return json({ error: 'Too many records (max 50)' }, { status: 400 });
+			const result = await batchCreateExerciseRecords(
+				user.id,
+				v.data.activityId,
+				v.data.records as any
+			);
 			if (!result) return json({ error: 'Activity not found or access denied' }, { status: 404 });
 			return json(result, { status: 201 });
+		}
+
+		case 'saveSession': {
+			const v = validateBody(body, {
+				title: { validate: isString, required: false },
+				notes: { validate: isString, required: false },
+				activityType: { validate: isOneOf(activityTypes), label: 'Activity type' },
+				startedAt: { validate: isString, required: false },
+				duration: { validate: isNumber, required: false },
+				exerciseRecords: {
+					validate: isArray(
+						(r): r is Record<string, unknown> => hasFields(r) && typeof r.itemId === 'string'
+					),
+					required: false,
+					label: 'Exercise records'
+				}
+			});
+			if (!v.ok) return v.error;
+
+			const records = (v.data.exerciseRecords ?? []) as Array<{
+				itemId: string;
+				sets?: number;
+				reps?: string;
+				weight?: number;
+				unit?: string;
+				rpe?: number;
+				restTime?: number;
+				notes?: string;
+			}>;
+			if (records.length > 50) return json({ error: 'Too many records (max 50)' }, { status: 400 });
+
+			// One transaction: a failure halfway must not leave an orphaned
+			// session the client would duplicate on retry.
+			try {
+				const result = await db.transaction(async (tx) => {
+					const session = await createTrainingSession(
+						user.id,
+						{
+							title: v.data.title,
+							notes: v.data.notes,
+							startedAt: v.data.startedAt
+						},
+						tx
+					);
+					const activity = await createTrainingActivity(
+						user.id,
+						session.id,
+						{
+							type: v.data.activityType,
+							startedAt: v.data.startedAt
+						},
+						tx
+					);
+					if (!activity) throw new Error('Failed to create activity');
+
+					if (records.length > 0) {
+						const saved = await batchCreateExerciseRecords(user.id, activity.id, records, tx);
+						if (!saved) throw new Error('Failed to save exercise records');
+					}
+
+					await updateTrainingSession(
+						user.id,
+						session.id,
+						{ status: 'completed', endedAt: new Date(), duration: v.data.duration },
+						tx
+					);
+
+					return { sessionId: session.id, activityId: activity.id };
+				});
+				return json(result, { status: 201 });
+			} catch (e) {
+				console.error('saveSession failed:', e);
+				return json({ error: 'Failed to save session. Please try again.' }, { status: 500 });
+			}
 		}
 
 		default:
@@ -140,6 +236,7 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 			const session = await updateTrainingSession(user.id, v.data.sessionId, v.data as any);
+			if (!session) return json({ error: 'Not found' }, { status: 404 });
 			return json(session);
 		}
 
@@ -150,6 +247,7 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 			const activity = await updateTrainingActivity(user.id, v.data.activityId, v.data as any);
+			if (!activity) return json({ error: 'Not found' }, { status: 404 });
 			return json(activity);
 		}
 
@@ -166,6 +264,7 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 			const record = await updateExerciseRecord(user.id, v.data.recordId, v.data as any);
+			if (!record) return json({ error: 'Not found' }, { status: 404 });
 			return json(record);
 		}
 

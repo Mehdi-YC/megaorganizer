@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import MindMap from '$lib/components/ui/MindMap.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 
 	let tree = $state<any[]>([]);
 	let loading = $state(true);
@@ -44,13 +46,7 @@
 		{#if selectedNode}
 			<div class="flex items-center gap-2">
 				<span class="text-xs text-fg-subdued">{selectedNode.name}</span>
-				<button
-					type="button"
-					class="h-7 px-3 rounded-sm bg-primary text-xs font-medium text-white hover:bg-primary-hover transition-colors"
-					onclick={navigateToNode}
-				>
-					Open
-				</button>
+				<Button size="sm" onclick={navigateToNode}>Open</Button>
 			</div>
 		{/if}
 	</div>
@@ -58,7 +54,7 @@
 	<div class="flex-1 p-2">
 		{#if loading}
 			<div class="flex h-full items-center justify-center">
-				<div class="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+				<Spinner size="md" />
 			</div>
 		{:else}
 			<MindMap {tree} onNodeClick={handleNodeClick} />

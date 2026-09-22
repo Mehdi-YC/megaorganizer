@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { renderMarkdown } from '$lib/utils/markdown';
+	import { Badge, Button, Checkbox } from '$lib/components/ui';
 
 	let {
 		reminder,
@@ -61,26 +62,37 @@
 	}
 </script>
 
-<div class="rounded-sm border {isOverdue(reminder.dueAt) ? 'border-error/30 bg-error/5' : 'border-border bg-surface'} p-4 transition-all hover:border-primary/50">
+<div
+	class="rounded-sm border {isOverdue(reminder.dueAt)
+		? 'border-error/30 bg-error/5'
+		: 'border-border bg-surface'} p-4 transition-all hover:border-primary/50"
+>
 	<div class="flex items-start justify-between gap-3">
-		<div class="flex-1 min-w-0">
+		<div class="min-w-0 flex-1">
 			<div class="flex items-center gap-2">
 				<button
 					type="button"
-					class="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border {reminder.completed ? 'border-success bg-success text-white' : 'border-border hover:border-primary'} transition-colors"
+					class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border {reminder.completed
+						? 'border-success bg-success text-white'
+						: 'border-border hover:border-primary'} transition-colors"
 					onclick={() => onComplete?.(reminder.id)}
+					aria-label="Toggle complete"
 				>
 					{#if reminder.completed}
 						<i class="fas fa-check text-[10px]"></i>
 					{/if}
 				</button>
-				<h3 class="text-sm font-medium {reminder.completed ? 'line-through text-fg-subdued' : 'text-fg'} truncate">
+				<h3
+					class="text-sm font-medium {reminder.completed
+						? 'text-fg-subdued line-through'
+						: 'text-fg'} truncate"
+				>
 					{reminder.title}
 				</h3>
 			</div>
 
 			{#if reminder.description}
-				<p class="mt-1 text-xs text-fg-subdued truncate pl-7">{reminder.description}</p>
+				<p class="mt-1 truncate pl-7 text-xs text-fg-subdued">{reminder.description}</p>
 			{/if}
 
 			<div class="mt-2 flex items-center gap-2 pl-7">
@@ -88,59 +100,49 @@
 					{formatDueTime(reminder.dueAt)}
 				</span>
 				{#if isOverdue(reminder.dueAt) && !reminder.completed}
-					<span class="inline-flex items-center rounded-sm bg-error/10 px-1.5 py-0.5 text-[10px] font-medium text-error">
-						Overdue
-					</span>
+					<Badge variant="danger" size="sm">Overdue</Badge>
 				{/if}
 			</div>
 
 			{#if reminder.todos && reminder.todos.length > 0}
 				<div class="mt-3 space-y-1.5 pl-7">
-					{#each reminder.todos as todo}
-						<label class="flex items-start gap-2 cursor-pointer">
-							<input
-								type="checkbox"
-								checked={todo.completed}
-								onchange={() => onTodoToggle?.(todo.id, !todo.completed)}
-								class="mt-0.5 h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
-							/>
-							<span class="text-xs {todo.completed ? 'line-through text-fg-subdued' : 'text-fg'}">
-								{todo.text}
-							</span>
-						</label>
+					{#each reminder.todos as todo (todo.id)}
+						<Checkbox
+							checked={todo.completed}
+							onchange={() => onTodoToggle?.(todo.id, !todo.completed)}
+							label={todo.text}
+						/>
 					{/each}
 				</div>
 			{/if}
 		</div>
 
-		<div class="flex items-center gap-1 shrink-0">
+		<div class="flex shrink-0 items-center gap-1">
 			{#if !reminder.completed}
-				<button
-					type="button"
-					class="inline-flex h-7 items-center gap-1 rounded-sm bg-muted px-2 text-[11px] font-medium text-fg hover:bg-border transition-colors"
-					onclick={() => handleSnooze(1)}
-					title="Snooze 1 hour"
-				>
+				<Button variant="secondary" size="sm" onclick={() => handleSnooze(1)} title="Snooze 1 hour">
 					<i class="fas fa-clock text-[9px]"></i>
 					1h
-				</button>
-				<button
-					type="button"
-					class="inline-flex h-7 items-center gap-1 rounded-sm bg-muted px-2 text-[11px] font-medium text-fg hover:bg-border transition-colors"
+				</Button>
+				<Button
+					variant="secondary"
+					size="sm"
 					onclick={handleTomorrow}
 					title="Snooze until tomorrow"
 				>
 					<i class="fas fa-calendar text-[9px]"></i>
 					Tom
-				</button>
+				</Button>
 			{/if}
 
 			{#if reminder.markdown}
 				<button
 					type="button"
-					class="inline-flex h-7 w-7 items-center justify-center rounded-sm {showContent ? 'bg-primary text-white' : 'bg-muted text-fg hover:bg-border'} transition-colors"
+					class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm {showContent
+						? 'bg-primary text-white'
+						: 'bg-muted text-fg hover:bg-border'} transition-colors"
 					onclick={() => (showContent = !showContent)}
 					title="Show content"
+					aria-label="Show content"
 				>
 					<i class="fas fa-expand text-[10px]"></i>
 				</button>
@@ -148,8 +150,9 @@
 
 			<a
 				href="/app/reminders/{reminder.id}"
-				class="inline-flex h-7 w-7 items-center justify-center rounded-sm bg-muted text-fg hover:bg-border transition-colors"
+				class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-border"
 				title="View details"
+				aria-label="View details"
 			>
 				<i class="fas fa-arrow-right text-[10px]"></i>
 			</a>
@@ -158,7 +161,7 @@
 
 	{#if showContent && reminder.markdown}
 		<div class="mt-3 border-t border-border pt-3 pl-7">
-			<div class="markdown-content text-xs text-fg leading-relaxed">{@html renderedMarkdown}</div>
+			<div class="markdown-content text-xs leading-relaxed text-fg">{@html renderedMarkdown}</div>
 		</div>
 	{/if}
 </div>

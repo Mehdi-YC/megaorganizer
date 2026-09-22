@@ -17,9 +17,25 @@ import {
 	getReminderStats
 } from '$lib/server/services/reminder.service';
 import { requireUser } from '$lib/server/api-helpers';
-import { parseJson, validateBody, isString, isNonEmptyString, isOneOf, isNumber, isArray, hasFields } from '$lib/server/validate';
+import {
+	parseJson,
+	validateBody,
+	isString,
+	isNonEmptyString,
+	isOneOf,
+	isNumber,
+	isArray,
+	hasFields
+} from '$lib/server/validate';
 
-const recurrenceTypes = ['daily', 'weekly', 'monthly', 'yearly', 'yearly_date', 'monthly_relative'] as const;
+const recurrenceTypes = [
+	'daily',
+	'weekly',
+	'monthly',
+	'yearly',
+	'yearly_date',
+	'monthly_relative'
+] as const;
 
 export const GET: RequestHandler = async (event) => {
 	const user = requireUser(event);
@@ -117,6 +133,7 @@ export const POST: RequestHandler = async (event) => {
 			if (!v.ok) return v.error;
 
 			const completed = await completeReminder(user.id, v.data.reminderId);
+			if (!completed) return json({ error: 'Not found' }, { status: 404 });
 			return json(completed);
 		}
 
@@ -128,6 +145,7 @@ export const POST: RequestHandler = async (event) => {
 			if (!v.ok) return v.error;
 
 			const snoozed = await snoozeReminder(user.id, v.data.reminderId, new Date(v.data.until));
+			if (!snoozed) return json({ error: 'Not found' }, { status: 404 });
 			return json(snoozed);
 		}
 
@@ -185,7 +203,11 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 
-			const updated = await updateReminderTemplateTodos(user.id, v.data.templateId, v.data.todos as string[]);
+			const updated = await updateReminderTemplateTodos(
+				user.id,
+				v.data.templateId,
+				v.data.todos as string[]
+			);
 			if (!updated) return json({ error: 'Template not found' }, { status: 404 });
 			return json(updated);
 		}
