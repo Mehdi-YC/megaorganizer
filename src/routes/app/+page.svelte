@@ -2,7 +2,7 @@
 	import { getSessionIcon } from '$lib/utils/training';
 	import { ReminderCard } from '$lib/components/reminders';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
-	import StatCard from '$lib/components/ui/StatCard.svelte';
+	import StatGroupCard from '$lib/components/ui/StatGroupCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
 	let { data } = $props();
@@ -10,10 +10,39 @@
 	// svelte-ignore state_referenced_locally
 	let dueReminders = $state<any[]>(data.dueReminders ?? []);
 
+	let analytics = $derived(data.analytics);
+	let currency = $derived(data.currency ?? 'DZD');
+	let weeklyTraining = $derived<number[]>(data.weeklyTraining ?? []);
+
 	function formatDuration(seconds: number) {
 		if (seconds < 60) return `${seconds}s`;
 		if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
 		return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+	}
+
+	function getSpendingTrend(): { value: number; positive: boolean } | null {
+		if (!analytics) return null;
+		const { thisMonthTotal, lastMonthTotal } = analytics.spending;
+		if (lastMonthTotal === 0) return null;
+		const change = ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
+		return {
+			value: Math.abs(Math.round(change)),
+			positive: change <= 0
+		};
+	}
+
+	function sparklinePath(values: number[]): string {
+		if (values.length < 2) return '';
+		const w = 120;
+		const h = 28;
+		const max = Math.max(...values, 1);
+		const stepX = w / (values.length - 1);
+		return values
+			.map(
+				(v, i) =>
+					`${i === 0 ? 'M' : 'L'} ${(i * stepX).toFixed(1)} ${(h - (v / max) * h).toFixed(1)}`
+			)
+			.join(' ');
 	}
 
 	function getWeekDays(): Date[] {
@@ -158,44 +187,101 @@
 		</div>
 	{/if}
 
-	<!-- Stats -->
-	<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-		<a href="/app/library" class="block">
-			<StatCard
+	<!-- Regrouped stats (from Analytics) -->
+	{#if analytics}
+		<div class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+			<StatGroupCard
+				icon="fa-dumbbell"
+				title="Training"
+				stats={[
+					{ label: 'Total Sessions', value: analytics.training.totalSessions },
+					{ label: 'Total Time', value: formatDuration(analytics.training.totalDuration) },
+					{ label: 'This Week', value: analytics.training.thisWeekSessions },
+					{ label: 'Avg Duration', value: formatDuration(analytics.training.avgDuration) }
+				]}
+			>
+				{#snippet footer()}
+					<div class="flex items-center gap-2">
+						<svg
+							viewBox="0 0 120 28"
+							class="h-7 w-full max-w-[140px]"
+							preserveAspectRatio="none"
+							aria-hidden="true"
+						>
+							<path
+								d={sparklinePath(weeklyTraining)}
+								fill="none"
+								stroke="var(--color-primary)"
+								stroke-width="1.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								vector-effect="non-scaling-stroke"
+							/>
+						</svg>
+						<span class="shrink-0 text-[10px] text-fg-subdued">12w</span>
+					</div>
+				{/snippet}
+			</StatGroupCard>
+
+			<StatGroupCard
+				icon="fa-receipt"
+				title="Spending"
+				stats={[
+					{
+						label: 'This Month',
+						value: `${analytics.spending.thisMonthTotal.toLocaleString()} ${currency}`
+					},
+					{
+						label: 'Last Month',
+						value: `${analytics.spending.lastMonthTotal.toLocaleString()} ${currency}`
+					},
+					{
+						label: 'Daily Avg',
+						value: `${analytics.spending.avgDaily.toLocaleString()} ${currency}`
+					},
+					{ label: 'Top Expense', value: analytics.spending.topExpenseDescription || 'N/A' }
+				]}
+			>
+				{#snippet footer()}
+					{@const trend = getSpendingTrend()}
+					{#if trend}
+						<div class="flex items-center gap-1.5 text-[10px]">
+							<i
+								class="fas {trend.positive
+									? 'fa-arrow-down text-success'
+									: 'fa-arrow-up text-error'}"
+							></i>
+							<span class={trend.positive ? 'text-success' : 'text-error'}>
+								{trend.value}% {trend.positive ? 'less' : 'more'} than last month
+							</span>
+						</div>
+					{/if}
+				{/snippet}
+			</StatGroupCard>
+
+			<StatGroupCard
+				icon="fa-bell"
+				title="Habits"
+				stats={[
+					{ label: 'Total (30d)', value: analytics.habits.totalReminders },
+					{ label: 'Completion Rate', value: `${analytics.habits.completionRate}%` },
+					{ label: 'Current Streak', value: analytics.habits.currentStreak },
+					{ label: 'Best Streak', value: analytics.habits.bestStreak }
+				]}
+			/>
+
+			<StatGroupCard
 				icon="fa-cubes"
-				iconColor="text-primary"
-				value={data.stats?.itemCount ?? 0}
-				label="Items"
+				title="Library"
+				stats={[
+					{ label: 'Total Items', value: analytics.products.totalItems },
+					{ label: 'New This Week', value: analytics.products.itemsThisWeek },
+					{ label: 'Total Pages', value: analytics.products.totalPages },
+					{ label: 'Categories', value: data.categories?.length ?? 0 }
+				]}
 			/>
-		</a>
-
-		<a href="/app/training" class="block">
-			<StatCard
-				icon="fa-calendar-check"
-				iconColor="text-green-600"
-				value={data.stats?.sessionCount ?? 0}
-				label="Sessions"
-			/>
-		</a>
-
-		<a href="/app/training/history" class="block">
-			<StatCard
-				icon="fa-clock"
-				iconColor="text-orange-600"
-				value={formatDuration(data.stats?.totalDuration ?? 0)}
-				label="Total Time"
-			/>
-		</a>
-
-		<a href="/app/tags" class="block">
-			<StatCard
-				icon="fa-tags"
-				iconColor="text-purple-600"
-				value={data.categories?.length ?? 0}
-				label="Categories"
-			/>
-		</a>
-	</div>
+		</div>
+	{/if}
 
 	<div class="mt-6 grid gap-6 lg:grid-cols-3">
 		<!-- Recent Items -->
@@ -305,9 +391,7 @@
 				<a href="/app/training/session/new" class="text-xs text-primary hover:text-primary-hover"
 					>New Session</a
 				>
-				<a href="/app/training/history" class="text-xs text-primary hover:text-primary-hover"
-					>View All</a
-				>
+				<a href="/app/training" class="text-xs text-primary hover:text-primary-hover">View All</a>
 			</div>
 		</div>
 		{#if data.recentSessions && data.recentSessions.length > 0}

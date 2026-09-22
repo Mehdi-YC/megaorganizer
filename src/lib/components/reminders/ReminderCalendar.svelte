@@ -42,9 +42,10 @@
 		const daysInMonth = lastDay.getDate();
 		const startDay = (firstDay.getDay() + 6) % 7; // Monday = 0
 
-		const days = [];
-		for (let i = 0; i < startDay; i++) days.push(null);
-		for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+		const days: Array<{ key: string; date: Date | null }> = [];
+		for (let i = 0; i < startDay; i++) days.push({ key: `pad-${i}`, date: null });
+		for (let i = 1; i <= daysInMonth; i++)
+			days.push({ key: `d-${i}`, date: new Date(year, month, i) });
 		return days;
 	}
 
@@ -156,7 +157,8 @@
 			</div>
 		{/each}
 
-		{#each getDaysInMonth(currentDate) as date (date)}
+		{#each getDaysInMonth(currentDate) as cell (cell.key)}
+			{@const date = cell.date}
 			<div
 				class="min-h-[40px] cursor-pointer bg-surface p-1 transition-colors hover:bg-muted sm:min-h-[80px] sm:p-2 {date
 					? ''

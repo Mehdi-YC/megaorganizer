@@ -3,32 +3,66 @@ import { treeElement, trainingSession } from '$lib/server/db/schema';
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
 import { getTrainingSessionsWithActivities } from './training.service';
 import { getDueReminders, generateDueReminders, getUpcomingReminders } from './reminder.service';
+import { getAnalytics } from './analytics.service';
+import { getUserSettings } from './finance.service';
+
+function getWeeklyTrainingMinutes(
+	sessions: Array<{ startedAt: Date | string; duration: number | null }>
+) {
+	const now = new Date();
+	const weeks: number[] = [];
+	for (let i = 11; i >= 0; i--) {
+		const weekStart = new Date(now);
+		weekStart.setDate(now.getDate() - (i * 7 + now.getDay()));
+		weekStart.setHours(0, 0, 0, 0);
+		const weekEnd = new Date(weekStart);
+		weekEnd.setDate(weekStart.getDate() + 7);
+		const minutes = sessions
+			.filter((s) => {
+				const d = new Date(s.startedAt);
+				return d >= weekStart && d < weekEnd;
+			})
+			.reduce((acc, s) => acc + (s.duration ?? 0) / 60, 0);
+		weeks.push(Math.round(minutes));
+	}
+	return weeks;
+}
 
 export async function getDashboardData(userId: string) {
 	// Generate any due reminders first
 	await generateDueReminders(userId);
 
-	const [recentItems, recentSessions, allItems, allSessions, dueReminders, upcomingEvents] =
-		await Promise.all([
-			db
-				.select({
-					id: treeElement.id,
-					name: treeElement.name,
-					type: treeElement.type,
-					imageUrl: treeElement.imageUrl,
-					favorite: treeElement.favorite,
-					updatedAt: treeElement.updatedAt
-				})
-				.from(treeElement)
-				.where(eq(treeElement.userId, userId))
-				.orderBy(desc(treeElement.updatedAt))
-				.limit(6),
-			getTrainingSessionsWithActivities(userId, 5),
-			db.select({ id: treeElement.id }).from(treeElement).where(eq(treeElement.userId, userId)),
-			db.select().from(trainingSession).where(eq(trainingSession.userId, userId)),
-			getDueReminders(userId, 10),
-			getUpcomingEvents(userId, 7)
-		]);
+	const [
+		recentItems,
+		recentSessions,
+		allItems,
+		allSessions,
+		dueReminders,
+		upcomingEvents,
+		analytics,
+		settings
+	] = await Promise.all([
+		db
+			.select({
+				id: treeElement.id,
+				name: treeElement.name,
+				type: treeElement.type,
+				imageUrl: treeElement.imageUrl,
+				favorite: treeElement.favorite,
+				updatedAt: treeElement.updatedAt
+			})
+			.from(treeElement)
+			.where(eq(treeElement.userId, userId))
+			.orderBy(desc(treeElement.updatedAt))
+			.limit(6),
+		getTrainingSessionsWithActivities(userId, 5),
+		db.select({ id: treeElement.id }).from(treeElement).where(eq(treeElement.userId, userId)),
+		db.select().from(trainingSession).where(eq(trainingSession.userId, userId)),
+		getDueReminders(userId, 10),
+		getUpcomingEvents(userId, 7),
+		getAnalytics(userId),
+		getUserSettings(userId)
+	]);
 
 	const totalDuration = allSessions.reduce((acc, s) => acc + (s.duration ?? 0), 0);
 
@@ -37,6 +71,9 @@ export async function getDashboardData(userId: string) {
 		recentSessions,
 		dueReminders,
 		upcomingEvents,
+		analytics,
+		currency: settings?.currency ?? 'DZD',
+		weeklyTraining: getWeeklyTrainingMinutes(allSessions),
 		stats: {
 			itemCount: allItems.length,
 			sessionCount: allSessions.length,

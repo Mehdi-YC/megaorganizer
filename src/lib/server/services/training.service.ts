@@ -5,7 +5,7 @@ import {
 	trainingActivityItem,
 	trainingExerciseRecord
 } from '$lib/server/db/schema';
-import { eq, and, asc, desc, inArray } from 'drizzle-orm';
+import { eq, and, asc, desc, inArray, gte, lte } from 'drizzle-orm';
 
 function toDate(value: Date | string | number | undefined | null): Date {
 	if (value instanceof Date) return value;
@@ -48,6 +48,21 @@ export async function getTrainingSessions(userId: string, limit = 50, offset = 0
 		.orderBy(desc(trainingSession.startedAt))
 		.limit(limit)
 		.offset(offset)
+		.all();
+}
+
+export async function getTrainingSessionsInRange(userId: string, startDate: Date, endDate: Date) {
+	return db
+		.select()
+		.from(trainingSession)
+		.where(
+			and(
+				eq(trainingSession.userId, userId),
+				gte(trainingSession.startedAt, startDate),
+				lte(trainingSession.startedAt, endDate)
+			)
+		)
+		.orderBy(desc(trainingSession.startedAt))
 		.all();
 }
 

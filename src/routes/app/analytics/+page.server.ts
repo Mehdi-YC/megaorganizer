@@ -1,22 +1,6 @@
-import { getAnalytics } from '$lib/server/services/analytics.service';
-import { getUserSettings } from '$lib/server/services/finance.service';
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.user) {
-		return {
-			analytics: null,
-			settings: { currency: 'DZD' }
-		};
-	}
-
-	const [analytics, settings] = await Promise.all([
-		getAnalytics(locals.user.id),
-		getUserSettings(locals.user.id)
-	]);
-
-	return {
-		analytics,
-		settings
-	};
+export const load: PageServerLoad = async () => {
+	throw redirect(302, '/app');
 };

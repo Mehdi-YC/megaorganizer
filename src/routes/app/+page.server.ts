@@ -6,6 +6,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return {
 			recentItems: [],
 			recentSessions: [],
+			dueReminders: [],
+			upcomingEvents: [],
+			analytics: null,
+			currency: 'DZD',
+			weeklyTraining: [],
 			stats: { itemCount: 0, sessionCount: 0, totalDuration: 0 }
 		};
 	}

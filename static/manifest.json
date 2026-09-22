@@ -4,8 +4,8 @@
 	"description": "Your personal knowledge & activity operating system",
 	"start_url": "/app",
 	"display": "standalone",
-	"background_color": "#0f172a",
-	"theme_color": "#3b82f6",
+	"background_color": "#0d1117",
+	"theme_color": "#5a31f4",
 	"orientation": "any",
 	"icons": [
 		{
