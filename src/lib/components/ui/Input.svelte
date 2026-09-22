@@ -33,8 +33,8 @@
 	} & Record<string, unknown> = $props();
 
 	const sizes: Record<string, string> = {
-		sm: 'h-8 px-2 text-xs',
-		md: 'h-[36px] px-3 text-sm'
+		sm: 'h-8 px-2 text-base sm:text-xs',
+		md: 'h-[36px] px-3 text-base sm:text-sm'
 	};
 </script>
 

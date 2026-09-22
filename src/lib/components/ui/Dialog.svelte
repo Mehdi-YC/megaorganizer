@@ -56,19 +56,14 @@
 		onfocusin={trapFocus}
 		role="presentation"
 	>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="w-full max-w-md rounded-sm border border-border bg-surface shadow-2xl animate-scale-in max-h-[90dvh] overflow-y-auto"
+			class="animate-scale-in max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-sm border border-border bg-surface shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
 			aria-labelledby={title ? 'dialog-title' : undefined}
 			onclick={handlePanelClick}
-		>
-		<div
-			class="animate-scale-in w-full max-w-md rounded-sm border border-border bg-surface shadow-2xl"
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby={title ? 'dialog-title' : undefined}
 		>
 			{#if title}
 				<div class="border-b border-border px-6 py-4">

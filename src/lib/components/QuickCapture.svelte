@@ -269,7 +269,7 @@
 									type="date"
 									id="qc-date"
 									bind:value={expenseDate}
-									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
+									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
 								/>
 							</div>
 							<Button class="w-full" onclick={saveExpense} disabled={expenseAmount <= 0 || saving}>
@@ -298,7 +298,7 @@
 										type="date"
 										id="qc-duedate"
 										bind:value={reminderDueDate}
-										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
+										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
 									/>
 								</div>
 								<div>
@@ -311,7 +311,7 @@
 										type="time"
 										id="qc-duetime"
 										bind:value={reminderDueTime}
-										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
+										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
 									/>
 								</div>
 							</div>

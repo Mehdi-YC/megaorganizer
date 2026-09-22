@@ -481,7 +481,6 @@
 							<i class="fas fa-stop mr-2"></i> Finish
 						{/if}
 					</Button>
-					</Button>
 				</div>
 			</div>
 		</div>
@@ -540,7 +539,9 @@
 					>
 						View History
 					</a>
-					<Button variant="secondary" onclick={resetRun}>New Run</Button>
+					<Button variant="secondary" onclick={requestNewRun}>
+						{confirmDiscard ? 'Tap again to discard' : 'New Run'}
+					</Button>
 				</div>
 			</div>
 		</div>

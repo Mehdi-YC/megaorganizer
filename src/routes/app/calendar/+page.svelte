@@ -414,10 +414,10 @@
 												title="Reminders"
 											></div>
 										{/if}
+										{#if hasExpenses}
+											<div class="h-2 w-2 rounded-full bg-warning" title="Expenses"></div>
+										{/if}
 									</div>
-									{#if hasExpenses}
-										<div class="h-2 w-2 rounded-full bg-warning" title="Expenses"></div>
-									{/if}
 								</div>
 
 								<div class="hidden space-y-0.5 sm:block">
