@@ -1,0 +1,18 @@
+# Development environment: runs `bun run dev` (Vite dev server) with the
+# source mounted from the host so changes hot-reload.
+#
+# Usage: docker compose -f docker-compose-dev.yml up
+services:
+  app:
+    image: oven/bun:1
+    working_dir: /app
+    command: sh -c "bun install --frozen-lockfile && bun run dev --host 0.0.0.0"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app:Z
+      - /app/node_modules

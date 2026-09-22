@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# Run database migrations
-bun run db:push
+# Apply database migrations (non-interactive)
+bun run db:migrate
 
-# Start production server
-exec bun run preview --host 0.0.0.0
+# Start the production server
+exec bun ./build/index.js
