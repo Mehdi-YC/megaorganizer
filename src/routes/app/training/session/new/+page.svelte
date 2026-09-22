@@ -23,6 +23,9 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
+	import Checkbox from '$lib/components/ui/Checkbox.svelte';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 
 	let { data } = $props();
 	let title = $state('');
@@ -408,9 +411,9 @@
 					</div>
 				{:else if gpsStatus === 'requesting'}
 					<div class="py-8 text-center">
-						<div
-							class="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
-						></div>
+						<div class="mx-auto mb-4 flex justify-center">
+							<Spinner size="lg" />
+						</div>
 						<p class="text-fg-subdued">Waiting for GPS...</p>
 					</div>
 				{:else}
@@ -497,23 +500,14 @@
 				placeholder="e.g. Upper Body, Leg Day, Morning Run..."
 			/>
 
-			<div>
-				<label for="type" class="mb-1 block text-xs font-semibold tracking-wide text-fg-accent"
-					>Activity Type</label
-				>
-				<select
-					id="type"
-					bind:value={activityType}
-					class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors hover:border-fg-subdued focus:border-primary focus:ring-0 focus:outline-none"
-				>
-					<option value="strength">Strength</option>
-					<option value="running">Running</option>
-					<option value="cycling">Cycling</option>
-					<option value="walking">Walking</option>
-					<option value="swimming">Swimming</option>
-					<option value="other">Other</option>
-				</select>
-			</div>
+			<Select label="Activity Type" id="type" bind:value={activityType}>
+				<option value="strength">Strength</option>
+				<option value="running">Running</option>
+				<option value="cycling">Cycling</option>
+				<option value="walking">Walking</option>
+				<option value="swimming">Swimming</option>
+				<option value="other">Other</option>
+			</Select>
 
 			{#if activityType === 'strength'}
 				<div>
@@ -521,17 +515,13 @@
 					<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
 					<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
 						{#each data.items as item}
-							<label
-								class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 transition-colors hover:bg-muted"
-							>
-								<input
-									type="checkbox"
+							<div class="rounded-sm px-2 py-1.5 transition-colors hover:bg-muted">
+								<Checkbox
 									checked={selectedItems.includes(item.id)}
 									onchange={() => toggleItem(item.id)}
-									class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+									label={item.name}
 								/>
-								<span class="text-sm text-fg">{item.name}</span>
-							</label>
+							</div>
 						{/each}
 						{#if data.items.length === 0}
 							<p class="py-4 text-center text-xs text-fg-subdued">
@@ -672,23 +662,17 @@
 		{/if}
 		<div class="flex gap-3">
 			{#if isGpsActivity && gpsStatus === 'tracking'}
-				<Button variant="danger" disabled={saving} onclick={saveSession}>
-					{#if saving}<i class="fas fa-spinner fa-spin mr-2"></i>{/if}
+				<Button variant="danger" loading={saving} onclick={saveSession}>
 					<i class="fas fa-stop mr-2"></i> Finish
 				</Button>
 			{:else}
-				<Button variant="primary" disabled={saving} onclick={saveSession}>
-					{#if saving}<i class="fas fa-spinner fa-spin mr-2"></i>{/if}
+				<Button variant="primary" loading={saving} onclick={saveSession}>
 					{saveError ? 'Retry Save' : 'Save Session'}
 				</Button>
 			{/if}
-			<a
-				href="/app/training"
-				onclick={() => clearSessionState()}
-				class="inline-flex h-[36px] items-center rounded-sm border border-border bg-surface px-4 text-sm font-medium text-fg transition-colors hover:bg-muted"
-			>
+			<Button href="/app/training" variant="secondary" onclick={() => clearSessionState()}>
 				Cancel
-			</a>
+			</Button>
 		</div>
 	</div>
 </div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Input, Textarea, Dialog } from '$lib/components/ui';
+	import { Button, Input, Select, Textarea, Dialog } from '$lib/components/ui';
 
 	let {
 		open = $bindable(false),
@@ -18,7 +18,9 @@
 	let markdown = $state('');
 	let icon = $state('fa-bell');
 	let iconColor = $state('');
-	let recurrenceType = $state<'daily' | 'weekly' | 'monthly' | 'yearly' | 'yearly_date' | 'monthly_relative'>('daily');
+	let recurrenceType = $state<
+		'daily' | 'weekly' | 'monthly' | 'yearly' | 'yearly_date' | 'monthly_relative'
+	>('daily');
 	let hour = $state(9);
 	let minute = $state(0);
 	let selectedDays = $state<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
@@ -52,13 +54,29 @@
 
 	const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 	const iconOptions = [
-		'fa-bell', 'fa-clock', 'fa-calendar', 'fa-calendar-check',
-		'fa-calendar-day', 'fa-alarm-clock', 'fa-stopwatch',
-		'fa-dumbbell', 'fa-book', 'fa-code', 'fa-heart', 'fa-star'
+		'fa-bell',
+		'fa-clock',
+		'fa-calendar',
+		'fa-calendar-check',
+		'fa-calendar-day',
+		'fa-alarm-clock',
+		'fa-stopwatch',
+		'fa-dumbbell',
+		'fa-book',
+		'fa-code',
+		'fa-heart',
+		'fa-star'
 	];
 
-	const recurrenceTypes = ['daily', 'weekly', 'monthly', 'yearly', 'yearly_date', 'monthly_relative'] as const;
-	
+	const recurrenceTypes = [
+		'daily',
+		'weekly',
+		'monthly',
+		'yearly',
+		'yearly_date',
+		'monthly_relative'
+	] as const;
+
 	const recurrenceLabels: Record<string, string> = {
 		daily: 'Daily',
 		weekly: 'Weekly',
@@ -71,7 +89,7 @@
 	// For yearly_date
 	let yearlyMonth = $state(0);
 	let yearlyDay = $state(1);
-	
+
 	// For monthly_relative
 	let relativeWeekday = $state(1); // Monday
 	let relativeOrdinal = $state(-1); // Last
@@ -165,15 +183,15 @@
 	}
 </script>
 
-<Dialog bind:open title={template ? 'Edit Reminder Template' : 'Create Reminder Template'} onclose={handleClose}>
-	<div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+<Dialog
+	bind:open
+	title={template ? 'Edit Reminder Template' : 'Create Reminder Template'}
+	onclose={handleClose}
+>
+	<div class="max-h-[70vh] space-y-4 overflow-y-auto pr-2">
 		<!-- Title -->
 		<div>
-			<Input
-				label="TITLE *"
-				bind:value={title}
-				placeholder="e.g., Morning Workout"
-			/>
+			<Input label="TITLE *" bind:value={title} placeholder="e.g., Morning Workout" />
 		</div>
 
 		<!-- Description -->
@@ -188,23 +206,19 @@
 		<!-- Icon & Color -->
 		<div class="grid grid-cols-2 gap-3">
 			<div>
-				<label for="reminder-icon" class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-					ICON
-				</label>
-				<select
-					id="reminder-icon"
-					bind:value={icon}
-					class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-				>
+				<Select label="ICON" id="reminder-icon" bind:value={icon}>
 					{#each iconOptions as iconOpt}
 						<option value={iconOpt}>
 							{iconOpt.replace('fa-', '').replace('-', ' ')}
 						</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
 			<div>
-				<label for="reminder-color" class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
+				<label
+					for="reminder-color"
+					class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"
+				>
 					COLOR
 				</label>
 				<div class="flex items-center gap-2">
@@ -212,13 +226,13 @@
 						type="color"
 						id="reminder-color"
 						bind:value={iconColor}
-						class="h-[36px] w-10 rounded-sm border border-border cursor-pointer"
+						class="h-[36px] w-10 cursor-pointer rounded-sm border border-border"
 					/>
 					<input
 						type="text"
 						bind:value={iconColor}
 						placeholder="#000000"
-						class="flex-1 h-[36px] rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+						class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
 					/>
 				</div>
 			</div>
@@ -226,15 +240,19 @@
 
 		<!-- Recurrence Type -->
 		<div>
-			<span class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
+			<span class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent">
 				RECURRENCE
 			</span>
 			<div class="grid grid-cols-3 gap-1.5">
 				{#each recurrenceTypes as type}
 					<button
 						type="button"
-						class="rounded-sm px-2 py-2 text-[11px] font-medium transition-colors {recurrenceType === type ? 'bg-primary text-white' : 'bg-muted text-fg hover:bg-border'}"
+						class="cursor-pointer rounded-sm px-2 py-2 text-[11px] font-medium transition-colors {recurrenceType ===
+						type
+							? 'bg-primary text-white'
+							: 'bg-muted text-fg hover:bg-border'}"
 						onclick={() => (recurrenceType = type)}
+						aria-label={recurrenceLabels[type] || type}
 					>
 						{recurrenceLabels[type] || type}
 					</button>
@@ -244,9 +262,7 @@
 
 		<!-- Time -->
 		<div>
-			<span class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-				TIME
-			</span>
+			<span class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"> TIME </span>
 			<div class="flex items-center gap-2">
 				<select
 					bind:value={hour}
@@ -271,15 +287,18 @@
 		<!-- Weekly: Day Selection -->
 		{#if recurrenceType === 'weekly'}
 			<div>
-				<span class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-					DAYS
-				</span>
+				<span class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"> DAYS </span>
 				<div class="flex gap-1.5">
 					{#each dayNames as day, i}
 						<button
 							type="button"
-							class="flex-1 rounded-sm px-2 py-2 text-xs font-medium transition-colors {selectedDays.includes(i) ? 'bg-primary text-white' : 'bg-muted text-fg hover:bg-border'}"
+							class="flex-1 cursor-pointer rounded-sm px-2 py-2 text-xs font-medium transition-colors {selectedDays.includes(
+								i
+							)
+								? 'bg-primary text-white'
+								: 'bg-muted text-fg hover:bg-border'}"
 							onclick={() => toggleDay(i)}
+							aria-label={day}
 						>
 							{day}
 						</button>
@@ -291,18 +310,11 @@
 		<!-- Monthly: Day of Month -->
 		{#if recurrenceType === 'monthly'}
 			<div>
-				<label for="day-of-month" class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-					DAY OF MONTH
-				</label>
-				<select
-					id="day-of-month"
-					bind:value={dayOfMonth}
-					class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-				>
+				<Select label="DAY OF MONTH" id="day-of-month" bind:value={dayOfMonth}>
 					{#each Array(31) as _, i}
 						<option value={i + 1}>{i + 1}</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
 		{/if}
 
@@ -310,32 +322,18 @@
 		{#if recurrenceType === 'yearly_date'}
 			<div class="grid grid-cols-2 gap-3">
 				<div>
-					<label for="yearly-month" class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-						MONTH
-					</label>
-					<select
-						id="yearly-month"
-						bind:value={yearlyMonth}
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-					>
+					<Select label="MONTH" id="yearly-month" bind:value={yearlyMonth}>
 						{#each ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as month, i}
 							<option value={i}>{month}</option>
 						{/each}
-					</select>
+					</Select>
 				</div>
 				<div>
-					<label for="yearly-day" class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-						DAY
-					</label>
-					<select
-						id="yearly-day"
-						bind:value={yearlyDay}
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-					>
+					<Select label="DAY" id="yearly-day" bind:value={yearlyDay}>
 						{#each Array(31) as _, i}
 							<option value={i + 1}>{i + 1}</option>
 						{/each}
-					</select>
+					</Select>
 				</div>
 			</div>
 		{/if}
@@ -344,74 +342,55 @@
 		{#if recurrenceType === 'monthly_relative'}
 			<div class="grid grid-cols-2 gap-3">
 				<div>
-					<label for="relative-weekday" class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-						WEEKDAY
-					</label>
-					<select
-						id="relative-weekday"
-						bind:value={relativeWeekday}
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-					>
+					<Select label="WEEKDAY" id="relative-weekday" bind:value={relativeWeekday}>
 						{#each dayNames as day, i}
 							<option value={i}>{day}</option>
 						{/each}
-					</select>
+					</Select>
 				</div>
 				<div>
-					<label for="relative-ordinal" class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
-						OCCURRENCE
-					</label>
-					<select
-						id="relative-ordinal"
-						bind:value={relativeOrdinal}
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
-					>
+					<Select label="OCCURRENCE" id="relative-ordinal" bind:value={relativeOrdinal}>
 						<option value={1}>First</option>
 						<option value={2}>Second</option>
 						<option value={3}>Third</option>
 						<option value={4}>Fourth</option>
 						<option value={-1}>Last</option>
-					</select>
+					</Select>
 				</div>
 			</div>
 		{/if}
 
 		<!-- Todos -->
 		<div>
-			<span class="block text-xs font-semibold text-fg-accent tracking-wide mb-1.5">
+			<span class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent">
 				TODO ITEMS
 			</span>
 			<div class="space-y-1.5">
 				{#each todos as todo, i}
 					<div class="flex items-center gap-2">
 						<span class="flex-1 text-sm text-fg">{todo}</span>
-						<button
-							type="button"
-							class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-fg-subdued hover:text-error hover:bg-error/10 transition-colors"
+						<Button
+							variant="ghost"
+							size="sm"
 							onclick={() => removeTodo(i)}
 							title="Remove todo"
+							aria-label="Remove todo"
 						>
 							<i class="fas fa-times text-[10px]"></i>
-						</button>
+						</Button>
 					</div>
 				{/each}
 			</div>
 			<div class="mt-2 flex gap-2">
-				<input
-					type="text"
+				<Input
 					bind:value={newTodo}
 					placeholder="Add todo item..."
-					class="flex-1 h-[36px] rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+					class="flex-1"
 					onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && addTodo()}
 				/>
-				<button
-					type="button"
-					class="inline-flex h-[36px] items-center justify-center rounded-sm bg-muted px-4 text-sm font-medium text-fg border border-border hover:border-fg-subdued"
-					onclick={addTodo}
-					aria-label="Add todo"
-				>
+				<Button variant="secondary" size="md" onclick={addTodo} aria-label="Add todo">
 					<i class="fas fa-plus text-[10px]"></i>
-				</button>
+				</Button>
 			</div>
 		</div>
 
@@ -426,21 +405,10 @@
 		</div>
 	</div>
 
-	<div class="mt-4 flex justify-end gap-2">
-		<button
-			type="button"
-			class="inline-flex h-[36px] items-center justify-center rounded-sm bg-muted px-4 text-sm font-medium text-fg border border-border hover:border-fg-subdued"
-			onclick={handleClose}
-		>
-			Cancel
-		</button>
-		<button
-			type="button"
-			class="inline-flex h-[36px] items-center justify-center rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
-			onclick={handleSave}
-			disabled={!title.trim()}
-		>
+	{#snippet footer()}
+		<Button variant="secondary" size="md" onclick={handleClose}>Cancel</Button>
+		<Button variant="primary" size="md" onclick={handleSave} disabled={!title.trim()}>
 			{template ? 'Update' : 'Create'} Template
-		</button>
-	</div>
+		</Button>
+	{/snippet}
 </Dialog>

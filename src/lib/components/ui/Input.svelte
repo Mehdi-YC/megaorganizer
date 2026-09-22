@@ -18,7 +18,7 @@
 	}: {
 		value?: string | number;
 		placeholder?: string;
-		type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url';
+		type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'url' | 'date';
 		disabled?: boolean;
 		error?: string;
 		label?: string;

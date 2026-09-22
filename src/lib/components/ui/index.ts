@@ -10,3 +10,7 @@ export { default as EmptyState } from './EmptyState.svelte';
 export { default as TagChips } from './TagChips.svelte';
 export { default as Spinner } from './Spinner.svelte';
 export { default as Dialog } from './Dialog.svelte';
+export { default as SearchInput } from './SearchInput.svelte';
+export { default as PageHeader } from './PageHeader.svelte';
+export { default as StatCard } from './StatCard.svelte';
+export { default as ConfirmButton } from './ConfirmButton.svelte';

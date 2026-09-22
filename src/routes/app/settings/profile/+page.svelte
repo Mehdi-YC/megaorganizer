@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
+	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 	// svelte-ignore state_referenced_locally
 	let name = $state(data.user?.name ?? '');
-	
+
 	// Finance settings
 	// svelte-ignore state_referenced_locally
 	let currency = $state(data.financeSettings?.currency ?? 'DZD');
@@ -82,139 +85,118 @@
 	<title>Edit Profile - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8 max-w-2xl">
+<div class="max-w-2xl p-4 sm:p-8">
 	<div class="mb-6">
-		<a href="/app" class="text-sm text-fg-subdued hover:text-fg transition-colors">
+		<a href="/app" class="text-sm text-fg-subdued transition-colors hover:text-fg">
 			<i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
 		</a>
 	</div>
 
-	<h1 class="text-lg font-semibold text-fg-accent mb-6">Edit Profile</h1>
+	<PageHeader title="Edit Profile" />
 
 	<div class="rounded-sm border border-border bg-surface">
 		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Profile</h2>
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Profile</h2>
 		</div>
 		<div class="px-6 py-5">
 			<form method="post" action="?/updateProfile" use:enhance class="space-y-4">
-				<div class="flex flex-col gap-1.5">
-					<label for="name" class="text-xs font-semibold text-fg-accent tracking-wide">Name</label>
-					<input
-						type="text"
-						id="name"
-						name="name"
-						bind:value={name}
-						required
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-					/>
-				</div>
+				<Input label="Name" type="text" id="name" name="name" bind:value={name} required />
 
 				<div class="flex flex-col gap-1.5">
-					<label for="email" class="text-xs font-semibold text-fg-accent tracking-wide">Email</label>
+					<label for="email" class="text-xs font-semibold tracking-wide text-fg-accent">Email</label
+					>
 					<input
 						type="email"
 						id="email"
 						value={data.user?.email}
 						disabled
-						class="h-[36px] w-full rounded-sm border border-border bg-muted px-3 text-sm text-fg-subdued cursor-not-allowed"
+						class="h-[36px] w-full cursor-not-allowed rounded-sm border border-border bg-muted px-3 text-sm text-fg-subdued"
 					/>
 					<p class="text-[10px] text-fg-subdued">Email cannot be changed</p>
 				</div>
 
 				{#if form?.profileMessage}
-					<p class="text-xs {form.profileMessage.includes('success') ? 'text-green-600' : 'text-error'}">{form.profileMessage}</p>
+					<p
+						class="text-xs {form.profileMessage.includes('success')
+							? 'text-green-600'
+							: 'text-error'}"
+					>
+						{form.profileMessage}
+					</p>
 				{/if}
 
-				<button
-					type="submit"
-					class="h-[36px] rounded-sm bg-primary px-6 font-medium text-white text-sm transition-all hover:bg-primary-hover active:scale-[0.98]"
-				>
-					Save Changes
-				</button>
+				<Button type="submit">Save Changes</Button>
 			</form>
 		</div>
 	</div>
 
 	<div class="mt-6 rounded-sm border border-border bg-surface">
 		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Change Password</h2>
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Change Password</h2>
 		</div>
 		<div class="px-6 py-5">
 			<form method="post" action="?/changePassword" use:enhance class="space-y-4">
-				<div class="flex flex-col gap-1.5">
-					<label for="currentPassword" class="text-xs font-semibold text-fg-accent tracking-wide">Current Password</label>
-					<input
-						type="password"
-						id="currentPassword"
-						name="currentPassword"
-						required
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-						placeholder="••••••••"
-					/>
-				</div>
+				<Input
+					label="Current Password"
+					type="password"
+					id="currentPassword"
+					name="currentPassword"
+					required
+					placeholder="••••••••"
+				/>
 
-				<div class="flex flex-col gap-1.5">
-					<label for="newPassword" class="text-xs font-semibold text-fg-accent tracking-wide">New Password</label>
-					<input
-						type="password"
-						id="newPassword"
-						name="newPassword"
-						required
-						minlength="8"
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-						placeholder="••••••••"
-					/>
-				</div>
+				<Input
+					label="New Password"
+					type="password"
+					id="newPassword"
+					name="newPassword"
+					required
+					minlength={8}
+					placeholder="••••••••"
+				/>
 
-				<div class="flex flex-col gap-1.5">
-					<label for="confirmPassword" class="text-xs font-semibold text-fg-accent tracking-wide">Confirm New Password</label>
-					<input
-						type="password"
-						id="confirmPassword"
-						name="confirmPassword"
-						required
-						minlength="8"
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-						placeholder="••••••••"
-					/>
-				</div>
+				<Input
+					label="Confirm New Password"
+					type="password"
+					id="confirmPassword"
+					name="confirmPassword"
+					required
+					minlength={8}
+					placeholder="••••••••"
+				/>
 
 				{#if form?.passwordMessage}
-					<p class="text-xs {form.passwordMessage.includes('success') ? 'text-green-600' : 'text-error'}">{form.passwordMessage}</p>
+					<p
+						class="text-xs {form.passwordMessage.includes('success')
+							? 'text-green-600'
+							: 'text-error'}"
+					>
+						{form.passwordMessage}
+					</p>
 				{/if}
 
-				<button
-					type="submit"
-					class="h-[36px] rounded-sm bg-primary px-6 font-medium text-white text-sm transition-all hover:bg-primary-hover active:scale-[0.98]"
-				>
-					Change Password
-				</button>
+				<Button type="submit">Change Password</Button>
 			</form>
 		</div>
 	</div>
 
 	<div class="mt-6 rounded-sm border border-border bg-surface">
 		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Backup & Restore</h2>
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Backup & Restore</h2>
 		</div>
-		<div class="px-6 py-5 space-y-4">
-			<p class="text-xs text-fg-subdued">Export all your data as a JSON file, or restore from a previous backup. Existing items with the same name will be skipped.</p>
+		<div class="space-y-4 px-6 py-5">
+			<p class="text-xs text-fg-subdued">
+				Export all your data as a JSON file, or restore from a previous backup. Existing items with
+				the same name will be skipped.
+			</p>
 
-			<div class="flex flex-col sm:flex-row gap-2">
-				<button
-					type="button"
-					class="inline-flex h-[36px] items-center justify-center gap-2 rounded-sm bg-primary px-5 font-medium text-white text-sm transition-all hover:bg-primary-hover active:scale-[0.98]"
-					onclick={exportBackup}
-				>
+			<div class="flex flex-col gap-2 sm:flex-row">
+				<Button type="button" onclick={exportBackup}>
 					<i class="fas fa-download text-xs"></i> Export Backup
-				</button>
-				<button
-					type="button"
-					class="inline-flex h-[36px] items-center justify-center gap-2 rounded-sm border border-border bg-surface px-5 font-medium text-sm text-fg transition-colors hover:bg-muted active:scale-[0.98]"
-					onclick={triggerImport}
-				>
+				</Button>
+				<Button variant="secondary" type="button" onclick={triggerImport}>
 					<i class="fas fa-upload text-xs"></i> Import Backup
-				</button>
+				</Button>
 				<input
 					type="file"
 					accept=".json"
@@ -223,7 +205,9 @@
 					onchange={handleImportFile}
 				/>
 			</div>
-			<p class="text-[10px] text-fg-subdued/60">Includes all categories, pages, items, tags, and file attachments.</p>
+			<p class="text-[10px] text-fg-subdued/60">
+				Includes all categories, pages, items, tags, and file attachments.
+			</p>
 
 			{#if importStatus === 'loading'}
 				<div class="flex items-center gap-2 text-xs text-fg-subdued">
@@ -239,7 +223,9 @@
 							{#if importCounts.elements}<span>{importCounts.elements} elements</span>{/if}
 							{#if importCounts.tags}<span>{importCounts.tags} tags</span>{/if}
 							{#if importCounts.attachments}<span>{importCounts.attachments} files</span>{/if}
-							{#if importCounts.skipped}<span class="text-fg-subdued/60">({importCounts.skipped} skipped)</span>{/if}
+							{#if importCounts.skipped}<span class="text-fg-subdued/60"
+									>({importCounts.skipped} skipped)</span
+								>{/if}
 						</div>
 					{/if}
 				</div>
@@ -254,37 +240,35 @@
 	<!-- Finance Settings -->
 	<div class="mt-6 rounded-sm border border-border bg-surface">
 		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">Finance Settings</h2>
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Finance Settings</h2>
 		</div>
 		<div class="px-6 py-5">
 			<form method="post" action="?/updateFinanceSettings" use:enhance class="space-y-4">
-				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-					<div class="flex flex-col gap-1.5">
-						<label for="currency" class="text-xs font-semibold text-fg-accent tracking-wide">Currency</label>
-						<input
-							type="text"
-							id="currency"
-							name="currency"
-							bind:value={currency}
-							placeholder="DZD"
-							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-						/>
-					</div>
-					<div class="flex flex-col gap-1.5">
-						<label for="currencyRate" class="text-xs font-semibold text-fg-accent tracking-wide">Currency Rate (to USD)</label>
-						<input
-							type="number"
-							id="currencyRate"
-							name="currencyRate"
-							bind:value={currencyRate}
-							step="0.0001"
-							min="0"
-							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
-						/>
-					</div>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="Currency"
+						type="text"
+						id="currency"
+						name="currency"
+						bind:value={currency}
+						placeholder="DZD"
+					/>
+					<Input
+						label="Currency Rate (to USD)"
+						type="number"
+						id="currencyRate"
+						name="currencyRate"
+						bind:value={currencyRate}
+						step={0.0001}
+						min={0}
+					/>
 				</div>
 				<div class="flex flex-col gap-1.5">
-					<label for="monthlySpendingLimit" class="text-xs font-semibold text-fg-accent tracking-wide">Monthly Spending Limit ({currency})</label>
+					<label
+						for="monthlySpendingLimit"
+						class="text-xs font-semibold tracking-wide text-fg-accent"
+						>Monthly Spending Limit ({currency})</label
+					>
 					<input
 						type="number"
 						id="monthlySpendingLimit"
@@ -293,21 +277,22 @@
 						step="0.01"
 						min="0"
 						placeholder="No limit"
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued transition-colors hover:border-fg-subdued focus:border-primary focus:outline-none focus:ring-0"
+						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary focus:ring-0 focus:outline-none"
 					/>
 					<p class="text-[10px] text-fg-subdued">Leave empty for no limit</p>
 				</div>
 
 				{#if form?.financeMessage}
-					<p class="text-xs {form.financeMessage.includes('success') ? 'text-green-600' : 'text-error'}">{form.financeMessage}</p>
+					<p
+						class="text-xs {form.financeMessage.includes('success')
+							? 'text-green-600'
+							: 'text-error'}"
+					>
+						{form.financeMessage}
+					</p>
 				{/if}
 
-				<button
-					type="submit"
-					class="h-[36px] rounded-sm bg-primary px-6 font-medium text-white text-sm transition-all hover:bg-primary-hover active:scale-[0.98]"
-				>
-					Save Finance Settings
-				</button>
+				<Button type="submit">Save Finance Settings</Button>
 			</form>
 		</div>
 	</div>

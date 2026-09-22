@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
 	import { EmptyState } from '$lib/components/ui';
+	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import { ExpenseForm, ExpenseCard, MonthlySummary } from '$lib/components/finance';
 
 	let { data } = $props();
@@ -59,10 +60,7 @@
 </svelte:head>
 
 <div class="p-4 sm:p-6 lg:p-8">
-	<div class="mb-6">
-		<h1 class="text-xl font-semibold text-fg-accent">Finance</h1>
-		<p class="mt-1 text-sm text-fg-subdued">Track your expenses and spending</p>
-	</div>
+	<PageHeader title="Finance" subtitle="Track your expenses and spending" />
 
 	<div class="grid gap-6 lg:grid-cols-3">
 		<!-- Main Content -->
@@ -88,7 +86,7 @@
 					/>
 				{:else}
 					<div class="space-y-2">
-						{#each expenses as expense}
+						{#each expenses as expense (expense.id)}
 							<ExpenseCard {expense} currency={settings.currency} onDelete={handleDeleteExpense} />
 						{/each}
 					</div>

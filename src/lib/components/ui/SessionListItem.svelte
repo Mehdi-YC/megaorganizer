@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ACTIVITY_ICONS, getSessionIcon } from '$lib/utils/training';
 	import { formatTime } from '$lib/utils';
+	import Badge from './Badge.svelte';
 
 	let {
 		session
@@ -38,17 +39,11 @@
 	</div>
 	<div class="flex items-center gap-4">
 		{#if session.status === 'completed' || (session.duration && session.duration > 0)}
-			<span class="inline-flex items-center rounded-sm bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
-				Completed
-			</span>
+			<Badge variant="success">Completed</Badge>
 		{:else if session.status === 'active'}
-			<span class="inline-flex items-center rounded-sm bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-				Active
-			</span>
+			<Badge variant="primary">Active</Badge>
 		{:else if session.status === 'cancelled'}
-			<span class="inline-flex items-center rounded-sm bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
-				Cancelled
-			</span>
+			<Badge variant="danger">Cancelled</Badge>
 		{/if}
 		<i class="fas fa-chevron-right text-fg-subdued"></i>
 	</div>

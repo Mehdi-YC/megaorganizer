@@ -14,7 +14,7 @@
 		children,
 		...rest
 	}: {
-		value?: string;
+		value?: string | number;
 		label?: string;
 		name?: string;
 		id?: string;

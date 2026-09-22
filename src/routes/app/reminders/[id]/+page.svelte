@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { renderMarkdown } from '$lib/utils/markdown';
-	import { EmptyState } from '$lib/components/ui';
+	import { Badge, Button, Checkbox, EmptyState } from '$lib/components/ui';
 	import { ReminderCalendar, ReminderTemplateForm } from '$lib/components/reminders';
 	import { getRecurrenceLabel } from '$lib/utils/reminders';
 
@@ -45,7 +45,11 @@
 		const res = await fetch('/api/reminders', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ action: 'snoozeReminder', reminderId: item.id, until: until.toISOString() })
+			body: JSON.stringify({
+				action: 'snoozeReminder',
+				reminderId: item.id,
+				until: until.toISOString()
+			})
 		});
 
 		if (res.ok) {
@@ -110,7 +114,7 @@
 	}
 
 	// Stats from history
-	const stats = $derived(() => {
+	const stats = $derived.by(() => {
 		const total = history.length;
 		const completed = history.filter((r: any) => r.completed).length;
 		const missed = history.filter((r: any) => !r.completed && isOverdue(r.dueAt)).length;
@@ -127,11 +131,13 @@
 <div class="p-4 sm:p-6 lg:p-8">
 	<!-- Breadcrumb -->
 	<div class="mb-4 flex items-center gap-1.5 text-[11px] text-fg-subdued">
-		<a href="/app" class="hover:text-primary" title="Home"><i class="fas fa-home text-[10px]"></i></a>
+		<a href="/app" class="hover:text-primary" title="Home"
+			><i class="fas fa-home text-[10px]"></i></a
+		>
 		<i class="fas fa-chevron-right text-[8px]"></i>
 		<a href="/app/reminders" class="hover:text-primary">Reminders</a>
 		<i class="fas fa-chevron-right text-[8px]"></i>
-		<span class="text-fg truncate">{item?.title}</span>
+		<span class="truncate text-fg">{item?.title}</span>
 	</div>
 
 	{#if !item}
@@ -139,13 +145,15 @@
 	{:else}
 		<div class="grid gap-6 lg:grid-cols-3">
 			<!-- Main Content -->
-			<div class="lg:col-span-2 space-y-6">
+			<div class="space-y-6 lg:col-span-2">
 				<!-- Header -->
 				<div class="flex items-start justify-between gap-4">
 					<div class="flex items-center gap-4">
 						<div
 							class="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm"
-							style="background-color: {template?.iconColor ? `${template.iconColor}20` : 'var(--color-primary-subdued)'}"
+							style="background-color: {template?.iconColor
+								? `${template.iconColor}20`
+								: 'var(--color-primary-subdued)'}"
 						>
 							<i
 								class="fas {template?.icon || 'fa-bell'} text-xl"
@@ -159,17 +167,19 @@
 							{/if}
 							{#if isReminder}
 								<div class="mt-2 flex items-center gap-3">
-									<span class="text-xs {isOverdue(item.dueAt) && !item.completed ? 'text-error' : 'text-fg-subdued'}">
+									<span
+										class="text-xs {isOverdue(item.dueAt) && !item.completed
+											? 'text-error'
+											: 'text-fg-subdued'}"
+									>
 										{formatDueDate(item.dueAt)} at {formatDueTime(item.dueAt)}
 									</span>
 									{#if item.completed}
-										<span class="inline-flex items-center rounded-sm bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success">
+										<Badge variant="success" size="sm">
 											<i class="fas fa-check mr-1"></i> Completed
-										</span>
+										</Badge>
 									{:else if isOverdue(item.dueAt)}
-										<span class="inline-flex items-center rounded-sm bg-error/10 px-2 py-0.5 text-[10px] font-medium text-error">
-											Overdue
-										</span>
+										<Badge variant="danger" size="sm">Overdue</Badge>
 									{/if}
 								</div>
 							{:else}
@@ -180,34 +190,22 @@
 						</div>
 					</div>
 
-					<div class="flex gap-2 shrink-0">
+					<div class="flex shrink-0 gap-2">
 						{#if isReminder && !item.completed}
-							<button
-								type="button"
-								class="inline-flex h-[36px] items-center justify-center rounded-sm bg-success px-4 text-sm font-medium text-white hover:bg-success/90"
-								onclick={handleComplete}
-							>
+							<Button variant="primary" size="md" onclick={handleComplete}>
 								<i class="fas fa-check mr-2 text-xs"></i>
 								Complete
-							</button>
-							<button
-								type="button"
-								class="inline-flex h-[36px] items-center justify-center rounded-sm bg-muted px-4 text-sm font-medium text-fg border border-border hover:border-fg-subdued"
-								onclick={() => handleSnooze(1)}
-							>
+							</Button>
+							<Button variant="secondary" size="md" onclick={() => handleSnooze(1)}>
 								<i class="fas fa-clock mr-2 text-xs"></i>
 								Snooze 1h
-							</button>
+							</Button>
 						{/if}
 						{#if !isReminder}
-							<button
-								type="button"
-								class="inline-flex h-[36px] items-center justify-center rounded-sm bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover"
-								onclick={() => (showEditForm = true)}
-							>
+							<Button variant="primary" size="md" onclick={() => (showEditForm = true)}>
 								<i class="fas fa-pen mr-2 text-xs"></i>
 								Edit
-							</button>
+							</Button>
 						{/if}
 					</div>
 				</div>
@@ -215,23 +213,19 @@
 				<!-- Todos -->
 				{#if item.todos && item.todos.length > 0}
 					<div class="rounded-sm border border-border bg-surface p-4">
-						<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Todo Items</h3>
+						<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+							Todo Items
+						</h3>
 						<div class="space-y-2">
-							{#each item.todos as todo}
-								<label class="flex items-start gap-3 cursor-pointer group">
-									<input
-										type="checkbox"
-										checked={todo.completed}
-										onchange={() => handleTodoToggle(todo.id, !todo.completed)}
-										class="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
-									/>
-									<span class="text-sm {todo.completed ? 'line-through text-fg-subdued' : 'text-fg group-hover:text-primary'} transition-colors">
-										{todo.text}
-									</span>
-								</label>
+							{#each item.todos as todo (todo.id)}
+								<Checkbox
+									checked={todo.completed}
+									onchange={() => handleTodoToggle(todo.id, !todo.completed)}
+									label={todo.text}
+								/>
 							{/each}
 						</div>
-						<div class="mt-3 pt-3 border-t border-border">
+						<div class="mt-3 border-t border-border pt-3">
 							<p class="text-[10px] text-fg-subdued">
 								{item.todos.filter((t: any) => t.completed).length} of {item.todos.length} completed
 							</p>
@@ -242,16 +236,22 @@
 				<!-- Markdown Content -->
 				{#if item.markdown}
 					<div class="rounded-sm border border-border bg-surface p-4">
-						<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Content</h3>
-						<div class="markdown-content text-sm text-fg leading-relaxed">{@html renderedMarkdown}</div>
+						<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+							Content
+						</h3>
+						<div class="markdown-content text-sm leading-relaxed text-fg">
+							{@html renderedMarkdown}
+						</div>
 					</div>
 				{/if}
 
 				<!-- Stats Card -->
 				{#if !isReminder && history.length > 0}
-					{@const s = stats()}
+					{@const s = stats}
 					<div class="rounded-sm border border-border bg-surface p-4">
-						<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Last 30 Days Stats</h3>
+						<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+							Last 30 Days Stats
+						</h3>
 						<div class="grid grid-cols-4 gap-4">
 							<div class="text-center">
 								<p class="text-2xl font-semibold text-fg">{s.total}</p>
@@ -266,7 +266,15 @@
 								<p class="text-[10px] text-fg-subdued">Missed</p>
 							</div>
 							<div class="text-center">
-								<p class="text-2xl font-semibold {s.rate >= 80 ? 'text-success' : s.rate >= 50 ? 'text-warning' : 'text-error'}">{s.rate}%</p>
+								<p
+									class="text-2xl font-semibold {s.rate >= 80
+										? 'text-success'
+										: s.rate >= 50
+											? 'text-warning'
+											: 'text-error'}"
+								>
+									{s.rate}%
+								</p>
 								<p class="text-[10px] text-fg-subdued">Rate</p>
 							</div>
 						</div>
@@ -278,21 +286,27 @@
 			<div class="space-y-6">
 				<!-- Calendar -->
 				<div>
-					<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Habit Tracking</h3>
+					<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+						Habit Tracking
+					</h3>
 					<ReminderCalendar reminders={history} />
 				</div>
 
 				<!-- Template Info (for reminders) -->
 				{#if isReminder && template}
 					<div class="rounded-sm border border-border bg-surface p-4">
-						<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Template</h3>
+						<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+							Template
+						</h3>
 						<a
 							href="/app/reminders/{template.id}"
-							class="flex items-center gap-3 rounded-sm p-2 hover:bg-muted transition-colors"
+							class="flex items-center gap-3 rounded-sm p-2 transition-colors hover:bg-muted"
 						>
 							<div
 								class="flex h-8 w-8 items-center justify-center rounded-sm"
-								style="background-color: {template.iconColor ? `${template.iconColor}20` : 'var(--color-primary-subdued)'}"
+								style="background-color: {template.iconColor
+									? `${template.iconColor}20`
+									: 'var(--color-primary-subdued)'}"
 							>
 								<i
 									class="fas {template.icon || 'fa-bell'} text-xs"
@@ -311,7 +325,7 @@
 
 				<!-- Details -->
 				<div class="rounded-sm border border-border bg-surface p-4">
-					<h3 class="mb-3 text-xs font-semibold text-fg-accent uppercase tracking-wide">Details</h3>
+					<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">Details</h3>
 					<dl class="space-y-2 text-xs">
 						<div class="flex justify-between">
 							<dt class="text-fg-subdued">Type</dt>
@@ -345,7 +359,7 @@
 {#if !isReminder && template}
 	<ReminderTemplateForm
 		bind:open={showEditForm}
-		template={template}
+		{template}
 		onSave={handleUpdateTemplate}
 		onClose={() => (showEditForm = false)}
 	/>

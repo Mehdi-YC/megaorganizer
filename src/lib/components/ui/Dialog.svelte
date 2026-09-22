@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import Button from './Button.svelte';
 
 	let {
 		open = $bindable(false),
@@ -66,13 +67,7 @@
 				{#if footer}
 					{@render footer()}
 				{:else}
-					<button
-						type="button"
-						class="inline-flex h-[36px] items-center justify-center rounded-sm bg-muted px-4 text-sm font-medium text-fg transition-colors hover:bg-border"
-						onclick={handleClose}
-					>
-						Close
-					</button>
+					<Button variant="secondary" onclick={handleClose}>Close</Button>
 				{/if}
 			</div>
 		</div>
