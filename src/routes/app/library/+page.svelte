@@ -1,12 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import {
-		checkSmallImages,
-		getAssignedTags,
-		toggleArrayItem,
-		DEFAULT_TAG_COLOR
-	} from '$lib/utils';
+	import { checkSmallImages, getAssignedTags, toggleArrayItem } from '$lib/utils';
 	import {
 		GridItemImage,
 		TagChips,

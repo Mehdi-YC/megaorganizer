@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import QuickCapture from '$lib/components/QuickCapture.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { page } from '$app/state';
 	import { checkAndNotifyReminders } from '$lib/utils/notifications';
 
@@ -23,7 +24,7 @@
 	});
 </script>
 
-<div class="flex h-screen overflow-hidden bg-bg">
+<div class="flex h-dvh h-screen overflow-hidden bg-bg">
 	{#if sidebarOpen}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -72,3 +73,4 @@
 </div>
 
 <QuickCapture />
+<ConfirmDialog />

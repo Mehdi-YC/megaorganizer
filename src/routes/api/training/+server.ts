@@ -7,7 +7,6 @@ import {
 	updateTrainingSession,
 	deleteTrainingSession,
 	createTrainingActivity,
-	getTrainingActivities,
 	updateTrainingActivity,
 	linkItemToActivity,
 	unlinkItemFromActivity,

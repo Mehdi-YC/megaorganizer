@@ -4,5 +4,8 @@
 </script>
 
 {#each tags as t}
-	<span class="rounded-sm font-medium text-white {sizeClasses[size]}" style="background: {t.color || '#5A31F4'}">{t.name}</span>
+	<span
+		class="rounded-sm font-medium text-white {sizeClasses[size]}"
+		style="background: {t.color || '#5A31F4'}">{t.name}</span
+	>
 {/each}

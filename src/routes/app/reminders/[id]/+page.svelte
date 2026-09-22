@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { Badge, Button, Checkbox, EmptyState } from '$lib/components/ui';
 	import { ReminderCalendar, ReminderTemplateForm } from '$lib/components/reminders';

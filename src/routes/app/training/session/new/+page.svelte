@@ -10,7 +10,6 @@
 		TIMER_INTERVAL_MS,
 		GPS_WATCH_OPTIONS,
 		handleGpsPosition,
-		type GpsTrackingState,
 		type GpsPoint
 	} from '$lib/utils/gps';
 	import {
@@ -63,13 +62,25 @@
 	let gpsError: string | null = $state(null);
 
 	onDestroy(() => {
+		persistOnExit();
+		window.removeEventListener('pagehide', persistOnExit);
+		window.removeEventListener('beforeunload', persistOnExit);
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
 		releaseWakeLock();
 		if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 	});
 
+	function persistOnExit() {
+		if (timerRunning || startTime > 0 || exerciseRecords.length > 0 || selectedItems.length > 0) {
+			persistState();
+		}
+	}
+
 	onMount(() => {
+		window.addEventListener('pagehide', persistOnExit);
+		window.addEventListener('beforeunload', persistOnExit);
+
 		const saved = loadSessionState();
 		if (!saved) return;
 
@@ -114,11 +125,6 @@
 
 	// Persist form drafts as they change so a reload mid-edit keeps them.
 	$effect(() => {
-		title;
-		notes;
-		activityType;
-		selectedItems;
-		exerciseRecords;
 		persistState();
 	});
 
@@ -150,6 +156,9 @@
 			wakeLock = await navigator.wakeLock.request('screen');
 			wakeLock.addEventListener('release', () => {
 				wakeLock = null;
+				if (document.visibilityState === 'visible' && timerRunning) {
+					acquireWakeLock();
+				}
 			});
 		} catch (err) {
 			console.warn('Wake Lock failed:', err);
@@ -171,6 +180,7 @@
 			maxSpeed,
 			gpsPoints
 		});
+		if (!result.accepted) return;
 		distance = result.updatedState.distance;
 		currentSpeed = result.updatedState.currentSpeed;
 		maxSpeed = result.updatedState.maxSpeed;
@@ -540,7 +550,7 @@
 			{#if exerciseRecords.length > 0}
 				<div class="space-y-3">
 					<h3 class="text-sm font-medium text-fg">Exercise Records</h3>
-					{#each exerciseRecords as record}
+					{#each exerciseRecords as record (record.itemId)}
 						{@const item = data.items.find((i: any) => i.id === record.itemId)}
 						<div class="rounded-sm border border-border bg-bg p-3">
 							<p class="mb-2 text-sm font-medium text-fg">{item?.name || 'Exercise'}</p>

@@ -1,10 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	let { title, subtitle, children }: { title: string; subtitle?: string; children?: Snippet } = $props();
+	let { title, subtitle, children }: { title: string; subtitle?: string; children?: Snippet } =
+		$props();
 </script>
 
-<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 	<div>
 		<h1 class="text-xl font-bold text-fg-accent">{title}</h1>
 		{#if subtitle}

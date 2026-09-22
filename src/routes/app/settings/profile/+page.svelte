@@ -116,12 +116,8 @@
 				</div>
 
 				{#if form?.profileMessage}
-					<p
-						class="text-xs {form.profileMessage.includes('success')
-							? 'text-green-600'
-							: 'text-error'}"
-					>
-						{form.profileMessage}
+					<p class="text-xs {form.profileMessage.ok ? 'text-green-600' : 'text-error'}">
+						{form.profileMessage.text}
 					</p>
 				{/if}
 
@@ -166,12 +162,8 @@
 				/>
 
 				{#if form?.passwordMessage}
-					<p
-						class="text-xs {form.passwordMessage.includes('success')
-							? 'text-green-600'
-							: 'text-error'}"
-					>
-						{form.passwordMessage}
+					<p class="text-xs {form.passwordMessage.ok ? 'text-green-600' : 'text-error'}">
+						{form.passwordMessage.text}
 					</p>
 				{/if}
 
@@ -283,12 +275,8 @@
 				</div>
 
 				{#if form?.financeMessage}
-					<p
-						class="text-xs {form.financeMessage.includes('success')
-							? 'text-green-600'
-							: 'text-error'}"
-					>
-						{form.financeMessage}
+					<p class="text-xs {form.financeMessage.ok ? 'text-green-600' : 'text-error'}">
+						{form.financeMessage.text}
 					</p>
 				{/if}
 

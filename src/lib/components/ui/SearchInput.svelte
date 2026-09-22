@@ -34,6 +34,6 @@
 		onkeydown={(e) => {
 			if (e.key === 'Enter') onsearch?.();
 		}}
-		class="h-9 w-full rounded-sm border border-border bg-bg pr-3 pl-9 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:ring-0 focus:outline-none"
+		class="h-9 w-full rounded-sm border border-border bg-bg pr-3 pl-9 text-base text-fg placeholder:text-fg-subdued focus:border-primary focus:ring-0 focus:outline-none sm:text-sm"
 	/>
 </div>

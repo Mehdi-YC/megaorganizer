@@ -8,9 +8,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth/login');
 	}
-	
+
 	const settings = await getUserSettings(locals.user.id);
-	
+
 	return {
 		user: {
 			name: locals.user.name,
@@ -30,7 +30,7 @@ export const actions: Actions = {
 		const name = formData.get('name')?.toString() ?? '';
 
 		if (!name) {
-			return fail(400, { profileMessage: 'Name is required' });
+			return fail(400, { profileMessage: { text: 'Name is required', ok: false } });
 		}
 
 		try {
@@ -40,10 +40,10 @@ export const actions: Actions = {
 			});
 		} catch (error) {
 			const { status, message } = handleAuthError(error, 'Failed to update profile');
-			return fail(status, { profileMessage: message });
+			return fail(status, { profileMessage: { text: message, ok: false } });
 		}
 
-		return { profileMessage: 'Profile updated successfully' };
+		return { profileMessage: { text: 'Profile updated successfully', ok: true } };
 	},
 
 	changePassword: async (event) => {
@@ -57,15 +57,17 @@ export const actions: Actions = {
 		const confirmPassword = formData.get('confirmPassword')?.toString() ?? '';
 
 		if (!currentPassword || !newPassword) {
-			return fail(400, { passwordMessage: 'All fields are required' });
+			return fail(400, { passwordMessage: { text: 'All fields are required', ok: false } });
 		}
 
 		if (newPassword.length < 8) {
-			return fail(400, { passwordMessage: 'New password must be at least 8 characters' });
+			return fail(400, {
+				passwordMessage: { text: 'New password must be at least 8 characters', ok: false }
+			});
 		}
 
 		if (newPassword !== confirmPassword) {
-			return fail(400, { passwordMessage: 'New passwords do not match' });
+			return fail(400, { passwordMessage: { text: 'New passwords do not match', ok: false } });
 		}
 
 		try {
@@ -75,10 +77,10 @@ export const actions: Actions = {
 			});
 		} catch (error) {
 			const { status, message } = handleAuthError(error, 'Failed to change password');
-			return fail(status, { passwordMessage: message });
+			return fail(status, { passwordMessage: { text: message, ok: false } });
 		}
 
-		return { passwordMessage: 'Password changed successfully' };
+		return { passwordMessage: { text: 'Password changed successfully', ok: true } };
 	},
 
 	updateFinanceSettings: async (event) => {
@@ -97,12 +99,15 @@ export const actions: Actions = {
 			await updateUserSettings(event.locals.user.id, {
 				currency,
 				currencyRate: isNaN(currencyRate) ? 1 : currencyRate,
-				monthlySpendingLimit: monthlySpendingLimit && !isNaN(monthlySpendingLimit) ? monthlySpendingLimit : null
+				monthlySpendingLimit:
+					monthlySpendingLimit && !isNaN(monthlySpendingLimit) ? monthlySpendingLimit : null
 			});
 		} catch (error) {
-			return fail(500, { financeMessage: 'Failed to update finance settings' });
+			return fail(500, {
+				financeMessage: { text: 'Failed to update finance settings', ok: false }
+			});
 		}
 
-		return { financeMessage: 'Finance settings updated successfully' };
+		return { financeMessage: { text: 'Finance settings updated successfully', ok: true } };
 	}
 };

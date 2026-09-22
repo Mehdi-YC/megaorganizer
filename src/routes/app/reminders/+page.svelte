@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
+	import { invalidateAll } from '$app/navigation';
 	import { Button, EmptyState } from '$lib/components/ui';
 	import { ReminderTemplateForm } from '$lib/components/reminders';
 	import { getRecurrenceLabel } from '$lib/utils/reminders';
@@ -8,15 +9,6 @@
 	let templates = $derived(data.templates ?? []);
 	let showCreateForm = $state(false);
 	let editingTemplate = $state<any>(null);
-
-	const recurrenceIcons: Record<string, string> = {
-		daily: 'fa-calendar-day',
-		weekly: 'fa-calendar-week',
-		monthly: 'fa-calendar',
-		yearly: 'fa-calendar-days',
-		yearly_date: 'fa-calendar-days',
-		monthly_relative: 'fa-calendar-week'
-	};
 
 	async function handleCreateTemplate(formData: any) {
 		const res = await fetch('/api/reminders', {
@@ -70,7 +62,11 @@
 	}
 
 	async function deleteTemplate(templateId: string) {
-		if (!confirm('Delete this reminder template? All associated reminders will also be deleted.'))
+		if (
+			!(await confirmAction(
+				'Delete this reminder template? All associated reminders will also be deleted.'
+			))
+		)
 			return;
 
 		const res = await fetch('/api/reminders', {

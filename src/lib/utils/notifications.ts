@@ -71,9 +71,10 @@ export function showReminderNotification(reminder: {
 	const timeStr = dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 	const pendingTodos = reminder.todos?.filter((t) => !t.completed) ?? [];
-	const todoText = pendingTodos.length > 0
-		? `${pendingTodos.length} todo${pendingTodos.length !== 1 ? 's' : ''} remaining`
-		: '';
+	const todoText =
+		pendingTodos.length > 0
+			? `${pendingTodos.length} todo${pendingTodos.length !== 1 ? 's' : ''} remaining`
+			: '';
 
 	return showNotification(reminder.title, {
 		body: [reminder.description, `Due at ${timeStr}`, todoText].filter(Boolean).join('\n'),
@@ -102,9 +103,7 @@ export async function checkAndNotifyReminders(): Promise<void> {
 		const notifiedKey = 'notified_reminders';
 		const notified: string[] = JSON.parse(sessionStorage.getItem(notifiedKey) ?? '[]');
 
-		const newReminders = reminders.filter(
-			(r: any) => !r.completed && !notified.includes(r.id)
-		);
+		const newReminders = reminders.filter((r: any) => !r.completed && !notified.includes(r.id));
 
 		if (newReminders.length > 0) {
 			// Show notification for the first new reminder

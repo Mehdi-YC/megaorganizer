@@ -1,12 +1,5 @@
 import { db } from '$lib/server/db';
-import {
-	treeElement,
-	page,
-	reminder,
-	expense,
-	trainingSession,
-	tag
-} from '$lib/server/db/schema';
+import { treeElement, page, reminder, expense, trainingSession, tag } from '$lib/server/db/schema';
 import { eq, like, or, and, desc } from 'drizzle-orm';
 
 export interface SearchResult {
@@ -19,7 +12,11 @@ export interface SearchResult {
 	imageUrl?: string;
 }
 
-export async function globalSearch(userId: string, query: string, limit = 20): Promise<SearchResult[]> {
+export async function globalSearch(
+	userId: string,
+	query: string,
+	limit = 20
+): Promise<SearchResult[]> {
 	if (!query || query.trim().length < 2) return [];
 
 	const searchTerm = `%${query}%`;
@@ -38,10 +35,7 @@ export async function globalSearch(userId: string, query: string, limit = 20): P
 		.where(
 			and(
 				eq(treeElement.userId, userId),
-				or(
-					like(treeElement.name, searchTerm),
-					like(treeElement.description, searchTerm)
-				)
+				or(like(treeElement.name, searchTerm), like(treeElement.description, searchTerm))
 			)
 		)
 		.limit(limit)
@@ -72,10 +66,7 @@ export async function globalSearch(userId: string, query: string, limit = 20): P
 		.where(
 			and(
 				eq(page.userId, userId),
-				or(
-					like(page.name, searchTerm),
-					like(page.description, searchTerm)
-				)
+				or(like(page.name, searchTerm), like(page.description, searchTerm))
 			)
 		)
 		.limit(limit)
@@ -105,10 +96,7 @@ export async function globalSearch(userId: string, query: string, limit = 20): P
 		.where(
 			and(
 				eq(reminder.userId, userId),
-				or(
-					like(reminder.title, searchTerm),
-					like(reminder.description, searchTerm)
-				)
+				or(like(reminder.title, searchTerm), like(reminder.description, searchTerm))
 			)
 		)
 		.orderBy(desc(reminder.dueAt))
@@ -136,12 +124,7 @@ export async function globalSearch(userId: string, query: string, limit = 20): P
 			spentAt: expense.spentAt
 		})
 		.from(expense)
-		.where(
-			and(
-				eq(expense.userId, userId),
-				like(expense.description, searchTerm)
-			)
-		)
+		.where(and(eq(expense.userId, userId), like(expense.description, searchTerm)))
 		.orderBy(desc(expense.spentAt))
 		.limit(limit)
 		.all();
@@ -169,10 +152,7 @@ export async function globalSearch(userId: string, query: string, limit = 20): P
 		.where(
 			and(
 				eq(trainingSession.userId, userId),
-				or(
-					like(trainingSession.title, searchTerm),
-					like(trainingSession.notes, searchTerm)
-				)
+				or(like(trainingSession.title, searchTerm), like(trainingSession.notes, searchTerm))
 			)
 		)
 		.orderBy(desc(trainingSession.startedAt))
@@ -198,12 +178,7 @@ export async function globalSearch(userId: string, query: string, limit = 20): P
 			color: tag.color
 		})
 		.from(tag)
-		.where(
-			and(
-				eq(tag.userId, userId),
-				like(tag.name, searchTerm)
-			)
-		)
+		.where(and(eq(tag.userId, userId), like(tag.name, searchTerm)))
 		.limit(limit)
 		.all();
 

@@ -2,7 +2,11 @@
 	import { isSmallImage } from '$lib/utils';
 	import { onMount } from 'svelte';
 
-	let { src, alt = '', size = 'md' }: { src: string; alt?: string; size?: 'sm' | 'md' | 'lg' | 'full' } = $props();
+	let {
+		src,
+		alt = '',
+		size = 'md'
+	}: { src: string; alt?: string; size?: 'sm' | 'md' | 'lg' | 'full' } = $props();
 
 	let small = $state(false);
 
@@ -16,7 +20,11 @@
 {#if size === 'full'}
 	{#if small}
 		<div class="relative h-full w-full overflow-hidden">
-			<img {src} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
+			<img
+				{src}
+				alt=""
+				class="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-xl"
+			/>
 			<img {src} {alt} class="relative h-full w-full object-contain p-0.5" />
 		</div>
 	{:else}
@@ -25,10 +33,14 @@
 {:else}
 	{#if small}
 		<div class="relative {sizes[size]} shrink-0 overflow-hidden rounded">
-			<img {src} alt="" class="absolute inset-0 h-full w-full scale-125 object-cover blur-xl opacity-60" />
+			<img
+				{src}
+				alt=""
+				class="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-xl"
+			/>
 			<img {src} {alt} class="relative h-full w-full object-contain" />
 		</div>
 	{:else}
-		<img {src} {alt} class="{sizes[size]} rounded object-cover shrink-0" />
+		<img {src} {alt} class="{sizes[size]} shrink-0 rounded object-cover" />
 	{/if}
 {/if}

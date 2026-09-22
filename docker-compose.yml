@@ -6,7 +6,7 @@ services:
         DATABASE_URL: ${DATABASE_URL:-file:local.db}
         BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
     ports:
-      - "${PORT:-5173}:3000"
+      - '${PORT:-5173}:3000'
     env_file:
       - .env
     environment:

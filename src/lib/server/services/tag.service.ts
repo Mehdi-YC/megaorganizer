@@ -14,7 +14,11 @@ export async function createTag(userId: string, name: string, color?: string) {
 	return result;
 }
 
-export async function updateTag(userId: string, tagId: string, data: { name?: string; color?: string }) {
+export async function updateTag(
+	userId: string,
+	tagId: string,
+	data: { name?: string; color?: string }
+) {
 	const [result] = await db
 		.update(tag)
 		.set(data)
@@ -24,7 +28,5 @@ export async function updateTag(userId: string, tagId: string, data: { name?: st
 }
 
 export async function deleteTag(userId: string, tagId: string) {
-	await db
-		.delete(tag)
-		.where(and(eq(tag.id, tagId), eq(tag.userId, userId)));
+	await db.delete(tag).where(and(eq(tag.id, tagId), eq(tag.userId, userId)));
 }

@@ -25,6 +25,10 @@
 	};
 </script>
 
-<span class="inline-flex items-center font-semibold rounded-sm tracking-wide uppercase {variants[variant]} {sizes[size]}">
+<span
+	class="inline-flex items-center rounded-sm font-semibold tracking-wide uppercase {variants[
+		variant
+	]} {sizes[size]}"
+>
 	{@render children()}
 </span>

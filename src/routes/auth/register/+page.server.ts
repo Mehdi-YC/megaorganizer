@@ -29,7 +29,9 @@ export const actions: Actions = {
 		const { allowed, retryAfterMs } = checkRateLimit(rateKey);
 		if (!allowed) {
 			const minutes = Math.ceil(retryAfterMs / 60000);
-			return fail(429, { message: `Too many attempts. Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.` });
+			return fail(429, {
+				message: `Too many attempts. Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`
+			});
 		}
 
 		try {
@@ -38,7 +40,8 @@ export const actions: Actions = {
 				headers: event.request.headers
 			});
 		} catch (error) {
-			const message = error instanceof Error ? 'Registration failed' : 'An unexpected error occurred';
+			const message =
+				error instanceof Error ? 'Registration failed' : 'An unexpected error occurred';
 			return fail(400, { message });
 		}
 

@@ -30,6 +30,19 @@
 	function handleBackdropClick(e: MouseEvent) {
 		if (e.target === e.currentTarget) handleClose();
 	}
+
+	function handlePanelClick(e: MouseEvent) {
+		e.stopPropagation();
+	}
+
+	function trapFocus(e: FocusEvent) {
+		const backdrop = e.currentTarget as HTMLElement;
+		if (backdrop.contains(e.relatedTarget as Node | null)) return;
+		const focusable = backdrop.querySelector<HTMLElement>(
+			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+		);
+		focusable?.focus();
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -37,16 +50,20 @@
 {#if open}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay"
+		class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay p-4"
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
+		onfocusin={trapFocus}
 		role="presentation"
 	>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="animate-scale-in w-full max-w-md rounded-sm border border-border bg-surface shadow-2xl"
+			class="animate-scale-in max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-sm border border-border bg-surface shadow-2xl"
 			role="dialog"
 			aria-modal="true"
+			tabindex="-1"
 			aria-labelledby={title ? 'dialog-title' : undefined}
+			onclick={handlePanelClick}
 		>
 			{#if title}
 				<div class="border-b border-border px-6 py-4">
