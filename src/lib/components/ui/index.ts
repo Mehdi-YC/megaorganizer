@@ -1,10 +1,12 @@
 export { default as Button } from './Button.svelte';
 export { default as Input } from './Input.svelte';
 export { default as Textarea } from './Textarea.svelte';
-export { default as Dialog } from './Dialog.svelte';
+export { default as Select } from './Select.svelte';
 export { default as Checkbox } from './Checkbox.svelte';
 export { default as Badge } from './Badge.svelte';
 export { default as ItemImage } from './ItemImage.svelte';
 export { default as GridItemImage } from './GridItemImage.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
 export { default as TagChips } from './TagChips.svelte';
+export { default as Spinner } from './Spinner.svelte';
+export { default as Dialog } from './Dialog.svelte';
