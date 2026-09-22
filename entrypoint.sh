@@ -24,8 +24,11 @@ if ! DATABASE_URL="$DATABASE_URL" bun -e '
   exit 1
 fi
 
-# Apply database migrations (non-interactive)
-bun run db:migrate
+# Apply database migrations (non-interactive). This runs the same migrator
+# drizzle-kit uses, but heals stale journal timestamps (prevents re-running
+# already-applied migrations, which died with "table already exists") and
+# prints real error messages instead of hiding them behind a spinner.
+bun ./migrate.mjs
 
 # Start the production server
 exec bun ./build/index.js

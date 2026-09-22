@@ -34,7 +34,7 @@ RUN bun install --frozen-lockfile --production
 COPY --from=base /app/build ./build
 COPY --from=base /app/package.json ./
 COPY --from=base /app/drizzle ./drizzle
-COPY --from=base /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=base /app/migrate.mjs ./migrate.mjs
 
 # Entrypoint applies migrations, then starts the server
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
