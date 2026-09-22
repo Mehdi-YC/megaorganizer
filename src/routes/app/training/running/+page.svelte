@@ -367,7 +367,7 @@
 	<title>Running - MegaOrganize</title>
 </svelte:head>
 
-<div class="flex h-[calc(100%-3rem)] select-none flex-col overflow-hidden bg-bg text-fg lg:h-full">
+<div class="flex h-[calc(100%-3rem)] flex-col overflow-hidden bg-bg text-fg select-none lg:h-full">
 	{#if status === 'idle'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
 			{#if gpsError}

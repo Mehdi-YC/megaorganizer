@@ -2,12 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdown';
-	import {
-		isSmallImage as checkIsSmallImage,
-		getTagIds,
-		toggleArrayItem,
-		DEFAULT_TAG_COLOR
-	} from '$lib/utils';
+	import { getTagIds, toggleArrayItem } from '$lib/utils';
 	import { YdkDeckViewer, ChildItemList, TagPicker } from '$lib/components/item';
 	import MindMap from '$lib/components/ui/MindMap.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -43,13 +38,13 @@
 	let ydkInput = $state('');
 	// svelte-ignore state_referenced_locally
 	let ydkEnabled = $state(!!item?.ydkData);
-	let isSmall = $state(false);
 	let showTree = $state(false);
 	let subtree = $state<any[]>([]);
 	// svelte-ignore state_referenced_locally
 	let favorite = $state(item?.favorite ?? false);
 
 	let isDeck = $derived(!!ydkData);
+	let isDeckView = $derived(isDeck && !editing);
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
 	let renderedContent = $state('');
 
@@ -60,10 +55,23 @@
 	});
 
 	onMount(async () => {
-		if (item?.imageUrl) isSmall = await checkIsSmallImage(item.imageUrl);
 		const t = await fetch('/api/tags').then((r) => r.json());
 		allTags = t;
 	});
+
+	function resetForm() {
+		editing = false;
+		if (!item) return;
+		name = item.name;
+		description = item.description ?? '';
+		content = item.markdown ?? '';
+		imageUrl = item.imageUrl ?? '';
+		videoUrl = item.videoUrl ?? '';
+		externalUrl = item.externalUrl ?? '';
+		tagIds = getTagIds(item);
+		ydkData = item.ydkData ?? '';
+		ydkEnabled = !!item.ydkData;
+	}
 
 	async function saveItem() {
 		if (!item) return;
@@ -193,7 +201,7 @@
 			body: JSON.stringify({ id: item.id, favorite: newVal })
 		});
 		if (res.ok) item = { ...item, favorite: newVal };
-		else favorite = !newVal; // revert on error
+		else favorite = !newVal;
 	}
 </script>
 
@@ -206,224 +214,42 @@
 		</EmptyState>
 	</div>
 {:else}
-	<!-- Header -->
-	<div class="border-b border-border bg-bg-subdued px-4 py-2 sm:px-6">
-		<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
-			<button
-				type="button"
-				aria-label="Go back"
-				class="cursor-pointer hover:text-primary"
-				onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button
-			>
-			<i class="fas fa-chevron-right text-[8px]"></i>
-			<span class="truncate text-fg">{item.name}</span>
-		</div>
-	</div>
-
-	{#if isDeck && !editing}
-		<!-- DECK VIEW -->
-		<!-- Mobile: single column -->
-		<div class="space-y-4 p-4 sm:p-6 lg:hidden">
-			<div class="flex items-center gap-3">
-				<div class="min-w-0 flex-1">
-					<h1 class="text-lg font-semibold text-fg-accent">{item.name}</h1>
-					{#if item.description}<p class="mt-0.5 text-sm text-fg-subdued">
-							{item.description}
-						</p>{/if}
-					<p class="mt-1 text-[10px] text-fg-subdued capitalize">{item.type}</p>
-				</div>
-				<div class="flex shrink-0 gap-1.5">
-					<Button variant="secondary" size="md" aria-label="Edit" onclick={() => (editing = true)}
-						><i class="fas fa-pen text-xs"></i></Button
-					>
-					<Button variant="danger" size="md" aria-label="Delete" onclick={deleteItem}
-						><i class="fas fa-trash text-xs"></i></Button
-					>
-				</div>
-			</div>
-
-			<YdkDeckViewer
-				{ydkData}
-				onEdit={() => (editing = true)}
-				onDelete={deleteItem}
-				{assignedTags}
-			/>
-
-			{#if content}
-				<div class="rounded-sm border border-border bg-surface p-4">
-					<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">Content</h3>
-					<div class="markdown-content text-sm leading-relaxed text-fg">
-						{@html renderedContent}
-					</div>
-				</div>
-			{/if}
-
-			{#if item.videoUrl}
-				<div class="rounded-sm border border-border bg-surface p-4">
-					<div class="aspect-video">
-						<iframe
-							src={item.videoUrl}
-							title="Video"
-							class="h-full w-full rounded-sm"
-							allowfullscreen
-						></iframe>
-					</div>
-				</div>
-			{/if}
-
-			{#if item.externalUrl}
-				<div class="rounded-sm border border-border bg-surface p-3">
-					<a
-						href={item.externalUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex items-center gap-2 text-xs text-primary hover:text-primary-hover"
-						><i class="fas fa-external-link text-[10px]"></i> {item.externalUrl}</a
-					>
-				</div>
-			{/if}
-
-			<ChildItemList
-				parentType="item"
-				parentId={item.id}
-				{children}
-				onAdd={handleChildAdd}
-				onRemove={handleChildRemove}
-				onReorder={handleChildReorder}
-			/>
-		</div>
-
-		<!-- Desktop: content left + sidebar right -->
-		<div class="hidden min-h-[calc(100vh-49px)] gap-0 lg:flex">
-			<div class="flex-1 overflow-y-auto p-8">
-				<div class="mb-6 flex items-center gap-3">
-					<h1 class="flex-1 text-xl font-semibold text-fg-accent">{item.name}</h1>
-					{#if item.description}<p class="mt-1 text-sm text-fg-subdued">{item.description}</p>{/if}
-					<div class="flex shrink-0 gap-1.5">
-						<Button variant="secondary" size="md" aria-label="Edit" onclick={() => (editing = true)}
-							><i class="fas fa-pen text-xs"></i></Button
-						>
-						<Button variant="danger" size="md" aria-label="Delete" onclick={deleteItem}
-							><i class="fas fa-trash text-xs"></i></Button
-						>
-					</div>
-				</div>
-
-				<YdkDeckViewer
-					{ydkData}
-					onEdit={() => (editing = true)}
-					onDelete={deleteItem}
-					{assignedTags}
-				/>
-
-				{#if content}
-					<div class="mt-6 rounded-sm border border-border bg-surface p-4">
-						<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-							Content
-						</h3>
-						<div class="markdown-content text-sm leading-relaxed text-fg">
-							{@html renderedContent}
-						</div>
-					</div>
-				{/if}
-
-				{#if item.videoUrl}
-					<div class="mt-6 rounded-sm border border-border bg-surface p-4">
-						<div class="aspect-video">
-							<iframe
-								src={item.videoUrl}
-								title="Video"
-								class="h-full w-full rounded-sm"
-								allowfullscreen
-							></iframe>
-						</div>
-					</div>
-				{/if}
-
-				{#if item.externalUrl}
-					<div class="mt-6 rounded-sm border border-border bg-surface p-3">
-						<a
-							href={item.externalUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="flex items-center gap-2 text-xs text-primary hover:text-primary-hover"
-							><i class="fas fa-external-link text-[10px]"></i> {item.externalUrl}</a
-						>
-					</div>
-				{/if}
-
-				<ChildItemList
-					parentType="item"
-					parentId={item.id}
-					{children}
-					onAdd={handleChildAdd}
-					onRemove={handleChildRemove}
-					onReorder={handleChildReorder}
-				/>
-			</div>
-
-			<!-- Right sidebar -->
-			<div
-				class="w-72 shrink-0 space-y-5 overflow-y-auto border-l border-border bg-surface p-5 xl:w-80"
-			>
-				<div>
-					<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">Details</h3>
-					<dl class="space-y-2 text-xs">
-						<div class="flex justify-between">
-							<dt class="text-fg-subdued">Type</dt>
-							<dd class="text-fg capitalize">{item.type}</dd>
-						</div>
-						<div class="flex justify-between">
-							<dt class="text-fg-subdued">Created</dt>
-							<dd class="text-fg">{new Date(item.createdAt).toLocaleDateString()}</dd>
-						</div>
-						<div class="flex justify-between">
-							<dt class="text-fg-subdued">Updated</dt>
-							<dd class="text-fg">{new Date(item.updatedAt).toLocaleDateString()}</dd>
-						</div>
-					</dl>
-				</div>
-				<div>
-					<button
-						type="button"
-						aria-label="Toggle favorite"
-						onclick={toggleFavorite}
-						class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {favorite
-							? 'bg-yellow-400/10 text-yellow-500'
-							: 'bg-muted text-fg-subdued hover:bg-border hover:text-fg'}"
-					>
-						<i class="fas fa-star"></i>
-						<span>{favorite ? 'Favorited' : 'Add to favorites'}</span>
-					</button>
-				</div>
-				<TagPicker {tagIds} {allTags} {editing} onToggle={toggleTag} />
+	{@const isDeckView = isDeck && !editing}
+	<div class="space-y-4 p-4 sm:p-6 lg:flex lg:h-[calc(100vh-49px)] lg:flex-col lg:space-y-0 lg:p-0">
+		<div class="border-b border-border bg-bg-subdued px-4 py-2 sm:px-6 lg:shrink-0">
+			<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
+				<button
+					type="button"
+					aria-label="Go back"
+					class="cursor-pointer hover:text-primary"
+					onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button
+				>
+				<i class="fas fa-chevron-right text-[8px]"></i>
+				<span class="truncate text-fg">{item.name}</span>
 			</div>
 		</div>
-	{:else}
-		<!-- NON-DECK VIEW -->
-		<!-- Mobile: single column -->
-		<div class="space-y-4 p-4 sm:p-6 lg:hidden">
-			<!-- Title + actions -->
+
+		<div class="lg:shrink-0 lg:px-8 lg:pt-8">
 			<div class="flex items-center gap-3">
 				<div class="min-w-0 flex-1">
 					{#if editing}
 						<input
 							type="text"
 							bind:value={name}
-							class="w-full border-b-2 border-primary bg-transparent text-lg font-semibold text-fg-accent focus:outline-none"
+							class="w-full border-b-2 border-primary bg-transparent text-lg font-semibold text-fg-accent focus:outline-none lg:text-xl"
 						/>
 						<input
 							type="text"
 							bind:value={description}
 							placeholder="Description (optional)"
-							class="mt-1 w-full border-b border-border bg-transparent text-sm text-fg-subdued placeholder:text-fg-subdued/50 focus:outline-none"
+							class="mt-1 w-full border-b border-border bg-transparent text-base text-fg-subdued placeholder:text-fg-subdued/50 focus:outline-none sm:text-sm"
 						/>
 					{:else}
-						<h1 class="text-lg font-semibold text-fg-accent">{item.name}</h1>
+						<h1 class="text-lg font-semibold text-fg-accent lg:text-xl">{item.name}</h1>
 						{#if item.description}<p class="mt-0.5 text-sm text-fg-subdued">
 								{item.description}
 							</p>{/if}
-						<p class="mt-1 text-[10px] text-fg-subdued capitalize">{item.type}</p>
+						<p class="mt-1 text-[10px] text-fg-subdued capitalize lg:hidden">{item.type}</p>
 					{/if}
 				</div>
 				<div class="flex shrink-0 gap-1.5">
@@ -431,258 +257,9 @@
 						<Button variant="primary" size="md" onclick={saveItem}
 							><i class="fas fa-check text-xs"></i> Save</Button
 						>
-						<Button
-							variant="secondary"
-							size="md"
-							onclick={() => {
-								editing = false;
-								if (item) {
-									name = item.name;
-									description = item.description ?? '';
-									content = item.markdown ?? '';
-									imageUrl = item.imageUrl ?? '';
-									videoUrl = item.videoUrl ?? '';
-									externalUrl = item.externalUrl ?? '';
-									tagIds = getTagIds(item);
-									ydkData = item.ydkData ?? '';
-									ydkEnabled = !!item.ydkData;
-								}
-							}}>Cancel</Button
-						>
+						<Button variant="secondary" size="md" onclick={resetForm}>Cancel</Button>
 					{:else}
-						<button
-							type="button"
-							aria-label="Toggle tree view"
-							class="inline-flex h-[36px] cursor-pointer items-center gap-1.5 rounded-sm {showTree
-								? 'bg-primary text-white'
-								: 'bg-muted text-fg'} px-3 text-sm font-medium transition-colors hover:bg-border"
-							onclick={toggleTreeView}
-						>
-							<i class="fas fa-project-diagram text-xs"></i>
-						</button>
-						<Button variant="secondary" size="md" aria-label="Edit" onclick={() => (editing = true)}
-							><i class="fas fa-pen text-xs"></i></Button
-						>
-						<Button variant="danger" size="md" aria-label="Delete" onclick={deleteItem}
-							><i class="fas fa-trash text-xs"></i></Button
-						>
-					{/if}
-				</div>
-			</div>
-
-			<!-- Mobile sidebar: image + details + tags -->
-			<div class="rounded-sm border border-border bg-surface p-4">
-				<div class="flex items-start gap-3">
-					{#if item.imageUrl}
-						<ItemImage src={item.imageUrl} alt={item.name} size="md" />
-					{:else}
-						<div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm bg-muted">
-							<i class="fas fa-cube text-lg text-fg-subdued"></i>
-						</div>
-					{/if}
-					<dl class="min-w-0 flex-1 space-y-1 text-xs">
-						<div class="flex justify-between">
-							<dt class="text-fg-subdued">Type</dt>
-							<dd class="text-fg capitalize">{item.type}</dd>
-						</div>
-						<div class="flex justify-between">
-							<dt class="text-fg-subdued">Created</dt>
-							<dd class="text-fg">{new Date(item.createdAt).toLocaleDateString()}</dd>
-						</div>
-						<div class="flex justify-between">
-							<dt class="text-fg-subdued">Updated</dt>
-							<dd class="text-fg">{new Date(item.updatedAt).toLocaleDateString()}</dd>
-						</div>
-					</dl>
-				</div>
-			</div>
-
-			<!-- Mobile Tags -->
-			<div class="rounded-sm border border-border bg-surface p-4">
-				<TagPicker {tagIds} {allTags} {editing} onToggle={toggleTag} />
-			</div>
-
-			<!-- Content -->
-			<div class="rounded-sm border border-border bg-surface p-4">
-				<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">Content</h3>
-				{#if editing}
-					<Textarea
-						bind:value={content}
-						rows={10}
-						placeholder="Write content (markdown supported)..."
-					/>
-				{:else if content}
-					<div class="markdown-content text-sm leading-relaxed text-fg">
-						{@html renderedContent}
-					</div>
-				{:else}
-					<EmptyState icon="fa-file-alt" message="No content yet" />
-				{/if}
-			</div>
-
-			<!-- Edit-only fields -->
-			{#if editing}
-				<div class="space-y-3 rounded-sm border border-border bg-surface p-4">
-					<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Media</h3>
-					<Input
-						type="url"
-						name="imageUrl-m"
-						label="Image URL"
-						bind:value={imageUrl}
-						placeholder="https://..."
-					/>
-					<Input
-						type="url"
-						name="videoUrl-m"
-						label="Video URL"
-						bind:value={videoUrl}
-						placeholder="https://..."
-					/>
-					<Input
-						type="url"
-						name="externalUrl-m"
-						label="External URL"
-						bind:value={externalUrl}
-						placeholder="https://..."
-					/>
-					<div class="flex flex-col gap-1.5">
-						<span class="text-[10px] font-semibold tracking-wide text-fg-subdued" id="ydk-label-m"
-							>YDK Deck</span
-						>
-						<div class="flex items-center gap-2">
-							<Checkbox bind:checked={ydkEnabled} label="Enable YDK" />
-							{#if isDeck && !ydkEnabled}
-								<Button variant="danger" size="sm" onclick={clearYdk}>Clear</Button>
-							{/if}
-						</div>
-						{#if ydkEnabled}
-							<Textarea
-								bind:value={ydkInput}
-								rows={5}
-								placeholder="#main&#10;12345678&#10;#extra&#10;87654321&#10;!side&#10;11111111"
-							/>
-							<div class="flex items-center gap-3">
-								<Button variant="primary" size="sm" onclick={applyYdkPaste}
-									><i class="fas fa-paste text-[10px]"></i> Apply</Button
-								>
-								<label
-									class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border"
-									><i class="fas fa-upload text-[10px]"></i> Import .ydk<input
-										type="file"
-										accept=".ydk,.txt"
-										class="hidden"
-										onchange={handleYdkFileImport}
-									/></label
-								>
-							</div>
-						{/if}
-					</div>
-				</div>
-			{/if}
-
-			<!-- Video -->
-			{#if item.videoUrl && !editing}
-				<div class="rounded-sm border border-border bg-surface p-4">
-					<div class="aspect-video">
-						<iframe
-							src={item.videoUrl}
-							title="Video"
-							class="h-full w-full rounded-sm"
-							allowfullscreen
-						></iframe>
-					</div>
-				</div>
-			{/if}
-
-			<!-- External link -->
-			{#if item.externalUrl && !editing}
-				<div class="rounded-sm border border-border bg-surface p-3">
-					<a
-						href={item.externalUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="flex items-center gap-2 text-xs text-primary hover:text-primary-hover"
-						><i class="fas fa-external-link text-[10px]"></i> {item.externalUrl}</a
-					>
-				</div>
-			{/if}
-
-			<!-- Child Items / Tree View -->
-			{#if !showTree}
-				<ChildItemList
-					parentType="item"
-					parentId={item.id}
-					{children}
-					onAdd={handleChildAdd}
-					onRemove={handleChildRemove}
-					onReorder={handleChildReorder}
-				/>
-			{:else if children.length > 0}
-				<div class="rounded-sm border border-border bg-surface p-4">
-					<div class="mb-3 flex items-center justify-between">
-						<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Tree View</h3>
-						<Button
-							variant="secondary"
-							size="sm"
-							onclick={toggleTreeView}
-							aria-label="Switch to list view"><i class="fas fa-list text-[9px]"></i> List</Button
-						>
-					</div>
-					<div class="overflow-hidden rounded-sm border border-border" style="height: 350px;">
-						<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<!-- Desktop: content left + sidebar right -->
-		<div class="hidden min-h-[calc(100vh-49px)] gap-0 lg:flex">
-			<!-- Main content area -->
-			<div class="flex-1 overflow-y-auto p-8">
-				<!-- Title + actions -->
-				<div class="mb-6 flex items-center gap-3">
-					{#if editing}
-						<input
-							type="text"
-							bind:value={name}
-							class="flex-1 border-b-2 border-primary bg-transparent text-xl font-semibold text-fg-accent focus:outline-none"
-						/>
-						<input
-							type="text"
-							bind:value={description}
-							placeholder="Description (optional)"
-							class="mt-1 flex-1 border-b border-border bg-transparent text-sm text-fg-subdued placeholder:text-fg-subdued/50 focus:outline-none"
-						/>
-					{:else}
-						<h1 class="flex-1 text-xl font-semibold text-fg-accent">{item.name}</h1>
-						{#if item.description}<p class="mt-1 text-sm text-fg-subdued">
-								{item.description}
-							</p>{/if}
-					{/if}
-					<div class="flex shrink-0 gap-1.5">
-						{#if editing}
-							<Button variant="primary" size="md" onclick={saveItem}
-								><i class="fas fa-check text-xs"></i> Save</Button
-							>
-							<Button
-								variant="secondary"
-								size="md"
-								onclick={() => {
-									editing = false;
-									if (item) {
-										name = item.name;
-										description = item.description ?? '';
-										content = item.markdown ?? '';
-										imageUrl = item.imageUrl ?? '';
-										videoUrl = item.videoUrl ?? '';
-										externalUrl = item.externalUrl ?? '';
-										tagIds = getTagIds(item);
-										ydkData = item.ydkData ?? '';
-										ydkEnabled = !!item.ydkData;
-									}
-								}}>Cancel</Button
-							>
-						{:else}
+						{#if !isDeckView}
 							<button
 								type="button"
 								aria-label="Toggle tree view"
@@ -693,43 +270,131 @@
 							>
 								<i class="fas fa-project-diagram text-xs"></i>
 							</button>
-							<Button
-								variant="secondary"
-								size="md"
-								aria-label="Edit"
-								onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></Button
-							>
-							<Button variant="danger" size="md" aria-label="Delete" onclick={deleteItem}
-								><i class="fas fa-trash text-xs"></i></Button
-							>
+						{/if}
+						<Button variant="secondary" size="md" aria-label="Edit" onclick={() => (editing = true)}
+							><i class="fas fa-pen text-xs"></i></Button
+						>
+						<Button variant="danger" size="md" aria-label="Delete" onclick={deleteItem}
+							><i class="fas fa-trash text-xs"></i></Button
+						>
+					{/if}
+				</div>
+			</div>
+		</div>
+
+		<div class="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:gap-0 lg:space-y-0">
+			<div
+				class="space-y-4 {isDeckView
+					? 'order-1'
+					: 'order-2'} lg:order-1 lg:min-w-0 lg:flex-1 lg:space-y-6 lg:overflow-y-auto lg:px-8 lg:pb-8"
+			>
+				{#if isDeckView}
+					<YdkDeckViewer
+						{ydkData}
+						onEdit={() => (editing = true)}
+						onDelete={deleteItem}
+						{assignedTags}
+					/>
+				{:else}
+					<div
+						class="rounded-sm border border-border bg-surface p-4 lg:border-0 lg:bg-transparent lg:p-0"
+					>
+						<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase lg:hidden">
+							Content
+						</h3>
+						{#if editing}
+							<Textarea
+								bind:value={content}
+								rows={12}
+								placeholder="Write content (markdown supported)..."
+							/>
+						{:else if content}
+							<div class="markdown-content text-sm leading-relaxed text-fg">
+								{@html renderedContent}
+							</div>
+						{:else}
+							<EmptyState
+								icon="fa-file-alt"
+								message="No content yet"
+								submessage="Click Edit to add content"
+							/>
 						{/if}
 					</div>
-				</div>
 
-				<!-- Content -->
-				<div class="mb-6">
 					{#if editing}
-						<Textarea
-							bind:value={content}
-							rows={20}
-							placeholder="Write content (markdown supported)..."
-						/>
-					{:else if content}
+						<div class="space-y-3 rounded-sm border border-border bg-surface p-4">
+							<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Media</h3>
+							<div class="grid gap-3 sm:grid-cols-3">
+								<Input
+									type="url"
+									name="imageUrl"
+									label="Image URL"
+									bind:value={imageUrl}
+									placeholder="https://..."
+								/>
+								<Input
+									type="url"
+									name="videoUrl"
+									label="Video URL"
+									bind:value={videoUrl}
+									placeholder="https://..."
+								/>
+								<Input
+									type="url"
+									name="externalUrl"
+									label="External URL"
+									bind:value={externalUrl}
+									placeholder="https://..."
+								/>
+							</div>
+							<div class="flex flex-col gap-1.5">
+								<span class="text-[10px] font-semibold tracking-wide text-fg-subdued">YDK Deck</span
+								>
+								<div class="flex items-center gap-2">
+									<Checkbox bind:checked={ydkEnabled} label="Enable YDK" />
+									{#if isDeck && !ydkEnabled}
+										<Button variant="danger" size="sm" onclick={clearYdk}>Clear</Button>
+									{/if}
+								</div>
+								{#if ydkEnabled}
+									<Textarea
+										bind:value={ydkInput}
+										rows={5}
+										placeholder="#main&#10;12345678&#10;#extra&#10;87654321&#10;!side&#10;11111111"
+									/>
+									<div class="flex items-center gap-3">
+										<Button variant="primary" size="sm" onclick={applyYdkPaste}
+											><i class="fas fa-paste text-[10px]"></i> Apply</Button
+										>
+										<label
+											class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border"
+											><i class="fas fa-upload text-[10px]"></i> Import .ydk<input
+												type="file"
+												accept=".ydk,.txt"
+												class="hidden"
+												onchange={handleYdkFileImport}
+											/></label
+										>
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/if}
+				{/if}
+
+				{#if content && isDeckView}
+					<div class="rounded-sm border border-border bg-surface p-4">
+						<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+							Content
+						</h3>
 						<div class="markdown-content text-sm leading-relaxed text-fg">
 							{@html renderedContent}
 						</div>
-					{:else}
-						<EmptyState
-							icon="fa-file-alt"
-							message="No content yet"
-							submessage="Click Edit to add content"
-						/>
-					{/if}
-				</div>
+					</div>
+				{/if}
 
-				<!-- Video -->
 				{#if item.videoUrl && !editing}
-					<div class="mb-6 rounded-sm border border-border bg-surface p-4">
+					<div class="rounded-sm border border-border bg-surface p-4">
 						<div class="aspect-video">
 							<iframe
 								src={item.videoUrl}
@@ -741,9 +406,8 @@
 					</div>
 				{/if}
 
-				<!-- External link -->
 				{#if item.externalUrl && !editing}
-					<div class="mb-6 rounded-sm border border-border bg-surface p-3">
+					<div class="rounded-sm border border-border bg-surface p-3">
 						<a
 							href={item.externalUrl}
 							target="_blank"
@@ -754,70 +418,7 @@
 					</div>
 				{/if}
 
-				<!-- Edit-only fields (desktop) -->
-				{#if editing}
-					<div class="mb-6 space-y-3 rounded-sm border border-border bg-surface p-4">
-						<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Media</h3>
-						<div class="grid gap-3 sm:grid-cols-3">
-							<Input
-								type="url"
-								name="imageUrl-d"
-								label="Image URL"
-								bind:value={imageUrl}
-								placeholder="https://..."
-							/>
-							<Input
-								type="url"
-								name="videoUrl-d"
-								label="Video URL"
-								bind:value={videoUrl}
-								placeholder="https://..."
-							/>
-							<Input
-								type="url"
-								name="externalUrl-d"
-								label="External URL"
-								bind:value={externalUrl}
-								placeholder="https://..."
-							/>
-						</div>
-						<div class="flex flex-col gap-1.5">
-							<span class="text-[10px] font-semibold tracking-wide text-fg-subdued" id="ydk-label-d"
-								>YDK Deck</span
-							>
-							<div class="flex items-center gap-2">
-								<Checkbox bind:checked={ydkEnabled} label="Enable YDK" />
-								{#if isDeck && !ydkEnabled}
-									<Button variant="danger" size="sm" onclick={clearYdk}>Clear</Button>
-								{/if}
-							</div>
-							{#if ydkEnabled}
-								<Textarea
-									bind:value={ydkInput}
-									rows={5}
-									placeholder="#main&#10;12345678&#10;#extra&#10;87654321&#10;!side&#10;11111111"
-								/>
-								<div class="flex items-center gap-3">
-									<Button variant="primary" size="sm" onclick={applyYdkPaste}
-										><i class="fas fa-paste text-[10px]"></i> Apply</Button
-									>
-									<label
-										class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border"
-										><i class="fas fa-upload text-[10px]"></i> Import .ydk<input
-											type="file"
-											accept=".ydk,.txt"
-											class="hidden"
-											onchange={handleYdkFileImport}
-										/></label
-									>
-								</div>
-							{/if}
-						</div>
-					</div>
-				{/if}
-
-				<!-- Child Items / Tree View -->
-				{#if !showTree}
+				{#if !showTree || isDeckView}
 					<ChildItemList
 						parentType="item"
 						parentId={item.id}
@@ -827,7 +428,7 @@
 						onReorder={handleChildReorder}
 					/>
 				{:else if children.length > 0}
-					<div class="rounded-sm border border-border bg-surface p-5">
+					<div class="rounded-sm border border-border bg-surface p-4 lg:p-5">
 						<div class="mb-3 flex items-center justify-between">
 							<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 								Tree View
@@ -839,18 +440,18 @@
 								aria-label="Switch to list view"><i class="fas fa-list text-[9px]"></i> List</Button
 							>
 						</div>
-						<div class="overflow-hidden rounded-sm border border-border" style="height: 400px;">
+						<div class="h-[350px] overflow-hidden rounded-sm border border-border sm:h-[400px]">
 							<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />
 						</div>
 					</div>
 				{/if}
 			</div>
 
-			<!-- Right sidebar -->
-			<div
-				class="w-72 shrink-0 space-y-5 overflow-y-auto border-l border-border bg-surface p-5 xl:w-80"
+			<aside
+				class="space-y-5 rounded-sm border border-border bg-surface p-4 {isDeckView
+					? 'order-2'
+					: 'order-1'} lg:order-2 lg:w-72 lg:shrink-0 lg:overflow-y-auto lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l lg:p-5 xl:w-80"
 			>
-				<!-- Image -->
 				<div>
 					{#if item.imageUrl}
 						<ItemImage src={item.imageUrl} alt={item.name} size="full" />
@@ -861,7 +462,6 @@
 					{/if}
 				</div>
 
-				<!-- Details -->
 				<div>
 					<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">Details</h3>
 					<dl class="space-y-2 text-xs">
@@ -894,9 +494,8 @@
 					</button>
 				</div>
 
-				<!-- Tags -->
 				<TagPicker {tagIds} {allTags} {editing} onToggle={toggleTag} />
-			</div>
+			</aside>
 		</div>
-	{/if}
+	</div>
 {/if}
