@@ -26,7 +26,7 @@
 	} & Record<string, unknown> = $props();
 
 	const base =
-		'inline-flex items-center justify-center font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-40 cursor-pointer';
+		'inline-flex items-center justify-center font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-40 cursor-pointer touch-manipulation select-none';
 
 	const variants: Record<string, string> = {
 		primary: 'bg-primary text-white hover:bg-primary-hover active:scale-[0.98]',
