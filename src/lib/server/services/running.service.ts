@@ -1,16 +1,25 @@
-import { db } from '$lib/server/db';
-import { runningActivity, runningTrackPoint, trainingActivity, trainingSession } from '$lib/server/db/schema';
+import { db, type DbExecutor } from '$lib/server/db';
+import {
+	runningActivity,
+	runningTrackPoint,
+	trainingActivity,
+	trainingSession
+} from '$lib/server/db/schema';
 import { eq, and, asc, desc } from 'drizzle-orm';
 
-async function verifyActivityOwnership(userId: string, activityId: string): Promise<boolean> {
-	const activity = await db
+async function verifyActivityOwnership(
+	userId: string,
+	activityId: string,
+	executor: DbExecutor = db
+): Promise<boolean> {
+	const activity = await executor
 		.select({ sessionId: trainingActivity.sessionId })
 		.from(trainingActivity)
 		.where(eq(trainingActivity.id, activityId))
 		.get();
 	if (!activity) return false;
 
-	const session = await db
+	const session = await executor
 		.select({ id: trainingSession.id })
 		.from(trainingSession)
 		.where(and(eq(trainingSession.id, activity.sessionId), eq(trainingSession.userId, userId)))
@@ -19,6 +28,7 @@ async function verifyActivityOwnership(userId: string, activityId: string): Prom
 }
 
 export async function createRunningActivity(
+	userId: string,
 	activityId: string,
 	data: {
 		distance?: number;
@@ -30,9 +40,13 @@ export async function createRunningActivity(
 		bestPace?: number;
 		elevationGain?: number;
 		elevationLoss?: number;
-	}
+	},
+	executor: DbExecutor = db
 ) {
-	const [result] = await db
+	const owned = await verifyActivityOwnership(userId, activityId, executor);
+	if (!owned) return null;
+
+	const [result] = await executor
 		.insert(runningActivity)
 		.values({
 			activityId,
@@ -74,11 +88,7 @@ export async function getRunningActivity(userId: string, activityId: string) {
 	const owned = await verifyActivityOwnership(userId, activityId);
 	if (!owned) return null;
 
-	return db
-		.select()
-		.from(runningActivity)
-		.where(eq(runningActivity.activityId, activityId))
-		.get();
+	return db.select().from(runningActivity).where(eq(runningActivity.activityId, activityId)).get();
 }
 
 export async function addTrackPoint(
@@ -122,11 +132,12 @@ export async function batchAddTrackPoints(
 		accuracy?: number;
 		speed?: number;
 		heading?: number;
-	}>
+	}>,
+	executor: DbExecutor = db
 ) {
 	if (points.length === 0) return [];
 
-	const owned = await verifyActivityOwnership(userId, activityId);
+	const owned = await verifyActivityOwnership(userId, activityId, executor);
 	if (!owned) return [];
 
 	const values = points.map((p) => ({
@@ -135,7 +146,7 @@ export async function batchAddTrackPoints(
 		timestamp: p.timestamp instanceof Date ? p.timestamp : new Date(p.timestamp)
 	}));
 
-	return db.insert(runningTrackPoint).values(values).returning().all();
+	return executor.insert(runningTrackPoint).values(values).returning().all();
 }
 
 export async function getTrackPoints(userId: string, activityId: string) {
@@ -154,9 +165,7 @@ export async function deleteTrackPoints(userId: string, activityId: string) {
 	const owned = await verifyActivityOwnership(userId, activityId);
 	if (!owned) return;
 
-	await db
-		.delete(runningTrackPoint)
-		.where(eq(runningTrackPoint.activityId, activityId));
+	await db.delete(runningTrackPoint).where(eq(runningTrackPoint.activityId, activityId));
 }
 
 export async function getRunningHistory(userId: string, limit = 20, offset = 0) {
@@ -169,14 +178,8 @@ export async function getRunningHistory(userId: string, limit = 20, offset = 0) 
 			startedAt: trainingActivity.startedAt
 		})
 		.from(runningActivity)
-		.innerJoin(
-			trainingActivity,
-			eq(runningActivity.activityId, trainingActivity.id)
-		)
-		.innerJoin(
-			trainingSession,
-			eq(trainingActivity.sessionId, trainingSession.id)
-		)
+		.innerJoin(trainingActivity, eq(runningActivity.activityId, trainingActivity.id))
+		.innerJoin(trainingSession, eq(trainingActivity.sessionId, trainingSession.id))
 		.where(eq(trainingSession.userId, userId))
 		.orderBy(desc(trainingActivity.startedAt))
 		.limit(limit)

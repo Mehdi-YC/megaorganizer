@@ -1,4 +1,4 @@
-import { db } from '$lib/server/db';
+import { db, type DbExecutor } from '$lib/server/db';
 import {
 	trainingSession,
 	trainingActivity,
@@ -22,9 +22,10 @@ export async function createTrainingSession(
 		startedAt?: Date | string;
 		sourcePageId?: string;
 		sourceNodeId?: string;
-	}
+	},
+	executor: DbExecutor = db
 ) {
-	const [result] = await db
+	const [result] = await executor
 		.insert(trainingSession)
 		.values({
 			userId,
@@ -88,9 +89,7 @@ export async function getTrainingSessionById(userId: string, sessionId: string) 
 	return db
 		.select()
 		.from(trainingSession)
-		.where(
-			and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId))
-		)
+		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)))
 		.get();
 }
 
@@ -103,12 +102,13 @@ export async function updateTrainingSession(
 		status?: 'active' | 'paused' | 'completed' | 'cancelled';
 		endedAt?: Date | string;
 		duration?: number;
-	}
+	},
+	executor: DbExecutor = db
 ) {
 	const updateData: Record<string, unknown> = { ...data };
 	if (data.endedAt) updateData.endedAt = toDate(data.endedAt);
 
-	const [result] = await db
+	const [result] = await executor
 		.update(trainingSession)
 		.set(updateData)
 		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)))
@@ -123,8 +123,12 @@ export async function deleteTrainingSession(userId: string, sessionId: string) {
 		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)));
 }
 
-async function verifySessionOwnership(userId: string, sessionId: string): Promise<boolean> {
-	const session = await db
+async function verifySessionOwnership(
+	userId: string,
+	sessionId: string,
+	executor: DbExecutor = db
+): Promise<boolean> {
+	const session = await executor
 		.select({ id: trainingSession.id })
 		.from(trainingSession)
 		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)))
@@ -132,8 +136,11 @@ async function verifySessionOwnership(userId: string, sessionId: string): Promis
 	return !!session;
 }
 
-async function resolveActivitySession(activityId: string): Promise<string | null> {
-	const activity = await db
+async function resolveActivitySession(
+	activityId: string,
+	executor: DbExecutor = db
+): Promise<string | null> {
+	const activity = await executor
 		.select({ sessionId: trainingActivity.sessionId })
 		.from(trainingActivity)
 		.where(eq(trainingActivity.id, activityId))
@@ -148,12 +155,13 @@ export async function createTrainingActivity(
 		type: 'strength' | 'running' | 'cycling' | 'walking' | 'swimming' | 'other';
 		startedAt?: Date | string;
 		notes?: string;
-	}
+	},
+	executor: DbExecutor = db
 ) {
-	const owned = await verifySessionOwnership(userId, sessionId);
+	const owned = await verifySessionOwnership(userId, sessionId, executor);
 	if (!owned) return null;
 
-	const [result] = await db
+	const [result] = await executor
 		.insert(trainingActivity)
 		.values({
 			sessionId,
@@ -208,10 +216,7 @@ export async function linkItemToActivity(userId: string, activityId: string, ite
 	const owned = await verifySessionOwnership(userId, sessionId);
 	if (!owned) return null;
 
-	const [result] = await db
-		.insert(trainingActivityItem)
-		.values({ activityId, itemId })
-		.returning();
+	const [result] = await db.insert(trainingActivityItem).values({ activityId, itemId }).returning();
 
 	return result;
 }
@@ -226,10 +231,7 @@ export async function unlinkItemFromActivity(userId: string, activityId: string,
 	await db
 		.delete(trainingActivityItem)
 		.where(
-			and(
-				eq(trainingActivityItem.activityId, activityId),
-				eq(trainingActivityItem.itemId, itemId)
-			)
+			and(eq(trainingActivityItem.activityId, activityId), eq(trainingActivityItem.itemId, itemId))
 		);
 }
 
@@ -280,7 +282,13 @@ export async function createExerciseRecord(
 	return result;
 }
 
-export async function getExerciseRecords(activityId: string) {
+export async function getExerciseRecords(userId: string, activityId: string) {
+	const sessionId = await resolveActivitySession(activityId);
+	if (!sessionId) return [];
+
+	const owned = await verifySessionOwnership(userId, sessionId);
+	if (!owned) return [];
+
 	return db
 		.select()
 		.from(trainingExerciseRecord)
@@ -302,14 +310,15 @@ export async function batchCreateExerciseRecords(
 		restTime?: number;
 		notes?: string;
 		position?: number;
-	}>
+	}>,
+	executor: DbExecutor = db
 ) {
 	if (records.length === 0) return [];
 
-	const sessionId = await resolveActivitySession(activityId);
+	const sessionId = await resolveActivitySession(activityId, executor);
 	if (!sessionId) return null;
 
-	const owned = await verifySessionOwnership(userId, sessionId);
+	const owned = await verifySessionOwnership(userId, sessionId, executor);
 	if (!owned) return null;
 
 	const values = records.map((r, i) => ({
@@ -325,7 +334,7 @@ export async function batchCreateExerciseRecords(
 		position: r.position ?? i
 	}));
 
-	return db.insert(trainingExerciseRecord).values(values).returning().all();
+	return executor.insert(trainingExerciseRecord).values(values).returning().all();
 }
 
 export async function updateExerciseRecord(
@@ -363,10 +372,7 @@ export async function updateExerciseRecord(
 	return result;
 }
 
-export async function deleteExerciseRecord(
-	userId: string,
-	recordId: string
-) {
+export async function deleteExerciseRecord(userId: string, recordId: string) {
 	const record = await db
 		.select({ activityId: trainingExerciseRecord.activityId })
 		.from(trainingExerciseRecord)

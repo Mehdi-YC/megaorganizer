@@ -2,13 +2,29 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
-	import { computeRunStats, buildRunPayload, saveRunApi, MS_TO_KMH, TIMER_INTERVAL_MS, GPS_WATCH_OPTIONS, handleGpsPosition, type GpsTrackingState, type GpsPoint } from '$lib/utils/gps';
-	import { saveRunningState, loadRunningState, clearRunningState } from '$lib/utils/session-persist';
+	import {
+		computeRunStats,
+		buildRunPayload,
+		saveRunApi,
+		MS_TO_KMH,
+		TIMER_INTERVAL_MS,
+		GPS_WATCH_OPTIONS,
+		handleGpsPosition,
+		type GpsTrackingState,
+		type GpsPoint
+	} from '$lib/utils/gps';
+	import {
+		saveRunningState,
+		loadRunningState,
+		clearRunningState
+	} from '$lib/utils/session-persist';
 	import RunMap from '$lib/components/ui/RunMap.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	let status = $state<'idle' | 'requesting' | 'running' | 'paused' | 'finished'>('idle');
 	let runTitle = $state('');
+	let saveError = $state<string | null>(null);
+	let finishing = $state(false);
 	let startTime = $state(0);
 	let elapsed = $state(0);
 	let distance = $state(0);
@@ -29,8 +45,12 @@
 
 	onMount(() => {
 		const saved = loadRunningState();
-		if (saved && (saved.status === 'running' || saved.status === 'paused')) {
+		if (
+			saved &&
+			(saved.status === 'running' || saved.status === 'paused' || saved.status === 'finished')
+		) {
 			status = saved.status as typeof status;
+			runTitle = saved.title ?? '';
 			startTime = saved.startTime;
 			elapsed = saved.elapsed;
 			distance = saved.distance;
@@ -49,6 +69,11 @@
 				acquireWakeLock();
 				setupVisibilityHandler();
 			}
+			// 'finished' restores the summary screen so an unsaved run can
+			// still be retried after a reload.
+			if (status === 'finished') {
+				saveError = 'This run has not been saved yet.';
+			}
 		}
 
 		return () => {
@@ -63,7 +88,9 @@
 		if (!('wakeLock' in navigator)) return;
 		try {
 			wakeLock = await navigator.wakeLock.request('screen');
-			wakeLock.addEventListener('release', () => { wakeLock = null; });
+			wakeLock.addEventListener('release', () => {
+				wakeLock = null;
+			});
 		} catch (err) {
 			console.warn('Wake Lock failed:', err);
 		}
@@ -77,7 +104,13 @@
 	}
 
 	function gpsCallback(position: GeolocationPosition) {
-		const result = handleGpsPosition(position, { lastPoint, distance, currentSpeed, maxSpeed, gpsPoints });
+		const result = handleGpsPosition(position, {
+			lastPoint,
+			distance,
+			currentSpeed,
+			maxSpeed,
+			gpsPoints
+		});
 		distance = result.updatedState.distance;
 		currentSpeed = result.updatedState.currentSpeed;
 		maxSpeed = result.updatedState.maxSpeed;
@@ -103,11 +136,7 @@
 
 	function startGpsWatch() {
 		stopGpsWatch();
-		watchId = navigator.geolocation.watchPosition(
-			gpsCallback,
-			gpsErrorCallback,
-			GPS_WATCH_OPTIONS
-		);
+		watchId = navigator.geolocation.watchPosition(gpsCallback, gpsErrorCallback, GPS_WATCH_OPTIONS);
 		gpsError = null;
 	}
 
@@ -140,8 +169,14 @@
 		}
 		status = 'requesting';
 		navigator.geolocation.getCurrentPosition(
-			() => { status = 'running'; startTracking(); },
-			() => { status = 'idle'; alert('Location permission denied. Please enable location services.'); },
+			() => {
+				status = 'running';
+				startTracking();
+			},
+			() => {
+				status = 'idle';
+				alert('Location permission denied. Please enable location services.');
+			},
 			{ enableHighAccuracy: true }
 		);
 	}
@@ -164,8 +199,19 @@
 
 	function persistState() {
 		saveRunningState({
-			status, startTime, elapsed, distance, currentSpeed, averageSpeed, maxSpeed,
-			currentPace, averagePace, bestPace, currentPosition, gpsPoints
+			status,
+			startTime,
+			elapsed,
+			distance,
+			currentSpeed,
+			averageSpeed,
+			maxSpeed,
+			currentPace,
+			averagePace,
+			bestPace,
+			currentPosition,
+			gpsPoints,
+			title: runTitle || undefined
 		});
 	}
 
@@ -195,17 +241,19 @@
 		setupVisibilityHandler();
 	}
 
-	let finishing = false;
-
 	function finishRun() {
 		if (finishing) return;
 		finishing = true;
+		saveError = null;
 		status = 'finished';
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
 		releaseWakeLock();
-		if (visibilityHandler) { document.removeEventListener('visibilitychange', visibilityHandler); visibilityHandler = null; }
-		clearRunningState();
+		if (visibilityHandler) {
+			document.removeEventListener('visibilitychange', visibilityHandler);
+			visibilityHandler = null;
+		}
+		persistState();
 
 		const runData = buildRunPayload({
 			gpsPoints,
@@ -221,22 +269,23 @@
 		saveRunApi(runData)
 			.then((data) => {
 				if (data.sessionId) {
+					clearRunningState();
 					goto(`/app/training/session/${data.sessionId}`);
 				} else {
-					alert('Failed to save run. Please try again.');
-					status = 'idle';
-					finishing = false;
+					throw new Error('Failed to save run. Please try again.');
 				}
 			})
-			.catch(() => {
-				alert('Failed to save run. Please check your connection and try again.');
-				status = 'idle';
+			.catch((e) => {
+				// Keep the run in localStorage and on screen so it can be retried.
+				saveError = e instanceof Error ? e.message : 'Failed to save run. Please try again.';
 				finishing = false;
 			});
 	}
 
 	function resetRun() {
 		status = 'idle';
+		saveError = null;
+		finishing = false;
 		distance = 0;
 		elapsed = 0;
 		currentSpeed = 0;
@@ -267,20 +316,28 @@
 				Enable Location
 			</Button>
 		</div>
-
 	{:else if status === 'requesting'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
-			<div class="mb-6 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+			<div
+				class="mb-6 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"
+			></div>
 			<h1 class="mb-2 text-lg font-semibold text-fg-accent">Waiting for GPS...</h1>
 			<p class="text-fg-subdued">Please allow location access</p>
 		</div>
-
 	{:else if status === 'running' || status === 'paused'}
 		<div class="flex flex-1 flex-col">
 			<div class="relative overflow-hidden" style="height: 45%;">
-				<RunMap points={gpsPoints} center={currentPosition} followPosition={true} showRoute={true} className="rounded-b-lg" />
+				<RunMap
+					points={gpsPoints}
+					center={currentPosition}
+					followPosition={true}
+					showRoute={true}
+					className="rounded-b-lg"
+				/>
 				{#if status === 'paused'}
-					<div class="absolute top-3 left-3 z-[1000] rounded-sm bg-yellow-500/90 px-4 py-2 text-sm font-medium text-white shadow-lg">
+					<div
+						class="absolute top-3 left-3 z-[1000] rounded-sm bg-yellow-500/90 px-4 py-2 text-sm font-medium text-white shadow-lg"
+					>
 						PAUSED
 					</div>
 				{/if}
@@ -288,7 +345,9 @@
 
 			<div class="flex flex-1 flex-col items-center justify-center p-4">
 				{#if gpsError}
-					<div class="mb-3 rounded-sm bg-yellow-500/15 border border-yellow-500/30 px-4 py-2 text-xs text-yellow-400 flex items-center gap-2">
+					<div
+						class="mb-3 flex items-center gap-2 rounded-sm border border-yellow-500/30 bg-yellow-500/15 px-4 py-2 text-xs text-yellow-400"
+					>
 						<i class="fas fa-satellite-dish"></i>
 						<span>{gpsError}</span>
 					</div>
@@ -345,20 +404,35 @@
 							<i class="fas fa-play mr-2"></i> Resume
 						</Button>
 					{/if}
-					<Button variant="danger" size="lg" onclick={finishRun}>
-						<i class="fas fa-stop mr-2"></i> Finish
+					<Button variant="danger" size="lg" disabled={finishing} onclick={finishRun}>
+						{#if finishing}<i class="fas fa-spinner fa-spin mr-2"></i>{:else}<i
+								class="fas fa-stop mr-2"
+							></i>{/if}
+						Finish
 					</Button>
 				</div>
 			</div>
 		</div>
-
 	{:else if status === 'finished'}
 		<div class="flex flex-1 flex-col">
 			<div class="relative overflow-hidden" style="height: 40%;">
-				<RunMap points={gpsPoints} center={gpsPoints.length > 0 ? gpsPoints[0] : undefined} showRoute={true} className="rounded-b-lg" />
+				<RunMap
+					points={gpsPoints}
+					center={gpsPoints.length > 0 ? gpsPoints[0] : undefined}
+					showRoute={true}
+					className="rounded-b-lg"
+				/>
 			</div>
 
 			<div class="flex flex-1 flex-col items-center justify-center p-6">
+				{#if saveError}
+					<div
+						class="mb-4 flex w-full max-w-md items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error"
+					>
+						<i class="fas fa-circle-exclamation"></i>
+						<span>{saveError}</span>
+					</div>
+				{/if}
 				<i class="fas fa-check-circle mb-4 text-5xl text-green-400"></i>
 				<h1 class="mb-4 text-lg font-semibold text-fg-accent">Run Complete!</h1>
 
@@ -382,12 +456,19 @@
 				</div>
 
 				<div class="flex gap-4">
-					<a href="/app/training/calendar" class="h-12 rounded-sm bg-primary px-6 font-medium text-white transition-colors hover:bg-primary-hover inline-flex items-center">
+					{#if saveError}
+						<Button variant="primary" disabled={finishing} onclick={finishRun}>
+							{#if finishing}<i class="fas fa-spinner fa-spin mr-2"></i>{/if}
+							Retry Save
+						</Button>
+					{/if}
+					<a
+						href="/app/training/calendar"
+						class="inline-flex h-12 items-center rounded-sm bg-primary px-6 font-medium text-white transition-colors hover:bg-primary-hover"
+					>
 						View History
 					</a>
-					<Button variant="secondary" onclick={resetRun}>
-						New Run
-					</Button>
+					<Button variant="secondary" onclick={resetRun}>New Run</Button>
 				</div>
 			</div>
 		</div>

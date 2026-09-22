@@ -1,3 +1,14 @@
+export interface ExerciseRecordDraft {
+	itemId: string;
+	sets: number;
+	reps: string;
+	weight: number;
+	unit: string;
+	rpe: number;
+	restTime: number;
+	notes: string;
+}
+
 export interface RunningSessionState {
 	status: string;
 	startTime: number;
@@ -18,6 +29,12 @@ export interface RunningSessionState {
 		speed?: number;
 		timestamp: number;
 	}>;
+	// Form drafts. Optional so state written by older builds still loads.
+	title?: string;
+	notes?: string;
+	activityType?: string;
+	selectedItems?: string[];
+	exerciseRecords?: ExerciseRecordDraft[];
 }
 
 const STORAGE_KEY_RUNNING = 'megorganize_running_state';
