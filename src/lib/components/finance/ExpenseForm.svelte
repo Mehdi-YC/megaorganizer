@@ -1,25 +1,49 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 
+	export interface ExpenseDraft {
+		amount: number;
+		description?: string;
+		markdown?: string;
+		tags?: string[];
+		spentAt: string;
+		currency: string;
+	}
+
 	let {
 		currency = 'DZD',
+		title = 'Add Expense',
+		flat = false,
+		initialValues,
 		onSave,
 		onCancel
 	}: {
 		currency?: string;
-		onSave?: (data: any) => void;
+		title?: string;
+		flat?: boolean;
+		initialValues?: {
+			amount: number;
+			description?: string;
+			markdown?: string;
+			tags?: string[];
+			spentAt?: string;
+		};
+		onSave?: (data: ExpenseDraft) => void;
 		onCancel?: () => void;
 	} = $props();
 
-	let amount = $state<number>(0);
-	let description = $state('');
-	let markdown = $state('');
-	let tags = $state<string[]>([]);
+	const draft = untrack(() => initialValues);
+
+	let amount = $state<number>(draft?.amount ?? 0);
+	let description = $state(draft?.description ?? '');
+	let markdown = $state(draft?.markdown ?? '');
+	let tags = $state<string[]>(draft?.tags ?? []);
 	let newTag = $state('');
-	let spentAt = $state(new Date().toISOString().split('T')[0]);
-	let showContent = $state(false);
+	let spentAt = $state(draft?.spentAt ?? new Date().toISOString().split('T')[0]);
+	let showContent = $state(!!draft?.markdown);
 
 	function addTag() {
 		if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -30,6 +54,20 @@
 
 	function removeTag(tag: string) {
 		tags = tags.filter((t) => t !== tag);
+	}
+
+	export function submit() {
+		handleSave();
+	}
+
+	export function reset() {
+		amount = draft?.amount ?? 0;
+		description = draft?.description ?? '';
+		markdown = draft?.markdown ?? '';
+		tags = draft?.tags ?? [];
+		newTag = '';
+		spentAt = draft?.spentAt ?? new Date().toISOString().split('T')[0];
+		showContent = !!draft?.markdown;
 	}
 
 	function handleSave() {
@@ -43,19 +81,11 @@
 			spentAt: new Date(spentAt).toISOString(),
 			currency
 		});
-
-		// Reset form
-		amount = 0;
-		description = '';
-		markdown = '';
-		tags = [];
-		spentAt = new Date().toISOString().split('T')[0];
-		showContent = false;
 	}
 </script>
 
-<div class="rounded-sm border border-border bg-surface p-4">
-	<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">Add Expense</h3>
+<div class={flat ? '' : 'rounded-sm border border-border bg-surface p-4'}>
+	<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">{title}</h3>
 
 	<div class="space-y-3">
 		<!-- Amount and Date row -->

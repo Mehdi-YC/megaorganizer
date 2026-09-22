@@ -4,6 +4,7 @@ export const ACTIVITY_ICONS: Record<string, { icon: string; color: string }> = {
 	cycling: { icon: 'fa-bicycle', color: 'text-orange-500' },
 	walking: { icon: 'fa-person-walking', color: 'text-yellow-500' },
 	swimming: { icon: 'fa-person-swimming', color: 'text-cyan-500' },
+	hiit: { icon: 'fa-fire', color: 'text-error' },
 	other: { icon: 'fa-circle-dot', color: 'text-fg-subdued' }
 };
 

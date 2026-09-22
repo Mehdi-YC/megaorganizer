@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { confirmAction } from '$lib/utils/confirm.svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { EmptyState } from '$lib/components/ui';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/ui/Input.svelte';
 	import { ExpenseForm, ExpenseCard, MonthlySummary } from '$lib/components/finance';
 
 	let { data } = $props();
@@ -14,15 +17,82 @@
 	let year = $derived(data.year ?? new Date().getFullYear());
 	let month = $derived(data.month ?? new Date().getMonth());
 
-	async function handleAddExpense(expenseData: any) {
-		const res = await fetch('/api/finance', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ action: 'createExpense', ...expenseData })
-		});
+	// Add / edit dialog
+	let showForm = $state(false);
+	let editing = $state<any>(null);
+	let saving = $state(false);
+	let formError = $state('');
 
+	// Search + tag filter over the loaded month
+	let searchQuery = $state('');
+	let activeTag = $state<string | null>(null);
+
+	let allTags = $derived.by(() => {
+		const set = new Set<string>();
+		for (const e of expenses) {
+			if (!e.tags) continue;
+			try {
+				for (const t of JSON.parse(e.tags)) set.add(t);
+			} catch {
+				// ignore malformed tags
+			}
+		}
+		return [...set].sort();
+	});
+
+	let visibleExpenses = $derived.by(() => {
+		const q = searchQuery.trim().toLowerCase();
+		return expenses.filter((e) => {
+			if (activeTag) {
+				let tags: string[] = [];
+				try {
+					tags = e.tags ? JSON.parse(e.tags) : [];
+				} catch {
+					// ignore malformed tags
+				}
+				if (!tags.includes(activeTag)) return false;
+			}
+			if (q) {
+				const hay = `${e.description ?? ''} ${e.amount}`.toLowerCase();
+				if (!hay.includes(q)) return false;
+			}
+			return true;
+		});
+	});
+
+	function openAdd() {
+		editing = null;
+		formError = '';
+		showForm = true;
+	}
+
+	function openEdit(expense: any) {
+		editing = expense;
+		formError = '';
+		showForm = true;
+	}
+
+	async function handleSave(expenseData: any) {
+		if (saving) return;
+		saving = true;
+		formError = '';
+		const res = await fetch('/api/finance', {
+			method: editing ? 'PUT' : 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(
+				editing
+					? { action: 'updateExpense', expenseId: editing.id, ...expenseData }
+					: { action: 'createExpense', ...expenseData }
+			)
+		});
+		saving = false;
 		if (res.ok) {
+			showForm = false;
+			editing = null;
 			await invalidateAll();
+		} else {
+			const body = await res.json().catch(() => null);
+			formError = body?.error || 'Could not save the expense. Try again.';
 		}
 	}
 
@@ -38,6 +108,24 @@
 		if (res.ok) {
 			await invalidateAll();
 		}
+	}
+
+	function changeMonth(delta: number) {
+		const d = new Date(year, month + delta, 1);
+		const url = new URL(window.location.href);
+		url.searchParams.set(
+			'month',
+			`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+		);
+		goto(url.toString(), { replaceState: true });
+	}
+
+	function prevMonth() {
+		changeMonth(-1);
+	}
+
+	function nextMonth() {
+		changeMonth(1);
 	}
 
 	const monthNames = [
@@ -61,34 +149,104 @@
 </svelte:head>
 
 <div class="p-4 sm:p-6 lg:p-8">
-	<PageHeader title="Finance" subtitle="Track your expenses and spending" />
+	<PageHeader title="Finance" subtitle="Track your expenses and spending">
+		<Button onclick={openAdd}>
+			<i class="fas fa-plus mr-2 text-xs"></i>
+			Add Expense
+		</Button>
+	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-3">
 		<!-- Main Content -->
-		<div class="space-y-6 lg:col-span-2">
-			<!-- Add Expense Form -->
-			<ExpenseForm currency={settings.currency} onSave={handleAddExpense} />
+		<div class="space-y-4 lg:col-span-2">
+			<!-- Month navigation + search -->
+			<div class="flex flex-wrap items-center gap-2">
+				<button
+					type="button"
+					aria-label="Previous month"
+					class="cursor-pointer rounded-sm border border-border bg-surface px-2.5 py-1.5 text-xs text-fg transition-colors hover:bg-muted"
+					onclick={prevMonth}
+				>
+					<i class="fas fa-chevron-left"></i>
+				</button>
+				<span class="min-w-[110px] text-center text-sm font-semibold text-fg">
+					{monthNames[month]}
+					{year}
+				</span>
+				<button
+					type="button"
+					aria-label="Next month"
+					class="cursor-pointer rounded-sm border border-border bg-surface px-2.5 py-1.5 text-xs text-fg transition-colors hover:bg-muted"
+					onclick={nextMonth}
+				>
+					<i class="fas fa-chevron-right"></i>
+				</button>
+				<div class="min-w-[140px] flex-1">
+					<Input
+						size="sm"
+						bind:value={searchQuery}
+						placeholder="Search description or amount..."
+						name="expense-search"
+					/>
+				</div>
+			</div>
+
+			<!-- Tag filter -->
+			{#if allTags.length > 0}
+				<div class="flex flex-wrap gap-1.5">
+					<button
+						type="button"
+						class="cursor-pointer rounded-sm px-2 py-0.5 text-[11px] transition-colors {activeTag ===
+						null
+							? 'bg-primary text-white'
+							: 'bg-muted text-fg hover:bg-border'}"
+						onclick={() => (activeTag = null)}
+					>
+						All
+					</button>
+					{#each allTags as tag (tag)}
+						<button
+							type="button"
+							class="cursor-pointer rounded-sm px-2 py-0.5 text-[11px] transition-colors {activeTag ===
+							tag
+								? 'bg-primary text-white'
+								: 'bg-muted text-fg hover:bg-border'}"
+							onclick={() => (activeTag = activeTag === tag ? null : tag)}
+						>
+							{tag}
+						</button>
+					{/each}
+				</div>
+			{/if}
 
 			<!-- Expense List -->
 			<div>
-				<div class="mb-3 flex items-center justify-between">
-					<h2 class="text-sm font-semibold tracking-wide text-fg-accent uppercase">Expenses</h2>
-					<span class="text-xs text-fg-subdued">
-						{monthNames[month]}
-						{year}
-					</span>
-				</div>
+				<h2 class="mb-3 text-sm font-semibold tracking-wide text-fg-accent uppercase">
+					Expenses
+					{#if visibleExpenses.length !== expenses.length}
+						<span class="ml-1 text-xs font-normal text-fg-subdued">
+							({visibleExpenses.length} of {expenses.length})
+						</span>
+					{/if}
+				</h2>
 
-				{#if expenses.length === 0}
+				{#if visibleExpenses.length === 0}
 					<EmptyState
 						icon="fa-receipt"
-						message="No expenses this month"
-						submessage="Add your first expense above"
+						message={expenses.length === 0 ? 'No expenses this month' : 'No expenses match'}
+						submessage={expenses.length === 0
+							? 'Tap "Add Expense" to log one'
+							: 'Adjust search or tags'}
 					/>
 				{:else}
 					<div class="space-y-2">
-						{#each expenses as expense (expense.id)}
-							<ExpenseCard {expense} currency={settings.currency} onDelete={handleDeleteExpense} />
+						{#each visibleExpenses as expense (expense.id)}
+							<ExpenseCard
+								{expense}
+								currency={settings.currency}
+								onEdit={openEdit}
+								onDelete={handleDeleteExpense}
+							/>
 						{/each}
 					</div>
 				{/if}
@@ -97,7 +255,6 @@
 
 		<!-- Sidebar -->
 		<div class="space-y-6">
-			<!-- Monthly Summary -->
 			<MonthlySummary
 				total={monthlyStats.total}
 				count={monthlyStats.count}
@@ -106,35 +263,6 @@
 				{year}
 				{month}
 			/>
-
-			<!-- Quick Stats -->
-			<div class="rounded-sm border border-border bg-surface p-4">
-				<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-					Quick Stats
-				</h3>
-				<div class="space-y-2">
-					<div class="flex items-center justify-between">
-						<span class="text-xs text-fg-subdued">This month</span>
-						<span class="text-sm font-medium text-fg">
-							{monthlyStats.total.toLocaleString()}
-							{settings.currency}
-						</span>
-					</div>
-					<div class="flex items-center justify-between">
-						<span class="text-xs text-fg-subdued">Transactions</span>
-						<span class="text-sm font-medium text-fg">{monthlyStats.count}</span>
-					</div>
-					{#if monthlyStats.count > 0}
-						<div class="flex items-center justify-between">
-							<span class="text-xs text-fg-subdued">Avg per expense</span>
-							<span class="text-sm font-medium text-fg">
-								{(monthlyStats.total / monthlyStats.count).toFixed(0)}
-								{settings.currency}
-							</span>
-						</div>
-					{/if}
-				</div>
-			</div>
 
 			<!-- Link to Calendar -->
 			<a
@@ -152,3 +280,36 @@
 		</div>
 	</div>
 </div>
+
+<!-- Add / Edit dialog -->
+<Dialog bind:open={showForm} title={editing ? 'Edit Expense' : 'Add Expense'}>
+	{#key editing?.id ?? 'new'}
+		<ExpenseForm
+			flat
+			title={editing ? 'Edit Expense' : 'Add Expense'}
+			currency={settings.currency}
+			initialValues={editing
+				? {
+						amount: editing.amount,
+						description: editing.description ?? '',
+						markdown: editing.markdown ?? '',
+						tags: editing.tags ? JSON.parse(editing.tags) : [],
+						spentAt: new Date(editing.spentAt).toISOString().split('T')[0]
+					}
+				: undefined}
+			onSave={handleSave}
+			onCancel={() => {
+				showForm = false;
+				editing = null;
+			}}
+		/>
+	{/key}
+	{#if formError}
+		<p class="mt-2 text-xs text-error">{formError}</p>
+	{/if}
+	{#snippet footer()}
+		{#if saving}
+			<span class="text-xs text-fg-subdued">Saving...</span>
+		{/if}
+	{/snippet}
+</Dialog>

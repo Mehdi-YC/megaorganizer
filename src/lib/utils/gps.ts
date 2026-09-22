@@ -24,6 +24,9 @@ export interface GpsTrackingState {
 	distance: number;
 	currentSpeed: number;
 	maxSpeed: number;
+	// Last accepted speed (km/h) for spike rejection. Optional so state from
+	// older builds / inline callers keeps working (falls back to currentSpeed).
+	lastAcceptedSpeedKmh?: number;
 	gpsPoints: GpsPoint[];
 }
 
@@ -38,6 +41,20 @@ export const MAX_DISTANCE_ACCURACY_M = 50;
 // Hop floor in meters; increments below it wait for the next fix so slow
 // movement is amortized instead of discarded, while standing jitter stays out.
 export const MIN_DISTANCE_COUNT_M = 2;
+
+// Segments shorter than this don't update speed: two fixes can arrive ~0.2s
+// apart while each carries meters of jitter, and dist/timeDiff over such a
+// window synthesizes huge speeds (the 178 km/h "jogging" bug).
+export const MIN_SPEED_INTERVAL_S = 0.8;
+
+// A new segment speed is only accepted if it is within `max(last * 2.5,
+// last + 15)` km/h of the last accepted speed (e.g. a 20 → 60 jump is
+// dropped). From standstill, anything above 25 km/h is dropped. A rejected
+// hop is swallowed: the baseline moves to it so its phantom displacement
+// can't inflate the next segment's distance or speed.
+export const SPEED_JUMP_FACTOR = 2.5;
+export const SPEED_JUMP_MIN_KMH = 15;
+export const SPEED_COLD_START_MAX_KMH = 25;
 
 export function handleGpsPosition(
 	position: GeolocationPosition,
@@ -57,6 +74,7 @@ export function handleGpsPosition(
 	}
 
 	let { distance, currentSpeed, maxSpeed } = state;
+	let lastAcceptedSpeedKmh = state.lastAcceptedSpeedKmh ?? state.currentSpeed;
 	let baseline = state.lastPoint;
 
 	if (baseline && point.accuracy !== undefined && point.accuracy <= MAX_DISTANCE_ACCURACY_M) {
@@ -70,13 +88,30 @@ export function handleGpsPosition(
 		const noiseFloorM = Math.max(MIN_DISTANCE_COUNT_M, point.accuracy * 0.5);
 		if (timeDiff > 0 && dist >= noiseFloorM) {
 			const speed = dist / timeDiff;
-			if (speed < MAX_GPS_SPEED_MS) {
+			const speedKmh = speed * MS_TO_KMH;
+			const jumpCeiling =
+				lastAcceptedSpeedKmh < 1
+					? SPEED_COLD_START_MAX_KMH
+					: Math.max(
+							lastAcceptedSpeedKmh * SPEED_JUMP_FACTOR,
+							lastAcceptedSpeedKmh + SPEED_JUMP_MIN_KMH
+						);
+			if (speed >= MAX_GPS_SPEED_MS || speedKmh > jumpCeiling) {
+				// Outlier hop (jitter teleport or impossible acceleration):
+				// swallow it so its displacement can't inflate the next segment.
+				baseline = point;
+			} else if (timeDiff >= MIN_SPEED_INTERVAL_S) {
 				distance += dist;
 				baseline = point;
 				if (dist >= MIN_PACE_DISTANCE_M) {
-					currentSpeed = speed * MS_TO_KMH;
+					currentSpeed = speedKmh;
 					maxSpeed = Math.max(maxSpeed, currentSpeed);
+					lastAcceptedSpeedKmh = speedKmh;
 				}
+			} else {
+				// Too short to trust for speed; keep the distance, hold the pace.
+				distance += dist;
+				baseline = point;
 			}
 		}
 	} else if (!baseline) {
@@ -92,6 +127,7 @@ export function handleGpsPosition(
 		distance,
 		currentSpeed,
 		maxSpeed,
+		lastAcceptedSpeedKmh,
 		gpsPoints: state.gpsPoints
 	};
 

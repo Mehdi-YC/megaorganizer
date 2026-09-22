@@ -2,15 +2,10 @@
 	import { invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import ExpenseForm from '$lib/components/finance/ExpenseForm.svelte';
 
 	let show = $state(false);
-	let activeTab = $state<'expense' | 'reminder' | 'item' | 'note'>('expense');
-
-	// Expense form
-	let expenseAmount = $state<number>(0);
-	let expenseDescription = $state('');
-	let expenseDate = $state(new Date().toISOString().split('T')[0]);
+	let activeTab = $state<'finance' | 'reminder' | 'item'>('finance');
 
 	// Reminder form
 	let reminderTitle = $state('');
@@ -20,11 +15,9 @@
 	// Item form
 	let itemName = $state('');
 
-	// Note form
-	let noteContent = $state('');
-
 	let saving = $state(false);
 	let saved = $state(false);
+	let expenseForm: ExpenseForm | undefined = $state();
 
 	function open() {
 		show = true;
@@ -37,32 +30,32 @@
 	}
 
 	function resetForms() {
-		expenseAmount = 0;
-		expenseDescription = '';
-		expenseDate = new Date().toISOString().split('T')[0];
+		expenseForm?.reset();
 		reminderTitle = '';
 		reminderDueDate = '';
 		reminderDueTime = '09:00';
 		itemName = '';
-		noteContent = '';
 		saved = false;
 	}
 
-	async function saveExpense() {
-		if (saving || expenseAmount <= 0) return;
+	async function saveExpense(data: {
+		amount: number;
+		description?: string;
+		markdown?: string;
+		tags?: string[];
+		spentAt: string;
+		currency: string;
+	}) {
+		if (saving) return;
 		saving = true;
 		const res = await fetch('/api/finance', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				action: 'createExpense',
-				amount: expenseAmount,
-				description: expenseDescription || undefined,
-				spentAt: new Date(expenseDate).toISOString()
-			})
+			body: JSON.stringify({ action: 'createExpense', ...data })
 		});
 		saving = false;
 		if (res.ok) {
+			expenseForm?.reset();
 			saved = true;
 			await invalidateAll();
 			setTimeout(close, 1000);
@@ -112,28 +105,6 @@
 		}
 	}
 
-	async function saveNote() {
-		if (saving || !noteContent.trim()) return;
-		saving = true;
-		// Create as an item with markdown
-		const res = await fetch('/api/tree', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				action: 'create',
-				name: noteContent.substring(0, 50) + (noteContent.length > 50 ? '...' : ''),
-				type: 'item',
-				markdown: noteContent
-			})
-		});
-		saving = false;
-		if (res.ok) {
-			saved = true;
-			await invalidateAll();
-			setTimeout(close, 1000);
-		}
-	}
-
 	function handleKeydown(e: KeyboardEvent) {
 		if (!show) return;
 		if (e.key === 'Escape') {
@@ -143,29 +114,26 @@
 		const target = e.target as HTMLElement | null;
 		const typing = !!target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 		// Tab shortcuts only outside fields, so typing "2" stays a "2"
-		if (!typing && e.key >= '1' && e.key <= '4') {
-			if (e.key === '1') activeTab = 'expense';
+		if (!typing && e.key >= '1' && e.key <= '3') {
+			if (e.key === '1') activeTab = 'finance';
 			if (e.key === '2') activeTab = 'reminder';
 			if (e.key === '3') activeTab = 'item';
-			if (e.key === '4') activeTab = 'note';
 			saved = false;
 			return;
 		}
 		// Enter submits the active tab; textareas keep Enter for newlines
 		if (e.key === 'Enter' && target?.tagName === 'INPUT') {
 			e.preventDefault();
-			if (activeTab === 'expense') saveExpense();
+			if (activeTab === 'finance') expenseForm?.submit();
 			else if (activeTab === 'reminder') saveReminder();
-			else if (activeTab === 'item') saveItem();
-			else saveNote();
+			else saveItem();
 		}
 	}
 
 	const tabs = [
-		{ id: 'expense' as const, label: 'Expense', icon: 'fa-receipt', color: 'text-warning' },
+		{ id: 'finance' as const, label: 'Finance', icon: 'fa-receipt', color: 'text-warning' },
 		{ id: 'reminder' as const, label: 'Reminder', icon: 'fa-bell', color: 'text-primary' },
-		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' },
-		{ id: 'note' as const, label: 'Quick Note', icon: 'fa-sticky-note', color: 'text-purple-500' }
+		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' }
 	];
 </script>
 
@@ -229,7 +197,7 @@
 			</div>
 
 			<!-- Form Content -->
-			<div class="p-4">
+			<div class="max-h-[65vh] overflow-y-auto p-4">
 				{#if saved}
 					<div class="py-8 text-center">
 						<div
@@ -240,42 +208,9 @@
 						<p class="text-sm font-medium text-fg">Saved!</p>
 					</div>
 				{:else}
-					<!-- Expense Form -->
-					{#if activeTab === 'expense'}
-						<div class="space-y-3">
-							<Input
-								type="number"
-								name="qc-amount"
-								label="AMOUNT"
-								bind:value={expenseAmount}
-								min={0}
-								step={0.01}
-								placeholder="0.00"
-							/>
-							<Input
-								type="text"
-								name="qc-desc"
-								label="DESCRIPTION"
-								bind:value={expenseDescription}
-								placeholder="What for?"
-							/>
-							<div>
-								<label
-									for="qc-date"
-									class="mb-1.5 block text-[10px] font-semibold tracking-wide text-fg-subdued"
-									>DATE</label
-								>
-								<input
-									type="date"
-									id="qc-date"
-									bind:value={expenseDate}
-									class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
-								/>
-							</div>
-							<Button class="w-full" onclick={saveExpense} disabled={expenseAmount <= 0 || saving}>
-								{saving ? 'Saving...' : 'Add Expense'}
-							</Button>
-						</div>
+					<!-- Finance Form -->
+					{#if activeTab === 'finance'}
+						<ExpenseForm bind:this={expenseForm} flat title="Add Expense" onSave={saveExpense} />
 
 						<!-- Reminder Form -->
 					{:else if activeTab === 'reminder'}
@@ -336,25 +271,6 @@
 							/>
 							<Button class="w-full" onclick={saveItem} disabled={!itemName.trim() || saving}>
 								{saving ? 'Saving...' : 'Add Item'}
-							</Button>
-						</div>
-
-						<!-- Note Form -->
-					{:else if activeTab === 'note'}
-						<div class="space-y-3">
-							<p class="text-[11px] text-fg-subdued">
-								Creates an item in your library with markdown content
-							</p>
-							<Textarea
-								name="qc-note"
-								label="NOTE CONTENT"
-								bind:value={noteContent}
-								placeholder="Write your note here (supports markdown)..."
-								rows={4}
-								class="font-mono"
-							/>
-							<Button class="w-full" onclick={saveNote} disabled={!noteContent.trim() || saving}>
-								{saving ? 'Saving...' : 'Save to Library'}
 							</Button>
 						</div>
 					{/if}

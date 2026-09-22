@@ -15,5 +15,35 @@
 			"purpose": "any maskable"
 		}
 	],
+	"shortcuts": [
+		{
+			"name": "Start Timer",
+			"short_name": "Timer",
+			"description": "Run a saved HIIT or WOD timer",
+			"url": "/app/training/timers",
+			"icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+		},
+		{
+			"name": "New Session",
+			"short_name": "Session",
+			"description": "Start a training session",
+			"url": "/app/training/session/new",
+			"icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+		},
+		{
+			"name": "Finance",
+			"short_name": "Finance",
+			"description": "Add or review expenses",
+			"url": "/app/finance",
+			"icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+		},
+		{
+			"name": "Reminders",
+			"short_name": "Reminders",
+			"description": "Your upcoming reminders",
+			"url": "/app/reminders",
+			"icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+		}
+	],
 	"categories": ["productivity", "utilities"]
 }

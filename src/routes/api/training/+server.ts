@@ -29,7 +29,15 @@ import {
 } from '$lib/server/validate';
 import { db } from '$lib/server/db';
 
-const activityTypes = ['strength', 'running', 'cycling', 'walking', 'swimming', 'other'] as const;
+const activityTypes = [
+	'strength',
+	'running',
+	'cycling',
+	'walking',
+	'swimming',
+	'hiit',
+	'other'
+] as const;
 const sessionStatuses = ['active', 'paused', 'completed', 'cancelled'] as const;
 
 export const GET: RequestHandler = async (event) => {

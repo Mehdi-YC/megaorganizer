@@ -13,12 +13,14 @@ services:
       HOST: 0.0.0.0
       PORT: 3000
       ORIGIN: ${ORIGIN:-http://localhost:5173}
-      DATABASE_URL: file:/app/data/local.db
+      # Honors .env; default keeps the DB in the project folder.
+      DATABASE_URL: ${DATABASE_URL:-file:local.db}
     volumes:
-      - app-data:/app/data
-      - uploads:/app/static/uploads
+      # Bind the folder DB and uploads (symlink local.db here if you keep it
+      # elsewhere). Create `local.db` as a file and `static/uploads` as a
+      # directory before the first `up` — Docker creates a directory for a
+      # missing file bind. Swapping the file in place keeps the old inode;
+      # restart the container after replacing it.
+      - ./local.db:/app/local.db
+      - ./static/uploads:/app/static/uploads
     restart: unless-stopped
-
-volumes:
-  app-data:
-  uploads:
