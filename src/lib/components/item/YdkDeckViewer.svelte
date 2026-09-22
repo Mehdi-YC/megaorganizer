@@ -51,6 +51,7 @@
 				cardCache = newCache;
 			}
 		} catch {
+			/* ignore */
 		} finally {
 			loadingCards = false;
 		}

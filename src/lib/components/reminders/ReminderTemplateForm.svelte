@@ -47,7 +47,9 @@
 					if (config.minute !== undefined) minute = config.minute;
 					if (config.days) selectedDays = config.days;
 					if (config.dayOfMonth) dayOfMonth = config.dayOfMonth;
-				} catch {}
+				} catch {
+					/* ignore */
+				}
 			}
 		}
 	});
