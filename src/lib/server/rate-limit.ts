@@ -7,15 +7,22 @@ const MAX_ATTEMPTS = 10;
 const CLEANUP_KEY = '__rateLimitCleanup';
 if (!(globalThis as any)[CLEANUP_KEY]) {
 	(globalThis as any)[CLEANUP_KEY] = true;
-	setInterval(() => {
-		const now = Date.now();
-		for (const [key, entry] of attempts) {
-			if (now > entry.resetAt) attempts.delete(key);
-		}
-	}, 5 * 60 * 1000);
+	setInterval(
+		() => {
+			const now = Date.now();
+			for (const [key, entry] of attempts) {
+				if (now > entry.resetAt) attempts.delete(key);
+			}
+		},
+		5 * 60 * 1000
+	);
 }
 
-export function checkRateLimit(key: string, maxAttempts?: number, windowMs?: number): { allowed: boolean; retryAfterMs: number } {
+export function checkRateLimit(
+	key: string,
+	maxAttempts?: number,
+	windowMs?: number
+): { allowed: boolean; retryAfterMs: number } {
 	const now = Date.now();
 	const entry = attempts.get(key);
 	const max = maxAttempts ?? MAX_ATTEMPTS;

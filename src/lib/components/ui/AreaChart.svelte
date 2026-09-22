@@ -31,13 +31,23 @@
 </script>
 
 <div class="mb-6 rounded-sm border border-border bg-surface p-5">
-	<h2 class="text-xs font-semibold text-fg-accent uppercase tracking-wide mb-4">{title}</h2>
-	<svg viewBox="0 0 {chartWidth} {chartHeight}" class="w-full h-auto">
+	<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">{title}</h2>
+	<svg viewBox="0 0 {chartWidth} {chartHeight}" class="h-auto w-full">
 		<g transform="translate({padding.left}, {padding.top})">
 			{#each yTicks as tick}
 				{@const y = chartH - (tick / maxValue) * chartH}
-				<line x1="-5" y1={y} x2={chartW} y2={y} stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="3,3" />
-				<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9">{yFormat(tick)}</text>
+				<line
+					x1="-5"
+					y1={y}
+					x2={chartW}
+					y2={y}
+					stroke="var(--color-border)"
+					stroke-width="0.5"
+					stroke-dasharray="3,3"
+				/>
+				<text x="-8" y={y + 3} text-anchor="end" class="fill-fg-subdued" font-size="9"
+					>{yFormat(tick)}</text
+				>
 			{/each}
 			<path d={area} fill={color} opacity="0.1" />
 			<path d={path} fill="none" stroke={color} stroke-width="2" />
@@ -45,10 +55,19 @@
 				{@const x = i * (chartW / (data.length - 1 || 1))}
 				{@const y = chartH - (d.value / maxValue) * chartH}
 				<circle cx={x} cy={y} r="3" fill={color} />
-				<text x={x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9">{xLabels[i]}</text>
+				<text {x} y={chartH + 15} text-anchor="middle" class="fill-fg-subdued" font-size="9"
+					>{xLabels[i]}</text
+				>
 			{/each}
 			<line x1="0" y1="0" x2="0" y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
-			<line x1="0" y1={chartH} x2={chartW} y2={chartH} stroke="var(--color-border)" stroke-width="0.5" />
+			<line
+				x1="0"
+				y1={chartH}
+				x2={chartW}
+				y2={chartH}
+				stroke="var(--color-border)"
+				stroke-width="0.5"
+			/>
 		</g>
 	</svg>
 </div>

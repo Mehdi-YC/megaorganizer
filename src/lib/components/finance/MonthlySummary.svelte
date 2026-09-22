@@ -16,8 +16,18 @@
 	} = $props();
 
 	const monthNames = [
-		'January', 'February', 'March', 'April', 'May', 'June',
-		'July', 'August', 'September', 'October', 'November', 'December'
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December'
 	];
 
 	let percentage = $derived(limit && limit > 0 ? Math.min((total / limit) * 100, 100) : 0);
@@ -32,9 +42,10 @@
 </script>
 
 <div class="rounded-sm border border-border bg-surface p-4">
-	<div class="flex items-center justify-between mb-3">
-		<h3 class="text-xs font-semibold text-fg-accent uppercase tracking-wide">
-			{monthNames[month]} {year}
+	<div class="mb-3 flex items-center justify-between">
+		<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+			{monthNames[month]}
+			{year}
 		</h3>
 		<span class="text-[10px] text-fg-subdued">{count} expense{count !== 1 ? 's' : ''}</span>
 	</div>
@@ -50,15 +61,17 @@
 		<!-- Limit progress -->
 		{#if limit}
 			<div>
-				<div class="flex items-center justify-between mb-1">
+				<div class="mb-1 flex items-center justify-between">
 					<span class="text-[10px] text-fg-subdued">
-						{isOverLimit ? 'Over limit!' : 'of'} {limit.toLocaleString()} {currency}
+						{isOverLimit ? 'Over limit!' : 'of'}
+						{limit.toLocaleString()}
+						{currency}
 					</span>
 					<span class="text-[10px] font-medium {isOverLimit ? 'text-error' : 'text-fg-subdued'}">
 						{percentage.toFixed(0)}%
 					</span>
 				</div>
-				<div class="h-2 rounded-full bg-muted overflow-hidden">
+				<div class="h-2 overflow-hidden rounded-full bg-muted">
 					<div
 						class="h-full rounded-full transition-all {getProgressColor()}"
 						style="width: {percentage}%"
@@ -66,11 +79,13 @@
 				</div>
 				{#if remaining !== null && !isOverLimit}
 					<p class="mt-1 text-[10px] text-fg-subdued">
-						{remaining.toLocaleString()} {currency} remaining
+						{remaining.toLocaleString()}
+						{currency} remaining
 					</p>
 				{:else if isOverLimit}
 					<p class="mt-1 text-[10px] text-error">
-						{(total - limit).toLocaleString()} {currency} over budget
+						{(total - limit).toLocaleString()}
+						{currency} over budget
 					</p>
 				{/if}
 			</div>
@@ -79,11 +94,12 @@
 		{/if}
 
 		<!-- Daily average -->
-		<div class="pt-2 border-t border-border">
+		<div class="border-t border-border pt-2">
 			<div class="flex items-center justify-between">
 				<span class="text-[10px] text-fg-subdued">Daily average</span>
 				<span class="text-xs font-medium text-fg">
-					{count > 0 ? (total / new Date(year, month + 1, 0).getDate()).toFixed(0) : 0} {currency}
+					{count > 0 ? (total / new Date(year, month + 1, 0).getDate()).toFixed(0) : 0}
+					{currency}
 				</span>
 			</div>
 		</div>

@@ -85,7 +85,6 @@
 		return 'mixed';
 	}
 
-	function getStatusColor(status: string): string {
 		switch (status) {
 			case 'completed':
 				return 'bg-success/20 border-success/40';
@@ -161,7 +160,7 @@
 	</div>
 
 	<div class="grid grid-cols-7 gap-px bg-border">
-		{#each dayNames as day}
+		{#each dayNames as day (day)}
 			<div
 				class="bg-muted px-1 py-1.5 text-center text-[10px] font-semibold text-fg-subdued uppercase sm:px-2 sm:py-2 sm:text-xs"
 			>
@@ -169,7 +168,7 @@
 			</div>
 		{/each}
 
-		{#each getDaysInMonth(currentDate) as date}
+		{#each getDaysInMonth(currentDate) as date (date)}
 			<div
 				class="min-h-[40px] cursor-pointer bg-surface p-1 transition-colors hover:bg-muted sm:min-h-[80px] sm:p-2 {date
 					? ''

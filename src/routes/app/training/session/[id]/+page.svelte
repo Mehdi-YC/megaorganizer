@@ -136,7 +136,7 @@
 		{:else if runningData.length > 0}
 			<div class="mb-8">
 				<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">Route Map</h2>
-				{#each runningData as run}
+				{#each runningData as run (run.activityId)}
 					{#if run.trackPoints && run.trackPoints.length > 0}
 						<div class="overflow-hidden rounded-sm border border-border" style="height: 400px;">
 							<RunMap
@@ -201,7 +201,7 @@
 				<EmptyState icon="fa-clipboard-list" message="No activities recorded" />
 			{:else}
 				<div class="space-y-4">
-					{#each activities as activity}
+					{#each activities as activity (activity.id)}
 						<div class="rounded-sm border border-border bg-surface p-4">
 							<div class="mb-2 flex items-center justify-between">
 								<div class="flex items-center gap-2">

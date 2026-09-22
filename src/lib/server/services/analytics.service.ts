@@ -1,12 +1,6 @@
 import { db } from '$lib/server/db';
-import {
-	trainingSession,
-	trainingActivity,
-	expense,
-	reminder,
-	treeElement
-} from '$lib/server/db/schema';
-import { eq, and, gte, lte, sql, desc } from 'drizzle-orm';
+import { trainingSession, expense, reminder, treeElement } from '$lib/server/db/schema';
+import { eq, and, gte, lte } from 'drizzle-orm';
 
 export interface AnalyticsData {
 	training: {
@@ -71,105 +65,103 @@ export async function getAnalytics(userId: string): Promise<AnalyticsData> {
 		allPages
 	] = await Promise.all([
 		// All training sessions
-		db.select({
-			id: trainingSession.id,
-			startedAt: trainingSession.startedAt,
-			duration: trainingSession.duration
-		})
-		.from(trainingSession)
-		.where(eq(trainingSession.userId, userId))
-		.all(),
+		db
+			.select({
+				id: trainingSession.id,
+				startedAt: trainingSession.startedAt,
+				duration: trainingSession.duration
+			})
+			.from(trainingSession)
+			.where(eq(trainingSession.userId, userId))
+			.all(),
 
 		// This week sessions
-		db.select({ id: trainingSession.id })
-		.from(trainingSession)
-		.where(and(
-			eq(trainingSession.userId, userId),
-			gte(trainingSession.startedAt, weekStart)
-		))
-		.all(),
+		db
+			.select({ id: trainingSession.id })
+			.from(trainingSession)
+			.where(and(eq(trainingSession.userId, userId), gte(trainingSession.startedAt, weekStart)))
+			.all(),
 
 		// This month sessions
-		db.select({ id: trainingSession.id })
-		.from(trainingSession)
-		.where(and(
-			eq(trainingSession.userId, userId),
-			gte(trainingSession.startedAt, monthStart)
-		))
-		.all(),
+		db
+			.select({ id: trainingSession.id })
+			.from(trainingSession)
+			.where(and(eq(trainingSession.userId, userId), gte(trainingSession.startedAt, monthStart)))
+			.all(),
 
 		// This month expenses
-		db.select({
-			amount: expense.amount,
-			description: expense.description
-		})
-		.from(expense)
-		.where(and(
-			eq(expense.userId, userId),
-			gte(expense.spentAt, monthStart)
-		))
-		.all(),
+		db
+			.select({
+				amount: expense.amount,
+				description: expense.description
+			})
+			.from(expense)
+			.where(and(eq(expense.userId, userId), gte(expense.spentAt, monthStart)))
+			.all(),
 
 		// Last month expenses
-		db.select({ amount: expense.amount })
-		.from(expense)
-		.where(and(
-			eq(expense.userId, userId),
-			gte(expense.spentAt, lastMonthStart),
-			lte(expense.spentAt, lastMonthEnd)
-		))
-		.all(),
+		db
+			.select({ amount: expense.amount })
+			.from(expense)
+			.where(
+				and(
+					eq(expense.userId, userId),
+					gte(expense.spentAt, lastMonthStart),
+					lte(expense.spentAt, lastMonthEnd)
+				)
+			)
+			.all(),
 
 		// All reminders (last 30 days)
-		db.select({
-			id: reminder.id,
-			completed: reminder.completed,
-			dueAt: reminder.dueAt
-		})
-		.from(reminder)
-		.where(and(
-			eq(reminder.userId, userId),
-			gte(reminder.dueAt, thirtyDaysAgo)
-		))
-		.all(),
+		db
+			.select({
+				id: reminder.id,
+				completed: reminder.completed,
+				dueAt: reminder.dueAt
+			})
+			.from(reminder)
+			.where(and(eq(reminder.userId, userId), gte(reminder.dueAt, thirtyDaysAgo)))
+			.all(),
 
 		// Completed reminders (last 30 days)
-		db.select({ id: reminder.id })
-		.from(reminder)
-		.where(and(
-			eq(reminder.userId, userId),
-			eq(reminder.completed, true),
-			gte(reminder.dueAt, thirtyDaysAgo)
-		))
-		.all(),
+		db
+			.select({ id: reminder.id })
+			.from(reminder)
+			.where(
+				and(
+					eq(reminder.userId, userId),
+					eq(reminder.completed, true),
+					gte(reminder.dueAt, thirtyDaysAgo)
+				)
+			)
+			.all(),
 
 		// All items
-		db.select({ id: treeElement.id })
-		.from(treeElement)
-		.where(and(
-			eq(treeElement.userId, userId),
-			eq(treeElement.type, 'item')
-		))
-		.all(),
+		db
+			.select({ id: treeElement.id })
+			.from(treeElement)
+			.where(and(eq(treeElement.userId, userId), eq(treeElement.type, 'item')))
+			.all(),
 
 		// Items this week
-		db.select({ id: treeElement.id })
-		.from(treeElement)
-		.where(and(
-			eq(treeElement.userId, userId),
-			eq(treeElement.type, 'item'),
-			gte(treeElement.createdAt, weekStart)
-		))
-		.all(),
+		db
+			.select({ id: treeElement.id })
+			.from(treeElement)
+			.where(
+				and(
+					eq(treeElement.userId, userId),
+					eq(treeElement.type, 'item'),
+					gte(treeElement.createdAt, weekStart)
+				)
+			)
+			.all(),
 
 		// Count pages (via tree elements that are nodes)
-		db.select({ id: treeElement.id })
-		.from(treeElement)
-		.where(and(
-			eq(treeElement.userId, userId),
-			eq(treeElement.type, 'node')
-		))
-		.all()
+		db
+			.select({ id: treeElement.id })
+			.from(treeElement)
+			.where(and(eq(treeElement.userId, userId), eq(treeElement.type, 'node')))
+			.all()
 	]);
 
 	// Calculate training stats
@@ -189,16 +181,18 @@ export async function getAnalytics(userId: string): Promise<AnalyticsData> {
 			descCounts[exp.description] = (descCounts[exp.description] || 0) + 1;
 		}
 	}
-	const topExpenseDescription = Object.entries(descCounts)
-		.sort((a, b) => b[1] - a[1])
-		[0]?.[0] ?? null;
+	const topExpenseDescription =
+		Object.entries(descCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
 	// Calculate habit stats
-	const completionRate = allReminders.length > 0
-		? Math.round((completedReminders.length / allReminders.length) * 100)
-		: 0;
+	const completionRate =
+		allReminders.length > 0
+			? Math.round((completedReminders.length / allReminders.length) * 100)
+			: 0;
 
 	// Calculate streak (consecutive days with all reminders completed)
+	// eslint-disable-next-line no-useless-assignment
+
 	let currentStreak = 0;
 	let bestStreak = 0;
 	let tempStreak = 0;

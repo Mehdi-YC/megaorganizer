@@ -6,9 +6,10 @@ export function getRecurrenceLabel(type: string, config?: string | null): string
 
 	try {
 		const parsed = JSON.parse(config);
-		const time = parsed.hour !== undefined
-			? ` at ${parsed.hour.toString().padStart(2, '0')}:${(parsed.minute ?? 0).toString().padStart(2, '0')}`
-			: '';
+		const time =
+			parsed.hour !== undefined
+				? ` at ${parsed.hour.toString().padStart(2, '0')}:${(parsed.minute ?? 0).toString().padStart(2, '0')}`
+				: '';
 
 		switch (type) {
 			case 'daily':
@@ -34,14 +35,35 @@ export function getRecurrenceLabel(type: string, config?: string | null): string
 				return `Yearly${time}`;
 
 			case 'yearly_date': {
-				const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+				const months = [
+					'Jan',
+					'Feb',
+					'Mar',
+					'Apr',
+					'May',
+					'Jun',
+					'Jul',
+					'Aug',
+					'Sep',
+					'Oct',
+					'Nov',
+					'Dec'
+				];
 				const month = parsed.month !== undefined ? months[parsed.month] : '?';
 				const day = parsed.day ?? '?';
 				return `${month} ${day}${getOrdinalSuffix(day)} every year${time}`;
 			}
 
 			case 'monthly_relative': {
-				const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+				const dayNames = [
+					'Sunday',
+					'Monday',
+					'Tuesday',
+					'Wednesday',
+					'Thursday',
+					'Friday',
+					'Saturday'
+				];
 				const weekday = parsed.weekday !== undefined ? dayNames[parsed.weekday] : '?';
 				const ordinal = getOrdinalLabel(parsed.weekdayOrdinal);
 				return `${ordinal} ${weekday} of every month${time}`;

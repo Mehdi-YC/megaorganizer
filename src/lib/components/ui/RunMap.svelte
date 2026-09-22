@@ -144,4 +144,4 @@
 	});
 </script>
 
-<div bind:this={mapEl} class="w-full h-full {className}"></div>
+<div bind:this={mapEl} class="h-full w-full {className}"></div>

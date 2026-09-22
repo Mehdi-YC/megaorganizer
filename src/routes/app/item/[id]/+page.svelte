@@ -215,7 +215,6 @@
 		</EmptyState>
 	</div>
 {:else}
-	{@const isDeckView = isDeck && !editing}
 	<div class="space-y-4 p-4 sm:p-6 lg:flex lg:h-[calc(100vh-49px)] lg:flex-col lg:space-y-0 lg:p-0">
 		<div class="border-b border-border bg-bg-subdued px-4 py-2 sm:px-6 lg:shrink-0">
 			<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">

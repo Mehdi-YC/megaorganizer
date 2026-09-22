@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { expense, userSettings } from '$lib/server/db/schema';
-import { eq, and, desc, asc, gte, lte, sql } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, sql } from 'drizzle-orm';
 
 // ─── User Settings ───────────────────────────────────────────────────────────
 
@@ -151,9 +151,7 @@ export async function updateExpense(
 }
 
 export async function deleteExpense(userId: string, expenseId: string) {
-	await db
-		.delete(expense)
-		.where(and(eq(expense.id, expenseId), eq(expense.userId, userId)));
+	await db.delete(expense).where(and(eq(expense.id, expenseId), eq(expense.userId, userId)));
 }
 
 // ─── Statistics ──────────────────────────────────────────────────────────────
@@ -209,11 +207,7 @@ export async function getDailyStats(userId: string, year: number, month: number)
 	return results;
 }
 
-export async function getExpensesForDateRange(
-	userId: string,
-	startDate: Date,
-	endDate: Date
-) {
+export async function getExpensesForDateRange(userId: string, startDate: Date, endDate: Date) {
 	return db
 		.select()
 		.from(expense)
@@ -228,11 +222,7 @@ export async function getExpensesForDateRange(
 		.all();
 }
 
-export async function getMonthlyTotalForDateRange(
-	userId: string,
-	startDate: Date,
-	endDate: Date
-) {
+export async function getMonthlyTotalForDateRange(userId: string, startDate: Date, endDate: Date) {
 	const results = await db
 		.select({
 			year: sql<number>`CAST(strftime('%Y', ${expense.spentAt} / 1000, 'unixepoch') AS INTEGER)`,
@@ -248,9 +238,7 @@ export async function getMonthlyTotalForDateRange(
 				lte(expense.spentAt, endDate)
 			)
 		)
-		.groupBy(
-			sql`strftime('%Y-%m', ${expense.spentAt} / 1000, 'unixepoch')`
-		)
+		.groupBy(sql`strftime('%Y-%m', ${expense.spentAt} / 1000, 'unixepoch')`)
 		.all();
 
 	return results;

@@ -595,8 +595,6 @@ export const ydkEntryRelations = relations(ydkEntry, ({ one }) => ({
 	deck: one(ydkDeck, { fields: [ydkEntry.deckId], references: [ydkDeck.id] })
 }));
 
-
-
 // ─── Reminders ──────────────────────────────────────────────────────────────
 export const reminderTemplate = sqliteTable(
 	'reminder_template',
@@ -780,9 +778,7 @@ export const userSettings = sqliteTable(
 			.$onUpdate(() => new Date())
 			.notNull()
 	},
-	(table) => [
-		index('userSettings_userId_idx').on(table.userId)
-	]
+	(table) => [index('userSettings_userId_idx').on(table.userId)]
 );
 
 export const expenseRelations = relations(expense, ({ one }) => ({

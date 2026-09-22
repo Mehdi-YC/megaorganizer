@@ -11,17 +11,30 @@ const MAX_SIZE = 100 * 1024 * 1024;
 // Allowed mime types for security
 const ALLOWED_MIME_TYPES = new Set([
 	// Images
-	'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp',
+	'image/jpeg',
+	'image/png',
+	'image/gif',
+	'image/webp',
+	'image/svg+xml',
+	'image/bmp',
 	// Videos
-	'tvideo/mp4', 'video/webm', 'video/quicktime',
+	'tvideo/mp4',
+	'video/webm',
+	'video/quicktime',
 	// Audio
-	'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm',
+	'audio/mpeg',
+	'audio/wav',
+	'audio/ogg',
+	'audio/webm',
 	// Documents
 	'application/pdf',
-	'text/plain', 'text/markdown', 'text/csv',
+	'text/plain',
+	'text/markdown',
+	'text/csv',
 	'application/json',
 	// Archives (for backups)
-	'application/zip', 'application/gzip',
+	'application/zip',
+	'application/gzip',
 	// Office (common)
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -30,10 +43,28 @@ const ALLOWED_MIME_TYPES = new Set([
 
 // Dangerous file extensions to block
 const BLOCKED_EXTENSIONS = new Set([
-	'.exe', '.bat', '.cmd', '.com', '.msi', '.ps1', '.sh', '.bash',
-	'.php', '.asp', '.aspx', '.jsp', '.cgi',
-	'.js', '.mjs', '.ts', '.jsx', '.tsx',
-	'.vbs', '.wsf', '.scr', '.pif'
+	'.exe',
+	'.bat',
+	'.cmd',
+	'.com',
+	'.msi',
+	'.ps1',
+	'.sh',
+	'.bash',
+	'.php',
+	'.asp',
+	'.aspx',
+	'.jsp',
+	'.cgi',
+	'.js',
+	'.mjs',
+	'.ts',
+	'.jsx',
+	'.tsx',
+	'.vbs',
+	'.wsf',
+	'.scr',
+	'.pif'
 ]);
 
 function userDir(userId: string) {
@@ -71,9 +102,14 @@ function toResponse(a: any): AttachmentData {
 }
 
 export async function uploadAttachment(userId: string, pageId: string, file: File) {
-	const pageRecord = await db.select({ id: page.id }).from(page).where(and(eq(page.id, pageId), eq(page.userId, userId))).get();
+	const pageRecord = await db
+		.select({ id: page.id })
+		.from(page)
+		.where(and(eq(page.id, pageId), eq(page.userId, userId)))
+		.get();
 	if (!pageRecord) return { success: false as const, error: 'Page not found' };
-	if (file.size > MAX_SIZE) return { success: false as const, error: 'File size exceeds 100MB limit' };
+	if (file.size > MAX_SIZE)
+		return { success: false as const, error: 'File size exceeds 100MB limit' };
 
 	// Validate file extension
 	const ext = path.extname(file.name).toLowerCase();
@@ -97,47 +133,76 @@ export async function uploadAttachment(userId: string, pageId: string, file: Fil
 
 	const storedName = `${crypto.randomUUID()}${ext}`;
 	const filePath = path.join(dir, storedName);
-	
+
 	// Verify the resolved path is within the upload directory (prevent path traversal)
 	const resolvedPath = path.resolve(filePath);
 	if (!resolvedPath.startsWith(path.resolve(dir))) {
 		return { success: false as const, error: 'Invalid file path' };
 	}
-	
+
 	await writeFile(resolvedPath, Buffer.from(await file.arrayBuffer()));
 
-	const [result] = await db.insert(attachment).values({
-		userId, pageId, originalName: file.name, storedName,
-		mimeType: file.type || 'application/octet-stream', size: file.size
-	}).returning();
+	const [result] = await db
+		.insert(attachment)
+		.values({
+			userId,
+			pageId,
+			originalName: file.name,
+			storedName,
+			mimeType: file.type || 'application/octet-stream',
+			size: file.size
+		})
+		.returning();
 
 	return { success: true as const, data: toResponse(result) };
 }
 
-export async function getAttachmentsByPage(userId: string, pageId: string): Promise<AttachmentData[]> {
-	return db.select().from(attachment)
+export async function getAttachmentsByPage(
+	userId: string,
+	pageId: string
+): Promise<AttachmentData[]> {
+	return db
+		.select()
+		.from(attachment)
 		.where(and(eq(attachment.userId, userId), eq(attachment.pageId, pageId)))
-		.all().then((rows) => rows.map(toResponse));
+		.all()
+		.then((rows) => rows.map(toResponse));
 }
 
 export async function getAttachmentById(userId: string, attachmentId: string) {
-	return db.select().from(attachment)
+	return db
+		.select()
+		.from(attachment)
 		.where(and(eq(attachment.id, attachmentId), eq(attachment.userId, userId)))
 		.get();
 }
 
-export async function getAttachmentFilePath(userId: string, storedName: string): Promise<string | null> {
+export async function getAttachmentFilePath(
+	userId: string,
+	storedName: string
+): Promise<string | null> {
 	const filePath = path.join(userDir(userId), storedName);
-	try { await stat(filePath); return filePath; } catch { return null; }
+	try {
+		await stat(filePath);
+		return filePath;
+	} catch {
+		return null;
+	}
 }
 
 export async function deleteAttachment(userId: string, attachmentId: string): Promise<boolean> {
-	const record = await db.select().from(attachment)
+	const record = await db
+		.select()
+		.from(attachment)
 		.where(and(eq(attachment.id, attachmentId), eq(attachment.userId, userId)))
 		.get();
 	if (!record) return false;
 
-	try { await unlink(path.join(userDir(userId), record.storedName)); } catch {}
-	await db.delete(attachment).where(and(eq(attachment.id, attachmentId), eq(attachment.userId, userId)));
+	try {
+		await unlink(path.join(userDir(userId), record.storedName));
+	} catch {}
+	await db
+		.delete(attachment)
+		.where(and(eq(attachment.id, attachmentId), eq(attachment.userId, userId)));
 	return true;
 }

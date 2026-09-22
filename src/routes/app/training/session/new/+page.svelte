@@ -10,7 +10,6 @@
 		TIMER_INTERVAL_MS,
 		GPS_WATCH_OPTIONS,
 		handleGpsPosition,
-		type GpsTrackingState,
 		type GpsPoint
 	} from '$lib/utils/gps';
 	import {
@@ -126,11 +125,6 @@
 
 	// Persist form drafts as they change so a reload mid-edit keeps them.
 	$effect(() => {
-		title;
-		notes;
-		activityType;
-		selectedItems;
-		exerciseRecords;
 		persistState();
 	});
 
@@ -556,7 +550,7 @@
 			{#if exerciseRecords.length > 0}
 				<div class="space-y-3">
 					<h3 class="text-sm font-medium text-fg">Exercise Records</h3>
-					{#each exerciseRecords as record}
+					{#each exerciseRecords as record (record.itemId)}
 						{@const item = data.items.find((i: any) => i.id === record.itemId)}
 						<div class="rounded-sm border border-border bg-bg p-3">
 							<p class="mb-2 text-sm font-medium text-fg">{item?.name || 'Exercise'}</p>

@@ -1204,69 +1204,65 @@
 		{@const node = treeElements.find((el: any) => el.id === editingNode)}
 		{#if node}
 			<Dialog open={true} onclose={() => (editingNode = null)} title="Edit Section: {node.name}">
-				{#snippet children()}
-					<div class="mb-4">
-						<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
-							Color
-						</p>
-						<div class="flex flex-wrap gap-2">
-							{#each NODE_COLORS as c, i (c)}
-								<button
-									type="button"
-									aria-label="Color {i + 1}"
-									class="h-7 w-7 cursor-pointer rounded-sm border-2 transition-all {editColor === c
-										? 'scale-110 border-fg'
-										: 'border-transparent hover:border-fg-subdued'}"
-									style="background: {c}"
-									onclick={() => (editColor = c)}
-								></button>
-							{/each}
-							<input
-								type="color"
-								bind:value={editColor}
-								class="h-7 w-9 cursor-pointer rounded-sm border-0 bg-transparent"
-							/>
-						</div>
-					</div>
-					<div class="mb-4">
-						<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Icon</p>
-						<div class="grid grid-cols-7 gap-1.5 sm:grid-cols-10">
-							{#each NODE_ICONS as icon (icon)}
-								<button
-									type="button"
-									aria-label={icon}
-									class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm border transition-all {editIcon ===
-									icon
-										? 'border-primary bg-primary/10 text-primary'
-										: 'border-border bg-bg text-fg-subdued hover:bg-muted hover:text-fg'}"
-									onclick={() => (editIcon = icon)}
-								>
-									<i class="fas {icon} text-xs"></i>
-								</button>
-							{/each}
-						</div>
-					</div>
-					<div class="mb-3 flex items-center gap-2">
-						<div
-							class="flex h-8 w-8 items-center justify-center rounded-sm"
-							style="background: {editColor}25"
-						>
-							<i class="fas {editIcon} text-sm" style="color: {editColor}"></i>
-						</div>
-						<span class="text-sm font-medium" style="color: {editColor}">{node.name}</span>
-					</div>
-					<div class="mb-4">
-						<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
-							Content (Markdown)
-						</p>
-						<Textarea
-							class="font-mono"
-							bind:value={editNodeMarkdown}
-							rows={6}
-							placeholder="Optional markdown content..."
+				<div class="mb-4">
+					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Color</p>
+					<div class="flex flex-wrap gap-2">
+						{#each NODE_COLORS as c, i (c)}
+							<button
+								type="button"
+								aria-label="Color {i + 1}"
+								class="h-7 w-7 cursor-pointer rounded-sm border-2 transition-all {editColor === c
+									? 'scale-110 border-fg'
+									: 'border-transparent hover:border-fg-subdued'}"
+								style="background: {c}"
+								onclick={() => (editColor = c)}
+							></button>
+						{/each}
+						<input
+							type="color"
+							bind:value={editColor}
+							class="h-7 w-9 cursor-pointer rounded-sm border-0 bg-transparent"
 						/>
 					</div>
-				{/snippet}
+				</div>
+				<div class="mb-4">
+					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Icon</p>
+					<div class="grid grid-cols-7 gap-1.5 sm:grid-cols-10">
+						{#each NODE_ICONS as icon (icon)}
+							<button
+								type="button"
+								aria-label={icon}
+								class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm border transition-all {editIcon ===
+								icon
+									? 'border-primary bg-primary/10 text-primary'
+									: 'border-border bg-bg text-fg-subdued hover:bg-muted hover:text-fg'}"
+								onclick={() => (editIcon = icon)}
+							>
+								<i class="fas {icon} text-xs"></i>
+							</button>
+						{/each}
+					</div>
+				</div>
+				<div class="mb-3 flex items-center gap-2">
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-sm"
+						style="background: {editColor}25"
+					>
+						<i class="fas {editIcon} text-sm" style="color: {editColor}"></i>
+					</div>
+					<span class="text-sm font-medium" style="color: {editColor}">{node.name}</span>
+				</div>
+				<div class="mb-4">
+					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+						Content (Markdown)
+					</p>
+					<Textarea
+						class="font-mono"
+						bind:value={editNodeMarkdown}
+						rows={6}
+						placeholder="Optional markdown content..."
+					/>
+				</div>
 				{#snippet footer()}
 					<Button variant="secondary" onclick={() => (editingNode = null)}>Cancel</Button>
 					<Button onclick={() => saveNodeMeta(node.id)}>Save</Button>
@@ -1310,8 +1306,6 @@
 
 	<!-- File Preview Modal -->
 	{#if previewFile}
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay"
 			role="presentation"

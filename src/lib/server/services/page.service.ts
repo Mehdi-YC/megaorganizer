@@ -89,7 +89,5 @@ export async function updatePage(
 }
 
 export async function deletePage(userId: string, pageId: string) {
-	await db
-		.delete(page)
-		.where(and(eq(page.id, pageId), eq(page.userId, userId)));
+	await db.delete(page).where(and(eq(page.id, pageId), eq(page.userId, userId)));
 }

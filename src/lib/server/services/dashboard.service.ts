@@ -8,26 +8,27 @@ export async function getDashboardData(userId: string) {
 	// Generate any due reminders first
 	await generateDueReminders(userId);
 
-	const [recentItems, recentSessions, allItems, allSessions, dueReminders, upcomingEvents] = await Promise.all([
-		db
-			.select({
-				id: treeElement.id,
-				name: treeElement.name,
-				type: treeElement.type,
-				imageUrl: treeElement.imageUrl,
-				favorite: treeElement.favorite,
-				updatedAt: treeElement.updatedAt
-			})
-			.from(treeElement)
-			.where(eq(treeElement.userId, userId))
-			.orderBy(desc(treeElement.updatedAt))
-			.limit(6),
-		getTrainingSessionsWithActivities(userId, 5),
-		db.select({ id: treeElement.id }).from(treeElement).where(eq(treeElement.userId, userId)),
-		db.select().from(trainingSession).where(eq(trainingSession.userId, userId)),
-		getDueReminders(userId, 10),
-		getUpcomingEvents(userId, 7)
-	]);
+	const [recentItems, recentSessions, allItems, allSessions, dueReminders, upcomingEvents] =
+		await Promise.all([
+			db
+				.select({
+					id: treeElement.id,
+					name: treeElement.name,
+					type: treeElement.type,
+					imageUrl: treeElement.imageUrl,
+					favorite: treeElement.favorite,
+					updatedAt: treeElement.updatedAt
+				})
+				.from(treeElement)
+				.where(eq(treeElement.userId, userId))
+				.orderBy(desc(treeElement.updatedAt))
+				.limit(6),
+			getTrainingSessionsWithActivities(userId, 5),
+			db.select({ id: treeElement.id }).from(treeElement).where(eq(treeElement.userId, userId)),
+			db.select().from(trainingSession).where(eq(trainingSession.userId, userId)),
+			getDueReminders(userId, 10),
+			getUpcomingEvents(userId, 7)
+		]);
 
 	const totalDuration = allSessions.reduce((acc, s) => acc + (s.duration ?? 0), 0);
 

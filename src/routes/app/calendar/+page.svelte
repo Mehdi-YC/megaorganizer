@@ -1,16 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { getSessionIcon } from '$lib/utils/training';
+	import {} from '$lib/utils/training';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 
 	let { data } = $props();
 	let sessions = $derived<any[]>(data.sessions ?? []);
 	let reminders = $derived<any[]>(data.reminders ?? []);
 	let virtualReminders = $derived<any[]>(data.virtualReminders ?? []);
-	let templates = $derived<any[]>(data.templates ?? []);
 	let expenses = $derived<any[]>(data.expenses ?? []);
 	let expenseSettings = $derived<any>(data.expenseSettings ?? { currency: 'DZD' });
-	let monthlyExpenses = $derived<any[]>(data.monthlyExpenses ?? []);
 	let filter = $derived(data.filter);
 	let currentDate = $state(new Date());
 
@@ -369,7 +367,7 @@
 				</div>
 
 				<div class="grid grid-cols-7 gap-px bg-border">
-					{#each dayNames as day}
+					{#each dayNames as day (day)}
 						<div
 							class="bg-muted px-1 py-1.5 text-center text-[10px] font-semibold text-fg-subdued uppercase sm:px-2 sm:py-2 sm:text-xs"
 						>
@@ -377,7 +375,7 @@
 						</div>
 					{/each}
 
-					{#each getDaysInMonth(currentDate) as date}
+					{#each getDaysInMonth(currentDate) as date (date)}
 						{@const events = date ? getEventsForDate(date) : []}
 						{@const hasTraining = events.some((e) => e.type === 'training')}
 						{@const hasReminders = events.some((e) => e.type === 'reminder')}
@@ -421,7 +419,7 @@
 								</div>
 
 								<div class="hidden space-y-0.5 sm:block">
-									{#each events.slice(0, 3) as event}
+									{#each events.slice(0, 3) as event (event)}
 										<div
 											class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {event.type ===
 											'training'

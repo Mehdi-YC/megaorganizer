@@ -205,8 +205,7 @@
 	});
 
 	$effect(() => {
-		tree;
-		untrack(() => computeLayout());
+		if (tree) untrack(() => computeLayout());
 	});
 
 	function truncateName(name: string, maxLen = 20): string {

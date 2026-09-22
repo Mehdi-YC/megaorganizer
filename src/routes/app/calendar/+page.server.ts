@@ -1,11 +1,28 @@
 import { getTrainingSessions } from '$lib/server/services/training.service';
-import { getReminderHistory, getReminderTemplates, getVirtualReminders } from '$lib/server/services/reminder.service';
-import { getExpensesForDateRange, getUserSettings, getMonthlyTotalForDateRange } from '$lib/server/services/finance.service';
+import {
+	getReminderHistory,
+	getReminderTemplates,
+	getVirtualReminders
+} from '$lib/server/services/reminder.service';
+import {
+	getExpensesForDateRange,
+	getUserSettings,
+	getMonthlyTotalForDateRange
+} from '$lib/server/services/finance.service';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
-		return { sessions: [], reminders: [], virtualReminders: [], templates: [], expenses: [], expenseSettings: { currency: 'DZD' }, monthlyExpenses: [], filter: null };
+		return {
+			sessions: [],
+			reminders: [],
+			virtualReminders: [],
+			templates: [],
+			expenses: [],
+			expenseSettings: { currency: 'DZD' },
+			monthlyExpenses: [],
+			filter: null
+		};
 	}
 
 	const filter = url.searchParams.get('filter') || null;
@@ -16,7 +33,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const startDate = new Date();
 	startDate.setDate(startDate.getDate() - 90);
 
-	const [sessions, reminders, virtualReminders, templates, expenses, expenseSettings, monthlyExpenses] = await Promise.all([
+	const [
+		sessions,
+		reminders,
+		virtualReminders,
+		templates,
+		expenses,
+		expenseSettings,
+		monthlyExpenses
+	] = await Promise.all([
 		getTrainingSessions(locals.user.id, 200, 0),
 		getReminderHistory(locals.user.id, startDate, endDate),
 		getVirtualReminders(locals.user.id, new Date(), endDate),

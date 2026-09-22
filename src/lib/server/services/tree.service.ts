@@ -84,9 +84,7 @@ export async function deleteTreeElement(userId: string, id: string) {
 		.delete(treeRelationship)
 		.where(or(eq(treeRelationship.parentId, id), eq(treeRelationship.childId, id)));
 
-	await db
-		.delete(treeElement)
-		.where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)));
+	await db.delete(treeElement).where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)));
 }
 
 function buildTree(node: any, byId: Map<string, any>): any {
@@ -110,9 +108,7 @@ export async function getSubtreeForItem(userId: string, itemId: string): Promise
 	// Only load relationships relevant to this user's elements
 	const elementIds = new Set(allElements.map((e) => e.id));
 	const allRels = await db.select().from(treeRelationship).all();
-	const userRels = allRels.filter(
-		(r) => elementIds.has(r.parentId) && elementIds.has(r.childId)
-	);
+	const userRels = allRels.filter((r) => elementIds.has(r.parentId) && elementIds.has(r.childId));
 
 	const byId = new Map(allElements.map((e) => [e.id, { ...e, children: [] as any[] }]));
 
@@ -135,10 +131,7 @@ export async function getChildren(userId: string, parentType: TreeParentType, pa
 		.select()
 		.from(treeRelationship)
 		.where(
-			and(
-				eq(treeRelationship.parentType, parentType),
-				eq(treeRelationship.parentId, parentId)
-			)
+			and(eq(treeRelationship.parentType, parentType), eq(treeRelationship.parentId, parentId))
 		)
 		.orderBy(asc(treeRelationship.position))
 		.all();
@@ -169,10 +162,7 @@ export async function addChildToParent(
 		.select({ position: treeRelationship.position })
 		.from(treeRelationship)
 		.where(
-			and(
-				eq(treeRelationship.parentType, parentType),
-				eq(treeRelationship.parentId, parentId)
-			)
+			and(eq(treeRelationship.parentType, parentType), eq(treeRelationship.parentId, parentId))
 		)
 		.orderBy(asc(treeRelationship.position))
 		.all();
@@ -238,11 +228,7 @@ export async function moveChild(
 }
 
 export async function getFullTree(userId: string) {
-	const elements = await db
-		.select()
-		.from(treeElement)
-		.where(eq(treeElement.userId, userId))
-		.all();
+	const elements = await db.select().from(treeElement).where(eq(treeElement.userId, userId)).all();
 
 	const elementIds = new Set(elements.map((e) => e.id));
 	const allRels = await db.select().from(treeRelationship).all();
@@ -286,42 +272,30 @@ function sortChildren(node: any) {
 
 export async function searchTreeElements(userId: string, query: string) {
 	if (!query || !query.trim()) {
-		return db
-			.select()
-			.from(treeElement)
-			.where(eq(treeElement.userId, userId))
-			.all();
+		return db.select().from(treeElement).where(eq(treeElement.userId, userId)).all();
 	}
 
 	const searchTerm = `%${query.trim()}%`;
 	const treeResults = await db
 		.select()
 		.from(treeElement)
-		.where(
-			and(
-				eq(treeElement.userId, userId),
-				like(treeElement.name, searchTerm)
-			)
-		)
+		.where(and(eq(treeElement.userId, userId), like(treeElement.name, searchTerm)))
 		.all();
 
-	const pageResults = (await db
-		.select({
-			id: page.id,
-			userId: page.userId,
-			categoryId: page.categoryId,
-			name: page.name,
-			description: page.description,
-			imageUrl: page.imageUrl,
-		})
-		.from(page)
-		.where(
-			and(
-				eq(page.userId, userId),
-				like(page.name, searchTerm)
-			)
-		)
-		.all()).map((p) => ({ ...p, type: 'page' as const }));
+	const pageResults = (
+		await db
+			.select({
+				id: page.id,
+				userId: page.userId,
+				categoryId: page.categoryId,
+				name: page.name,
+				description: page.description,
+				imageUrl: page.imageUrl
+			})
+			.from(page)
+			.where(and(eq(page.userId, userId), like(page.name, searchTerm)))
+			.all()
+	).map((p) => ({ ...p, type: 'page' as const }));
 
 	return [...treeResults, ...pageResults];
 }

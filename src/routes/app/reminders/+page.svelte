@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { confirmAction } from '$lib/utils/confirm.svelte';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
 	import { Button, EmptyState } from '$lib/components/ui';
 	import { ReminderTemplateForm } from '$lib/components/reminders';
 	import { getRecurrenceLabel } from '$lib/utils/reminders';
@@ -10,7 +10,6 @@
 	let showCreateForm = $state(false);
 	let editingTemplate = $state<any>(null);
 
-	const recurrenceIcons: Record<string, string> = {
 		daily: 'fa-calendar-day',
 		weekly: 'fa-calendar-week',
 		monthly: 'fa-calendar',

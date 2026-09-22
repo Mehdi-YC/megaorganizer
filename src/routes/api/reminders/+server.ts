@@ -24,8 +24,7 @@ import {
 	isNonEmptyString,
 	isOneOf,
 	isNumber,
-	isArray,
-	hasFields
+	isArray
 } from '$lib/server/validate';
 
 const recurrenceTypes = [

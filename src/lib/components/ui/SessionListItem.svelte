@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ACTIVITY_ICONS, getSessionIcon } from '$lib/utils/training';
+	import { getSessionIcon } from '$lib/utils/training';
 	import { formatTime } from '$lib/utils';
 	import Badge from './Badge.svelte';
 

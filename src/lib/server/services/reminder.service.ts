@@ -5,7 +5,7 @@ import {
 	reminder,
 	reminderTodo
 } from '$lib/server/db/schema';
-import { eq, and, desc, asc, lte, gte, inArray } from 'drizzle-orm';
+import { eq, and, asc, lte, gte, inArray } from 'drizzle-orm';
 
 // ─── Recurrence Helpers ──────────────────────────────────────────────────────
 
@@ -39,10 +39,14 @@ function parseConfig(configStr: string | null): RecurrenceConfig {
  * @param weekday Day of week (0=Sun, 1=Mon, ..., 6=Sat)
  * @param ordinal 1=first, 2=second, 3=third, 4=fourth, -1=last
  */
-function getWeekdayOfMonth(year: number, month: number, weekday: number, ordinal: number): Date | null {
-	const firstDay = new Date(year, month, 1);
+function getWeekdayOfMonth(
+	year: number,
+	month: number,
+	weekday: number,
+	ordinal: number
+): Date | null {
 	const lastDay = new Date(year, month + 1, 0);
-	
+
 	if (ordinal === -1) {
 		// Last occurrence - search from end of month
 		for (let d = lastDay.getDate(); d >= 1; d--) {
@@ -60,7 +64,7 @@ function getWeekdayOfMonth(year: number, month: number, weekday: number, ordinal
 			}
 		}
 	}
-	
+
 	return null;
 }
 
@@ -82,7 +86,7 @@ export function calculateNextDueAt(
 			const days = config.days ?? [currentDueAt.getDay()];
 			const currentDay = currentDueAt.getDay();
 			let daysToAdd = 1;
-			
+
 			// Find next matching day
 			for (let i = 1; i <= 7; i++) {
 				const checkDay = (currentDay + i) % 7;
@@ -91,7 +95,7 @@ export function calculateNextDueAt(
 					break;
 				}
 			}
-			
+
 			next.setDate(next.getDate() + daysToAdd);
 			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
 			break;
@@ -100,7 +104,9 @@ export function calculateNextDueAt(
 		case 'monthly': {
 			const targetDay = config.dayOfMonth ?? currentDueAt.getDate();
 			next.setMonth(next.getMonth() + 1);
-			next.setDate(Math.min(targetDay, new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate()));
+			next.setDate(
+				Math.min(targetDay, new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate())
+			);
 			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
 			break;
 		}
@@ -110,7 +116,9 @@ export function calculateNextDueAt(
 			const targetDayOfYear = config.day ?? currentDueAt.getDate();
 			next.setFullYear(next.getFullYear() + 1);
 			next.setMonth(targetMonth);
-			next.setDate(Math.min(targetDayOfYear, new Date(next.getFullYear(), targetMonth + 1, 0).getDate()));
+			next.setDate(
+				Math.min(targetDayOfYear, new Date(next.getFullYear(), targetMonth + 1, 0).getDate())
+			);
 			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
 			break;
 		}
@@ -130,14 +138,19 @@ export function calculateNextDueAt(
 			// e.g., last Monday of March, 2nd Tuesday of every month
 			const mrWeekday = config.weekday ?? 1; // Default Monday
 			const mrOrdinal = config.weekdayOrdinal ?? -1; // Default last
-			
+
 			// Calculate next month
 			const mrNext = new Date(currentDueAt);
 			mrNext.setMonth(mrNext.getMonth() + 1);
 			mrNext.setDate(1);
-			
+
 			// Find the target weekday in that month
-			const mrTargetDate = getWeekdayOfMonth(mrNext.getFullYear(), mrNext.getMonth(), mrWeekday, mrOrdinal);
+			const mrTargetDate = getWeekdayOfMonth(
+				mrNext.getFullYear(),
+				mrNext.getMonth(),
+				mrWeekday,
+				mrOrdinal
+			);
 			if (mrTargetDate) {
 				next.setTime(mrTargetDate.getTime());
 				if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
@@ -391,16 +404,12 @@ export async function generateDueReminders(userId: string): Promise<number> {
 
 export async function getDueReminders(userId: string, limit = 20) {
 	const now = new Date();
-	
+
 	const dueReminders = await db
 		.select()
 		.from(reminder)
 		.where(
-			and(
-				eq(reminder.userId, userId),
-				eq(reminder.completed, false),
-				lte(reminder.dueAt, now)
-			)
+			and(eq(reminder.userId, userId), eq(reminder.completed, false), lte(reminder.dueAt, now))
 		)
 		.orderBy(asc(reminder.dueAt))
 		.limit(limit)
@@ -480,21 +489,12 @@ export async function getReminderHistory(
  * Generate virtual reminders from templates for a date range
  * Used by the calendar to show upcoming scheduled reminders
  */
-export async function getVirtualReminders(
-	userId: string,
-	startDate: Date,
-	endDate: Date
-) {
+export async function getVirtualReminders(userId: string, startDate: Date, endDate: Date) {
 	// Get all active templates
 	const templates = await db
 		.select()
 		.from(reminderTemplate)
-		.where(
-			and(
-				eq(reminderTemplate.userId, userId),
-				eq(reminderTemplate.active, true)
-			)
-		)
+		.where(and(eq(reminderTemplate.userId, userId), eq(reminderTemplate.active, true)))
 		.all();
 
 	const virtualReminders: Array<{
@@ -509,14 +509,14 @@ export async function getVirtualReminders(
 
 	for (const template of templates) {
 		if (!template.nextDueAt) continue;
-		
+
 		let currentDate = new Date(template.nextDueAt);
-		
+
 		// Generate occurrences within the date range
 		// Limit to 100 iterations to prevent infinite loops
 		for (let i = 0; i < 100; i++) {
 			if (currentDate > endDate) break;
-			
+
 			if (currentDate >= startDate) {
 				virtualReminders.push({
 					id: `virtual_${template.id}_${currentDate.getTime()}`,
@@ -528,7 +528,7 @@ export async function getVirtualReminders(
 					isVirtual: true
 				});
 			}
-			
+
 			// Calculate next occurrence
 			currentDate = calculateNextDueAt(
 				currentDate,
@@ -585,11 +585,7 @@ export async function snoozeReminder(userId: string, reminderId: string, until: 
 	return updated;
 }
 
-export async function updateReminderTodo(
-	userId: string,
-	todoId: string,
-	completed: boolean
-) {
+export async function updateReminderTodo(userId: string, todoId: string, completed: boolean) {
 	// Verify ownership through reminder
 	const todo = await db
 		.select({ reminderId: reminderTodo.reminderId })
@@ -628,9 +624,7 @@ export async function getReminderStats(userId: string, templateId?: string) {
 		.where(and(...conditions))
 		.all();
 
-	const todayReminders = allReminders.filter(
-		(r) => r.dueAt >= startOfDay && r.dueAt < endOfDay
-	);
+	const todayReminders = allReminders.filter((r) => r.dueAt >= startOfDay && r.dueAt < endOfDay);
 
 	const completedToday = todayReminders.filter((r) => r.completed).length;
 	const totalToday = todayReminders.length;
@@ -646,9 +640,7 @@ export async function getReminderStats(userId: string, templateId?: string) {
 		const dayEnd = new Date(checkDate);
 		dayEnd.setDate(dayEnd.getDate() + 1);
 
-		const dayReminders = allReminders.filter(
-			(r) => r.dueAt >= dayStart && r.dueAt < dayEnd
-		);
+		const dayReminders = allReminders.filter((r) => r.dueAt >= dayStart && r.dueAt < dayEnd);
 
 		if (dayReminders.length === 0) break;
 

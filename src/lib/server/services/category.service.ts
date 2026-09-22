@@ -83,9 +83,7 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(userId: string, categoryId: string) {
-	await db
-		.delete(category)
-		.where(and(eq(category.id, categoryId), eq(category.userId, userId)));
+	await db.delete(category).where(and(eq(category.id, categoryId), eq(category.userId, userId)));
 }
 
 export async function getCategoryPages(userId: string, categoryId: string) {

@@ -18,11 +18,7 @@ const UPLOAD_DIR = path.resolve('static/uploads');
 // ─── Export ──────────────────────────────────────────────────────────────────
 
 async function exportAttachments(userId: string) {
-	const records = await db
-		.select()
-		.from(attachment)
-		.where(eq(attachment.userId, userId))
-		.all();
+	const records = await db.select().from(attachment).where(eq(attachment.userId, userId)).all();
 
 	const result = [];
 	for (const rec of records) {
@@ -56,9 +52,7 @@ export async function exportUserData(userId: string) {
 
 	const elementIds = new Set(allTreeElements.map((e) => e.id));
 	const allRels = await db.select().from(treeRelationship).all();
-	const userRels = allRels.filter(
-		(r) => elementIds.has(r.parentId) || elementIds.has(r.childId)
-	);
+	const userRels = allRels.filter((r) => elementIds.has(r.parentId) || elementIds.has(r.childId));
 
 	const pageIds = new Set<string>();
 	for (const cat of cats) {
@@ -144,7 +138,15 @@ export async function importUserData(userId: string, data: any) {
 	}
 
 	const idMap = new Map<string, string>();
-	const counts = { categories: 0, pages: 0, elements: 0, relationships: 0, tags: 0, attachments: 0, skipped: 0 };
+	const counts = {
+		categories: 0,
+		pages: 0,
+		elements: 0,
+		relationships: 0,
+		tags: 0,
+		attachments: 0,
+		skipped: 0
+	};
 
 	// 1. Tags — skip if name already exists
 	for (const t of data.tags ?? []) {
@@ -162,7 +164,10 @@ export async function importUserData(userId: string, data: any) {
 
 	// 2. Categories — skip if name already exists
 	for (const cat of data.categories ?? []) {
-		const existing = await findExisting(category, and(eq(category.userId, userId), eq(category.name, cat.name)));
+		const existing = await findExisting(
+			category,
+			and(eq(category.userId, userId), eq(category.name, cat.name))
+		);
 		let catId: string;
 		if (existing) {
 			catId = existing.id;
@@ -171,30 +176,52 @@ export async function importUserData(userId: string, data: any) {
 		} else {
 			catId = crypto.randomUUID();
 			idMap.set(cat.id, catId);
-			db.insert(category).values({
-				id: catId, userId, name: cat.name, description: cat.description,
-				icon: cat.icon, iconColor: cat.iconColor, accentColor: cat.accentColor,
-				backgroundColor: cat.backgroundColor, imageUrl: cat.imageUrl, position: cat.position
-			}).run();
+			db.insert(category)
+				.values({
+					id: catId,
+					userId,
+					name: cat.name,
+					description: cat.description,
+					icon: cat.icon,
+					iconColor: cat.iconColor,
+					accentColor: cat.accentColor,
+					backgroundColor: cat.backgroundColor,
+					imageUrl: cat.imageUrl,
+					position: cat.position
+				})
+				.run();
 			counts.categories++;
 		}
 
 		// 3. Pages — skip if name already exists within this category
 		for (const pg of cat.pages ?? []) {
-			const existingPage = await findExisting(page, and(eq(page.userId, userId), eq(page.categoryId, catId), eq(page.name, pg.name)));
+			const existingPage = await findExisting(
+				page,
+				and(eq(page.userId, userId), eq(page.categoryId, catId), eq(page.name, pg.name))
+			);
 			if (existingPage) {
 				idMap.set(pg.id, existingPage.id);
 				counts.skipped++;
 			} else {
 				const newPageId = crypto.randomUUID();
 				idMap.set(pg.id, newPageId);
-				db.insert(page).values({
-					id: newPageId, userId, categoryId: catId, name: pg.name,
-					description: pg.description, icon: pg.icon, iconColor: pg.iconColor,
-					accentColor: pg.accentColor, backgroundColor: pg.backgroundColor,
-					imageUrl: pg.imageUrl, coverImageUrl: pg.coverImageUrl,
-					markdown: pg.markdown, position: pg.position
-				}).run();
+				db.insert(page)
+					.values({
+						id: newPageId,
+						userId,
+						categoryId: catId,
+						name: pg.name,
+						description: pg.description,
+						icon: pg.icon,
+						iconColor: pg.iconColor,
+						accentColor: pg.accentColor,
+						backgroundColor: pg.backgroundColor,
+						imageUrl: pg.imageUrl,
+						coverImageUrl: pg.coverImageUrl,
+						markdown: pg.markdown,
+						position: pg.position
+					})
+					.run();
 				counts.pages++;
 			}
 		}
@@ -202,20 +229,36 @@ export async function importUserData(userId: string, data: any) {
 
 	// 4. Tree elements — skip if name+type already exists (same user)
 	for (const el of data.treeElements ?? []) {
-		const existing = await findExisting(treeElement, and(eq(treeElement.userId, userId), eq(treeElement.name, el.name), eq(treeElement.type, el.type)));
+		const existing = await findExisting(
+			treeElement,
+			and(
+				eq(treeElement.userId, userId),
+				eq(treeElement.name, el.name),
+				eq(treeElement.type, el.type)
+			)
+		);
 		if (existing) {
 			idMap.set(el.id, existing.id);
 			counts.skipped++;
 		} else {
 			const newId = crypto.randomUUID();
 			idMap.set(el.id, newId);
-			db.insert(treeElement).values({
-				id: newId, userId, type: el.type, name: el.name,
-				description: el.description, markdown: el.markdown,
-				imageUrl: el.imageUrl, videoUrl: el.videoUrl,
-				externalUrl: el.externalUrl, tags: el.tags,
-				metadata: el.metadata, ydkData: el.ydkData
-			}).run();
+			db.insert(treeElement)
+				.values({
+					id: newId,
+					userId,
+					type: el.type,
+					name: el.name,
+					description: el.description,
+					markdown: el.markdown,
+					imageUrl: el.imageUrl,
+					videoUrl: el.videoUrl,
+					externalUrl: el.externalUrl,
+					tags: el.tags,
+					metadata: el.metadata,
+					ydkData: el.ydkData
+				})
+				.run();
 			counts.elements++;
 		}
 	}
@@ -225,17 +268,25 @@ export async function importUserData(userId: string, data: any) {
 		const newParentId = idMap.get(rel.parentId);
 		const newChildId = idMap.get(rel.childId);
 		if (newParentId && newChildId) {
-			const existing = await findExisting(treeRelationship, and(
-				eq(treeRelationship.parentType, rel.parentType),
-				eq(treeRelationship.parentId, newParentId),
-				eq(treeRelationship.childType, rel.childType),
-				eq(treeRelationship.childId, newChildId)
-			));
+			const existing = await findExisting(
+				treeRelationship,
+				and(
+					eq(treeRelationship.parentType, rel.parentType),
+					eq(treeRelationship.parentId, newParentId),
+					eq(treeRelationship.childType, rel.childType),
+					eq(treeRelationship.childId, newChildId)
+				)
+			);
 			if (!existing) {
-				db.insert(treeRelationship).values({
-					parentType: rel.parentType, parentId: newParentId,
-					childType: rel.childType, childId: newChildId, position: rel.position
-				}).run();
+				db.insert(treeRelationship)
+					.values({
+						parentType: rel.parentType,
+						parentId: newParentId,
+						childType: rel.childType,
+						childId: newChildId,
+						position: rel.position
+					})
+					.run();
 				counts.relationships++;
 			} else {
 				counts.skipped++;
@@ -247,10 +298,23 @@ export async function importUserData(userId: string, data: any) {
 	if (data.attachments) {
 		for (const att of data.attachments) {
 			const newPageId = idMap.get(att.pageId);
-			if (!newPageId) { counts.skipped++; continue; }
+			if (!newPageId) {
+				counts.skipped++;
+				continue;
+			}
 
-			const existing = await findExisting(attachment, and(eq(attachment.userId, userId), eq(attachment.pageId, newPageId), eq(attachment.originalName, att.originalName)));
-			if (existing) { counts.skipped++; continue; }
+			const existing = await findExisting(
+				attachment,
+				and(
+					eq(attachment.userId, userId),
+					eq(attachment.pageId, newPageId),
+					eq(attachment.originalName, att.originalName)
+				)
+			);
+			if (existing) {
+				counts.skipped++;
+				continue;
+			}
 
 			// Write file to disk
 			const userDir = path.join(UPLOAD_DIR, userId);
@@ -263,20 +327,33 @@ export async function importUserData(userId: string, data: any) {
 			const { writeFileSync } = await import('fs');
 			writeFileSync(filePath, Buffer.from(att.data, 'base64'));
 
-			db.insert(attachment).values({
-				userId, pageId: newPageId, originalName: att.originalName,
-				storedName, mimeType: att.mimeType, size: att.size
-			}).run();
+			db.insert(attachment)
+				.values({
+					userId,
+					pageId: newPageId,
+					originalName: att.originalName,
+					storedName,
+					mimeType: att.mimeType,
+					size: att.size
+				})
+				.run();
 			counts.attachments++;
 		}
 	}
 
-	const imported = counts.categories + counts.pages + counts.elements + counts.relationships + counts.tags + counts.attachments;
+	const imported =
+		counts.categories +
+		counts.pages +
+		counts.elements +
+		counts.relationships +
+		counts.tags +
+		counts.attachments;
 	return {
 		success: true,
-		message: counts.skipped > 0
-			? `Imported ${imported} items, skipped ${counts.skipped} duplicates`
-			: `Imported ${imported} items successfully`,
+		message:
+			counts.skipped > 0
+				? `Imported ${imported} items, skipped ${counts.skipped} duplicates`
+				: `Imported ${imported} items successfully`,
 		counts
 	};
 }

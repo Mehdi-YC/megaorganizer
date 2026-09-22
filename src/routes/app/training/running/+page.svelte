@@ -10,7 +10,6 @@
 		TIMER_INTERVAL_MS,
 		GPS_WATCH_OPTIONS,
 		handleGpsPosition,
-		type GpsTrackingState,
 		type GpsPoint
 	} from '$lib/utils/gps';
 	import {
@@ -96,7 +95,6 @@
 	});
 
 	$effect(() => {
-		runTitle;
 		if (status === 'running' || status === 'paused' || status === 'finished') {
 			persistState();
 		}

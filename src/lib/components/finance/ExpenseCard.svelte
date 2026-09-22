@@ -50,7 +50,7 @@
 			{/if}
 			{#if tags.length > 0}
 				<div class="mt-1.5 flex flex-wrap gap-1">
-					{#each tags as tag}
+					{#each tags as tag (tag)}
 						<Badge variant="default" size="sm">{tag}</Badge>
 					{/each}
 				</div>
