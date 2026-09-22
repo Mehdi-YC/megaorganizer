@@ -98,6 +98,7 @@
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
+				action: 'create',
 				name: itemName,
 				type: 'item'
 			})
@@ -118,6 +119,7 @@
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
+				action: 'create',
 				name: noteContent.substring(0, 50) + (noteContent.length > 50 ? '...' : ''),
 				type: 'item',
 				markdown: noteContent
