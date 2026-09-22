@@ -40,8 +40,10 @@ COPY --from=base /app/drizzle.config.ts ./drizzle.config.ts
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Create uploads directory
-RUN mkdir -p static/uploads
+# Create data and uploads directories and make them writable regardless of
+# whether the container runs as root or as the image's `bun` (uid 1000) user.
+# Fresh named volumes are initialized with this directory's ownership.
+RUN mkdir -p /app/data /app/static/uploads && chown -R 1000:1000 /app/data /app/static/uploads
 
 # Set environment
 ENV NODE_ENV=production
