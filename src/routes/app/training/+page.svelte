@@ -21,6 +21,10 @@
 
 <div class="p-4 sm:p-8">
 	<PageHeader title="Training Sessions" subtitle="All your training sessions">
+		<Button href="/app/training/timers" variant="secondary" size="md">
+			<i class="fas fa-stopwatch mr-2 text-xs"></i>
+			Timers
+		</Button>
 		<Button href="/app/training/running" variant="secondary" size="md">
 			<i class="fas fa-person-running mr-2 text-xs"></i>
 			Running
@@ -61,6 +65,16 @@
 			onclick={() => (filterType = 'strength')}
 		>
 			Strength
+		</button>
+		<button
+			type="button"
+			class="cursor-pointer rounded-sm px-3 py-1.5 text-sm font-medium transition-colors {filterType ===
+			'hiit'
+				? 'bg-primary text-white'
+				: 'bg-muted text-fg hover:bg-border'}"
+			onclick={() => (filterType = 'hiit')}
+		>
+			HIIT
 		</button>
 	</div>
 

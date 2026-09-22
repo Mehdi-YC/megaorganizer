@@ -27,6 +27,7 @@ import {
 	hasFields
 } from '$lib/server/validate';
 import { db } from '$lib/server/db';
+import { MAX_GPS_SPEED_MS } from '$lib/utils/gps';
 
 const MAX_GPS_POINTS = 10000;
 
@@ -212,7 +213,10 @@ export const POST: RequestHandler = async (event) => {
 							elapsedDuration: v.data.elapsedDuration,
 							movingDuration: v.data.movingDuration,
 							averageSpeed: v.data.averageSpeed,
-							maxSpeed: v.data.maxSpeed,
+							maxSpeed:
+								typeof v.data.maxSpeed === 'number'
+									? Math.min(Math.max(v.data.maxSpeed, 0), MAX_GPS_SPEED_MS)
+									: v.data.maxSpeed,
 							averagePace: v.data.averagePace,
 							bestPace: v.data.bestPace,
 							elevationGain: v.data.elevationGain,

@@ -1,4 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
+import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { integer, sqliteTable, text, real, index } from 'drizzle-orm/sqlite-core';
 import { user } from './auth.schema';
 
@@ -328,7 +329,7 @@ export const trainingActivity = sqliteTable(
 			.notNull()
 			.references(() => trainingSession.id, { onDelete: 'cascade' }),
 		type: text('type', {
-			enum: ['strength', 'running', 'cycling', 'walking', 'swimming', 'other']
+			enum: ['strength', 'running', 'cycling', 'walking', 'swimming', 'hiit', 'other']
 		}).notNull(),
 		startedAt: integer('started_at', { mode: 'timestamp_ms' }).notNull(),
 		endedAt: integer('ended_at', { mode: 'timestamp_ms' }),
@@ -787,4 +788,77 @@ export const expenseRelations = relations(expense, ({ one }) => ({
 
 export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 	user: one(user, { fields: [userSettings.userId], references: [user.id] })
+}));
+
+// ─── HIIT / WOD timers ──────────────────────────────────────────────────────
+export const timerTemplate = sqliteTable(
+	'timer_template',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		description: text('description'),
+		rounds: integer('rounds').notNull().default(1),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [index('timerTemplate_userId_idx').on(table.userId)]
+);
+
+export const timerStep = sqliteTable(
+	'timer_step',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		timerTemplateId: text('timer_template_id')
+			.notNull()
+			.references(() => timerTemplate.id, { onDelete: 'cascade' }),
+		// Steps belonging to a group point at the group step.
+		parentId: text('parent_id').references((): AnySQLiteColumn => timerStep.id, {
+			onDelete: 'cascade'
+		}),
+		kind: text('kind', {
+			enum: ['start', 'normal', 'info', 'silent', 'end', 'group']
+		}).notNull(),
+		label: text('label').notNull(),
+		// Nullable: info steps may wait for a tap instead of counting down.
+		durationSec: integer('duration_sec'),
+		// Only set on group steps: repeats of the nested steps.
+		groupRounds: integer('group_rounds'),
+		position: integer('position').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [
+		index('timerStep_templateId_idx').on(table.timerTemplateId),
+		index('timerStep_parentId_idx').on(table.parentId)
+	]
+);
+
+export const timerTemplateRelations = relations(timerTemplate, ({ one, many }) => ({
+	user: one(user, { fields: [timerTemplate.userId], references: [user.id] }),
+	steps: many(timerStep)
+}));
+
+export const timerStepRelations = relations(timerStep, ({ one, many }) => ({
+	template: one(timerTemplate, {
+		fields: [timerStep.timerTemplateId],
+		references: [timerTemplate.id]
+	}),
+	parent: one(timerStep, {
+		fields: [timerStep.parentId],
+		references: [timerStep.id],
+		relationName: 'timerStepHierarchy'
+	}),
+	children: many(timerStep, { relationName: 'timerStepHierarchy' })
 }));

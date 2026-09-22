@@ -167,7 +167,7 @@ export async function createTrainingActivity(
 	userId: string,
 	sessionId: string,
 	data: {
-		type: 'strength' | 'running' | 'cycling' | 'walking' | 'swimming' | 'other';
+		type: 'strength' | 'running' | 'cycling' | 'walking' | 'swimming' | 'hiit' | 'other';
 		startedAt?: Date | string;
 		notes?: string;
 	},

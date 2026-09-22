@@ -32,7 +32,15 @@
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
 
-	const activityTypes = ['strength', 'running', 'cycling', 'walking', 'swimming', 'other'] as const;
+	const activityTypes = [
+		'strength',
+		'running',
+		'cycling',
+		'walking',
+		'swimming',
+		'hiit',
+		'other'
+	] as const;
 	let activityType = $state<(typeof activityTypes)[number]>('strength');
 	let selectedItems = $state<string[]>([]);
 	let exerciseRecords = $state<ExerciseRecordDraft[]>([]);
@@ -522,6 +530,7 @@
 			<option value="cycling">Cycling</option>
 			<option value="walking">Walking</option>
 			<option value="swimming">Swimming</option>
+			<option value="hiit">HIIT</option>
 			<option value="other">Other</option>
 		</Select>
 
