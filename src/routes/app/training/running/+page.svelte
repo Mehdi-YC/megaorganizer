@@ -164,7 +164,7 @@
 
 	function requestGpsPermission() {
 		if (!navigator.geolocation) {
-			alert('Geolocation is not supported by your browser');
+			gpsError = 'Geolocation is not supported by your browser';
 			return;
 		}
 		status = 'requesting';
@@ -175,7 +175,7 @@
 			},
 			() => {
 				status = 'idle';
-				alert('Location permission denied. Please enable location services.');
+				gpsError = 'Location permission denied. Please enable location services.';
 			},
 			{ enableHighAccuracy: true }
 		);
@@ -285,6 +285,7 @@
 	function resetRun() {
 		status = 'idle';
 		saveError = null;
+		gpsError = null;
 		finishing = false;
 		distance = 0;
 		elapsed = 0;
@@ -308,6 +309,14 @@
 <div class="flex h-full flex-col bg-bg text-fg">
 	{#if status === 'idle'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
+			{#if gpsError}
+				<div
+					class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error"
+				>
+					<i class="fas fa-circle-exclamation"></i>
+					<span>{gpsError}</span>
+				</div>
+			{/if}
 			<i class="fas fa-person-running mb-6 text-6xl text-primary"></i>
 			<h1 class="mb-2 text-lg font-semibold text-fg-accent">Ready to Run?</h1>
 			<p class="mb-8 text-fg-subdued">GPS permission is required to track your run</p>

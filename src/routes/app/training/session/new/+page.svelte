@@ -42,7 +42,6 @@
 	let timerRunning = $state(false);
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let startTime = $state(0);
-	let finished = $state(false);
 
 	const gpsTypes = ['running', 'cycling', 'walking'];
 	let isGpsActivity = $derived(gpsTypes.includes(activityType));
@@ -243,7 +242,7 @@
 
 	function startGpsTracking() {
 		if (!navigator.geolocation) {
-			alert('Geolocation is not supported by your browser');
+			gpsError = 'Geolocation is not supported by your browser';
 			return;
 		}
 		gpsStatus = 'requesting';
@@ -257,7 +256,7 @@
 			},
 			() => {
 				gpsStatus = 'idle';
-				alert('Location permission denied. Please enable location services.');
+				gpsError = 'Location permission denied. Please enable location services.';
 			},
 			{ enableHighAccuracy: true }
 		);
@@ -398,258 +397,247 @@
 
 	<h1 class="mb-6 text-lg font-semibold text-fg-accent">New Training Session</h1>
 
-	{#if !finished}
-		{#if isGpsActivity}
-			<div class="mb-6 rounded-sm border border-border bg-surface p-6">
-				{#if gpsStatus === 'idle'}
-					<div class="py-8 text-center">
-						<i class="fas fa-location-crosshairs mb-4 text-4xl text-primary"></i>
-						<p class="mb-4 text-fg-subdued">GPS tracking for {activityType}</p>
-						<Button variant="primary" onclick={startGpsTracking}>
-							<i class="fas fa-play mr-2"></i> Start {activityType}
-						</Button>
-					</div>
-				{:else if gpsStatus === 'requesting'}
-					<div class="py-8 text-center">
-						<div class="mx-auto mb-4 flex justify-center">
-							<Spinner size="lg" />
-						</div>
-						<p class="text-fg-subdued">Waiting for GPS...</p>
-					</div>
-				{:else}
-					<div class="relative mb-4 overflow-hidden rounded-sm" style="height: 300px;">
-						<RunMap
-							points={gpsPoints}
-							center={currentPosition}
-							followPosition={true}
-							showRoute={true}
-							className="rounded-sm"
-						/>
-					</div>
-
+	{#if isGpsActivity}
+		<div class="mb-6 rounded-sm border border-border bg-surface p-6">
+			{#if gpsStatus === 'idle'}
+				<div class="py-8 text-center">
 					{#if gpsError}
 						<div
-							class="mb-3 flex items-center gap-2 rounded-sm border border-yellow-500/30 bg-yellow-500/15 px-4 py-2 text-xs text-yellow-400"
+							class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error"
 						>
-							<i class="fas fa-satellite-dish"></i>
+							<i class="fas fa-circle-exclamation"></i>
 							<span>{gpsError}</span>
 						</div>
 					{/if}
-
-					<div class="mb-4 text-center">
-						<div class="text-4xl font-bold tabular-nums">{formatTime(elapsedTime)}</div>
+					<i class="fas fa-location-crosshairs mb-4 text-4xl text-primary"></i>
+					<p class="mb-4 text-fg-subdued">GPS tracking for {activityType}</p>
+					<Button variant="primary" onclick={startGpsTracking}>
+						<i class="fas fa-play mr-2"></i> Start {activityType}
+					</Button>
+				</div>
+			{:else if gpsStatus === 'requesting'}
+				<div class="py-8 text-center">
+					<div class="mx-auto mb-4 flex justify-center">
+						<Spinner size="lg" />
 					</div>
+					<p class="text-fg-subdued">Waiting for GPS...</p>
+				</div>
+			{:else}
+				<div class="relative mb-4 overflow-hidden rounded-sm" style="height: 300px;">
+					<RunMap
+						points={gpsPoints}
+						center={currentPosition}
+						followPosition={true}
+						showRoute={true}
+						className="rounded-sm"
+					/>
+				</div>
 
-					<div class="mb-4 grid grid-cols-2 gap-4 text-center">
-						<div>
-							<div class="text-2xl font-bold tabular-nums">{(distance / 1000).toFixed(2)}</div>
-							<div class="text-xs text-fg-subdued">km</div>
-						</div>
-						<div>
-							<div class="text-2xl font-bold tabular-nums">{formatPace(currentPace)}</div>
-							<div class="text-xs text-fg-subdued">/km</div>
-						</div>
+				{#if gpsError}
+					<div
+						class="mb-3 flex items-center gap-2 rounded-sm border border-yellow-500/30 bg-yellow-500/15 px-4 py-2 text-xs text-yellow-400"
+					>
+						<i class="fas fa-satellite-dish"></i>
+						<span>{gpsError}</span>
 					</div>
-
-					<div class="grid grid-cols-3 gap-3 text-center text-xs">
-						<div>
-							<div class="font-semibold tabular-nums">{formatPace(averagePace)}</div>
-							<div class="text-fg-subdued">Avg Pace</div>
-						</div>
-						<div>
-							<div class="font-semibold tabular-nums">{currentSpeed.toFixed(1)}</div>
-							<div class="text-fg-subdued">km/h</div>
-						</div>
-						<div>
-							<div class="font-semibold tabular-nums">{averageSpeed.toFixed(1)}</div>
-							<div class="text-fg-subdued">Avg km/h</div>
-						</div>
-					</div>
-
-					{#if gpsStatus === 'paused'}
-						<div class="text-center">
-							<Button variant="primary" onclick={resumeGpsTracking}>
-								<i class="fas fa-play mr-2"></i> Resume {activityType}
-							</Button>
-						</div>
-					{/if}
 				{/if}
-			</div>
-		{:else}
-			<div class="mb-6 rounded-sm border border-border bg-surface p-6">
-				<div class="mb-6 text-center">
-					<div class="mb-2 text-5xl font-bold text-fg tabular-nums">{formatTime(elapsedTime)}</div>
-					{#if timerRunning}
-						<Button variant="secondary" onclick={pauseTimer}>
-							<i class="fas fa-pause mr-2"></i> Pause
-						</Button>
-					{:else}
-						<Button variant="primary" onclick={startTimer}>
-							<i class="fas fa-play mr-2"></i>
-							{elapsedTime > 0 ? 'Resume' : 'Start'}
-						</Button>
-					{/if}
+
+				<div class="mb-4 text-center">
+					<div class="text-4xl font-bold tabular-nums">{formatTime(elapsedTime)}</div>
 				</div>
-			</div>
-		{/if}
 
-		<div class="space-y-6">
-			<Input
-				label="Title"
-				bind:value={title}
-				placeholder="e.g. Upper Body, Leg Day, Morning Run..."
-			/>
-
-			<Select label="Activity Type" id="type" bind:value={activityType}>
-				<option value="strength">Strength</option>
-				<option value="running">Running</option>
-				<option value="cycling">Cycling</option>
-				<option value="walking">Walking</option>
-				<option value="swimming">Swimming</option>
-				<option value="other">Other</option>
-			</Select>
-
-			{#if activityType === 'strength'}
-				<div>
-					<h3 class="mb-2 text-sm font-medium text-fg">Exercises</h3>
-					<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
-					<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
-						{#each data.items as item}
-							<div class="rounded-sm px-2 py-1.5 transition-colors hover:bg-muted">
-								<Checkbox
-									checked={selectedItems.includes(item.id)}
-									onchange={() => toggleItem(item.id)}
-									label={item.name}
-								/>
-							</div>
-						{/each}
-						{#if data.items.length === 0}
-							<p class="py-4 text-center text-xs text-fg-subdued">
-								No items in library. Create items first.
-							</p>
-						{/if}
+				<div class="mb-4 grid grid-cols-2 gap-4 text-center">
+					<div>
+						<div class="text-2xl font-bold tabular-nums">{(distance / 1000).toFixed(2)}</div>
+						<div class="text-xs text-fg-subdued">km</div>
+					</div>
+					<div>
+						<div class="text-2xl font-bold tabular-nums">{formatPace(currentPace)}</div>
+						<div class="text-xs text-fg-subdued">/km</div>
 					</div>
 				</div>
 
-				{#if exerciseRecords.length > 0}
-					<div class="space-y-3">
-						<h3 class="text-sm font-medium text-fg">Exercise Records</h3>
-						{#each exerciseRecords as record}
-							{@const item = data.items.find((i: any) => i.id === record.itemId)}
-							<div class="rounded-sm border border-border bg-bg p-3">
-								<p class="mb-2 text-sm font-medium text-fg">{item?.name || 'Exercise'}</p>
-								<div class="grid grid-cols-3 gap-2">
-									<div>
-										<label for="sets-{record.itemId}" class="text-[10px] text-fg-subdued"
-											>Sets</label
-										>
-										<input
-											id="sets-{record.itemId}"
-											type="number"
-											value={record.sets}
-											onchange={(e) =>
-												updateRecord(
-													record.itemId,
-													'sets',
-													parseRecordInt(e.currentTarget.value, 3)
-												)}
-											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
-										/>
-									</div>
-									<div>
-										<label for="reps-{record.itemId}" class="text-[10px] text-fg-subdued"
-											>Reps</label
-										>
-										<input
-											id="reps-{record.itemId}"
-											type="text"
-											value={record.reps}
-											onchange={(e) => updateRecord(record.itemId, 'reps', e.currentTarget.value)}
-											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
-										/>
-									</div>
-									<div>
-										<label for="weight-{record.itemId}" class="text-[10px] text-fg-subdued"
-											>Weight</label
-										>
-										<div class="flex">
-											<input
-												id="weight-{record.itemId}"
-												type="number"
-												value={record.weight}
-												onchange={(e) =>
-													updateRecord(
-														record.itemId,
-														'weight',
-														parseRecordFloat(e.currentTarget.value, 0)
-													)}
-												class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
-											/>
-											<span class="ml-1 self-center text-[10px] text-fg-subdued">kg</span>
-										</div>
-									</div>
-									<div>
-										<label for="rpe-{record.itemId}" class="text-[10px] text-fg-subdued">RPE</label>
-										<input
-											id="rpe-{record.itemId}"
-											type="number"
-											min="1"
-											max="10"
-											value={record.rpe}
-											onchange={(e) =>
-												updateRecord(
-													record.itemId,
-													'rpe',
-													parseRecordInt(e.currentTarget.value, 7)
-												)}
-											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
-										/>
-									</div>
-									<div>
-										<label for="rest-{record.itemId}" class="text-[10px] text-fg-subdued"
-											>Rest (s)</label
-										>
-										<input
-											id="rest-{record.itemId}"
-											type="number"
-											value={record.restTime}
-											onchange={(e) =>
-												updateRecord(
-													record.itemId,
-													'restTime',
-													parseRecordInt(e.currentTarget.value, 90)
-												)}
-											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
-										/>
-									</div>
-									<div>
-										<label for="notes-{record.itemId}" class="text-[10px] text-fg-subdued"
-											>Notes</label
-										>
-										<input
-											id="notes-{record.itemId}"
-											type="text"
-											value={record.notes}
-											onchange={(e) => updateRecord(record.itemId, 'notes', e.currentTarget.value)}
-											placeholder="optional"
-											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
-										/>
-									</div>
-								</div>
-							</div>
-						{/each}
+				<div class="grid grid-cols-3 gap-3 text-center text-xs">
+					<div>
+						<div class="font-semibold tabular-nums">{formatPace(averagePace)}</div>
+						<div class="text-fg-subdued">Avg Pace</div>
+					</div>
+					<div>
+						<div class="font-semibold tabular-nums">{currentSpeed.toFixed(1)}</div>
+						<div class="text-fg-subdued">km/h</div>
+					</div>
+					<div>
+						<div class="font-semibold tabular-nums">{averageSpeed.toFixed(1)}</div>
+						<div class="text-fg-subdued">Avg km/h</div>
+					</div>
+				</div>
+
+				{#if gpsStatus === 'paused'}
+					<div class="text-center">
+						<Button variant="primary" onclick={resumeGpsTracking}>
+							<i class="fas fa-play mr-2"></i> Resume {activityType}
+						</Button>
 					</div>
 				{/if}
 			{/if}
-
-			<Textarea label="Notes" bind:value={notes} rows={3} placeholder="Optional notes..." />
 		</div>
 	{:else}
-		<div class="py-12 text-center">
-			<i class="fas fa-check-circle mb-4 text-5xl text-green-400"></i>
-			<h2 class="mb-2 text-lg font-semibold text-fg-accent">Session Saved!</h2>
+		<div class="mb-6 rounded-sm border border-border bg-surface p-6">
+			<div class="mb-6 text-center">
+				<div class="mb-2 text-5xl font-bold text-fg tabular-nums">{formatTime(elapsedTime)}</div>
+				{#if timerRunning}
+					<Button variant="secondary" onclick={pauseTimer}>
+						<i class="fas fa-pause mr-2"></i> Pause
+					</Button>
+				{:else}
+					<Button variant="primary" onclick={startTimer}>
+						<i class="fas fa-play mr-2"></i>
+						{elapsedTime > 0 ? 'Resume' : 'Start'}
+					</Button>
+				{/if}
+			</div>
 		</div>
 	{/if}
+
+	<div class="space-y-6">
+		<Input
+			label="Title"
+			bind:value={title}
+			placeholder="e.g. Upper Body, Leg Day, Morning Run..."
+		/>
+
+		<Select label="Activity Type" id="type" bind:value={activityType}>
+			<option value="strength">Strength</option>
+			<option value="running">Running</option>
+			<option value="cycling">Cycling</option>
+			<option value="walking">Walking</option>
+			<option value="swimming">Swimming</option>
+			<option value="other">Other</option>
+		</Select>
+
+		{#if activityType === 'strength'}
+			<div>
+				<h3 class="mb-2 text-sm font-medium text-fg">Exercises</h3>
+				<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
+				<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
+					{#each data.items as item}
+						<div class="rounded-sm px-2 py-1.5 transition-colors hover:bg-muted">
+							<Checkbox
+								checked={selectedItems.includes(item.id)}
+								onchange={() => toggleItem(item.id)}
+								label={item.name}
+							/>
+						</div>
+					{/each}
+					{#if data.items.length === 0}
+						<p class="py-4 text-center text-xs text-fg-subdued">
+							No items in library. Create items first.
+						</p>
+					{/if}
+				</div>
+			</div>
+
+			{#if exerciseRecords.length > 0}
+				<div class="space-y-3">
+					<h3 class="text-sm font-medium text-fg">Exercise Records</h3>
+					{#each exerciseRecords as record}
+						{@const item = data.items.find((i: any) => i.id === record.itemId)}
+						<div class="rounded-sm border border-border bg-bg p-3">
+							<p class="mb-2 text-sm font-medium text-fg">{item?.name || 'Exercise'}</p>
+							<div class="grid grid-cols-3 gap-2">
+								<div>
+									<label for="sets-{record.itemId}" class="text-[10px] text-fg-subdued">Sets</label>
+									<input
+										id="sets-{record.itemId}"
+										type="number"
+										value={record.sets}
+										onchange={(e) =>
+											updateRecord(record.itemId, 'sets', parseRecordInt(e.currentTarget.value, 3))}
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+									/>
+								</div>
+								<div>
+									<label for="reps-{record.itemId}" class="text-[10px] text-fg-subdued">Reps</label>
+									<input
+										id="reps-{record.itemId}"
+										type="text"
+										value={record.reps}
+										onchange={(e) => updateRecord(record.itemId, 'reps', e.currentTarget.value)}
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+									/>
+								</div>
+								<div>
+									<label for="weight-{record.itemId}" class="text-[10px] text-fg-subdued"
+										>Weight</label
+									>
+									<div class="flex">
+										<input
+											id="weight-{record.itemId}"
+											type="number"
+											value={record.weight}
+											onchange={(e) =>
+												updateRecord(
+													record.itemId,
+													'weight',
+													parseRecordFloat(e.currentTarget.value, 0)
+												)}
+											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+										/>
+										<span class="ml-1 self-center text-[10px] text-fg-subdued">kg</span>
+									</div>
+								</div>
+								<div>
+									<label for="rpe-{record.itemId}" class="text-[10px] text-fg-subdued">RPE</label>
+									<input
+										id="rpe-{record.itemId}"
+										type="number"
+										min="1"
+										max="10"
+										value={record.rpe}
+										onchange={(e) =>
+											updateRecord(record.itemId, 'rpe', parseRecordInt(e.currentTarget.value, 7))}
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+									/>
+								</div>
+								<div>
+									<label for="rest-{record.itemId}" class="text-[10px] text-fg-subdued"
+										>Rest (s)</label
+									>
+									<input
+										id="rest-{record.itemId}"
+										type="number"
+										value={record.restTime}
+										onchange={(e) =>
+											updateRecord(
+												record.itemId,
+												'restTime',
+												parseRecordInt(e.currentTarget.value, 90)
+											)}
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+									/>
+								</div>
+								<div>
+									<label for="notes-{record.itemId}" class="text-[10px] text-fg-subdued"
+										>Notes</label
+									>
+									<input
+										id="notes-{record.itemId}"
+										type="text"
+										value={record.notes}
+										onchange={(e) => updateRecord(record.itemId, 'notes', e.currentTarget.value)}
+										placeholder="optional"
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+									/>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
+
+		<Textarea label="Notes" bind:value={notes} rows={3} placeholder="Optional notes..." />
+	</div>
 
 	<div class="mt-6">
 		{#if saveError}
@@ -663,7 +651,7 @@
 		<div class="flex gap-3">
 			{#if isGpsActivity && gpsStatus === 'tracking'}
 				<Button variant="danger" loading={saving} onclick={saveSession}>
-					<i class="fas fa-stop mr-2"></i> Finish
+					{#if !saving}<i class="fas fa-stop mr-2"></i>{/if} Finish
 				</Button>
 			{:else}
 				<Button variant="primary" loading={saving} onclick={saveSession}>

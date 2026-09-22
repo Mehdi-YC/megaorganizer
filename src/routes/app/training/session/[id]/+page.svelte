@@ -6,6 +6,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 
@@ -124,7 +125,14 @@
 			</div>
 		{/if}
 
-		{#if runningData.length > 0}
+		{#if loadingRunning}
+			<div
+				class="mb-8 flex items-center gap-2 rounded-sm border border-border bg-surface px-4 py-3 text-xs text-fg-subdued"
+			>
+				<Spinner size="sm" />
+				<span>Loading route map...</span>
+			</div>
+		{:else if runningData.length > 0}
 			<div class="mb-8">
 				<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">Route Map</h2>
 				{#each runningData as run}

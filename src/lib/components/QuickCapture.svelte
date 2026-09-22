@@ -49,7 +49,7 @@
 	}
 
 	async function saveExpense() {
-		if (expenseAmount <= 0) return;
+		if (saving || expenseAmount <= 0) return;
 		saving = true;
 		const res = await fetch('/api/finance', {
 			method: 'POST',
@@ -70,7 +70,7 @@
 	}
 
 	async function saveReminder() {
-		if (!reminderTitle.trim()) return;
+		if (saving || !reminderTitle.trim()) return;
 		saving = true;
 		const dueAt = reminderDueDate ? new Date(`${reminderDueDate}T${reminderDueTime}`) : new Date();
 		const res = await fetch('/api/reminders', {
@@ -93,7 +93,7 @@
 	}
 
 	async function saveItem() {
-		if (!itemName.trim()) return;
+		if (saving || !itemName.trim()) return;
 		saving = true;
 		const res = await fetch('/api/tree', {
 			method: 'POST',
@@ -113,7 +113,7 @@
 	}
 
 	async function saveNote() {
-		if (!noteContent.trim()) return;
+		if (saving || !noteContent.trim()) return;
 		saving = true;
 		// Create as an item with markdown
 		const res = await fetch('/api/tree', {
@@ -135,15 +135,29 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape' && show) {
+		if (!show) return;
+		if (e.key === 'Escape') {
 			close();
+			return;
 		}
-		// Quick shortcuts when modal is open
-		if (show) {
+		const target = e.target as HTMLElement | null;
+		const typing = !!target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+		// Tab shortcuts only outside fields, so typing "2" stays a "2"
+		if (!typing && e.key >= '1' && e.key <= '4') {
 			if (e.key === '1') activeTab = 'expense';
 			if (e.key === '2') activeTab = 'reminder';
 			if (e.key === '3') activeTab = 'item';
 			if (e.key === '4') activeTab = 'note';
+			saved = false;
+			return;
+		}
+		// Enter submits the active tab; textareas keep Enter for newlines
+		if (e.key === 'Enter' && target?.tagName === 'INPUT') {
+			e.preventDefault();
+			if (activeTab === 'expense') saveExpense();
+			else if (activeTab === 'reminder') saveReminder();
+			else if (activeTab === 'item') saveItem();
+			else saveNote();
 		}
 	}
 
