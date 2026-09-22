@@ -123,7 +123,8 @@ export async function uploadAttachment(userId: string, pageId: string, file: Fil
 	}
 
 	// Sanitize filename - remove path separators and null bytes
-	const sanitizedName = file.name.replace(/[\/\\:*?"<>|\x00]/g, '_');
+	// eslint-disable-next-line no-control-regex
+	const sanitizedName = file.name.replace(/[/\\:*?"<>|\x00]/g, '_');
 	if (!sanitizedName || sanitizedName.trim().length === 0) {
 		return { success: false as const, error: 'Invalid filename' };
 	}
@@ -200,7 +201,9 @@ export async function deleteAttachment(userId: string, attachmentId: string): Pr
 
 	try {
 		await unlink(path.join(userDir(userId), record.storedName));
-	} catch {}
+	} catch {
+		/* ignore */
+	}
 	await db
 		.delete(attachment)
 		.where(and(eq(attachment.id, attachmentId), eq(attachment.userId, userId)));
