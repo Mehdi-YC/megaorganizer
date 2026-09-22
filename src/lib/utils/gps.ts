@@ -4,8 +4,10 @@ export const MAX_GPS_SPEED_MS = 50; // 180 km/h — supports cycling descents
 export const TIMER_INTERVAL_MS = 1000;
 export const GPS_WATCH_OPTIONS: PositionOptions = {
 	enableHighAccuracy: true,
-	maximumAge: 1000,
-	timeout: 10000
+	// Fixes older than 5s are stale for a moving runner, and a tighter
+	// window keeps the 10s timeout from eating real updates mid-run.
+	maximumAge: 5000,
+	timeout: 8000
 };
 
 export interface GpsPoint {
@@ -29,10 +31,18 @@ export interface GpsTrackingState {
 // Prevents GPS jitter from creating false "fastest" pace readings.
 export const MIN_PACE_DISTANCE_M = 5;
 
+// Fixes worse than this are dropped from the track entirely.
+export const MAX_TRACK_ACCURACY_M = 100;
+// Fixes worse than this never contribute to distance or speed.
+export const MAX_DISTANCE_ACCURACY_M = 50;
+// Hop floor in meters; increments below it wait for the next fix so slow
+// movement is amortized instead of discarded, while standing jitter stays out.
+export const MIN_DISTANCE_COUNT_M = 2;
+
 export function handleGpsPosition(
 	position: GeolocationPosition,
 	state: GpsTrackingState
-): { updatedState: GpsTrackingState; newPoint: GpsPoint } {
+): { updatedState: GpsTrackingState; newPoint: GpsPoint; accepted: boolean } {
 	const point: GpsPoint = {
 		latitude: position.coords.latitude,
 		longitude: position.coords.longitude,
@@ -42,27 +52,35 @@ export function handleGpsPosition(
 		timestamp: position.timestamp
 	};
 
-	let { distance, currentSpeed, maxSpeed } = state;
+	if (point.accuracy !== undefined && point.accuracy > MAX_TRACK_ACCURACY_M) {
+		return { updatedState: state, newPoint: point, accepted: false };
+	}
 
-	if (state.lastPoint) {
+	let { distance, currentSpeed, maxSpeed } = state;
+	let baseline = state.lastPoint;
+
+	if (baseline && point.accuracy !== undefined && point.accuracy <= MAX_DISTANCE_ACCURACY_M) {
 		const dist = calculateDistance(
-			state.lastPoint.latitude,
-			state.lastPoint.longitude,
+			baseline.latitude,
+			baseline.longitude,
 			point.latitude,
 			point.longitude
 		);
-		const timeDiff = (point.timestamp - state.lastPoint.timestamp) / 1000;
-		if (timeDiff > 0 && dist > 0) {
+		const timeDiff = (point.timestamp - baseline.timestamp) / 1000;
+		const noiseFloorM = Math.max(MIN_DISTANCE_COUNT_M, point.accuracy * 0.5);
+		if (timeDiff > 0 && dist >= noiseFloorM) {
 			const speed = dist / timeDiff;
 			if (speed < MAX_GPS_SPEED_MS) {
 				distance += dist;
-				// Only update speed/pace if we've moved enough to get a meaningful reading
+				baseline = point;
 				if (dist >= MIN_PACE_DISTANCE_M) {
 					currentSpeed = speed * MS_TO_KMH;
 					maxSpeed = Math.max(maxSpeed, currentSpeed);
 				}
 			}
 		}
+	} else if (!baseline) {
+		baseline = point;
 	}
 
 	// Mutate the array instead of spreading — avoids O(n) copy on every GPS tick.
@@ -70,14 +88,14 @@ export function handleGpsPosition(
 	state.gpsPoints.push(point);
 
 	const updatedState: GpsTrackingState = {
-		lastPoint: point,
+		lastPoint: baseline,
 		distance,
 		currentSpeed,
 		maxSpeed,
 		gpsPoints: state.gpsPoints
 	};
 
-	return { updatedState, newPoint: point };
+	return { updatedState, newPoint: point, accepted: true };
 }
 
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
