@@ -63,13 +63,25 @@
 	let gpsError: string | null = $state(null);
 
 	onDestroy(() => {
+		persistOnExit();
+		window.removeEventListener('pagehide', persistOnExit);
+		window.removeEventListener('beforeunload', persistOnExit);
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
 		releaseWakeLock();
 		if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 	});
 
+	function persistOnExit() {
+		if (timerRunning || startTime > 0 || exerciseRecords.length > 0 || selectedItems.length > 0) {
+			persistState();
+		}
+	}
+
 	onMount(() => {
+		window.addEventListener('pagehide', persistOnExit);
+		window.addEventListener('beforeunload', persistOnExit);
+
 		const saved = loadSessionState();
 		if (!saved) return;
 
@@ -150,6 +162,9 @@
 			wakeLock = await navigator.wakeLock.request('screen');
 			wakeLock.addEventListener('release', () => {
 				wakeLock = null;
+				if (document.visibilityState === 'visible' && timerRunning) {
+					acquireWakeLock();
+				}
 			});
 		} catch (err) {
 			console.warn('Wake Lock failed:', err);
@@ -171,6 +186,7 @@
 			maxSpeed,
 			gpsPoints
 		});
+		if (!result.accepted) return;
 		distance = result.updatedState.distance;
 		currentSpeed = result.updatedState.currentSpeed;
 		maxSpeed = result.updatedState.maxSpeed;

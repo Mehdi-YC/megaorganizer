@@ -20,11 +20,15 @@
 	} from '$lib/utils/session-persist';
 	import RunMap from '$lib/components/ui/RunMap.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Spinner from '$lib/components/ui/Spinner.svelte';
 
 	let status = $state<'idle' | 'requesting' | 'running' | 'paused' | 'finished'>('idle');
 	let runTitle = $state('');
 	let saveError = $state<string | null>(null);
 	let finishing = $state(false);
+	let confirmFinish = $state(false);
+	let confirmDiscard = $state(false);
+	let confirmTimer: ReturnType<typeof setTimeout> | null = null;
 	let startTime = $state(0);
 	let elapsed = $state(0);
 	let distance = $state(0);
@@ -76,12 +80,26 @@
 			}
 		}
 
+		const persistOnExit = () => persistState();
+		window.addEventListener('pagehide', persistOnExit);
+		window.addEventListener('beforeunload', persistOnExit);
+
 		return () => {
+			window.removeEventListener('pagehide', persistOnExit);
+			window.removeEventListener('beforeunload', persistOnExit);
 			stopGpsWatch();
 			if (timerInterval) clearInterval(timerInterval);
+			if (confirmTimer) clearTimeout(confirmTimer);
 			releaseWakeLock();
 			if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 		};
+	});
+
+	$effect(() => {
+		runTitle;
+		if (status === 'running' || status === 'paused' || status === 'finished') {
+			persistState();
+		}
 	});
 
 	async function acquireWakeLock() {
@@ -90,6 +108,9 @@
 			wakeLock = await navigator.wakeLock.request('screen');
 			wakeLock.addEventListener('release', () => {
 				wakeLock = null;
+				if (document.visibilityState === 'visible' && status === 'running') {
+					acquireWakeLock();
+				}
 			});
 		} catch (err) {
 			console.warn('Wake Lock failed:', err);
@@ -111,6 +132,7 @@
 			maxSpeed,
 			gpsPoints
 		});
+		if (!result.accepted) return;
 		distance = result.updatedState.distance;
 		currentSpeed = result.updatedState.currentSpeed;
 		maxSpeed = result.updatedState.maxSpeed;
@@ -241,6 +263,40 @@
 		setupVisibilityHandler();
 	}
 
+	function resetConfirm() {
+		confirmFinish = false;
+		confirmDiscard = false;
+		if (confirmTimer) {
+			clearTimeout(confirmTimer);
+			confirmTimer = null;
+		}
+	}
+
+	function armConfirm(which: 'finish' | 'discard') {
+		resetConfirm();
+		if (which === 'finish') confirmFinish = true;
+		else confirmDiscard = true;
+		confirmTimer = setTimeout(resetConfirm, 4000);
+	}
+
+	function requestFinish() {
+		if (finishing) return;
+		if (!confirmFinish) {
+			armConfirm('finish');
+			return;
+		}
+		resetConfirm();
+		finishRun();
+	}
+
+	function requestNewRun() {
+		if (saveError && !confirmDiscard) {
+			armConfirm('discard');
+			return;
+		}
+		resetRun();
+	}
+
 	function finishRun() {
 		if (finishing) return;
 		finishing = true;
@@ -277,12 +333,17 @@
 			})
 			.catch((e) => {
 				// Keep the run in localStorage and on screen so it can be retried.
-				saveError = e instanceof Error ? e.message : 'Failed to save run. Please try again.';
+				saveError = !navigator.onLine
+					? 'You are offline. Connect to the internet and tap Retry Save.'
+					: e instanceof Error
+						? e.message
+						: 'Failed to save run. Please try again.';
 				finishing = false;
 			});
 	}
 
 	function resetRun() {
+		resetConfirm();
 		status = 'idle';
 		saveError = null;
 		gpsError = null;
@@ -306,7 +367,7 @@
 	<title>Running - MegaOrganize</title>
 </svelte:head>
 
-<div class="flex h-full flex-col bg-bg text-fg">
+<div class="flex h-[calc(100%-3rem)] select-none flex-col overflow-hidden bg-bg text-fg lg:h-full">
 	{#if status === 'idle'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
 			{#if gpsError}
@@ -327,15 +388,13 @@
 		</div>
 	{:else if status === 'requesting'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
-			<div
-				class="mb-6 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"
-			></div>
+			<div class="mb-6 flex justify-center"><Spinner size="lg" /></div>
 			<h1 class="mb-2 text-lg font-semibold text-fg-accent">Waiting for GPS...</h1>
 			<p class="text-fg-subdued">Please allow location access</p>
 		</div>
 	{:else if status === 'running' || status === 'paused'}
 		<div class="flex flex-1 flex-col">
-			<div class="relative overflow-hidden" style="height: 45%;">
+			<div class="relative h-[45%] shrink-0 overflow-hidden">
 				<RunMap
 					points={gpsPoints}
 					center={currentPosition}
@@ -352,7 +411,7 @@
 				{/if}
 			</div>
 
-			<div class="flex flex-1 flex-col items-center justify-center p-4">
+			<div class="flex flex-1 flex-col items-center justify-center overflow-y-auto p-4 select-text">
 				{#if gpsError}
 					<div
 						class="mb-3 flex items-center gap-2 rounded-sm border border-yellow-500/30 bg-yellow-500/15 px-4 py-2 text-xs text-yellow-400"
@@ -366,14 +425,14 @@
 						type="text"
 						bind:value={runTitle}
 						placeholder="Name this run (optional)"
-						class="w-full max-w-xs rounded-sm border border-border bg-surface px-3 py-1.5 text-center text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+						class="w-full max-w-xs touch-manipulation rounded-sm border border-border bg-surface px-3 py-1.5 text-center text-base text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none sm:text-sm"
 					/>
 				</div>
 				<div class="mb-4 text-center">
 					<div class="text-5xl font-bold tabular-nums">{formatTime(elapsed)}</div>
 				</div>
 
-				<div class="mb-6 grid w-full max-w-md grid-cols-2 gap-6">
+				<div class="mb-4 grid w-full max-w-md grid-cols-2 gap-4 sm:gap-6">
 					<div class="text-center">
 						<div class="text-3xl font-bold tabular-nums">{(distance / 1000).toFixed(2)}</div>
 						<div class="text-sm text-fg-subdued">km</div>
@@ -384,7 +443,7 @@
 					</div>
 				</div>
 
-				<div class="mb-6 grid w-full max-w-md grid-cols-4 gap-4 text-center">
+				<div class="mb-6 grid w-full max-w-md grid-cols-2 gap-4 sm:grid-cols-4">
 					<div>
 						<div class="text-lg font-semibold tabular-nums">{formatPace(averagePace)}</div>
 						<div class="text-[10px] text-fg-subdued">Avg Pace</div>
@@ -413,18 +472,22 @@
 							<i class="fas fa-play mr-2"></i> Resume
 						</Button>
 					{/if}
-					<Button variant="danger" size="lg" disabled={finishing} onclick={finishRun}>
-						{#if finishing}<i class="fas fa-spinner fa-spin mr-2"></i>{:else}<i
-								class="fas fa-stop mr-2"
-							></i>{/if}
-						Finish
+					<Button variant="danger" size="lg" disabled={finishing} onclick={requestFinish}>
+						{#if finishing}
+							<i class="fas fa-spinner fa-spin mr-2"></i> Saving...
+						{:else if confirmFinish}
+							<i class="fas fa-check mr-2"></i> Tap again to finish
+						{:else}
+							<i class="fas fa-stop mr-2"></i> Finish
+						{/if}
+					</Button>
 					</Button>
 				</div>
 			</div>
 		</div>
 	{:else if status === 'finished'}
 		<div class="flex flex-1 flex-col">
-			<div class="relative overflow-hidden" style="height: 40%;">
+			<div class="relative h-[40%] shrink-0 overflow-hidden">
 				<RunMap
 					points={gpsPoints}
 					center={gpsPoints.length > 0 ? gpsPoints[0] : undefined}
