@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { Button, EmptyState } from '$lib/components/ui';
 	import { ReminderTemplateForm } from '$lib/components/reminders';
@@ -70,7 +71,11 @@
 	}
 
 	async function deleteTemplate(templateId: string) {
-		if (!confirm('Delete this reminder template? All associated reminders will also be deleted.'))
+		if (
+			!(await confirmAction(
+				'Delete this reminder template? All associated reminders will also be deleted.'
+			))
+		)
 			return;
 
 		const res = await fetch('/api/reminders', {

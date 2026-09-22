@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdown';
@@ -372,7 +373,7 @@
 	}
 
 	async function deletePage() {
-		if (!pageData || !confirm('Delete this page and all its content?')) return;
+		if (!pageData || !(await confirmAction('Delete this page and all its content?'))) return;
 		const res = await fetch('/api/pages', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },

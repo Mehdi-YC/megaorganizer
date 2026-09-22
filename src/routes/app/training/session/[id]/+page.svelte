@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
@@ -53,7 +54,7 @@
 	}
 
 	async function deleteSession() {
-		if (!confirm('Are you sure you want to delete this session?')) return;
+		if (!(await confirmAction('Are you sure you want to delete this session?'))) return;
 		const response = await fetch('/api/training', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },

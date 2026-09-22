@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import QuickCapture from '$lib/components/QuickCapture.svelte';
+	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { page } from '$app/state';
 	import { checkAndNotifyReminders } from '$lib/utils/notifications';
 
@@ -72,3 +73,4 @@
 </div>
 
 <QuickCapture />
+<ConfirmDialog />

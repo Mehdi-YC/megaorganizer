@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { EmptyState } from '$lib/components/ui';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
@@ -26,7 +27,7 @@
 	}
 
 	async function handleDeleteExpense(id: string) {
-		if (!confirm('Delete this expense?')) return;
+		if (!(await confirmAction('Delete this expense?'))) return;
 
 		const res = await fetch('/api/finance', {
 			method: 'DELETE',

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdown';
@@ -99,7 +100,7 @@
 	}
 
 	async function deleteItem() {
-		if (!confirm('Delete this item?')) return;
+		if (!(await confirmAction('Delete this item?'))) return;
 		const res = await fetch('/api/tree', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },

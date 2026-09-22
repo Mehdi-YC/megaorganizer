@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
@@ -65,7 +66,7 @@
 	}
 
 	async function remove(id: string) {
-		if (!confirm('Delete this tag?')) return;
+		if (!(await confirmAction('Delete this tag?'))) return;
 		const res = await fetch('/api/tags', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
