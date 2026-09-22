@@ -85,18 +85,6 @@
 		return 'mixed';
 	}
 
-		switch (status) {
-			case 'completed':
-				return 'bg-success/20 border-success/40';
-			case 'missed':
-				return 'bg-error/20 border-error/40';
-			case 'mixed':
-				return 'bg-warning/20 border-warning/40';
-			default:
-				return 'bg-surface border-border';
-		}
-	}
-
 	function getStatusDotColor(status: string): string {
 		switch (status) {
 			case 'completed':

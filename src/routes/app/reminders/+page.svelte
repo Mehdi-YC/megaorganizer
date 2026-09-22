@@ -10,14 +10,6 @@
 	let showCreateForm = $state(false);
 	let editingTemplate = $state<any>(null);
 
-		daily: 'fa-calendar-day',
-		weekly: 'fa-calendar-week',
-		monthly: 'fa-calendar',
-		yearly: 'fa-calendar-days',
-		yearly_date: 'fa-calendar-days',
-		monthly_relative: 'fa-calendar-week'
-	};
-
 	async function handleCreateTemplate(formData: any) {
 		const res = await fetch('/api/reminders', {
 			method: 'POST',
