@@ -15,8 +15,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const reminderData = await getReminderById(locals.user.id, params.id);
 
 	if (reminderData) {
-		// Load template info and recent history
-		const template = await getReminderTemplateById(locals.user.id, reminderData.templateId);
+		// Load template info and recent history (one-off reminders have no template)
+		const template = reminderData.templateId
+			? await getReminderTemplateById(locals.user.id, reminderData.templateId)
+			: null;
 
 		// Get last 30 days of history for this template
 		const endDate = new Date();
@@ -26,7 +28,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			locals.user.id,
 			startDate,
 			endDate,
-			reminderData.templateId
+			reminderData.templateId ?? undefined
 		);
 
 		return {

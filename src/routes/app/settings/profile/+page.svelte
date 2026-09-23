@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
+	import { enablePush, disablePush } from '$lib/utils/push-client';
 	import type { ActionData, PageData } from './$types';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
@@ -21,6 +23,46 @@
 	let importMessage = $state('');
 	let importCounts = $state<Record<string, number> | null>(null);
 	let importInput = $state<HTMLInputElement | null>(null);
+
+	// Push notifications
+	let pushSupported = $state(true);
+	let pushConfigured = $state(false);
+	let pushSubscribed = $state(false);
+	let pushBusy = $state(false);
+	let pushError = $state('');
+
+	onMount(async () => {
+		if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+			pushSupported = false;
+			return;
+		}
+		try {
+			const res = await fetch('/api/push');
+			if (!res.ok) return;
+			const info = await res.json();
+			pushConfigured = info.configured;
+			pushSubscribed = info.subscribed;
+		} catch {
+			// Settings remain usable without push status.
+		}
+	});
+
+	async function togglePush() {
+		if (pushBusy) return;
+		pushBusy = true;
+		pushError = '';
+		try {
+			if (pushSubscribed) {
+				await disablePush();
+				pushSubscribed = false;
+			} else {
+				pushSubscribed = await enablePush();
+				if (!pushSubscribed) pushError = 'Could not enable push on this device.';
+			}
+		} finally {
+			pushBusy = false;
+		}
+	}
 
 	const COUNT_LABELS: Record<string, string> = {
 		categories: 'categories',
@@ -255,6 +297,44 @@
 				<div class="rounded-sm border border-error/30 bg-error/10 px-4 py-3">
 					<p class="text-xs font-medium text-error">{importMessage}</p>
 				</div>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Push Notifications -->
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+				Push Notifications
+			</h2>
+		</div>
+		<div class="space-y-3 px-6 py-5">
+			<p class="text-xs text-fg-subdued">
+				Get reminder notifications on this device even when the app is closed.
+			</p>
+			{#if !pushSupported}
+				<p class="text-xs text-fg-subdued">This browser does not support push notifications.</p>
+			{:else if !pushConfigured}
+				<p class="text-xs text-fg-subdued">
+					Push is not configured on the server (missing VAPID keys).
+				</p>
+			{:else}
+				<div class="flex items-center gap-3">
+					<Button
+						type="button"
+						variant={pushSubscribed ? 'secondary' : 'primary'}
+						disabled={pushBusy}
+						onclick={togglePush}
+					>
+						{pushSubscribed ? 'Disable on this device' : 'Enable on this device'}
+					</Button>
+					{#if pushSubscribed}
+						<span class="text-xs text-green-500">Enabled</span>
+					{/if}
+				</div>
+				{#if pushError}
+					<p class="text-xs text-error">{pushError}</p>
+				{/if}
 			{/if}
 		</div>
 	</div>

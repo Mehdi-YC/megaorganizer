@@ -70,11 +70,9 @@
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				action: 'createTemplate',
+				action: 'createReminder',
 				title: reminderTitle,
-				recurrenceType: 'daily',
-				recurrenceConfig: JSON.stringify({ hour: dueAt.getHours(), minute: dueAt.getMinutes() }),
-				nextDueAt: dueAt.toISOString()
+				dueAt: dueAt.toISOString()
 			})
 		});
 		saving = false;

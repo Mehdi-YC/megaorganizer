@@ -105,3 +105,69 @@ self.addEventListener('message', (event) => {
 		event.source.postMessage({ type: 'PONG' });
 	}
 });
+
+// Web Push: show reminder notifications even when no app tab is open.
+self.addEventListener('push', (event) => {
+	let data = {};
+	try {
+		data = event.data ? event.data.json() : {};
+	} catch {
+		data = { title: event.data ? event.data.text() : 'Reminder' };
+	}
+	const payload = data ?? {};
+	event.waitUntil(
+		self.registration.showNotification(payload.title ?? 'Reminder', {
+			body: payload.body ?? '',
+			icon: '/icons/icon-96.png',
+			badge: '/icons/icon-96.png',
+			tag: payload.tag ?? 'megareminder',
+			data: { url: payload.url ?? '/app/reminders', reminderId: payload.reminderId },
+			actions: [
+				{ action: 'done', title: 'Done' },
+				{ action: 'snooze', title: 'Snooze 10m' }
+			]
+		})
+	);
+});
+
+// Notification actions post back to the reminder API, then focus the app.
+self.addEventListener('notificationclick', (event) => {
+	const data = (event.notification.data ?? {});
+	event.notification.close();
+
+	const run = async () => {
+		if (data.reminderId) {
+			const body =
+				event.action === 'done'
+					? { action: 'completeReminder', reminderId: data.reminderId }
+					: event.action === 'snooze'
+						? {
+								action: 'snoozeReminder',
+								reminderId: data.reminderId,
+								until: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+							}
+						: null;
+			if (body) {
+				try {
+					await fetch('/api/reminders', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(body)
+					});
+				} catch {
+					// Offline: the action is dropped, the reminder stays open.
+				}
+			}
+		}
+
+		const target = data.url ?? '/app/reminders';
+		const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+		for (const win of windows) {
+			await win.navigate(target);
+			return win.focus();
+		}
+		return self.clients.openWindow(target);
+	};
+
+	event.waitUntil(run());
+});
