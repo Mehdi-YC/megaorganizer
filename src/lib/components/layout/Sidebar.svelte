@@ -41,8 +41,10 @@
 
 	let creatingPageFor = $state<string | null>(null);
 	let newPageName = $state('');
-	let showSearch = $state(false);
 	let searchQuery = $state('');
+	let searchInput = $state<HTMLInputElement | null>(null);
+	let searchTimer: ReturnType<typeof setTimeout> | null = null;
+	let searchSearched = $state(false);
 	let searchResults = $state<
 		Array<{
 			id: string;
@@ -126,13 +128,12 @@
 	function handleKeydown(e: KeyboardEvent) {
 		if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 			e.preventDefault();
-			showSearch = !showSearch;
-			searchQuery = '';
-			searchResults = [];
+			searchInput?.focus();
+			searchInput?.select();
 		}
 		if (e.key === 'Escape') {
-			if (showSearch) {
-				showSearch = false;
+			if (document.activeElement === searchInput) {
+				searchInput?.blur();
 			}
 			if (showUserMenu) {
 				showUserMenu = false;
@@ -143,18 +144,30 @@
 		}
 	}
 
+	let searchSeq = 0;
+
+	function scheduleSearch() {
+		searchSearched = false;
+		if (searchTimer) clearTimeout(searchTimer);
+		searchTimer = setTimeout(doSearch, 250);
+	}
+
 	async function doSearch() {
 		if (!searchQuery.trim() || searchQuery.trim().length < 2) {
 			searchResults = [];
 			return;
 		}
+		const seq = ++searchSeq;
 		const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-		if (res.ok) searchResults = await res.json();
+		if (res.ok && seq === searchSeq) {
+			searchResults = await res.json();
+			searchSearched = true;
+		}
 	}
 
 	function navigateSearchResult(result: any) {
-		showSearch = false;
 		searchQuery = '';
+		searchSearched = false;
 		searchResults = [];
 		onNavigate();
 		goto(result.url);
@@ -176,40 +189,32 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-{#if showSearch}
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		class="fixed inset-0 flex items-start justify-center overflow-hidden p-4 pt-[10vh] sm:pt-[15vh]"
-		style="z-index: 100; background: var(--color-bg); opacity: 0.97;"
-		onclick={() => (showSearch = false)}
-	>
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
+<aside class="flex h-full w-64 shrink-0 flex-col border-r border-border bg-bg-subdued">
+	<div class="flex h-12 items-center gap-2.5 border-b border-border px-4">
 		<div
-			class="w-full max-w-md overflow-hidden rounded-sm border border-border bg-surface shadow-xl"
-			onclick={(e) => e.stopPropagation()}
+			class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-xs font-bold text-white"
 		>
-			<div class="flex items-center gap-3 px-4 py-3">
-				<div class="min-w-0 flex-1">
-					<SearchInput
-						bind:value={searchQuery}
-						placeholder="Search items, pages..."
-						onsearch={doSearch}
-						autofocus
-					/>
-				</div>
-				<kbd
-					class="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-medium text-fg-subdued"
-					>ESC</kbd
-				>
-			</div>
-			{#if searchResults.length > 0}
-				<div class="max-h-[60vh] overflow-y-auto border-t border-border py-1">
+			M
+		</div>
+		<span class="text-sm font-bold tracking-wide text-fg-accent uppercase">MegaOrganize</span>
+	</div>
+
+	<div class="relative px-3 pt-3 pb-1">
+		<SearchInput
+			bind:value={searchQuery}
+			bind:inputEl={searchInput}
+			placeholder="Search..."
+			onsearch={scheduleSearch}
+		/>
+		{#if searchSearched && searchQuery.trim().length >= 2}
+			<div
+				class="absolute top-full right-3 left-3 z-30 mt-1 max-h-[60vh] overflow-y-auto rounded-sm border border-border bg-surface py-1 shadow-xl"
+			>
+				{#if searchResults.length > 0}
 					{#each searchResults as result}
 						<button
 							type="button"
-							class="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-muted"
+							class="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
 							onclick={() => navigateSearchResult(result)}
 						>
 							{#if result.imageUrl}
@@ -227,53 +232,16 @@
 								<p class="truncate text-sm text-fg">{result.title}</p>
 								<p class="truncate text-[10px] text-fg-subdued">{result.subtitle || result.type}</p>
 							</div>
-							<i class="fas fa-arrow-right text-[9px] text-fg-subdued/50"></i>
 						</button>
 					{/each}
-				</div>
-			{:else if searchQuery.trim()}
-				<div class="border-t border-border px-4 py-8 text-center">
-					<i class="fas fa-search mb-2 text-xl text-fg-subdued/30"></i>
-					<p class="text-sm text-fg-subdued">No results found</p>
-				</div>
-			{:else}
-				<div class="border-t border-border px-4 py-6 text-center">
-					<p class="text-xs text-fg-subdued">
-						Search items, pages, reminders, expenses, training...
-					</p>
-				</div>
-			{/if}
-		</div>
-	</div>
-{/if}
-
-<aside class="flex h-full w-64 shrink-0 flex-col border-r border-border bg-bg-subdued">
-	<div class="flex h-12 items-center gap-2.5 border-b border-border px-4">
-		<div
-			class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-xs font-bold text-white"
-		>
-			M
-		</div>
-		<span class="text-sm font-bold tracking-wide text-fg-accent uppercase">MegaOrganize</span>
-	</div>
-
-	<div class="px-3 pt-3 pb-1">
-		<button
-			type="button"
-			class="flex h-8 w-full cursor-pointer items-center gap-2 rounded-sm border border-border bg-bg px-2.5 text-xs text-fg-subdued transition-colors hover:border-fg-subdued"
-			onclick={() => {
-				showSearch = true;
-				searchQuery = '';
-				searchResults = [];
-			}}
-		>
-			<i class="fas fa-search text-[10px]"></i>
-			<span class="flex-1 text-left">Search...</span>
-			<kbd
-				class="hidden rounded-sm bg-muted px-1 py-0.5 text-[9px] font-medium text-fg-subdued sm:inline"
-				>⌘K</kbd
-			>
-		</button>
+				{:else}
+					<div class="px-4 py-6 text-center">
+						<i class="fas fa-search mb-2 text-xl text-fg-subdued/30"></i>
+						<p class="text-xs text-fg-subdued">No results found</p>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	<nav class="flex-1 overflow-y-auto px-2 py-3">

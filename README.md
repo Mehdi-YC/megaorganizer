@@ -148,7 +148,7 @@ src/
 - Installable progressive web app with offline service worker
 - Home-screen quick actions (start timer, new session, quick capture)
 - Share text and links from any app straight into Quick Capture
-- Quick Capture on the `c` key, with markdown body and wikilinks
+- Quick Capture on the `c` key: markdown body with wikilinks, quick reminders, and one-tap Start Training
 
 ## UI Components
 

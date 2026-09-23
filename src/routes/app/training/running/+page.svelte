@@ -42,6 +42,10 @@
 	let watchId: number | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let lastPoint: GpsPoint | null = null;
+	let gpsHeartbeat: ReturnType<typeof setInterval> | null = null;
+	let lastFixAt = 0;
+	const GPS_HEARTBEAT_MS = 30_000;
+	const GPS_STALE_MS = 90_000;
 	let wakeLock: WakeLockSentinel | null = null;
 	let visibilityHandler: (() => void) | null = null;
 	let gpsError: string | null = $state(null);
@@ -123,6 +127,7 @@
 	}
 
 	function gpsCallback(position: GeolocationPosition) {
+		lastFixAt = Date.now();
 		const result = handleGpsPosition(position, {
 			lastPoint,
 			distance,
@@ -157,6 +162,17 @@
 	function startGpsWatch() {
 		stopGpsWatch();
 		watchId = navigator.geolocation.watchPosition(gpsCallback, gpsErrorCallback, GPS_WATCH_OPTIONS);
+		// Heartbeat: mobile browsers freeze watchPosition while the screen is
+		// off, which draws one straight line across the gap. A periodic
+		// getCurrentPosition fills those gaps (background timers throttle to
+		// roughly one per minute, still far better than nothing) and re-arms
+		// the watch if it went completely silent.
+		gpsHeartbeat = setInterval(() => {
+			navigator.geolocation.getCurrentPosition(gpsCallback, () => {}, GPS_WATCH_OPTIONS);
+			if (Date.now() - lastFixAt > GPS_STALE_MS) {
+				startGpsWatch();
+			}
+		}, GPS_HEARTBEAT_MS);
 		gpsError = null;
 	}
 
@@ -164,6 +180,10 @@
 		if (watchId !== null) {
 			navigator.geolocation.clearWatch(watchId);
 			watchId = null;
+		}
+		if (gpsHeartbeat !== null) {
+			clearInterval(gpsHeartbeat);
+			gpsHeartbeat = null;
 		}
 	}
 

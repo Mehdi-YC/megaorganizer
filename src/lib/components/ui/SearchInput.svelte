@@ -4,15 +4,16 @@
 		placeholder = 'Search...',
 		onsearch,
 		autofocus = false,
-		class: className = ''
+		class: className = '',
+		inputEl = $bindable<HTMLInputElement | null>(null)
 	}: {
 		value?: string;
 		placeholder?: string;
 		onsearch?: () => void;
 		autofocus?: boolean;
 		class?: string;
+		inputEl?: HTMLInputElement | null;
 	} = $props();
-	let inputEl = $state<HTMLInputElement | null>(null);
 
 	$effect(() => {
 		if (autofocus && inputEl) {

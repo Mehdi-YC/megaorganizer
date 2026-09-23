@@ -5,15 +5,15 @@
 		$props();
 </script>
 
-<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-	<div>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+	<div class="min-w-0">
 		<h1 class="text-xl font-bold text-fg-accent">{title}</h1>
 		{#if subtitle}
 			<p class="text-sm text-fg-subdued">{subtitle}</p>
 		{/if}
 	</div>
 	{#if children}
-		<div class="flex items-center gap-2">
+		<div class="flex flex-wrap items-center gap-2">
 			{@render children()}
 		</div>
 	{/if}
