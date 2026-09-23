@@ -1,7 +1,7 @@
 import { Marked } from 'marked';
 import type { RendererExtension, TokenizerExtension } from 'marked';
 import DOMPurify from 'dompurify';
-import { createWikilinkExtension } from '$lib/utils/wikilink';
+import { createWikilinkExtension, escapeHtml } from '$lib/utils/wikilink';
 
 let mermaidReady = false;
 let mermaidModule: any = null;
@@ -47,7 +47,7 @@ marked.use({
 		code({ text, lang }: { text: string; lang?: string }) {
 			if (lang === 'mermaid') {
 				const id = `mermaid-${++mermaidIdCounter}`;
-				return `<div class="mermaid" data-mermaid-id="${id}">${text}</div>`;
+				return `<div class="mermaid" data-mermaid-id="${id}">${escapeHtml(text)}</div>`;
 			}
 			let highlighted: string;
 			if (hljsModule && lang && hljsModule.getLanguage(lang)) {
@@ -61,7 +61,7 @@ marked.use({
 			} else {
 				highlighted = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 			}
-			const langClass = lang ? ` language-${lang}` : '';
+			const langClass = lang ? ` language-${escapeHtml(lang)}` : '';
 			return `<pre><code class="hljs${langClass}">${highlighted}\n</code></pre>`;
 		}
 	}
@@ -263,7 +263,12 @@ export async function renderMarkdown(
 				]
 			});
 		} catch {
-			el.innerHTML = `<pre class="mermaid-error">${code}</pre>`;
+			// `code` survived sanitization as text; assigning it via innerHTML
+			// would re-parse it as HTML (stored XSS). textContent keeps it text.
+			const pre = document.createElement('pre');
+			pre.className = 'mermaid-error';
+			pre.textContent = code;
+			el.replaceChildren(pre);
 		}
 	}
 

@@ -22,9 +22,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		return json(result);
 	} catch (err) {
 		console.error('backup import failed:', err);
-		return json(
-			{ success: false, message: err instanceof Error ? err.message : 'Import failed' },
-			{ status: 500 }
-		);
+		// Keep error detail out of responses (SQL/filesystem internals)
+		return json({ success: false, message: 'Import failed' }, { status: 500 });
 	}
 };

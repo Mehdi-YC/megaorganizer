@@ -125,6 +125,13 @@ export function buildDdl(): string[] {
 
 /** Create the index structures and backfill them when empty. Idempotent. */
 export async function ensureSearchIndex(client: Client): Promise<void> {
+	// Fresh databases have no schema yet (migrations not applied); the
+	// triggers below need the source tables to exist.
+	const { rows: tables } = await client.execute(
+		"SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'page'"
+	);
+	if (tables.length === 0) return;
+
 	for (const stmt of buildDdl()) {
 		await client.execute(stmt);
 	}

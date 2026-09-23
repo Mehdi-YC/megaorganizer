@@ -32,11 +32,9 @@ import {
 } from '$lib/server/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { readFile } from 'fs/promises';
-import path from 'path';
 import { getCategories, getCategoryPages } from './category.service';
 import { getTagsByUser } from './tag.service';
-
-const UPLOAD_DIR = path.resolve('static/uploads');
+import { saveAttachmentFile, getAttachmentFilePath } from './attachment.service';
 
 type Db = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -54,7 +52,8 @@ async function exportAttachments(userId: string) {
 	const result = [];
 	for (const rec of records) {
 		try {
-			const filePath = path.join(UPLOAD_DIR, userId, rec.storedName);
+			const filePath = await getAttachmentFilePath(userId, rec.storedName);
+			if (!filePath) continue;
 			const buffer = await readFile(filePath);
 			result.push({
 				id: rec.id,
@@ -721,16 +720,17 @@ export async function importUserData(userId: string, data: any) {
 					continue;
 				}
 
-				// Write file to disk
-				const userDir = path.join(UPLOAD_DIR, userId);
-				const ext = path.extname(att.originalName);
-				const storedName = `${crypto.randomUUID()}${ext}`;
-				const filePath = path.join(userDir, storedName);
-
-				const { mkdirSync } = await import('fs');
-				mkdirSync(userDir, { recursive: true });
-				const { writeFileSync } = await import('fs');
-				writeFileSync(filePath, Buffer.from(att.data, 'base64'));
+				// Validate and write the file with the same rules as uploads
+				const saved = await saveAttachmentFile(
+					userId,
+					att.originalName,
+					att.mimeType,
+					Buffer.from(att.data, 'base64')
+				);
+				if (!saved.ok) {
+					counts.skipped++;
+					continue;
+				}
 
 				await tx
 					.insert(attachment)
@@ -738,9 +738,9 @@ export async function importUserData(userId: string, data: any) {
 						userId,
 						pageId: newPageId,
 						originalName: att.originalName,
-						storedName,
-						mimeType: att.mimeType,
-						size: att.size
+						storedName: saved.storedName,
+						mimeType: saved.mimeType,
+						size: saved.size
 					})
 					.run();
 				counts.attachments++;

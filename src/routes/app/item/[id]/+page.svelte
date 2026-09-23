@@ -47,6 +47,8 @@
 
 	let isDeck = $derived(!!ydkData);
 	let isDeckView = $derived(isDeck && !editing);
+	// Only http(s) URLs may be rendered as links (blocks javascript: click-XSS)
+	let externalHref = $derived(item ? safeHttpUrl(item.externalUrl) : null);
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
 	let renderedContent = $state('');
 
@@ -127,6 +129,10 @@
 		const [moved] = next.splice(fromIdx, 1);
 		next.splice(toIdx, 0, moved);
 		children = next;
+	}
+
+	function safeHttpUrl(url: string | null | undefined): string | null {
+		return url && /^https?:\/\//i.test(url) ? url : null;
 	}
 
 	function toggleTreeView() {
@@ -407,15 +413,19 @@
 					</div>
 				{/if}
 
-				{#if item.externalUrl && !editing}
+				{#if externalHref && !editing}
 					<div class="rounded-sm border border-border bg-surface p-3">
-						<a
-							href={item.externalUrl}
+						<Button
+							href={externalHref}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="flex items-center gap-2 text-xs text-primary hover:text-primary-hover"
-							><i class="fas fa-external-link text-[10px]"></i> {item.externalUrl}</a
+							variant="ghost"
+							size="sm"
+							class="w-full justify-start gap-2 text-xs text-primary hover:text-primary-hover"
 						>
+							<i class="fas fa-external-link text-xs"></i>
+							{item.externalUrl}
+						</Button>
 					</div>
 				{/if}
 

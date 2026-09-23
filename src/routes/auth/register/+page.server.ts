@@ -25,7 +25,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Password must be at least 8 characters' });
 		}
 
-		const rateKey = `register:${event.getClientAddress()}`;
+		const rateKey = `register:${event.getClientAddress()}:${email.toLowerCase()}`;
 		const { allowed, retryAfterMs } = checkRateLimit(rateKey);
 		if (!allowed) {
 			const minutes = Math.ceil(retryAfterMs / 60000);

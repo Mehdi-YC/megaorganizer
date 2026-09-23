@@ -5,3 +5,5 @@ dist
 .git
 *.db
 .env
+data/uploads
+static/uploads

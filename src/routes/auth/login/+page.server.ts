@@ -20,7 +20,7 @@ export const actions: Actions = {
 			return fail(400, { message: 'Email and password are required' });
 		}
 
-		const rateKey = `login:${event.getClientAddress()}`;
+		const rateKey = `login:${event.getClientAddress()}:${email.toLowerCase()}`;
 		const { allowed, retryAfterMs } = checkRateLimit(rateKey);
 		if (!allowed) {
 			const minutes = Math.ceil(retryAfterMs / 60000);
