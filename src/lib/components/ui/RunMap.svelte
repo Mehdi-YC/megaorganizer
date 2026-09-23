@@ -144,4 +144,6 @@
 	});
 </script>
 
-<div bind:this={mapEl} class="h-full w-full {className}"></div>
+<!-- isolate + z-0: Leaflet panes stack at z-index 400-1000 and would
+	otherwise paint over the sticky header, sidebar, and dialogs. -->
+<div bind:this={mapEl} class="relative isolate z-0 h-full w-full overflow-hidden {className}"></div>

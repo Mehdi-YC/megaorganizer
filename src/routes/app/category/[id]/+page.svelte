@@ -1,6 +1,4 @@
 <script lang="ts">
-	import {} from '$app/navigation';
-	import {} from '$app/state';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -79,27 +77,33 @@
 			<Button href="/app" variant="primary" size="sm">Back to Dashboard</Button>
 		</EmptyState>
 	{:else}
-		<div class="mb-6 sm:mb-8">
-			<div class="mb-2 flex items-center gap-3">
-				{#if category.icon}
-					<i
-						class="fas {category.icon} text-2xl"
-						style="color: {category.iconColor || 'var(--color-primary)'}"
-					></i>
-				{/if}
-				<h1 class="text-lg font-semibold text-fg-accent">{category.name}</h1>
+		<div class="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+			<div class="flex min-w-0 items-center gap-3">
+				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-primary/10">
+					{#if category.icon}
+						<i
+							class="fas {category.icon} text-lg"
+							style="color: {category.iconColor || 'var(--color-primary)'}"
+						></i>
+					{:else}
+						<i class="fas fa-folder text-lg text-primary"></i>
+					{/if}
+				</div>
+				<div class="min-w-0">
+					<h1 class="truncate text-xl font-bold text-fg-accent">{category.name}</h1>
+					{#if category.description}
+						<p class="truncate text-sm text-fg-subdued">{category.description}</p>
+					{/if}
+				</div>
 			</div>
-			{#if category.description}
-				<p class="mt-2 text-fg-subdued">{category.description}</p>
-			{/if}
-		</div>
-
-		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Pages</h2>
-			<Button onclick={() => (showNewPage = true)}>
-				<i class="fas fa-plus mr-2"></i> New Page
+			<Button size="sm" onclick={() => (showNewPage = true)}>
+				<i class="fas fa-plus mr-2 text-xs"></i> New Page
 			</Button>
 		</div>
+
+		<h2 class="mb-3 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+			Pages ({pages.length})
+		</h2>
 
 		{#if showNewPage}
 			<div class="mb-6 rounded-sm border border-border bg-surface p-4">
@@ -133,32 +137,39 @@
 				submessage="Create your first page to get started"
 			/>
 		{:else}
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 				{#each pages as pg, idx (pg.id)}
 					<a
 						href="/app/category/{category.id}/page/{pg.id}"
-						class="group relative cursor-move rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary"
+						class="group relative flex cursor-move items-start gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
 						draggable="true"
 						ondragstart={(e) => handleDragStart(e, idx)}
 						ondragover={(e) => handleDragOver(e, idx)}
 						ondragend={handleDragEnd}
 					>
 						<div
-							class="absolute top-2 left-2 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+							class="absolute top-2 right-2 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
 						>
 							<i class="fas fa-grip-vertical text-[10px] text-fg-subdued/40"></i>
 						</div>
-						<div class="mb-3 flex items-center gap-2">
+						<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-primary/10">
 							{#if pg.icon}
-								<i class="fas {pg.icon}" style="color: {pg.iconColor || 'inherit'}"></i>
+								<i
+									class="fas {pg.icon} text-sm"
+									style="color: {pg.iconColor || 'var(--color-primary)'}"
+								></i>
 							{:else}
-								<i class="fas fa-file text-primary"></i>
+								<i class="fas fa-file text-sm text-primary"></i>
 							{/if}
-							<h3 class="font-medium text-fg group-hover:text-primary">{pg.name}</h3>
 						</div>
-						{#if pg.description}
-							<p class="line-clamp-2 text-sm text-fg-subdued">{pg.description}</p>
-						{/if}
+						<div class="min-w-0 flex-1">
+							<h3 class="truncate text-sm font-medium text-fg group-hover:text-primary">
+								{pg.name}
+							</h3>
+							{#if pg.description}
+								<p class="mt-0.5 line-clamp-2 text-xs text-fg-subdued">{pg.description}</p>
+							{/if}
+						</div>
 					</a>
 				{/each}
 			</div>

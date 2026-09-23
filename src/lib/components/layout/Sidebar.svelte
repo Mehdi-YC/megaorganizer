@@ -244,7 +244,7 @@
 		{/if}
 	</div>
 
-	<nav class="flex-1 overflow-y-auto px-2 py-3">
+	<nav class="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
 		<a
 			href="/app"
 			onclick={onNavigate}

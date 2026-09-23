@@ -403,3 +403,27 @@ body {
 		transition-duration: 0.01ms !important;
 	}
 }
+
+/* Slim, quiet scrollbars (the default dark-theme bars read as double
+   scrollbars next to the sidebar's own scroller) */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-border) transparent;
+}
+*::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+	background: var(--color-border);
+	border-radius: 4px;
+}
+.no-scrollbar {
+	scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
