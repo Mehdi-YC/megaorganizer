@@ -212,6 +212,27 @@ plus `QuickCapture.svelte` for quick-add capture.
 | `bun run format` | Auto-format code           |
 | `bun run check`  | Svelte type checking       |
 
+## Deploying (Docker)
+
+1. **Back up first**: Settings → Backup export, plus a file copy of `local.db`
+   and `static/uploads`.
+2. `git pull`, then set `.env`: `ORIGIN=https://your.domain`, and for Web Push
+   generate keys with `bunx web-push generate-vapid-keys` into
+   `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT`. Without the
+   VAPID keys the app runs but push stays off (in-app notifications only).
+3. **One-time, if you have existing uploads** (uploads moved from
+   `static/uploads` to `data/uploads`; old files stay readable but new ones
+   go to the new folder):
+   `mkdir -p data/uploads && cp -a static/uploads/. data/uploads/`
+4. `docker compose up -d --build`. Migrations apply automatically at startup
+   and the full-text search index self-builds on first boot. No cron needed:
+   the reminder scheduler runs in-process.
+5. Verify: login works, search finds body text, `/favicon.ico` returns 200,
+   Settings → Push shows "Enable on this device", and a test reminder
+   notifies.
+6. On phones, remove and re-add the PWA to refresh the icons, launcher
+   shortcuts, and share-sheet target, then enable push per device.
+
 ## Environment Variables
 
 See `.env.example` for required variables:

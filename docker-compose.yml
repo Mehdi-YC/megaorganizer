@@ -17,10 +17,13 @@ services:
       DATABASE_URL: ${DATABASE_URL:-file:local.db}
     volumes:
       # Bind the folder DB and uploads (symlink local.db here if you keep it
-      # elsewhere). Create `local.db` as a file and `static/uploads` as a
+      # elsewhere). Create `local.db` as a file and `data/uploads` as a
       # directory before the first `up` — Docker creates a directory for a
       # missing file bind. Swapping the file in place keeps the old inode;
-      # restart the container after replacing it.
+      # restart the container after replacing it. `static/uploads` is the
+      # legacy upload location and stays mounted so pre-existing files keep
+      # working (copy them into `data/uploads` when convenient).
       - ./local.db:/app/local.db
+      - ./data/uploads:/app/data/uploads
       - ./static/uploads:/app/static/uploads
     restart: unless-stopped
