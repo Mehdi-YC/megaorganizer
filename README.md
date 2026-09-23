@@ -13,6 +13,7 @@ A self-hostable personal knowledge, organization, activity, and tracking OS. Bui
 | Auth      | Better Auth                                             |
 | Runtime   | Bun                                                     |
 | Markdown  | Marked + DOMPurify (Mermaid + highlight.js lazy-loaded) |
+| Push      | Web Push (VAPID) with in-app polling fallback           |
 
 ## Getting Started
 
@@ -37,6 +38,7 @@ bun run db:generate  # generate migration files from schema changes
 bun run db:migrate   # run pending migrations
 bun run db:push      # push schema directly (dev only — skips migration files)
 bun run db:studio    # open Drizzle Studio
+bun run db:reindex   # rebuild the full-text search index from source tables
 ```
 
 > **⚠️ Production workflow:** Always use `db:generate` + `db:migrate` for production databases.
@@ -76,6 +78,13 @@ src/
 - **Nodes** — colored, icon-labeled sections (folders)
 - **Items** — leaf content with images, markdown, video, and external links
 
+### Wikilinks
+
+- Link any page or item with `[[Target]]` or `[[Target|label]]`
+- Backlinks panel on every page and item
+- Links survive renames; creating a missing target lights up dangling links
+- Click any link to open it, or create the target if it does not exist yet
+
 ### Yu-Gi-Oh Deck Builder
 
 - Import/export `.ydk` files
@@ -98,9 +107,10 @@ src/
 
 ### Reminders
 
-- Reminder templates with todo checklists
-- Calendar view and history
-- Stats overview
+- One-off reminders and recurring templates with todo checklists
+- Web Push notifications with Done and Snooze actions, even when the app is closed
+- Per-device push opt-in under Settings
+- Calendar view, history, and stats overview
 
 ### Finance
 
@@ -114,7 +124,8 @@ src/
 ### Library
 
 - Grid view of all items with tag and YDK filters
-- Search across all content
+- Full-text search (SQLite FTS5) across names, descriptions, and body
+  markdown of pages, items, reminders, expenses, and training sessions
 
 ### Tag System
 
@@ -136,6 +147,8 @@ src/
 
 - Installable progressive web app with offline service worker
 - Home-screen quick actions (start timer, new session, quick capture)
+- Share text and links from any app straight into Quick Capture
+- Quick Capture on the `c` key, with markdown body and wikilinks
 
 ## UI Components
 
@@ -170,21 +183,24 @@ plus `QuickCapture.svelte` for quick-add capture.
 
 ## API Endpoints
 
-| Endpoint              | Methods                | Description                               |
-| --------------------- | ---------------------- | ----------------------------------------- |
-| `/api/categories`     | GET, POST, PUT, DELETE | Category CRUD                             |
-| `/api/pages`          | GET, POST, PUT, DELETE | Page CRUD                                 |
-| `/api/tree`           | GET, POST, PUT, DELETE | Tree elements CRUD, search, subtree, move |
-| `/api/tree/hierarchy` | GET                    | Full tree hierarchy                       |
-| `/api/attachments`    | GET, POST, DELETE      | File upload, download, delete             |
-| `/api/tags`           | GET, POST, PUT, DELETE | Tag CRUD                                  |
-| `/api/training`       | GET, POST, PUT, DELETE | Training sessions, activities, records    |
-| `/api/running`        | GET, POST, PUT, DELETE | Running activities & GPS data             |
-| `/api/timers`         | GET, POST, PUT, DELETE | HIIT/WOD timer templates & steps          |
-| `/api/reminders`      | GET, POST, PUT, DELETE | Reminders, templates, stats               |
-| `/api/finance`        | GET, POST, PUT, DELETE | Expenses, monthly summaries, settings     |
-| `/api/search`         | GET                    | Global search across all content          |
-| `/api/backup`         | GET, POST              | Full data export (GET) / import (POST)    |
+| Endpoint              | Methods                | Description                                          |
+| --------------------- | ---------------------- | ---------------------------------------------------- |
+| `/api/categories`     | GET, POST, PUT, DELETE | Category CRUD                                        |
+| `/api/pages`          | GET, POST, PUT, DELETE | Page CRUD                                            |
+| `/api/tree`           | GET, POST, PUT, DELETE | Tree elements CRUD, search, subtree, move            |
+| `/api/tree/hierarchy` | GET                    | Full tree hierarchy                                  |
+| `/api/attachments`    | GET, POST, DELETE      | File upload, download, delete                        |
+| `/api/tags`           | GET, POST, PUT, DELETE | Tag CRUD                                             |
+| `/api/training`       | GET, POST, PUT, DELETE | Training sessions, activities, records               |
+| `/api/running`        | GET, POST, PUT, DELETE | Running activities & GPS data                        |
+| `/api/timers`         | GET, POST, PUT, DELETE | HIIT/WOD timer templates & steps                     |
+| `/api/reminders`      | GET, POST, PUT, DELETE | One-off reminders, templates, complete/snooze, stats |
+| `/api/finance`        | GET, POST, PUT, DELETE | Expenses, monthly summaries, settings                |
+| `/api/links`          | GET                    | Resolve a wikilink target name to a URL              |
+| `/api/push`           | GET, POST              | Web Push config, device subscribe/unsubscribe        |
+| `/api/search`         | GET                    | FTS5 global search across all content                |
+| `/api/backup`         | GET, POST              | Full data export (GET) / import (POST)               |
+| `/share-target`       | POST                   | PWA share_target endpoint (Android share sheet)      |
 
 ## Scripts
 
@@ -203,3 +219,7 @@ See `.env.example` for required variables:
 - `DATABASE_URL` — SQLite connection string (default: `file:local.db`)
 - `BETTER_AUTH_SECRET` — Secret for auth sessions
 - `ORIGIN` — App origin URL (default: `http://localhost:5173`)
+- `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` — Web Push keys (generate with
+  `bunx web-push generate-vapid-keys`); without them push is disabled and
+  reminders notify only while the app is open
+- `VAPID_SUBJECT` — Contact for push service operators (e.g. `mailto:you@example.com`)
