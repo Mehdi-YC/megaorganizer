@@ -148,13 +148,13 @@
 	}
 </script>
 
-<div class="rounded-sm border border-border bg-surface p-4 sm:p-5">
+<div class="rounded-sm border border-border bg-surface p-4">
 	<div class="mb-3 flex items-center justify-between">
 		<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 			Child Items ({children.length})
 		</h3>
 		<Button size="sm" onclick={() => (showAdd = !showAdd)}>
-			<i class="fas fa-plus text-[9px]"></i> Add
+			<i class="fas fa-plus mr-2 text-xs"></i> Add
 		</Button>
 	</div>
 
@@ -201,7 +201,7 @@
 			{/if}
 			{#if addQuery.trim() && addResults.length === 0}
 				<Button size="sm" class="w-full" onclick={createAndAdd}>
-					<i class="fas fa-plus mr-1 text-[8px]"></i> Create "{addQuery}"
+					<i class="fas fa-plus mr-2 text-xs"></i> Create "{addQuery}"
 				</Button>
 			{/if}
 			<Button size="sm" variant="ghost" class="w-full" onclick={closeAdd}>Cancel</Button>

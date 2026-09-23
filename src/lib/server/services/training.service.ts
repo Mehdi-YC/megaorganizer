@@ -66,15 +66,6 @@ export async function getTrainingSessionsInRange(userId: string, startDate: Date
 		.all();
 }
 
-export async function getTrainingSessionsCount(userId: string): Promise<number> {
-	const result = await db
-		.select({ count: trainingSession.id })
-		.from(trainingSession)
-		.where(eq(trainingSession.userId, userId))
-		.all();
-	return result.length;
-}
-
 export async function getTrainingSessionsWithActivities(userId: string, limit = 50, offset = 0) {
 	const sessions = await getTrainingSessions(userId, limit, offset);
 	if (sessions.length === 0) return [];
@@ -295,21 +286,6 @@ export async function createExerciseRecord(
 		.returning();
 
 	return result;
-}
-
-export async function getExerciseRecords(userId: string, activityId: string) {
-	const sessionId = await resolveActivitySession(activityId);
-	if (!sessionId) return [];
-
-	const owned = await verifySessionOwnership(userId, sessionId);
-	if (!owned) return [];
-
-	return db
-		.select()
-		.from(trainingExerciseRecord)
-		.where(eq(trainingExerciseRecord.activityId, activityId))
-		.orderBy(asc(trainingExerciseRecord.position))
-		.all();
 }
 
 export async function batchCreateExerciseRecords(

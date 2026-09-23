@@ -128,7 +128,7 @@
 	<title>{item?.title || 'Reminder'} - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-6 lg:p-8">
+<div class="p-4 sm:p-8">
 	<!-- Breadcrumb -->
 	<div class="mb-4 flex items-center gap-1.5 text-[11px] text-fg-subdued">
 		<a href="/app" class="hover:text-primary" title="Home"

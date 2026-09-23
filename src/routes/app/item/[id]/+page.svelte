@@ -47,6 +47,8 @@
 
 	let isDeck = $derived(!!ydkData);
 	let isDeckView = $derived(isDeck && !editing);
+	// Only http(s) URLs may be rendered as links (blocks javascript: click-XSS)
+	let externalHref = $derived(item ? safeHttpUrl(item.externalUrl) : null);
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
 	let renderedContent = $state('');
 
@@ -127,6 +129,10 @@
 		const [moved] = next.splice(fromIdx, 1);
 		next.splice(toIdx, 0, moved);
 		children = next;
+	}
+
+	function safeHttpUrl(url: string | null | undefined): string | null {
+		return url && /^https?:\/\//i.test(url) ? url : null;
 	}
 
 	function toggleTreeView() {
@@ -216,7 +222,7 @@
 		</EmptyState>
 	</div>
 {:else}
-	<div class="space-y-4 p-4 sm:p-6 lg:flex lg:h-[calc(100vh-49px)] lg:flex-col lg:space-y-0 lg:p-0">
+	<div class="space-y-4 p-4 sm:p-8 lg:flex lg:h-[calc(100vh-49px)] lg:flex-col lg:space-y-0 lg:p-0">
 		<div class="border-b border-border bg-bg-subdued px-4 py-2 sm:px-6 lg:shrink-0">
 			<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
 				<button
@@ -407,15 +413,19 @@
 					</div>
 				{/if}
 
-				{#if item.externalUrl && !editing}
+				{#if externalHref && !editing}
 					<div class="rounded-sm border border-border bg-surface p-3">
-						<a
-							href={item.externalUrl}
+						<Button
+							href={externalHref}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="flex items-center gap-2 text-xs text-primary hover:text-primary-hover"
-							><i class="fas fa-external-link text-[10px]"></i> {item.externalUrl}</a
+							variant="ghost"
+							size="sm"
+							class="w-full justify-start gap-2 text-xs text-primary hover:text-primary-hover"
 						>
+							<i class="fas fa-external-link text-xs"></i>
+							{item.externalUrl}
+						</Button>
 					</div>
 				{/if}
 
@@ -429,7 +439,7 @@
 						onReorder={handleChildReorder}
 					/>
 				{:else if children.length > 0}
-					<div class="rounded-sm border border-border bg-surface p-4 lg:p-5">
+					<div class="rounded-sm border border-border bg-surface p-4">
 						<div class="mb-3 flex items-center justify-between">
 							<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 								Tree View
@@ -489,7 +499,7 @@
 						aria-label="Toggle favorite"
 						onclick={toggleFavorite}
 						class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {favorite
-							? 'bg-yellow-400/10 text-yellow-500'
+							? 'bg-yellow-400/10 text-yellow-400'
 							: 'bg-muted text-fg-subdued hover:bg-border hover:text-fg'}"
 					>
 						<i class="fas fa-star"></i>

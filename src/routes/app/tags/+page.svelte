@@ -84,7 +84,7 @@
 
 <svelte:head><title>Tags - MegaOrganize</title></svelte:head>
 
-<div class="p-4 sm:p-6">
+<div class="p-4 sm:p-8">
 	<PageHeader title="Tags" subtitle="{tags.length} tags">
 		<Button size="md" onclick={() => (showNew = true)}>
 			<i class="fas fa-plus text-xs"></i> New Tag

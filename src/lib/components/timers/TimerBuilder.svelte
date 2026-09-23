@@ -142,7 +142,7 @@
 			case 'silent':
 				return 'bg-warning/10 text-warning';
 			case 'group':
-				return 'bg-blue-500/10 text-blue-500';
+				return 'bg-blue-500/10 text-blue-600';
 			default:
 				return 'bg-error/10 text-error';
 		}
@@ -376,19 +376,19 @@
 
 		<div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
 			<Button variant="secondary" size="sm" onclick={() => addStep('normal')}>
-				<i class="fas fa-plus mr-1 text-[10px]"></i>Step
+				<i class="fas fa-plus mr-2 text-xs"></i>Step
 			</Button>
 			<Button variant="secondary" size="sm" onclick={() => addStep('info')}>
-				<i class="fas fa-info mr-1 text-[10px]"></i>Info
+				<i class="fas fa-info mr-2 text-xs"></i>Info
 			</Button>
 			<Button variant="secondary" size="sm" onclick={() => addStep('group')}>
-				<i class="fas fa-layer-group mr-1 text-[10px]"></i>Group
+				<i class="fas fa-layer-group mr-2 text-xs"></i>Group
 			</Button>
 			<Button variant="secondary" size="sm" onclick={() => addStep('start')}>
-				<i class="fas fa-flag-checkered mr-1 text-[10px]"></i>Start
+				<i class="fas fa-flag-checkered mr-2 text-xs"></i>Start
 			</Button>
 			<Button variant="secondary" size="sm" onclick={() => addStep('end')}>
-				<i class="fas fa-trophy mr-1 text-[10px]"></i>End
+				<i class="fas fa-trophy mr-2 text-xs"></i>End
 			</Button>
 		</div>
 	</div>

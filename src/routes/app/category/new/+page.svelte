@@ -48,7 +48,7 @@
 	<title>New Category - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-6">
+<div class="p-4 sm:p-8">
 	<div class="mb-4 flex items-center gap-3 sm:mb-6">
 		<a href="/app" aria-label="Go back" class="text-fg-subdued transition-colors hover:text-fg">
 			<i class="fas fa-arrow-left text-sm"></i>

@@ -148,7 +148,7 @@
 	<title>Finance - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-6 lg:p-8">
+<div class="p-4 sm:p-8">
 	<PageHeader title="Finance" subtitle="Track your expenses and spending">
 		<Button onclick={openAdd}>
 			<i class="fas fa-plus mr-2 text-xs"></i>
@@ -221,7 +221,7 @@
 
 			<!-- Expense List -->
 			<div>
-				<h2 class="mb-3 text-sm font-semibold tracking-wide text-fg-accent uppercase">
+				<h2 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
 					Expenses
 					{#if visibleExpenses.length !== expenses.length}
 						<span class="ml-1 text-xs font-normal text-fg-subdued">

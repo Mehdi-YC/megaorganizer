@@ -419,7 +419,7 @@
 	<h1 class="mb-6 text-lg font-semibold text-fg-accent">New Training Session</h1>
 
 	{#if isGpsActivity}
-		<div class="mb-6 rounded-sm border border-border bg-surface p-6">
+		<div class="mb-6 rounded-sm border border-border bg-surface p-4">
 			{#if gpsStatus === 'idle'}
 				<div class="py-8 text-center">
 					{#if gpsError}
@@ -456,7 +456,7 @@
 
 				{#if gpsError}
 					<div
-						class="mb-3 flex items-center gap-2 rounded-sm border border-yellow-500/30 bg-yellow-500/15 px-4 py-2 text-xs text-yellow-400"
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
 					>
 						<i class="fas fa-satellite-dish"></i>
 						<span>{gpsError}</span>
@@ -503,7 +503,7 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="mb-6 rounded-sm border border-border bg-surface p-6">
+		<div class="mb-6 rounded-sm border border-border bg-surface p-4">
 			<div class="mb-6 text-center">
 				<div class="mb-2 text-5xl font-bold text-fg tabular-nums">{formatTime(elapsedTime)}</div>
 				{#if timerRunning}
@@ -568,7 +568,10 @@
 							<p class="mb-2 text-sm font-medium text-fg">{item?.name || 'Exercise'}</p>
 							<div class="grid grid-cols-3 gap-2">
 								<div>
-									<label for="sets-{record.itemId}" class="text-[10px] text-fg-subdued">Sets</label>
+									<label
+										for="sets-{record.itemId}"
+										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Sets</label
+									>
 									<input
 										id="sets-{record.itemId}"
 										type="number"
@@ -579,7 +582,10 @@
 									/>
 								</div>
 								<div>
-									<label for="reps-{record.itemId}" class="text-[10px] text-fg-subdued">Reps</label>
+									<label
+										for="reps-{record.itemId}"
+										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Reps</label
+									>
 									<input
 										id="reps-{record.itemId}"
 										type="text"
@@ -589,8 +595,9 @@
 									/>
 								</div>
 								<div>
-									<label for="weight-{record.itemId}" class="text-[10px] text-fg-subdued"
-										>Weight</label
+									<label
+										for="weight-{record.itemId}"
+										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Weight</label
 									>
 									<div class="flex">
 										<input
@@ -605,11 +612,17 @@
 												)}
 											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
 										/>
-										<span class="ml-1 self-center text-[10px] text-fg-subdued">kg</span>
+										<span
+											class="ml-1 self-center text-[10px] font-semibold tracking-wide text-fg-subdued"
+											>kg</span
+										>
 									</div>
 								</div>
 								<div>
-									<label for="rpe-{record.itemId}" class="text-[10px] text-fg-subdued">RPE</label>
+									<label
+										for="rpe-{record.itemId}"
+										class="text-[10px] font-semibold tracking-wide text-fg-subdued">RPE</label
+									>
 									<input
 										id="rpe-{record.itemId}"
 										type="number"
@@ -622,8 +635,9 @@
 									/>
 								</div>
 								<div>
-									<label for="rest-{record.itemId}" class="text-[10px] text-fg-subdued"
-										>Rest (s)</label
+									<label
+										for="rest-{record.itemId}"
+										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Rest (s)</label
 									>
 									<input
 										id="rest-{record.itemId}"
@@ -639,8 +653,9 @@
 									/>
 								</div>
 								<div>
-									<label for="notes-{record.itemId}" class="text-[10px] text-fg-subdued"
-										>Notes</label
+									<label
+										for="notes-{record.itemId}"
+										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Notes</label
 									>
 									<input
 										id="notes-{record.itemId}"

@@ -2,7 +2,8 @@
 set -e
 
 # --- Diagnostics: print a redacted view of the runtime config ----------------
-echo "entrypoint: DATABASE_URL=${DATABASE_URL}"
+REDACTED_DB_URL=$(printf '%s' "$DATABASE_URL" | sed -E 's#(://[^@/]*@)#://***@#; s#([?&](authToken|token|password|secret)=)[^&]*#\1***#gi')
+echo "entrypoint: DATABASE_URL=${REDACTED_DB_URL}"
 echo "entrypoint: ORIGIN=${ORIGIN}"
 
 # --- Ensure the database directory exists before migrating. libsql cannot ---

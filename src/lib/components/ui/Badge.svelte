@@ -14,7 +14,7 @@
 	const variants: Record<string, string> = {
 		default: 'bg-muted text-fg-subdued',
 		primary: 'bg-primary-subdued text-primary',
-		success: 'bg-green-500/15 text-success',
+		success: 'bg-success/15 text-success',
 		warning: 'bg-warning/15 text-warning',
 		danger: 'bg-error/15 text-error'
 	};

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import {} from '$lib/utils/training';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 
 	let { data } = $props();
@@ -310,7 +309,7 @@
 	<title>Calendar - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-6 lg:p-8">
+<div class="p-4 sm:p-8">
 	<PageHeader title="Calendar" subtitle="View all your events in one place">
 		<!-- Filter buttons -->
 		<button
@@ -360,7 +359,7 @@
 	<div class="grid gap-6 lg:grid-cols-3">
 		<!-- Calendar -->
 		<div class="lg:col-span-2">
-			<div class="rounded-sm border border-border bg-surface p-3 sm:p-6">
+			<div class="rounded-sm border border-border bg-surface p-4">
 				<div class="mb-4 flex items-center justify-between sm:mb-6">
 					<button
 						type="button"

@@ -402,7 +402,7 @@
 				/>
 				{#if status === 'paused'}
 					<div
-						class="absolute top-3 left-3 z-[1000] rounded-sm bg-yellow-500/90 px-4 py-2 text-sm font-medium text-white shadow-lg"
+						class="absolute top-3 left-3 z-[1000] rounded-sm bg-warning/90 px-4 py-2 text-sm font-medium text-white shadow-lg"
 					>
 						PAUSED
 					</div>
@@ -412,7 +412,7 @@
 			<div class="flex flex-1 flex-col items-center justify-center overflow-y-auto p-4 select-text">
 				{#if gpsError}
 					<div
-						class="mb-3 flex items-center gap-2 rounded-sm border border-yellow-500/30 bg-yellow-500/15 px-4 py-2 text-xs text-yellow-400"
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
 					>
 						<i class="fas fa-satellite-dish"></i>
 						<span>{gpsError}</span>
@@ -502,7 +502,7 @@
 						<span>{saveError}</span>
 					</div>
 				{/if}
-				<i class="fas fa-check-circle mb-4 text-5xl text-green-400"></i>
+				<i class="fas fa-check-circle mb-4 text-5xl text-success"></i>
 				<h1 class="mb-4 text-lg font-semibold text-fg-accent">Run Complete!</h1>
 
 				<div class="mb-6 grid grid-cols-2 gap-6 text-center">

@@ -124,7 +124,7 @@
 
 <svelte:head><title>Item Library - MegaOrganize</title></svelte:head>
 
-<div class="p-4 sm:p-6">
+<div class="p-4 sm:p-8">
 	<PageHeader title="Item Library" subtitle="{items.length} items">
 		<Button size="md" onclick={() => (showNewItem = true)}>
 			<i class="fas fa-plus text-xs"></i> <span class="hidden sm:inline">New Item</span>
@@ -196,9 +196,7 @@
 				</div>
 				<div class="space-y-2">
 					<div>
-						<p class="mb-1 text-[10px] font-semibold tracking-wider text-fg-subdued uppercase">
-							Tags
-						</p>
+						<p class="mb-1 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Tags</p>
 						<div class="flex flex-wrap gap-1">
 							{#each allTags as t (t.id)}
 								<button

@@ -929,9 +929,7 @@
 													style="background: {nodeColor}"
 													onclick={() => addItemToNode(node.id)}
 												>
-													<i class="fas fa-plus mr-1 text-[8px]"></i> Create "{nodeAddName[
-														node.id
-													]}"
+													<i class="fas fa-plus mr-2 text-xs"></i> Create "{nodeAddName[node.id]}"
 												</button>
 											{/if}
 											<button
@@ -1194,7 +1192,7 @@
 								class="cursor-pointer text-[10px] text-fg-subdued hover:text-fg"
 								onclick={() => fileInput?.click()}
 							>
-								<i class="fas fa-plus mr-1 text-[8px]"></i> Add more files
+								<i class="fas fa-plus mr-2 text-xs"></i> Add more files
 							</button>
 						</div>
 					{/if}
@@ -1287,7 +1285,7 @@
 		>
 			<p class="mb-1.5 truncate text-xs font-semibold text-fg-accent">{hoverItem.name}</p>
 			{#if hoverItemChildren.length > 0}
-				<p class="mb-1 text-[9px] font-bold tracking-widest text-fg-subdued uppercase">
+				<p class="mb-1 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
 					Children ({hoverItemChildren.length})
 				</p>
 				<div class="max-h-32 space-y-0.5 overflow-y-auto">

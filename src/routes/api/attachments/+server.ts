@@ -28,12 +28,22 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		const fileStat = await stat(filePath);
 		const stream = Readable.toWeb(createReadStream(filePath)) as ReadableStream;
 
+		// Only images, audio, video, and PDF render inline; everything else
+		// downloads as octet-stream so no uploaded file can run in the app origin.
+		const inlineSafe =
+			record.mimeType === 'application/pdf' ||
+			record.mimeType.startsWith('image/') ||
+			record.mimeType.startsWith('video/') ||
+			record.mimeType.startsWith('audio/');
+
 		return new Response(stream, {
 			headers: {
-				'Content-Type': record.mimeType,
+				'Content-Type': inlineSafe ? record.mimeType : 'application/octet-stream',
 				'Content-Length': fileStat.size.toString(),
-				'Content-Disposition': `inline; filename="${encodeURIComponent(record.originalName)}"`,
-				'Cache-Control': 'private, max-age=3600'
+				'Content-Disposition': `${inlineSafe ? 'inline' : 'attachment'}; filename="${encodeURIComponent(record.originalName)}"`,
+				'Cache-Control': 'private, max-age=3600',
+				'Content-Security-Policy': "default-src 'none'; sandbox",
+				'X-Content-Type-Options': 'nosniff'
 			}
 		});
 	}

@@ -121,7 +121,7 @@
 						{tag}
 						<button
 							type="button"
-							class="hover:text-primary-hover"
+							class="cursor-pointer hover:text-primary-hover"
 							onclick={() => removeTag(tag)}
 							aria-label="Remove tag {tag}"
 						>

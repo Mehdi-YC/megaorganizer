@@ -1,14 +1,19 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { json, redirect } from '@sveltejs/kit';
-import { building } from '$app/environment';
+import { building, dev } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { logError } from '$lib/server/error-log';
 import { startScheduler } from '$lib/server/services/scheduler';
+import { checkRateLimit } from '$lib/server/rate-limit';
 
 // Background reminder delivery (see services/scheduler.ts). Skipped during
 // the build, which evaluates this module graph without a server process.
 if (!building) startScheduler();
+
+// vite dev needs 'unsafe-inline'/'unsafe-eval'; production loads the SW
+// registration from /sw-register.js and needs neither.
+const SCRIPT_SRC = dev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self'";
 
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Content-Type-Options': 'nosniff',
@@ -16,8 +21,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 	'X-XSS-Protection': '1; mode=block',
 	'Referrer-Policy': 'strict-origin-when-cross-origin',
 	'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
-	'Content-Security-Policy':
-		"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' ws: wss:; frame-src 'self' https://www.youtube.com https://www.google.com;"
+	'Content-Security-Policy': `default-src 'self'; script-src ${SCRIPT_SRC}; object-src 'none'; base-uri 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' ws: wss:; frame-src 'self' https://www.youtube.com https://www.google.com;`
 };
 
 const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB for regular API requests
@@ -32,18 +36,26 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		return response;
 	}
 
-	// Check request body size for API endpoints
+	// Enforce body size on API writes. The check must not depend on
+	// content-length being present and numeric: chunked or malformed
+	// headers are rejected instead of buffered unbounded.
 	if (event.request.method !== 'GET' && event.url.pathname.startsWith('/api/')) {
-		const contentLength = event.request.headers.get('content-length');
+		const contentLength = Number(event.request.headers.get('content-length'));
+		if (!Number.isFinite(contentLength)) {
+			return json({ error: 'Content-Length required' }, { status: 411 });
+		}
 		const isUpload =
 			event.url.pathname.includes('/attachments') || event.url.pathname.includes('/backup');
 		const maxSize = isUpload ? MAX_UPLOAD_BODY_SIZE : MAX_BODY_SIZE;
-
-		if (contentLength && parseInt(contentLength) > maxSize) {
-			return new Response(JSON.stringify({ error: 'Request body too large' }), {
-				status: 413,
-				headers: { 'Content-Type': 'application/json' }
-			});
+		if (contentLength > maxSize) {
+			return json({ error: 'Request body too large' }, { status: 413 });
+		}
+	}
+	// The share endpoint accepts multipart text shares only.
+	if (event.request.method === 'POST' && event.url.pathname === '/share-target') {
+		const contentLength = Number(event.request.headers.get('content-length'));
+		if (Number.isFinite(contentLength) && contentLength > MAX_BODY_SIZE) {
+			return redirect(303, '/app');
 		}
 	}
 
@@ -54,6 +66,20 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	if (session?.user) {
 		event.locals.user = session.user;
 		event.locals.session = session.session;
+
+		// Central API rate limit (per user): 300 requests per minute.
+		if (event.url.pathname.startsWith('/api/')) {
+			const { allowed, retryAfterMs } = checkRateLimit(`api:${session.user.id}`, 300, 60_000);
+			if (!allowed) {
+				return json(
+					{ error: 'Too many requests', retryAfterMs },
+					{
+						status: 429,
+						headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) }
+					}
+				);
+			}
+		}
 	} else {
 		if (event.url.pathname.startsWith('/api/')) {
 			return json({ error: 'Unauthorized' }, { status: 401 });

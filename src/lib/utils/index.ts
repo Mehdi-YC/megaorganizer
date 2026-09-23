@@ -1,4 +1,3 @@
-export const DEFAULT_TAG_COLOR = '#5A31F4';
 export const NODE_COLORS = [
 	'#5a31f4',
 	'#e35169',

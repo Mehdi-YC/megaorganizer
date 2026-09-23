@@ -124,7 +124,7 @@
 	}
 </script>
 
-<div class="rounded-sm border border-border bg-surface p-3 sm:p-6">
+<div class="rounded-sm border border-border bg-surface p-4">
 	<div class="mb-4 flex items-center justify-between sm:mb-6">
 		<button
 			type="button"

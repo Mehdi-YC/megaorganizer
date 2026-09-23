@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as schema from './schema';
 import { ensureSearchIndex } from './search-index';
+import { building } from '$app/environment';
 import { env } from '$env/dynamic/private';
 
 if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
@@ -12,7 +13,8 @@ const client = createClient({ url: env.DATABASE_URL });
 await client.execute('PRAGMA foreign_keys = ON');
 
 // Full-text search index: created, trigger-backed, and backfilled if empty.
-await ensureSearchIndex(client);
+// Skipped at build time, where this module graph is only evaluated.
+if (!building) await ensureSearchIndex(client);
 
 export const db = drizzle(client, { schema });
 

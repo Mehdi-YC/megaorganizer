@@ -111,7 +111,7 @@
 	<title>Dashboard - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-6 lg:p-8">
+<div class="p-4 sm:p-8">
 	<PageHeader title="Dashboard" subtitle="Your personal knowledge & activity operating system" />
 
 	<!-- Today's Reminders -->
@@ -119,7 +119,7 @@
 		<div class="mb-6">
 			<div class="mb-3 flex items-center justify-between">
 				<h2
-					class="flex items-center gap-2 text-sm font-semibold tracking-wide text-fg-accent uppercase"
+					class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
 				>
 					<i class="fas fa-bell text-xs text-primary"></i>
 					Today's Reminders
@@ -144,7 +144,7 @@
 		<div class="mb-6">
 			<div class="mb-3 flex items-center justify-between">
 				<h2
-					class="flex items-center gap-2 text-sm font-semibold tracking-wide text-fg-accent uppercase"
+					class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
 				>
 					<i class="fas fa-calendar-week text-xs text-primary"></i>
 					Upcoming This Week
@@ -176,7 +176,7 @@
 										: `/app/reminders/${event.id}`}
 									class="h-2 w-2 rounded-full {event.type === 'training'
 										? 'bg-blue-500'
-										: 'bg-green-500'}"
+										: 'bg-success'}"
 									title={event.title}
 								></a>
 							{/each}
@@ -287,7 +287,7 @@
 		<!-- Recent Items -->
 		<div class="lg:col-span-2">
 			<div class="mb-3 flex items-center justify-between">
-				<h2 class="text-sm font-semibold tracking-wide text-fg-accent uppercase">Recent Items</h2>
+				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Recent Items</h2>
 				<a href="/app/library" class="text-xs text-primary hover:text-primary-hover">View All</a>
 			</div>
 			{#if data.recentItems && data.recentItems.length > 0}
@@ -342,7 +342,7 @@
 		<!-- Categories -->
 		<div>
 			<div class="mb-3 flex items-center justify-between">
-				<h2 class="text-sm font-semibold tracking-wide text-fg-accent uppercase">Categories</h2>
+				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Categories</h2>
 				<a href="/app/category/new" class="text-xs text-primary hover:text-primary-hover">Add New</a
 				>
 			</div>
@@ -386,7 +386,7 @@
 	<!-- Recent Training -->
 	<div class="mt-6">
 		<div class="mb-3 flex items-center justify-between">
-			<h2 class="text-sm font-semibold tracking-wide text-fg-accent uppercase">Recent Training</h2>
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Recent Training</h2>
 			<div class="flex gap-3">
 				<a href="/app/training/session/new" class="text-xs text-primary hover:text-primary-hover"
 					>New Session</a
