@@ -124,13 +124,13 @@
 			>
 			<button
 				type="button"
-				class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg-subdued hover:bg-border hover:text-fg"
+				class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-border"
 				onclick={onEdit}
 				aria-label="Edit"><i class="fas fa-pen text-[10px]"></i></button
 			>
 			<button
 				type="button"
-				class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-sm bg-error/15 px-3 text-xs font-medium text-error hover:bg-error/25"
+				class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
 				onclick={onDelete}
 				aria-label="Delete"><i class="fas fa-trash text-[10px]"></i></button
 			>
@@ -142,7 +142,7 @@
 			{#each [['Main Deck', deck.mainDeck], ['Extra Deck', deck.extraDeck], ['Side Deck', deck.sideDeck]] as [label, cards] (label)}
 				{#if cards.length > 0}
 					<div class="mb-5">
-						<h3 class="mb-2 text-[11px] font-bold tracking-wider text-fg-subdued uppercase">
+						<h3 class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
 							{label} · {cards.length}
 						</h3>
 						<div
@@ -216,7 +216,7 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		class="card-modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 p-4"
+		class="card-modal-backdrop fixed inset-0 z-50 flex flex-col items-center justify-center bg-surface-overlay p-4"
 		onclick={() => (enlargedCard = null)}
 		onmousemove={handleModalMousemove}
 		onmouseleave={handleModalMouseleave}
@@ -232,8 +232,8 @@
 			</div>
 		</div>
 		<div class="mt-5 text-center">
-			<p class="text-sm font-semibold text-white">{enlargedCard.name}</p>
-			<p class="mt-1 text-[10px] text-white/50">
+			<p class="text-sm font-semibold text-fg-accent">{enlargedCard.name}</p>
+			<p class="mt-1 text-[10px] text-fg-subdued">
 				{enlargedCard.type} · {enlargedCard.race}
 				{enlargedCard.attribute ? `· ${enlargedCard.attribute}` : ''}
 			</p>

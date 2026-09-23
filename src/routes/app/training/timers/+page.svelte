@@ -85,7 +85,7 @@
 		<div class="space-y-2">
 			{#each templates as t (t.id)}
 				<div
-					class="flex flex-wrap items-center gap-3 rounded-sm border border-border bg-surface p-3 transition-all hover:border-primary/30"
+					class="flex flex-wrap items-center gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
 				>
 					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-error/10">
 						<i class="fas fa-fire text-sm text-error"></i>
@@ -100,9 +100,14 @@
 					</div>
 					<div class="flex shrink-0 items-center gap-1.5">
 						<Button href="/app/training/timers/{t.id}/run" size="sm">
-							<i class="fas fa-play mr-1 text-[10px]"></i>Start
+							<i class="fas fa-play mr-2 text-xs"></i>Start
 						</Button>
-						<Button href="/app/training/timers/{t.id}" variant="secondary" size="sm">
+						<Button
+							href="/app/training/timers/{t.id}"
+							variant="secondary"
+							size="sm"
+							aria-label="Edit"
+						>
 							<i class="fas fa-pen text-[10px]"></i>
 						</Button>
 						<button

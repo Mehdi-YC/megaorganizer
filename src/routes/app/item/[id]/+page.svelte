@@ -216,7 +216,7 @@
 		</EmptyState>
 	</div>
 {:else}
-	<div class="space-y-4 p-4 sm:p-6 lg:flex lg:h-[calc(100vh-49px)] lg:flex-col lg:space-y-0 lg:p-0">
+	<div class="space-y-4 p-4 sm:p-8 lg:flex lg:h-[calc(100vh-49px)] lg:flex-col lg:space-y-0 lg:p-0">
 		<div class="border-b border-border bg-bg-subdued px-4 py-2 sm:px-6 lg:shrink-0">
 			<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
 				<button
@@ -429,7 +429,7 @@
 						onReorder={handleChildReorder}
 					/>
 				{:else if children.length > 0}
-					<div class="rounded-sm border border-border bg-surface p-4 lg:p-5">
+					<div class="rounded-sm border border-border bg-surface p-4">
 						<div class="mb-3 flex items-center justify-between">
 							<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 								Tree View
@@ -489,7 +489,7 @@
 						aria-label="Toggle favorite"
 						onclick={toggleFavorite}
 						class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {favorite
-							? 'bg-yellow-400/10 text-yellow-500'
+							? 'bg-yellow-400/10 text-yellow-400'
 							: 'bg-muted text-fg-subdued hover:bg-border hover:text-fg'}"
 					>
 						<i class="fas fa-star"></i>

@@ -35,7 +35,7 @@
 	let tags: string[] = $derived(expense.tags ? JSON.parse(expense.tags) : []);
 </script>
 
-<div class="rounded-sm border border-border bg-surface p-3 transition-all hover:border-primary/30">
+<div class="rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50">
 	<div class="flex items-start justify-between gap-3">
 		<div class="min-w-0 flex-1">
 			<div class="flex items-center gap-2">

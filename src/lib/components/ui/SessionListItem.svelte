@@ -21,7 +21,7 @@
 
 <a
 	href="/app/training/session/{session.id}"
-	class="flex items-center justify-between rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary"
+	class="flex items-center justify-between rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
 >
 	<div class="flex items-center gap-4">
 		<div class="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">

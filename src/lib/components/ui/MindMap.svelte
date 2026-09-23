@@ -296,7 +296,7 @@
 					{#if nd.type === 'node'}
 						<rect width="4" height={NODE_H} rx="2" class="fill-primary" />
 					{:else}
-						<rect width="4" height={NODE_H} rx="2" class="fill-green-500" />
+						<rect width="4" height={NODE_H} rx="2" class="fill-success" />
 					{/if}
 
 					{#if nd.node.imageUrl}

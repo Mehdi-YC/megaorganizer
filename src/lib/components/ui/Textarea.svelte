@@ -34,7 +34,7 @@
 		{rows}
 		bind:value
 		{...rest}
-		class="resize-none rounded-sm border border-border bg-bg px-3 py-2.5 text-base text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary focus:ring-0 focus:outline-none sm:text-sm {error
+		class="resize-none rounded-sm border border-border bg-bg px-3 py-2.5 text-base text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary sm:text-sm {error
 			? 'border-error'
 			: ''} {disabled ? 'cursor-not-allowed opacity-40' : ''}"></textarea>
 	{#if error}

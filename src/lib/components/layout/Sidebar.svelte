@@ -209,7 +209,7 @@
 					{#each searchResults as result}
 						<button
 							type="button"
-							class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-muted"
+							class="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-muted"
 							onclick={() => navigateSearchResult(result)}
 						>
 							{#if result.imageUrl}
@@ -406,7 +406,7 @@
 					{:else}
 						<i class="fas fa-folder w-4 text-center text-xs text-fg-subdued"></i>
 					{/if}
-					<span class="flex-1 truncate text-[11px] font-bold tracking-wider uppercase"
+					<span class="flex-1 truncate text-[10px] font-bold tracking-widest uppercase"
 						>{cat.name}</span
 					>
 				</a>

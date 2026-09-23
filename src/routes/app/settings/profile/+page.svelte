@@ -189,7 +189,7 @@
 				</div>
 
 				{#if form?.profileMessage}
-					<p class="text-xs {form.profileMessage.ok ? 'text-green-600' : 'text-error'}">
+					<p class="text-xs {form.profileMessage.ok ? 'text-success' : 'text-error'}">
 						{form.profileMessage.text}
 					</p>
 				{/if}
@@ -235,7 +235,7 @@
 				/>
 
 				{#if form?.passwordMessage}
-					<p class="text-xs {form.passwordMessage.ok ? 'text-green-600' : 'text-error'}">
+					<p class="text-xs {form.passwordMessage.ok ? 'text-success' : 'text-error'}">
 						{form.passwordMessage.text}
 					</p>
 				{/if}
@@ -280,8 +280,8 @@
 					<i class="fas fa-spinner fa-spin text-xs"></i> Importing...
 				</div>
 			{:else if importStatus === 'success'}
-				<div class="rounded-sm border border-green-500/30 bg-green-500/10 px-4 py-3">
-					<p class="text-xs font-medium text-green-500">{importMessage}</p>
+				<div class="rounded-sm border border-success/30 bg-success/10 px-4 py-3">
+					<p class="text-xs font-medium text-success">{importMessage}</p>
 					{#if importCounts}
 						<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-fg-subdued">
 							{#each Object.entries(importCounts).filter(([key, n]) => key !== 'skipped' && n > 0) as [key, n] (key)}
@@ -329,7 +329,7 @@
 						{pushSubscribed ? 'Disable on this device' : 'Enable on this device'}
 					</Button>
 					{#if pushSubscribed}
-						<span class="text-xs text-green-500">Enabled</span>
+						<span class="text-xs text-success">Enabled</span>
 					{/if}
 				</div>
 				{#if pushError}
@@ -385,7 +385,7 @@
 				</div>
 
 				{#if form?.financeMessage}
-					<p class="text-xs {form.financeMessage.ok ? 'text-green-600' : 'text-error'}">
+					<p class="text-xs {form.financeMessage.ok ? 'text-success' : 'text-error'}">
 						{form.financeMessage.text}
 					</p>
 				{/if}

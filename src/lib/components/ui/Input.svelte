@@ -58,7 +58,7 @@
 		{...rest}
 		class="{sizes[
 			size
-		]} w-full rounded-sm border border-border bg-bg text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary focus:ring-0 focus:outline-none {error
+		]} w-full rounded-sm border border-border bg-bg text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary {error
 			? 'border-error'
 			: ''} {disabled ? 'cursor-not-allowed opacity-40' : ''}"
 	/>

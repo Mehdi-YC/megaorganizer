@@ -193,18 +193,22 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+		class="fixed inset-0 z-50 flex items-end justify-center bg-surface-overlay sm:items-center"
 		onclick={close}
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
-			class="animate-slide-up w-full max-w-md rounded-t-lg border border-border bg-surface shadow-2xl sm:rounded-lg"
+			class="animate-slide-up w-full max-w-md rounded-t-lg border border-border bg-surface shadow-2xl sm:rounded-sm"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Quick Capture"
+			tabindex="-1"
 			onclick={(e) => e.stopPropagation()}
 		>
 			<!-- Header -->
-			<div class="flex items-center justify-between border-b border-border px-4 py-3">
-				<h2 class="text-sm font-semibold text-fg-accent">Quick Capture</h2>
+			<div class="flex items-center justify-between border-b border-border px-6 py-4">
+				<h2 class="text-base font-semibold text-fg-accent">Quick Capture</h2>
 				<button
 					type="button"
 					class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm hover:bg-muted"
@@ -224,6 +228,7 @@
 						tab.id
 							? 'border-b-2 border-primary bg-primary/5 text-primary'
 							: 'text-fg-subdued hover:text-fg'}"
+						aria-label={tab.label}
 						onclick={() => {
 							activeTab = tab.id;
 							saved = false;
@@ -236,7 +241,7 @@
 			</div>
 
 			<!-- Form Content -->
-			<div class="max-h-[65vh] overflow-y-auto p-4">
+			<div class="max-h-[65vh] overflow-y-auto px-6 py-5">
 				{#if saved}
 					<div class="py-8 text-center">
 						<div
@@ -257,7 +262,7 @@
 							<Input
 								type="text"
 								name="qc-title"
-								label="TITLE"
+								label="Title"
 								bind:value={reminderTitle}
 								placeholder="Reminder title"
 							/>
@@ -265,7 +270,7 @@
 								<div>
 									<label
 										for="qc-duedate"
-										class="mb-1.5 block text-[10px] font-semibold tracking-wide text-fg-subdued"
+										class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"
 										>DATE</label
 									>
 									<input
@@ -278,7 +283,7 @@
 								<div>
 									<label
 										for="qc-duetime"
-										class="mb-1.5 block text-[10px] font-semibold tracking-wide text-fg-subdued"
+										class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"
 										>TIME</label
 									>
 									<input
@@ -304,13 +309,13 @@
 							<Input
 								type="text"
 								name="qc-item"
-								label="ITEM NAME"
+								label="Item name"
 								bind:value={itemName}
 								placeholder="Item name"
 							/>
 							<Textarea
 								name="qc-body"
-								label="BODY"
+								label="Body"
 								bind:value={itemBody}
 								rows={4}
 								placeholder="Notes (markdown and [[wikilinks]] supported)"

@@ -95,7 +95,7 @@
 		</div>
 
 		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<h2 class="text-sm font-semibold tracking-wide text-fg-accent uppercase">Pages</h2>
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Pages</h2>
 			<Button onclick={() => (showNewPage = true)}>
 				<i class="fas fa-plus mr-2"></i> New Page
 			</Button>
@@ -137,7 +137,7 @@
 				{#each pages as pg, idx (pg.id)}
 					<a
 						href="/app/category/{category.id}/page/{pg.id}"
-						class="group relative cursor-move rounded-sm border border-border bg-surface p-6 transition-all hover:border-primary"
+						class="group relative cursor-move rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary"
 						draggable="true"
 						ondragstart={(e) => handleDragStart(e, idx)}
 						ondragover={(e) => handleDragOver(e, idx)}

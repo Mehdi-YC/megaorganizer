@@ -85,7 +85,7 @@
 	<title>Reminders - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-6 lg:p-8">
+<div class="p-4 sm:p-8">
 	<div class="mb-6 flex items-center justify-between">
 		<div>
 			<h1 class="text-xl font-semibold text-fg-accent">Reminders</h1>
@@ -182,7 +182,7 @@
 
 					{#if template.todos && template.todos.length > 0}
 						<div class="mt-3 border-t border-border pt-3">
-							<p class="mb-1.5 text-[10px] font-semibold tracking-wide text-fg-subdued uppercase">
+							<p class="mb-1.5 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
 								{template.todos.length} todo{template.todos.length !== 1 ? 's' : ''}
 							</p>
 							<div class="space-y-1">
