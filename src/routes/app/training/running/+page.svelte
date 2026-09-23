@@ -385,7 +385,7 @@
 	<title>Running - MegaOrganize</title>
 </svelte:head>
 
-<div class="flex h-[calc(100%-3rem)] flex-col overflow-hidden bg-bg text-fg select-none lg:h-full">
+<div class="flex flex-col bg-bg text-fg select-none lg:h-full lg:overflow-hidden">
 	{#if status === 'idle'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
 			{#if gpsError}
@@ -412,7 +412,7 @@
 		</div>
 	{:else if status === 'running' || status === 'paused'}
 		<div class="flex flex-1 flex-col">
-			<div class="relative h-[45%] shrink-0 overflow-hidden">
+			<div class="relative h-[45dvh] shrink-0 overflow-hidden lg:h-[45%]">
 				<RunMap
 					points={gpsPoints}
 					center={currentPosition}
@@ -429,7 +429,9 @@
 				{/if}
 			</div>
 
-			<div class="flex flex-1 flex-col items-center justify-center overflow-y-auto p-4 select-text">
+			<div
+				class="flex flex-1 flex-col items-center justify-center p-4 select-text lg:overflow-y-auto"
+			>
 				{#if gpsError}
 					<div
 						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"

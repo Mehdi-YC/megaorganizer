@@ -285,7 +285,7 @@
 	<title>Run: {template.name} - MegaOrganize</title>
 </svelte:head>
 
-<div class="flex min-h-screen flex-col p-4 sm:p-8">
+<div class="flex min-h-full flex-col p-4 sm:p-8">
 	<div class="mx-auto flex w-full max-w-md flex-1 flex-col">
 		<div class="mb-4 flex items-center justify-between">
 			<a
