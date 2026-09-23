@@ -4,15 +4,15 @@ A self-hostable personal knowledge, organization, activity, and tracking OS. Bui
 
 ## Tech Stack
 
-| Layer     | Technology                          |
-| --------- | ----------------------------------- |
-| Framework | SvelteKit 2 + Svelte 5 (runes mode) |
-| Language  | TypeScript                          |
-| Styling   | Tailwind CSS v4                     |
-| Database  | SQLite via Drizzle ORM + LibSQL     |
-| Auth      | Better Auth                         |
-| Runtime   | Bun                                 |
-| Markdown  | Snarkdown (runtime) + mdsvex (dev)  |
+| Layer     | Technology                                              |
+| --------- | ------------------------------------------------------- |
+| Framework | SvelteKit 2 + Svelte 5 (runes mode)                     |
+| Language  | TypeScript                                              |
+| Styling   | Tailwind CSS v4                                         |
+| Database  | SQLite via Drizzle ORM + LibSQL                         |
+| Auth      | Better Auth                                             |
+| Runtime   | Bun                                                     |
+| Markdown  | Marked + DOMPurify (Mermaid + highlight.js lazy-loaded) |
 
 ## Getting Started
 
@@ -49,8 +49,13 @@ bun run db:studio    # open Drizzle Studio
 src/
   lib/
     components/
-      layout/          # Sidebar
-      ui/              # Reusable UI components (Button, Dialog, ItemImage, etc.)
+      finance/           # ExpenseForm, ExpenseCard, MonthlySummary
+      item/              # ChildItemList, TagPicker, YdkDeckViewer
+      layout/            # Sidebar
+      reminders/         # ReminderCard, ReminderCalendar, ReminderTemplateForm
+      timers/            # TimerBuilder
+      ui/                # Reusable UI components (Button, Dialog, ItemImage, etc.)
+      QuickCapture.svelte # Quick-add finance/reminder/item capture
     server/
       auth.ts          # Better Auth configuration
       db/              # Drizzle schema + connection
@@ -82,8 +87,29 @@ src/
 
 - Session management (strength, running, cycling, walking, swimming)
 - Running with GPS tracking, pace, elevation
-- Calendar view and history
+- Calendar view, history, and stats
 - Exercise records with sets, reps, weight, RPE
+
+### HIIT / WOD Timers
+
+- Timer templates with custom steps (work, rest, rounds)
+- Full-screen timer runner page
+- Quick-start from the PWA home screen
+
+### Reminders
+
+- Reminder templates with todo checklists
+- Calendar view and history
+- Stats overview
+
+### Finance
+
+- Expense tracking with monthly summaries
+- Quick expense capture
+
+### Backup & Restore
+
+- Full JSON export/import covering every domain (knowledge tree, training, reminders, finance, decks, timers)
 
 ### Library
 
@@ -101,37 +127,64 @@ src/
 - Graph-based roadmaps with nodes and edges
 - Drag-and-drop tier lists
 
+### Dashboard & Analytics
+
+- Dashboard with upcoming reminders and training overview
+- Analytics across training, running, and activity data
+
+### PWA
+
+- Installable progressive web app with offline service worker
+- Home-screen quick actions (start timer, new session, quick capture)
+
 ## UI Components
 
 Reusable components in `src/lib/components/ui/`:
 
-| Component       | Description                        |
-| --------------- | ---------------------------------- |
-| `Button`        | Styled button with variants        |
-| `Input`         | Text input with consistent styling |
-| `Textarea`      | Multi-line text input              |
-| `Dialog`        | Modal dialog                       |
-| `Checkbox`      | Styled checkbox                    |
-| `Badge`         | Status badge                       |
-| `NavItem`       | Navigation item                    |
-| `ItemImage`     | Auto small/large image display     |
-| `GridItemImage` | Grid card image with blur fallback |
-| `EmptyState`    | Empty state placeholder            |
-| `PageHeader`    | Page title + actions layout        |
-| `SearchInput`   | Search input with icon             |
-| `TagChips`      | Colored tag pills                  |
-| `ConfirmButton` | Two-click delete confirmation      |
+| Component         | Description                        |
+| ----------------- | ---------------------------------- |
+| `Badge`           | Status badge                       |
+| `Button`          | Styled button with variants        |
+| `Checkbox`        | Styled checkbox                    |
+| `ConfirmButton`   | Two-click delete confirmation      |
+| `ConfirmDialog`   | In-app confirmation modal          |
+| `Dialog`          | Modal dialog                       |
+| `EmptyState`      | Empty state placeholder            |
+| `GridItemImage`   | Grid card image with blur fallback |
+| `Input`           | Text input with consistent styling |
+| `ItemImage`       | Auto small/large image display     |
+| `MindMap`         | Graph/roadmap visualization        |
+| `NavItem`         | Navigation item                    |
+| `PageHeader`      | Page title + actions layout        |
+| `RunMap`          | Leaflet map for GPS runs           |
+| `SearchInput`     | Search input with icon             |
+| `Select`          | Styled select                      |
+| `SessionListItem` | Training session list row          |
+| `Spinner`         | Loading spinner                    |
+| `StatGroupCard`   | Grouped stats display              |
+| `TagChips`        | Colored tag pills                  |
+| `Textarea`        | Multi-line text input              |
+
+Domain components live in `src/lib/components/{finance,item,reminders,timers}/`,
+plus `QuickCapture.svelte` for quick-add capture.
 
 ## API Endpoints
 
-| Endpoint          | Methods                | Description                          |
-| ----------------- | ---------------------- | ------------------------------------ |
-| `/api/categories` | GET, POST, PUT, DELETE | Category CRUD                        |
-| `/api/pages`      | GET, POST, PUT, DELETE | Page CRUD                            |
-| `/api/tree`       | GET, POST, PUT, DELETE | Tree elements, search, relationships |
-| `/api/tags`       | GET, POST, PUT, DELETE | Tag CRUD                             |
-| `/api/training`   | GET, POST, PUT, DELETE | Training sessions & activities       |
-| `/api/running`    | GET, POST              | Running activities & GPS data        |
+| Endpoint              | Methods                | Description                               |
+| --------------------- | ---------------------- | ----------------------------------------- |
+| `/api/categories`     | GET, POST, PUT, DELETE | Category CRUD                             |
+| `/api/pages`          | GET, POST, PUT, DELETE | Page CRUD                                 |
+| `/api/tree`           | GET, POST, PUT, DELETE | Tree elements CRUD, search, subtree, move |
+| `/api/tree/hierarchy` | GET                    | Full tree hierarchy                       |
+| `/api/attachments`    | GET, POST, DELETE      | File upload, download, delete             |
+| `/api/tags`           | GET, POST, PUT, DELETE | Tag CRUD                                  |
+| `/api/training`       | GET, POST, PUT, DELETE | Training sessions, activities, records    |
+| `/api/running`        | GET, POST, PUT, DELETE | Running activities & GPS data             |
+| `/api/timers`         | GET, POST, PUT, DELETE | HIIT/WOD timer templates & steps          |
+| `/api/reminders`      | GET, POST, PUT, DELETE | Reminders, templates, stats               |
+| `/api/finance`        | GET, POST, PUT, DELETE | Expenses, monthly summaries, settings     |
+| `/api/search`         | GET                    | Global search across all content          |
+| `/api/backup`         | GET, POST              | Full data export (GET) / import (POST)    |
 
 ## Scripts
 
