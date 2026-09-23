@@ -10,7 +10,7 @@ echo "entrypoint: ORIGIN=${ORIGIN}"
 # --- create the file if its parent directory is missing (SQLITE_CANTOPEN). ---
 DB_PATH="${DATABASE_URL#file:}"
 DB_DIR="$(dirname "$DB_PATH")"
-mkdir -p "$DB_DIR" static/uploads
+mkdir -p "$DB_DIR" data/uploads static/uploads
 echo "entrypoint: db dir = $DB_DIR"
 [ -w "$DB_DIR" ] || { echo "ERROR: db directory is not writable: $DB_DIR"; exit 1; }
 

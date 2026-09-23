@@ -1,6 +1,6 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { json, redirect } from '@sveltejs/kit';
-import { building, dev } from '$app/environment';
+import { building } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { logError } from '$lib/server/error-log';
@@ -11,17 +11,14 @@ import { checkRateLimit } from '$lib/server/rate-limit';
 // the build, which evaluates this module graph without a server process.
 if (!building) startScheduler();
 
-// vite dev needs 'unsafe-inline'/'unsafe-eval'; production loads the SW
-// registration from /sw-register.js and needs neither.
-const SCRIPT_SRC = dev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self'";
-
+// Content-Security-Policy is emitted by SvelteKit (nonce mode, see
+// vite.config.ts) so its inline bootstrap scripts keep working.
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Content-Type-Options': 'nosniff',
 	'X-Frame-Options': 'DENY',
 	'X-XSS-Protection': '1; mode=block',
 	'Referrer-Policy': 'strict-origin-when-cross-origin',
-	'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
-	'Content-Security-Policy': `default-src 'self'; script-src ${SCRIPT_SRC}; object-src 'none'; base-uri 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' ws: wss:; frame-src 'self' https://www.youtube.com https://www.google.com;`
+	'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)'
 };
 
 const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB for regular API requests
