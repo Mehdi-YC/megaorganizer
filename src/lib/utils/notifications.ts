@@ -36,8 +36,8 @@ export function showNotification(
 	const { onClick, ...notificationOptions } = options ?? {};
 
 	const notification = new Notification(title, {
-		icon: '/favicon.png',
-		badge: '/favicon.png',
+		icon: '/icons/icon-96.png',
+		badge: '/icons/icon-96.png',
 		tag: 'megareminder',
 		...notificationOptions
 	});
