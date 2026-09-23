@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdown';
+	import BacklinksPanel from '$lib/components/ui/BacklinksPanel.svelte';
 	import {
 		parseMetadata,
 		getNodeColor,
@@ -109,7 +110,7 @@
 	let renderedContent = $state('');
 
 	$effect(() => {
-		renderMarkdown(pageContent).then((html) => {
+		renderMarkdown(pageContent, data.links).then((html) => {
 			renderedContent = html;
 		});
 	});
@@ -1046,6 +1047,8 @@
 						<p class="text-xs text-fg-subdued">Add page content</p>
 					</button>
 				{/if}
+
+				<BacklinksPanel backlinks={data.backlinks} />
 			</div>
 
 			<!-- Attachments -->

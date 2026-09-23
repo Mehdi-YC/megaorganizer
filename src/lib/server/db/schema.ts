@@ -150,6 +150,37 @@ export const attachment = sqliteTable(
 );
 
 // ─── Tags ────────────────────────────────────────────────────────────────────
+// Wikilink edges extracted from [[Target]] markdown links. The markdown text
+// keeps the target name; this table stores resolution state so backlinks are
+// an indexed lookup and renames never break links (resolvedId outranks the
+// stale name). Rebuilt on every source save; resolvedId is re-bound when a
+// matching entity appears and dangles when one is deleted.
+export const wikilink = sqliteTable(
+	'wikilink',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		sourceType: text('source_type', { enum: ['page', 'tree_element'] }).notNull(),
+		sourceId: text('source_id').notNull(),
+		rawTarget: text('raw_target').notNull(),
+		resolvedType: text('resolved_type', { enum: ['page', 'tree_element'] }),
+		resolvedId: text('resolved_id'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [
+		index('wikilink_source_idx').on(table.sourceType, table.sourceId),
+		index('wikilink_resolved_idx').on(table.resolvedType, table.resolvedId),
+		index('wikilink_rawTarget_idx').on(table.rawTarget),
+		index('wikilink_userId_idx').on(table.userId)
+	]
+);
+
 export const tag = sqliteTable(
 	'tag',
 	{

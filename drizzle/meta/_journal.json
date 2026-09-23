@@ -15,6 +15,13 @@
       "when": 1790109969869,
       "tag": "0001_bent_deathbird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790176147675,
+      "tag": "0002_previous_magneto",
+      "breakpoints": true
     }
   ]
 }

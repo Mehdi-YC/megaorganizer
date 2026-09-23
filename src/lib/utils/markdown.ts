@@ -1,5 +1,7 @@
 import { Marked } from 'marked';
+import type { RendererExtension, TokenizerExtension } from 'marked';
 import DOMPurify from 'dompurify';
+import { createWikilinkExtension } from '$lib/utils/wikilink';
 
 let mermaidReady = false;
 let mermaidModule: any = null;
@@ -28,6 +30,18 @@ async function ensureHljs() {
 const marked = new Marked();
 let mermaidIdCounter = 0;
 
+// Resolution map for `[[wikilinks]]` set per renderMarkdown call. The parse
+// is synchronous, so this cannot leak across renders. A null map means the
+// caller has no resolutions (list cards); links render as click-to-resolve
+// spans there instead of resolved anchors.
+let currentLinks: Record<string, string | null> | null = null;
+
+marked.use({
+	extensions: [
+		createWikilinkExtension(() => currentLinks) as unknown as TokenizerExtension & RendererExtension
+	]
+});
+
 marked.use({
 	renderer: {
 		code({ text, lang }: { text: string; lang?: string }) {
@@ -53,8 +67,12 @@ marked.use({
 	}
 });
 
-export async function renderMarkdown(text: string): Promise<string> {
+export async function renderMarkdown(
+	text: string,
+	links?: Record<string, string | null>
+): Promise<string> {
 	if (!text) return '';
+	currentLinks = links ?? null;
 	// The code renderer runs synchronously inside marked.parse, so the
 	// highlighter must be loaded before parsing whenever fences are present.
 	if (text.includes('```')) await ensureHljs();
@@ -147,6 +165,7 @@ export async function renderMarkdown(text: string): Promise<string> {
 			'markerHeight',
 			'orient',
 			'data-mermaid-id',
+			'data-wikilink',
 			'checked',
 			'type',
 			'disabled',

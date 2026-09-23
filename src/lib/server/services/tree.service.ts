@@ -1,6 +1,12 @@
 import { db } from '$lib/server/db';
 import { treeElement, treeRelationship, page } from '$lib/server/db/schema';
 import { eq, and, or, asc, like } from 'drizzle-orm';
+import {
+	rebuildDocLinks,
+	rebindDanglingLinks,
+	unlinkDeletedTarget,
+	deleteSourceLinks
+} from './wikilink.service';
 
 export type TreeElementType = 'node' | 'item';
 export type TreeParentType = 'page' | 'node' | 'item';
@@ -39,6 +45,9 @@ export async function createTreeElement(
 		})
 		.returning();
 
+	await rebuildDocLinks(userId, 'tree_element', result.id, data.markdown);
+	await rebindDanglingLinks(userId, result.name, 'tree_element', result.id);
+
 	return result;
 }
 
@@ -72,6 +81,15 @@ export async function updateTreeElement(
 		.where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)))
 		.returning();
 
+	if (result) {
+		if (data.markdown !== undefined) {
+			await rebuildDocLinks(userId, 'tree_element', id, data.markdown);
+		}
+		if (data.name !== undefined) {
+			await rebindDanglingLinks(userId, result.name, 'tree_element', id);
+		}
+	}
+
 	return result;
 }
 
@@ -85,6 +103,9 @@ export async function deleteTreeElement(userId: string, id: string) {
 		.where(or(eq(treeRelationship.parentId, id), eq(treeRelationship.childId, id)));
 
 	await db.delete(treeElement).where(and(eq(treeElement.id, id), eq(treeElement.userId, userId)));
+
+	await deleteSourceLinks(userId, 'tree_element', id);
+	await unlinkDeletedTarget('tree_element', id);
 }
 
 function buildTree(node: any, byId: Map<string, any>): any {

@@ -12,6 +12,7 @@
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import ItemImage from '$lib/components/ui/ItemImage.svelte';
+	import BacklinksPanel from '$lib/components/ui/BacklinksPanel.svelte';
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
@@ -50,7 +51,7 @@
 	let renderedContent = $state('');
 
 	$effect(() => {
-		renderMarkdown(content).then((html) => {
+		renderMarkdown(content, data.links).then((html) => {
 			renderedContent = html;
 		});
 	});
@@ -445,6 +446,8 @@
 						</div>
 					</div>
 				{/if}
+
+				<BacklinksPanel backlinks={data.backlinks} />
 			</div>
 
 			<aside

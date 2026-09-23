@@ -6,6 +6,7 @@
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { page } from '$app/state';
 	import { checkAndNotifyReminders } from '$lib/utils/notifications';
+	import { initWikilinkClicks } from '$lib/utils/wikilink-click';
 
 	let {
 		children,
@@ -21,6 +22,7 @@
 		if (data.user) {
 			checkAndNotifyReminders();
 		}
+		return initWikilinkClicks();
 	});
 </script>
 
