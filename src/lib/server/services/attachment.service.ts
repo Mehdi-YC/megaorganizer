@@ -18,7 +18,7 @@ const ALLOWED_MIME_TYPES = new Set([
 	'image/svg+xml',
 	'image/bmp',
 	// Videos
-	'tvideo/mp4',
+	'video/mp4',
 	'video/webm',
 	'video/quicktime',
 	// Audio

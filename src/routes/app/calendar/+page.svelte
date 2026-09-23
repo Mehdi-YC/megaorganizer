@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import {} from '$lib/utils/training';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 
 	let { data } = $props();
