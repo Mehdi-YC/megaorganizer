@@ -5,10 +5,20 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import ExpenseForm from '$lib/components/finance/ExpenseForm.svelte';
 	import { page } from '$app/state';
-	import { replaceState } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 
 	let show = $state(false);
-	let activeTab = $state<'finance' | 'reminder' | 'item'>('finance');
+	let activeTab = $state<'finance' | 'reminder' | 'item' | 'training'>('finance');
+	const TRAINING_TYPES = [
+		'strength',
+		'running',
+		'cycling',
+		'walking',
+		'swimming',
+		'hiit',
+		'other'
+	] as const;
+	let trainingType = $state<(typeof TRAINING_TYPES)[number]>('strength');
 
 	// Reminder form
 	let reminderTitle = $state('');
@@ -153,10 +163,11 @@
 			return;
 		}
 		// Tab shortcuts only outside fields, so typing "2" stays a "2"
-		if (!typing && e.key >= '1' && e.key <= '3') {
+		if (!typing && e.key >= '1' && e.key <= '4') {
 			if (e.key === '1') activeTab = 'finance';
 			if (e.key === '2') activeTab = 'reminder';
 			if (e.key === '3') activeTab = 'item';
+			if (e.key === '4') activeTab = 'training';
 			saved = false;
 			return;
 		}
@@ -165,14 +176,23 @@
 			e.preventDefault();
 			if (activeTab === 'finance') expenseForm?.submit();
 			else if (activeTab === 'reminder') saveReminder();
+			else if (activeTab === 'training') startTraining();
 			else saveItem();
 		}
+	}
+
+	function startTraining() {
+		close();
+		// Fixed route with a query param; resolve() only handles route patterns.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`/app/training/session/new?type=${trainingType}`);
 	}
 
 	const tabs = [
 		{ id: 'finance' as const, label: 'Finance', icon: 'fa-receipt', color: 'text-warning' },
 		{ id: 'reminder' as const, label: 'Reminder', icon: 'fa-bell', color: 'text-primary' },
-		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' }
+		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' },
+		{ id: 'training' as const, label: 'Training', icon: 'fa-dumbbell', color: 'text-fg-accent' }
 	];
 </script>
 
@@ -321,6 +341,29 @@
 							/>
 							<Button class="w-full" onclick={saveItem} disabled={!itemName.trim() || saving}>
 								{saving ? 'Saving...' : 'Add Item'}
+							</Button>
+						</div>
+
+						<!-- Training Form -->
+					{:else if activeTab === 'training'}
+						<div class="space-y-3">
+							<div class="flex flex-wrap gap-1.5">
+								{#each TRAINING_TYPES as t (t)}
+									<button
+										type="button"
+										class="cursor-pointer rounded-sm px-2.5 py-1 text-xs font-medium capitalize transition-colors {trainingType ===
+										t
+											? 'bg-primary text-white'
+											: 'bg-muted text-fg hover:bg-border'}"
+										onclick={() => (trainingType = t)}
+									>
+										{t}
+									</button>
+								{/each}
+							</div>
+							<Button class="w-full" onclick={startTraining}>
+								<i class="fas fa-play mr-2 text-xs"></i>
+								Start Training
 							</Button>
 						</div>
 					{/if}

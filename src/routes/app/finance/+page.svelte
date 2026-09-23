@@ -150,7 +150,7 @@
 
 <div class="p-4 sm:p-8">
 	<PageHeader title="Finance" subtitle="Track your expenses and spending">
-		<Button onclick={openAdd}>
+		<Button size="sm" onclick={openAdd}>
 			<i class="fas fa-plus mr-2 text-xs"></i>
 			Add Expense
 		</Button>
@@ -181,7 +181,7 @@
 				>
 					<i class="fas fa-chevron-right"></i>
 				</button>
-				<div class="min-w-[140px] flex-1">
+				<div class="w-full min-w-[140px] flex-1 sm:w-auto">
 					<Input
 						size="sm"
 						bind:value={searchQuery}

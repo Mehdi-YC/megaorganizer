@@ -21,15 +21,15 @@
 
 <div class="p-4 sm:p-8">
 	<PageHeader title="Training Sessions" subtitle="All your training sessions">
-		<Button href="/app/training/timers" variant="secondary" size="md">
+		<Button href="/app/training/timers" variant="secondary" size="sm">
 			<i class="fas fa-stopwatch mr-2 text-xs"></i>
 			Timers
 		</Button>
-		<Button href="/app/training/running" variant="secondary" size="md">
+		<Button href="/app/training/running" variant="secondary" size="sm">
 			<i class="fas fa-person-running mr-2 text-xs"></i>
 			Running
 		</Button>
-		<Button href="/app/training/session/new" variant="primary" size="md">
+		<Button href="/app/training/session/new" variant="primary" size="sm">
 			<i class="fas fa-plus mr-2 text-xs"></i>
 			New Session
 		</Button>
