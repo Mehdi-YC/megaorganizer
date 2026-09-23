@@ -22,6 +22,37 @@
 	let importCounts = $state<Record<string, number> | null>(null);
 	let importInput = $state<HTMLInputElement | null>(null);
 
+	const COUNT_LABELS: Record<string, string> = {
+		categories: 'categories',
+		pages: 'pages',
+		elements: 'elements',
+		relationships: 'links',
+		tags: 'tags',
+		attachments: 'files',
+		reminderTemplates: 'reminder templates',
+		reminders: 'reminders',
+		templateTodos: 'template todos',
+		reminderTodos: 'reminder todos',
+		expenses: 'expenses',
+		sessions: 'sessions',
+		activities: 'activities',
+		activityItems: 'activity links',
+		exerciseRecords: 'exercise records',
+		runningStats: 'runs',
+		trackPoints: 'GPS points',
+		roadmaps: 'roadmaps',
+		roadmapNodes: 'roadmap nodes',
+		roadmapEdges: 'roadmap edges',
+		tierLists: 'tier lists',
+		tiers: 'tiers',
+		tierEntries: 'tier entries',
+		ydkDecks: 'ydk decks',
+		ydkEntries: 'ydk cards',
+		timers: 'timers',
+		timerSteps: 'timer steps',
+		settings: 'settings'
+	};
+
 	async function exportBackup() {
 		try {
 			const res = await fetch('/api/backup');
@@ -198,7 +229,8 @@
 				/>
 			</div>
 			<p class="text-[10px] text-fg-subdued/60">
-				Includes all categories, pages, items, tags, and file attachments.
+				Includes everything: library (categories, pages, items, tags, attachments), reminders,
+				expenses, settings, training runs with GPS, roadmaps, tier lists, YDK decks, and timers.
 			</p>
 
 			{#if importStatus === 'loading'}
@@ -210,11 +242,9 @@
 					<p class="text-xs font-medium text-green-500">{importMessage}</p>
 					{#if importCounts}
 						<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-fg-subdued">
-							{#if importCounts.categories}<span>{importCounts.categories} categories</span>{/if}
-							{#if importCounts.pages}<span>{importCounts.pages} pages</span>{/if}
-							{#if importCounts.elements}<span>{importCounts.elements} elements</span>{/if}
-							{#if importCounts.tags}<span>{importCounts.tags} tags</span>{/if}
-							{#if importCounts.attachments}<span>{importCounts.attachments} files</span>{/if}
+							{#each Object.entries(importCounts).filter(([key, n]) => key !== 'skipped' && n > 0) as [key, n] (key)}
+								<span>{n} {COUNT_LABELS[key] ?? key}</span>
+							{/each}
 							{#if importCounts.skipped}<span class="text-fg-subdued/60"
 									>({importCounts.skipped} skipped)</span
 								>{/if}

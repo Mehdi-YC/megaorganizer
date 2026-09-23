@@ -10,11 +10,21 @@ export const GET: RequestHandler = async ({ locals }) => {
 export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
 
+	let body: unknown;
 	try {
-		const body = await request.json();
-		const result = await importUserData(locals.user.id, body);
-		return json(result);
+		body = await request.json();
 	} catch {
 		return json({ success: false, message: 'Invalid backup file' }, { status: 400 });
+	}
+
+	try {
+		const result = await importUserData(locals.user.id, body);
+		return json(result);
+	} catch (err) {
+		console.error('backup import failed:', err);
+		return json(
+			{ success: false, message: err instanceof Error ? err.message : 'Import failed' },
+			{ status: 500 }
+		);
 	}
 };
