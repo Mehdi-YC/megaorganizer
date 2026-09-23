@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import {
 	createReminderTemplate,
+	createOneOffReminder,
 	getReminderTemplates,
 	getReminderTemplateById,
 	updateReminderTemplate,
@@ -146,6 +147,24 @@ export const POST: RequestHandler = async (event) => {
 			const snoozed = await snoozeReminder(user.id, v.data.reminderId, new Date(v.data.until));
 			if (!snoozed) return json({ error: 'Not found' }, { status: 404 });
 			return json(snoozed);
+		}
+
+		case 'createReminder': {
+			const v = validateBody(body, {
+				title: { validate: isNonEmptyString, label: 'Title' },
+				dueAt: { validate: isNonEmptyString, label: 'Due date' },
+				description: { validate: isString, required: false },
+				markdown: { validate: isString, required: false }
+			});
+			if (!v.ok) return v.error;
+
+			const created = await createOneOffReminder(user.id, {
+				title: v.data.title,
+				description: v.data.description ?? undefined,
+				markdown: v.data.markdown ?? undefined,
+				dueAt: new Date(v.data.dueAt)
+			});
+			return json(created, { status: 201 });
 		}
 
 		case 'updateTodo': {

@@ -1,6 +1,12 @@
 import { db } from '$lib/server/db';
 import { page, category } from '$lib/server/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
+import {
+	rebuildDocLinks,
+	rebindDanglingLinks,
+	unlinkDeletedTarget,
+	deleteSourceLinks
+} from './wikilink.service';
 
 export async function createPage(
 	userId: string,
@@ -52,6 +58,9 @@ export async function createPage(
 		})
 		.returning();
 
+	await rebuildDocLinks(userId, 'page', result.id, data.markdown);
+	await rebindDanglingLinks(userId, result.name, 'page', result.id);
+
 	return result;
 }
 
@@ -85,9 +94,20 @@ export async function updatePage(
 		.where(and(eq(page.id, pageId), eq(page.userId, userId)))
 		.returning();
 
+	if (result) {
+		if (data.markdown !== undefined) {
+			await rebuildDocLinks(userId, 'page', pageId, data.markdown);
+		}
+		if (data.name !== undefined) {
+			await rebindDanglingLinks(userId, result.name, 'page', pageId);
+		}
+	}
+
 	return result;
 }
 
 export async function deletePage(userId: string, pageId: string) {
 	await db.delete(page).where(and(eq(page.id, pageId), eq(page.userId, userId)));
+	await deleteSourceLinks(userId, 'page', pageId);
+	await unlinkDeletedTarget('page', pageId);
 }

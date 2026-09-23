@@ -36,8 +36,8 @@ export function showNotification(
 	const { onClick, ...notificationOptions } = options ?? {};
 
 	const notification = new Notification(title, {
-		icon: '/favicon.png',
-		badge: '/favicon.png',
+		icon: '/icons/icon-96.png',
+		badge: '/icons/icon-96.png',
 		tag: 'megareminder',
 		...notificationOptions
 	});
@@ -106,9 +106,10 @@ export async function checkAndNotifyReminders(): Promise<void> {
 		const newReminders = reminders.filter((r: any) => !r.completed && !notified.includes(r.id));
 
 		if (newReminders.length > 0) {
-			// Show notification for the first new reminder
-			const reminder = newReminders[0];
-			showReminderNotification(reminder);
+			// Notify for every new due reminder, not just the first
+			for (const reminder of newReminders) {
+				showReminderNotification(reminder);
+			}
 
 			// Mark as notified
 			const updatedNotified = [...notified, ...newReminders.map((r: any) => r.id)];
@@ -117,4 +118,16 @@ export async function checkAndNotifyReminders(): Promise<void> {
 	} catch (error) {
 		console.error('Failed to check reminders:', error);
 	}
+}
+
+/**
+ * Keep checking for due reminders while the app is open. Returns a stop
+ * function for cleanup.
+ */
+export function startReminderPolling(intervalMs = 60_000): () => void {
+	void checkAndNotifyReminders();
+	const id = setInterval(() => {
+		void checkAndNotifyReminders();
+	}, intervalMs);
+	return () => clearInterval(id);
 }

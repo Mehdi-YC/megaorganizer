@@ -1,4 +1,5 @@
 import { db } from '$lib/server/db';
+import { rebuildAllDocLinks } from './wikilink.service';
 import {
 	category,
 	page,
@@ -1390,6 +1391,10 @@ export async function importUserData(userId: string, data: any) {
 			}
 		}
 	});
+
+	// Wikilinks are derived data: rebuild every document's edges from the
+	// imported markdown rather than trusting anything in the backup file.
+	await rebuildAllDocLinks(userId);
 
 	const imported =
 		counts.categories +

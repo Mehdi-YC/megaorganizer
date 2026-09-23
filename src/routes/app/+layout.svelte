@@ -5,7 +5,8 @@
 	import QuickCapture from '$lib/components/QuickCapture.svelte';
 	import ConfirmDialog from '$lib/components/ui/ConfirmDialog.svelte';
 	import { page } from '$app/state';
-	import { checkAndNotifyReminders } from '$lib/utils/notifications';
+	import { startReminderPolling } from '$lib/utils/notifications';
+	import { initWikilinkClicks } from '$lib/utils/wikilink-click';
 
 	let {
 		children,
@@ -17,10 +18,13 @@
 	let sidebarOpen = $state(false);
 
 	onMount(() => {
-		// Check for due reminders and show notifications
-		if (data.user) {
-			checkAndNotifyReminders();
-		}
+		const stopWikilinks = initWikilinkClicks();
+		// While the app is open: poll for due reminders and notify
+		const stopReminders = data.user ? startReminderPolling() : null;
+		return () => {
+			stopWikilinks();
+			stopReminders?.();
+		};
 	});
 </script>
 

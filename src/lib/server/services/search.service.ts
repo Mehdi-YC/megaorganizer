@@ -1,6 +1,15 @@
 import { db } from '$lib/server/db';
-import { treeElement, page, reminder, expense, trainingSession, tag } from '$lib/server/db/schema';
-import { eq, like, or, and, desc } from 'drizzle-orm';
+import {
+	treeElement,
+	page,
+	reminder,
+	reminderTemplate,
+	expense,
+	trainingSession,
+	tag
+} from '$lib/server/db/schema';
+import { inArray } from 'drizzle-orm';
+import { buildMatchQuery } from '$lib/server/db/search-index';
 
 export interface SearchResult {
 	type: 'item' | 'page' | 'reminder' | 'expense' | 'training' | 'tag';
@@ -12,186 +21,220 @@ export interface SearchResult {
 	imageUrl?: string;
 }
 
+interface SearchHit {
+	entityType: string;
+	entityId: string;
+	snippet: string;
+}
+
 export async function globalSearch(
 	userId: string,
 	query: string,
 	limit = 20
 ): Promise<SearchResult[]> {
-	if (!query || query.trim().length < 2) return [];
+	const match = buildMatchQuery(query ?? '');
+	if (!match) return [];
 
-	const searchTerm = `%${query}%`;
-	const results: SearchResult[] = [];
+	// One FTS5 query scores every domain at once. bm25 column weights rank
+	// name matches over description matches over body matches.
+	const res = await db.$client.execute({
+		sql: `SELECT d.entity_type AS entityType, d.entity_id AS entityId,
+				snippet(search_index, 2, '', '', '…', 12) AS snip,
+				bm25(search_index, 10.0, 5.0, 1.0) AS rank
+			FROM search_index
+			JOIN search_doc d ON d.doc_id = search_index.rowid
+			WHERE search_index MATCH ? AND d.user_id = ?
+			ORDER BY rank
+			LIMIT ?`,
+		args: [match, userId, limit]
+	});
 
-	// Search items
-	const items = await db
-		.select({
-			id: treeElement.id,
-			name: treeElement.name,
-			description: treeElement.description,
-			type: treeElement.type,
-			imageUrl: treeElement.imageUrl
-		})
-		.from(treeElement)
-		.where(
-			and(
-				eq(treeElement.userId, userId),
-				or(like(treeElement.name, searchTerm), like(treeElement.description, searchTerm))
-			)
-		)
-		.limit(limit)
-		.all();
+	const hits: SearchHit[] = res.rows.map((row) => ({
+		entityType: String(row.entityType),
+		entityId: String(row.entityId),
+		snippet: String(row.snip ?? '')
+	}));
+	if (hits.length === 0) return [];
 
-	for (const item of items) {
-		results.push({
-			type: 'item',
-			id: item.id,
-			title: item.name,
-			subtitle: item.description || undefined,
-			icon: item.type === 'node' ? 'fa-folder' : 'fa-cube',
-			url: `/app/item/${item.id}`,
-			imageUrl: item.imageUrl || undefined
-		});
+	const idsByType = new Map<string, string[]>();
+	for (const hit of hits) {
+		const ids = idsByType.get(hit.entityType) ?? [];
+		ids.push(hit.entityId);
+		idsByType.set(hit.entityType, ids);
 	}
 
-	// Search pages
-	const pages = await db
-		.select({
-			id: page.id,
-			name: page.name,
-			description: page.description,
-			categoryId: page.categoryId,
-			icon: page.icon
-		})
-		.from(page)
-		.where(
-			and(
-				eq(page.userId, userId),
-				or(like(page.name, searchTerm), like(page.description, searchTerm))
-			)
-		)
-		.limit(limit)
-		.all();
+	const shaped = new Map<string, SearchResult>();
+	const add = (key: string, result: SearchResult) => shaped.set(key, result);
+	const snipOf = (entityType: string, id: string) =>
+		hits.find((h) => h.entityType === entityType && h.entityId === id)?.snippet || undefined;
 
-	for (const pg of pages) {
-		results.push({
-			type: 'page',
-			id: pg.id,
-			title: pg.name,
-			subtitle: pg.description || undefined,
-			icon: pg.icon || 'fa-file-alt',
-			url: `/app/category/${pg.categoryId}/page/${pg.id}`
-		});
+	const itemIds = idsByType.get('tree_element') ?? [];
+	if (itemIds.length > 0) {
+		const rows = await db
+			.select({
+				id: treeElement.id,
+				name: treeElement.name,
+				description: treeElement.description,
+				type: treeElement.type,
+				imageUrl: treeElement.imageUrl
+			})
+			.from(treeElement)
+			.where(inArray(treeElement.id, itemIds))
+			.all();
+		for (const item of rows) {
+			add(`tree_element:${item.id}`, {
+				type: 'item',
+				id: item.id,
+				title: item.name,
+				subtitle: item.description || snipOf('tree_element', item.id),
+				icon: item.type === 'node' ? 'fa-folder' : 'fa-cube',
+				url: `/app/item/${item.id}`,
+				imageUrl: item.imageUrl || undefined
+			});
+		}
 	}
 
-	// Search reminders
-	const reminders = await db
-		.select({
-			id: reminder.id,
-			title: reminder.title,
-			description: reminder.description,
-			completed: reminder.completed,
-			dueAt: reminder.dueAt
-		})
-		.from(reminder)
-		.where(
-			and(
-				eq(reminder.userId, userId),
-				or(like(reminder.title, searchTerm), like(reminder.description, searchTerm))
-			)
-		)
-		.orderBy(desc(reminder.dueAt))
-		.limit(limit)
-		.all();
-
-	for (const rem of reminders) {
-		results.push({
-			type: 'reminder',
-			id: rem.id,
-			title: rem.title,
-			subtitle: rem.description || (rem.completed ? 'Completed' : 'Pending'),
-			icon: rem.completed ? 'fa-check-circle' : 'fa-bell',
-			url: `/app/reminders/${rem.id}`
-		});
+	const pageIds = idsByType.get('page') ?? [];
+	if (pageIds.length > 0) {
+		const rows = await db
+			.select({
+				id: page.id,
+				name: page.name,
+				description: page.description,
+				categoryId: page.categoryId,
+				icon: page.icon
+			})
+			.from(page)
+			.where(inArray(page.id, pageIds))
+			.all();
+		for (const pg of rows) {
+			add(`page:${pg.id}`, {
+				type: 'page',
+				id: pg.id,
+				title: pg.name,
+				subtitle: pg.description || snipOf('page', pg.id),
+				icon: pg.icon || 'fa-file-alt',
+				url: `/app/category/${pg.categoryId}/page/${pg.id}`
+			});
+		}
 	}
 
-	// Search expenses
-	const expenses = await db
-		.select({
-			id: expense.id,
-			amount: expense.amount,
-			currency: expense.currency,
-			description: expense.description,
-			spentAt: expense.spentAt
-		})
-		.from(expense)
-		.where(and(eq(expense.userId, userId), like(expense.description, searchTerm)))
-		.orderBy(desc(expense.spentAt))
-		.limit(limit)
-		.all();
-
-	for (const exp of expenses) {
-		results.push({
-			type: 'expense',
-			id: exp.id,
-			title: `${exp.amount.toLocaleString()} ${exp.currency}`,
-			subtitle: exp.description || undefined,
-			icon: 'fa-receipt',
-			url: '/app/finance'
-		});
+	const reminderIds = idsByType.get('reminder') ?? [];
+	if (reminderIds.length > 0) {
+		const rows = await db
+			.select({
+				id: reminder.id,
+				title: reminder.title,
+				description: reminder.description,
+				completed: reminder.completed
+			})
+			.from(reminder)
+			.where(inArray(reminder.id, reminderIds))
+			.all();
+		for (const rem of rows) {
+			add(`reminder:${rem.id}`, {
+				type: 'reminder',
+				id: rem.id,
+				title: rem.title,
+				subtitle: rem.description || (rem.completed ? 'Completed' : 'Pending'),
+				icon: rem.completed ? 'fa-check-circle' : 'fa-bell',
+				url: `/app/reminders/${rem.id}`
+			});
+		}
 	}
 
-	// Search training sessions
-	const sessions = await db
-		.select({
-			id: trainingSession.id,
-			title: trainingSession.title,
-			notes: trainingSession.notes,
-			startedAt: trainingSession.startedAt
-		})
-		.from(trainingSession)
-		.where(
-			and(
-				eq(trainingSession.userId, userId),
-				or(like(trainingSession.title, searchTerm), like(trainingSession.notes, searchTerm))
-			)
-		)
-		.orderBy(desc(trainingSession.startedAt))
-		.limit(limit)
-		.all();
-
-	for (const session of sessions) {
-		results.push({
-			type: 'training',
-			id: session.id,
-			title: session.title || 'Training Session',
-			subtitle: session.notes || new Date(session.startedAt).toLocaleDateString(),
-			icon: 'fa-dumbbell',
-			url: `/app/training/session/${session.id}`
-		});
+	const templateIds = idsByType.get('reminder_template') ?? [];
+	if (templateIds.length > 0) {
+		const rows = await db
+			.select({
+				id: reminderTemplate.id,
+				title: reminderTemplate.title,
+				description: reminderTemplate.description
+			})
+			.from(reminderTemplate)
+			.where(inArray(reminderTemplate.id, templateIds))
+			.all();
+		for (const tpl of rows) {
+			add(`reminder_template:${tpl.id}`, {
+				type: 'reminder',
+				id: tpl.id,
+				title: tpl.title,
+				subtitle: tpl.description || 'Reminder template',
+				icon: 'fa-bell',
+				url: `/app/reminders/${tpl.id}`
+			});
+		}
 	}
 
-	// Search tags
-	const tags = await db
-		.select({
-			id: tag.id,
-			name: tag.name,
-			color: tag.color
-		})
-		.from(tag)
-		.where(and(eq(tag.userId, userId), like(tag.name, searchTerm)))
-		.limit(limit)
-		.all();
-
-	for (const t of tags) {
-		results.push({
-			type: 'tag',
-			id: t.id,
-			title: t.name,
-			subtitle: 'Tag',
-			icon: 'fa-tag',
-			url: '/app/tags'
-		});
+	const expenseIds = idsByType.get('expense') ?? [];
+	if (expenseIds.length > 0) {
+		const rows = await db
+			.select({
+				id: expense.id,
+				amount: expense.amount,
+				currency: expense.currency,
+				description: expense.description
+			})
+			.from(expense)
+			.where(inArray(expense.id, expenseIds))
+			.all();
+		for (const exp of rows) {
+			add(`expense:${exp.id}`, {
+				type: 'expense',
+				id: exp.id,
+				title: `${exp.amount.toLocaleString()} ${exp.currency}`,
+				subtitle: exp.description || snipOf('expense', exp.id),
+				icon: 'fa-receipt',
+				url: '/app/finance'
+			});
+		}
 	}
 
-	return results;
+	const sessionIds = idsByType.get('training_session') ?? [];
+	if (sessionIds.length > 0) {
+		const rows = await db
+			.select({
+				id: trainingSession.id,
+				title: trainingSession.title,
+				notes: trainingSession.notes,
+				startedAt: trainingSession.startedAt
+			})
+			.from(trainingSession)
+			.where(inArray(trainingSession.id, sessionIds))
+			.all();
+		for (const session of rows) {
+			add(`training_session:${session.id}`, {
+				type: 'training',
+				id: session.id,
+				title: session.title || 'Training Session',
+				subtitle: session.notes || new Date(session.startedAt).toLocaleDateString(),
+				icon: 'fa-dumbbell',
+				url: `/app/training/session/${session.id}`
+			});
+		}
+	}
+
+	const tagIds = idsByType.get('tag') ?? [];
+	if (tagIds.length > 0) {
+		const rows = await db
+			.select({ id: tag.id, name: tag.name })
+			.from(tag)
+			.where(inArray(tag.id, tagIds))
+			.all();
+		for (const t of rows) {
+			add(`tag:${t.id}`, {
+				type: 'tag',
+				id: t.id,
+				title: t.name,
+				subtitle: 'Tag',
+				icon: 'fa-tag',
+				url: '/app/tags'
+			});
+		}
+	}
+
+	// Return in relevance order across all domains.
+	return hits
+		.map((hit) => shaped.get(`${hit.entityType}:${hit.entityId}`))
+		.filter((r): r is SearchResult => r !== undefined);
 }

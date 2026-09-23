@@ -213,6 +213,25 @@ export async function createReminderTemplate(
 	return getReminderTemplateById(userId, template.id);
 }
 
+/** One-off reminder without a template (quick capture). */
+export async function createOneOffReminder(
+	userId: string,
+	data: { title: string; description?: string; markdown?: string; dueAt: Date }
+) {
+	const [result] = await db
+		.insert(reminder)
+		.values({
+			userId,
+			templateId: null,
+			title: data.title,
+			description: data.description,
+			markdown: data.markdown,
+			dueAt: data.dueAt
+		})
+		.returning();
+	return result;
+}
+
 export async function getReminderTemplates(userId: string) {
 	const templates = await db
 		.select()

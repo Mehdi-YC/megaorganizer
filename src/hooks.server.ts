@@ -4,6 +4,11 @@ import { building } from '$app/environment';
 import { auth } from '$lib/server/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 import { logError } from '$lib/server/error-log';
+import { startScheduler } from '$lib/server/services/scheduler';
+
+// Background reminder delivery (see services/scheduler.ts). Skipped during
+// the build, which evaluates this module graph without a server process.
+if (!building) startScheduler();
 
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Content-Type-Options': 'nosniff',

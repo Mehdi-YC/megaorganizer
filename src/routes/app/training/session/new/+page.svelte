@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
 	import { onDestroy, onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
 	import {
@@ -69,7 +70,9 @@
 	let visibilityHandler: (() => void) | null = null;
 	let gpsError: string | null = $state(null);
 
+	// onDestroy also runs during SSR, where window and document don't exist.
 	onDestroy(() => {
+		if (!browser) return;
 		persistOnExit();
 		window.removeEventListener('pagehide', persistOnExit);
 		window.removeEventListener('beforeunload', persistOnExit);

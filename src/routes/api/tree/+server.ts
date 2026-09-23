@@ -70,7 +70,9 @@ export const POST: RequestHandler = async (event) => {
 		case 'create': {
 			const v = validateBody(body, {
 				type: { validate: isOneOf(treeTypes), label: 'Type' },
-				name: { validate: isNonEmptyString, label: 'Name' }
+				name: { validate: isNonEmptyString, label: 'Name' },
+				description: { validate: isString, label: 'Description', required: false },
+				markdown: { validate: isString, label: 'Markdown', required: false }
 			});
 			if (!v.ok) return v.error;
 			const element = await createTreeElement(user.id, v.data.type, v.data as any);
