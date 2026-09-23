@@ -2,7 +2,10 @@
 	import { invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import ExpenseForm from '$lib/components/finance/ExpenseForm.svelte';
+	import { page } from '$app/state';
+	import { replaceState } from '$app/navigation';
 
 	let show = $state(false);
 	let activeTab = $state<'finance' | 'reminder' | 'item'>('finance');
@@ -14,15 +17,44 @@
 
 	// Item form
 	let itemName = $state('');
+	let itemBody = $state('');
 
 	let saving = $state(false);
 	let saved = $state(false);
 	let expenseForm: ExpenseForm | undefined = $state();
 
-	function open() {
+	function open(prefill?: { name?: string; text?: string; url?: string }) {
 		show = true;
 		resetForms();
+		if (prefill) {
+			activeTab = 'item';
+			const urlLine = prefill.url && !prefill.text?.includes(prefill.url) ? prefill.url : '';
+			itemBody = [prefill.text, urlLine].filter(Boolean).join('\n\n');
+			itemName =
+				prefill.name ||
+				(prefill.text ? prefill.text.split('\n')[0].slice(0, 60) : '') ||
+				'Shared item';
+		}
 	}
+
+	// Accept shared text from the Android share sheet (PWA share_target):
+	// open prefilled, then strip the query params from the URL.
+	let shareHandled = false;
+	$effect(() => {
+		const params = page.url.searchParams;
+		const shareText = params.get('share_text');
+		const shareTitle = params.get('share_title');
+		const shareUrl = params.get('share_url');
+		if (shareHandled || (!shareText && !shareTitle && !shareUrl)) return;
+		shareHandled = true;
+		open({
+			name: shareTitle ?? undefined,
+			text: shareText ?? undefined,
+			url: shareUrl ?? undefined
+		});
+		// Strip the share params so a reload does not reopen the dialog.
+		replaceState(page.url.pathname, {});
+	});
 
 	function close() {
 		show = false;
@@ -35,6 +67,7 @@
 		reminderDueDate = '';
 		reminderDueTime = '09:00';
 		itemName = '';
+		itemBody = '';
 		saved = false;
 	}
 
@@ -92,7 +125,8 @@
 			body: JSON.stringify({
 				action: 'create',
 				name: itemName,
-				type: 'item'
+				type: 'item',
+				markdown: itemBody.trim() || undefined
 			})
 		});
 		saving = false;
@@ -104,13 +138,20 @@
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (!show) return;
+		const target = e.target as HTMLElement | null;
+		const typing = !!target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+		if (!show) {
+			// 'c' opens quick capture from anywhere outside a text field
+			if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && e.key === 'c') {
+				e.preventDefault();
+				open();
+			}
+			return;
+		}
 		if (e.key === 'Escape') {
 			close();
 			return;
 		}
-		const target = e.target as HTMLElement | null;
-		const typing = !!target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
 		// Tab shortcuts only outside fields, so typing "2" stays a "2"
 		if (!typing && e.key >= '1' && e.key <= '3') {
 			if (e.key === '1') activeTab = 'finance';
@@ -141,7 +182,7 @@
 <button
 	type="button"
 	class="fixed right-6 bottom-6 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover active:scale-95"
-	onclick={open}
+	onclick={() => open()}
 	aria-label="Quick capture"
 >
 	<i class="fas fa-plus text-sm"></i>
@@ -266,6 +307,13 @@
 								label="ITEM NAME"
 								bind:value={itemName}
 								placeholder="Item name"
+							/>
+							<Textarea
+								name="qc-body"
+								label="BODY"
+								bind:value={itemBody}
+								rows={4}
+								placeholder="Notes (markdown and [[wikilinks]] supported)"
 							/>
 							<Button class="w-full" onclick={saveItem} disabled={!itemName.trim() || saving}>
 								{saving ? 'Saving...' : 'Add Item'}
