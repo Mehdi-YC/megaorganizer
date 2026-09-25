@@ -5,7 +5,7 @@ import {
 	reminder,
 	reminderTodo
 } from '$lib/server/db/schema';
-import { eq, and, asc, lte, gte, inArray } from 'drizzle-orm';
+import { eq, and, or, asc, lte, gte, isNull, inArray } from 'drizzle-orm';
 
 // ─── Recurrence Helpers ──────────────────────────────────────────────────────
 
@@ -20,6 +20,8 @@ interface RecurrenceConfig {
 	// For monthly_relative: e.g., last Monday of month
 	weekday?: number; // 0=Sun, 1=Mon, ..., 6=Sat
 	weekdayOrdinal?: number; // 1=first, 2=second, 3=third, 4=fourth, -1=last
+	/** IANA timezone the fields above are wall-clock in (written by the client). */
+	timeZone?: string;
 }
 
 function parseConfig(configStr: string | null): RecurrenceConfig {
@@ -45,20 +47,20 @@ function getWeekdayOfMonth(
 	weekday: number,
 	ordinal: number
 ): Date | null {
-	const lastDay = new Date(year, month + 1, 0);
+	const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
 
 	if (ordinal === -1) {
 		// Last occurrence - search from end of month
-		for (let d = lastDay.getDate(); d >= 1; d--) {
-			const date = new Date(year, month, d);
-			if (date.getDay() === weekday) return date;
+		for (let d = lastDay; d >= 1; d--) {
+			const date = new Date(Date.UTC(year, month, d));
+			if (date.getUTCDay() === weekday) return date;
 		}
 	} else {
 		// Nth occurrence - search from beginning
 		let count = 0;
-		for (let d = 1; d <= lastDay.getDate(); d++) {
-			const date = new Date(year, month, d);
-			if (date.getDay() === weekday) {
+		for (let d = 1; d <= lastDay; d++) {
+			const date = new Date(Date.UTC(year, month, d));
+			if (date.getUTCDay() === weekday) {
 				count++;
 				if (count === ordinal) return date;
 			}
@@ -68,23 +70,93 @@ function getWeekdayOfMonth(
 	return null;
 }
 
+// ─── Timezone Helpers ────────────────────────────────────────────────────────
+// Recurrence fields (hour/minute/days/...) are wall-clock in the user's
+// timezone. Occurrences have to be computed in that zone: doing date math in
+// the server's zone (UTC inside Docker) shifts every occurrence by the
+// timezone offset. Calendar math below therefore runs on a UTC "calendar"
+// Date that only carries year/month/day/time fields, converted to a real
+// instant at the edges.
+
+const zoneFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function zoneFormatter(timeZone: string): Intl.DateTimeFormat {
+	let formatter = zoneFormatters.get(timeZone);
+	if (!formatter) {
+		formatter = new Intl.DateTimeFormat('en-US', {
+			timeZone,
+			hourCycle: 'h23',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit'
+		});
+		zoneFormatters.set(timeZone, formatter);
+	}
+	return formatter;
+}
+
+/** Wall-clock fields of an instant in `timeZone`, as a UTC calendar Date. */
+function toCalendar(instant: Date, timeZone: string): Date {
+	const fields: Record<string, number> = {};
+	for (const part of zoneFormatter(timeZone).formatToParts(instant)) {
+		if (part.type !== 'literal') fields[part.type] = Number(part.value);
+	}
+	return new Date(
+		Date.UTC(fields.year, fields.month - 1, fields.day, fields.hour, fields.minute, fields.second)
+	);
+}
+
+/** Offset of `timeZone` at `instant`, in milliseconds (UTC+1 → 3_600_000). */
+function zoneOffsetMs(instant: Date, timeZone: string): number {
+	const truncated = instant.getTime() - instant.getMilliseconds();
+	return toCalendar(instant, timeZone).getTime() - truncated;
+}
+
+/** The instant at which the wall-clock time carried by `calendar` happens. */
+function fromCalendar(calendar: Date, timeZone: string): Date {
+	const wallClock = calendar.getTime();
+	// Two passes: a single offset guess is wrong across a DST change.
+	const firstGuess = new Date(wallClock - zoneOffsetMs(new Date(wallClock), timeZone));
+	return new Date(wallClock - zoneOffsetMs(firstGuess, timeZone));
+}
+
+function serverTimeZone(): string {
+	return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+function applyTimeOfDay(calendar: Date, config: RecurrenceConfig): void {
+	if (config.hour !== undefined) {
+		calendar.setUTCHours(config.hour, config.minute ?? 0, 0, 0);
+	}
+}
+
+function daysInCalendarMonth(calendar: Date): number {
+	return new Date(Date.UTC(calendar.getUTCFullYear(), calendar.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
 export function calculateNextDueAt(
 	currentDueAt: Date,
 	recurrenceType: string,
 	recurrenceConfig: string | null
 ): Date {
 	const config = parseConfig(recurrenceConfig);
-	const next = new Date(currentDueAt);
+	// Templates saved before the timezone was recorded fall back to the
+	// server's zone (the previous behaviour).
+	const timeZone = config.timeZone ?? serverTimeZone();
+	const next = toCalendar(currentDueAt, timeZone);
 
 	switch (recurrenceType) {
 		case 'daily':
-			next.setDate(next.getDate() + 1);
-			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
+			next.setUTCDate(next.getUTCDate() + 1);
+			applyTimeOfDay(next, config);
 			break;
 
 		case 'weekly': {
-			const days = config.days ?? [currentDueAt.getDay()];
-			const currentDay = currentDueAt.getDay();
+			const days = config.days ?? [next.getUTCDay()];
+			const currentDay = next.getUTCDay();
 			let daysToAdd = 1;
 
 			// Find next matching day
@@ -96,30 +168,30 @@ export function calculateNextDueAt(
 				}
 			}
 
-			next.setDate(next.getDate() + daysToAdd);
-			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
+			next.setUTCDate(next.getUTCDate() + daysToAdd);
+			applyTimeOfDay(next, config);
 			break;
 		}
 
 		case 'monthly': {
-			const targetDay = config.dayOfMonth ?? currentDueAt.getDate();
-			next.setMonth(next.getMonth() + 1);
-			next.setDate(
-				Math.min(targetDay, new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate())
-			);
-			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
+			const targetDay = config.dayOfMonth ?? next.getUTCDate();
+			// Step from day 1 so e.g. Jan 31 lands on Feb 28 instead of
+			// rolling over into March.
+			next.setUTCDate(1);
+			next.setUTCMonth(next.getUTCMonth() + 1);
+			next.setUTCDate(Math.min(targetDay, daysInCalendarMonth(next)));
+			applyTimeOfDay(next, config);
 			break;
 		}
 
 		case 'yearly': {
-			const targetMonth = config.month ?? currentDueAt.getMonth();
-			const targetDayOfYear = config.day ?? currentDueAt.getDate();
-			next.setFullYear(next.getFullYear() + 1);
-			next.setMonth(targetMonth);
-			next.setDate(
-				Math.min(targetDayOfYear, new Date(next.getFullYear(), targetMonth + 1, 0).getDate())
-			);
-			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
+			const targetMonth = config.month ?? next.getUTCMonth();
+			const targetDay = config.day ?? next.getUTCDate();
+			next.setUTCDate(1);
+			next.setUTCFullYear(next.getUTCFullYear() + 1);
+			next.setUTCMonth(targetMonth);
+			next.setUTCDate(Math.min(targetDay, daysInCalendarMonth(next)));
+			applyTimeOfDay(next, config);
 			break;
 		}
 
@@ -127,10 +199,11 @@ export function calculateNextDueAt(
 			// Specific date every year (e.g., April 6th)
 			const ydMonth = config.month ?? 0;
 			const ydDay = config.day ?? 1;
-			next.setFullYear(next.getFullYear() + 1);
-			next.setMonth(ydMonth);
-			next.setDate(Math.min(ydDay, new Date(next.getFullYear(), ydMonth + 1, 0).getDate()));
-			if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
+			next.setUTCDate(1);
+			next.setUTCFullYear(next.getUTCFullYear() + 1);
+			next.setUTCMonth(ydMonth);
+			next.setUTCDate(Math.min(ydDay, daysInCalendarMonth(next)));
+			applyTimeOfDay(next, config);
 			break;
 		}
 
@@ -139,31 +212,59 @@ export function calculateNextDueAt(
 			const mrWeekday = config.weekday ?? 1; // Default Monday
 			const mrOrdinal = config.weekdayOrdinal ?? -1; // Default last
 
-			// Calculate next month
-			const mrNext = new Date(currentDueAt);
-			mrNext.setMonth(mrNext.getMonth() + 1);
-			mrNext.setDate(1);
+			// Move to the first day of next month
+			const mrNext = new Date(next.getTime());
+			mrNext.setUTCDate(1);
+			mrNext.setUTCMonth(mrNext.getUTCMonth() + 1);
 
 			// Find the target weekday in that month
 			const mrTargetDate = getWeekdayOfMonth(
-				mrNext.getFullYear(),
-				mrNext.getMonth(),
+				mrNext.getUTCFullYear(),
+				mrNext.getUTCMonth(),
 				mrWeekday,
 				mrOrdinal
 			);
 			if (mrTargetDate) {
 				next.setTime(mrTargetDate.getTime());
-				if (config.hour !== undefined) next.setHours(config.hour, config.minute ?? 0, 0, 0);
+				applyTimeOfDay(next, config);
 			}
 			break;
 		}
 
 		default:
 			// For unknown types, just add 1 day
-			next.setDate(next.getDate() + 1);
+			next.setUTCDate(next.getUTCDate() + 1);
 	}
 
-	return next;
+	return fromCalendar(next, timeZone);
+}
+
+/**
+ * Stamp the user's timezone onto templates saved before it was recorded, so
+ * their recurrence hours keep firing at the user's wall-clock time. Called
+ * with the timezone the browser reports.
+ */
+export async function backfillTemplateTimeZones(userId: string, timeZone: string): Promise<void> {
+	try {
+		new Intl.DateTimeFormat('en-US', { timeZone });
+	} catch {
+		return; // Not a timezone this runtime knows.
+	}
+
+	const templates = await db
+		.select({ id: reminderTemplate.id, recurrenceConfig: reminderTemplate.recurrenceConfig })
+		.from(reminderTemplate)
+		.where(eq(reminderTemplate.userId, userId))
+		.all();
+
+	for (const template of templates) {
+		const config = parseConfig(template.recurrenceConfig);
+		if (config.timeZone) continue;
+		await db
+			.update(reminderTemplate)
+			.set({ recurrenceConfig: JSON.stringify({ ...config, timeZone }) })
+			.where(eq(reminderTemplate.id, template.id));
+	}
 }
 
 // ─── Template CRUD ───────────────────────────────────────────────────────────
@@ -428,7 +529,13 @@ export async function getDueReminders(userId: string, limit = 20) {
 		.select()
 		.from(reminder)
 		.where(
-			and(eq(reminder.userId, userId), eq(reminder.completed, false), lte(reminder.dueAt, now))
+			and(
+				eq(reminder.userId, userId),
+				eq(reminder.completed, false),
+				lte(reminder.dueAt, now),
+				// Snoozed reminders come back to the list once the snooze expires.
+				or(isNull(reminder.snoozedUntil), lte(reminder.snoozedUntil, now))
+			)
 		)
 		.orderBy(asc(reminder.dueAt))
 		.limit(limit)
@@ -597,7 +704,9 @@ export async function completeReminder(userId: string, reminderId: string) {
 export async function snoozeReminder(userId: string, reminderId: string, until: Date) {
 	const [updated] = await db
 		.update(reminder)
-		.set({ snoozedUntil: until })
+		// Clearing notifiedAt lets the scheduler alert again once the snooze
+		// expires instead of the reminder staying silent forever.
+		.set({ snoozedUntil: until, notifiedAt: null })
 		.where(and(eq(reminder.id, reminderId), eq(reminder.userId, userId)))
 		.returning();
 

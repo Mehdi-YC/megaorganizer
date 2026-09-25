@@ -116,7 +116,13 @@
 	}
 
 	function buildRecurrenceConfig(): string {
-		const config: any = { hour, minute };
+		// Recurrence hours are wall-clock in the user's timezone; the server
+		// needs the zone to compute the next occurrences from it.
+		const config: any = {
+			hour,
+			minute,
+			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+		};
 
 		if (recurrenceType === 'weekly') {
 			config.days = selectedDays;

@@ -3,6 +3,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { Button, EmptyState } from '$lib/components/ui';
 	import { ReminderTemplateForm } from '$lib/components/reminders';
+	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
 	import { getRecurrenceLabel } from '$lib/utils/reminders';
 
 	let { data } = $props();
@@ -102,6 +103,8 @@
 			</Button>
 		</div>
 	</div>
+
+	<NotificationPrompt />
 
 	{#if templates.length === 0}
 		<EmptyState
