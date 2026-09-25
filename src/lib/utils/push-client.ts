@@ -50,10 +50,17 @@ export async function enablePush(): Promise<boolean> {
 
 	try {
 		const registration = await navigator.serviceWorker.ready;
-		const subscription = await registration.pushManager.subscribe({
-			userVisibleOnly: true,
-			applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource
-		});
+		// subscribe() waits on the browser's push service and can hang when
+		// that service is unreachable. Give up after a while so the caller can
+		// report the failure instead of spinning forever.
+		const subscription = await Promise.race([
+			registration.pushManager.subscribe({
+				userVisibleOnly: true,
+				applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as BufferSource
+			}),
+			new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 12_000))
+		]);
+		if (!subscription) return false;
 		const json = subscription.toJSON();
 		const save = await fetch('/api/push', {
 			method: 'POST',
