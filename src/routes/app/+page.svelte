@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { getSessionIcon } from '$lib/utils/training';
 	import { ReminderCard } from '$lib/components/reminders';
+	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import StatGroupCard from '$lib/components/ui/StatGroupCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import Textarea from '$lib/components/ui/Textarea.svelte';
 
 	let { data } = $props();
 
@@ -13,6 +16,33 @@
 	let analytics = $derived(data.analytics);
 	let currency = $derived(data.currency ?? 'DZD');
 	let weeklyTraining = $derived<number[]>(data.weeklyTraining ?? []);
+
+	// Scratch notes: autosaved a moment after typing stops.
+	// svelte-ignore state_referenced_locally
+	let note = $state(data.note ?? '');
+	let noteStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
+	let noteTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function queueNoteSave() {
+		noteStatus = 'saving';
+		clearTimeout(noteTimer);
+		noteTimer = setTimeout(saveNote, 600);
+	}
+
+	async function saveNote() {
+		try {
+			const res = await fetch('/api/dashboard-note', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'save', content: note })
+			});
+			noteStatus = res.ok ? 'saved' : 'error';
+		} catch {
+			noteStatus = 'error';
+		}
+	}
+
+	onMount(() => () => clearTimeout(noteTimer));
 
 	function formatDuration(seconds: number) {
 		if (seconds < 60) return `${seconds}s`;
@@ -113,6 +143,8 @@
 
 <div class="p-4 sm:p-8">
 	<PageHeader title="Dashboard" subtitle="Your personal knowledge & activity operating system" />
+
+	<NotificationPrompt />
 
 	<!-- Today's Reminders -->
 	{#if dueReminders.length > 0}
@@ -426,5 +458,32 @@
 				>
 			</EmptyState>
 		{/if}
+	</div>
+
+	<!-- Scratch Notes -->
+	<div class="mt-6">
+		<div class="mb-3 flex items-center justify-between">
+			<h2
+				class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
+			>
+				<i class="fas fa-pencil text-xs text-primary"></i>
+				Notes
+			</h2>
+			<span class="text-[10px] text-fg-subdued">
+				{noteStatus === 'saving'
+					? 'Saving…'
+					: noteStatus === 'saved'
+						? 'Saved'
+						: noteStatus === 'error'
+							? 'Not saved'
+							: ''}
+			</span>
+		</div>
+		<Textarea
+			rows={10}
+			placeholder="Anything worth keeping handy…"
+			bind:value={note}
+			oninput={queueNoteSave}
+		/>
 	</div>
 </div>

@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { treeElement, trainingSession } from '$lib/server/db/schema';
+import { treeElement, trainingSession, dashboardNote } from '$lib/server/db/schema';
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
 import { getTrainingSessionsWithActivities } from './training.service';
 import { getDueReminders, generateDueReminders, getUpcomingReminders } from './reminder.service';
@@ -40,7 +40,8 @@ export async function getDashboardData(userId: string) {
 		dueReminders,
 		upcomingEvents,
 		analytics,
-		settings
+		settings,
+		note
 	] = await Promise.all([
 		db
 			.select({
@@ -61,7 +62,8 @@ export async function getDashboardData(userId: string) {
 		getDueReminders(userId, 10),
 		getUpcomingEvents(userId, 7),
 		getAnalytics(userId),
-		getUserSettings(userId)
+		getUserSettings(userId),
+		getDashboardNote(userId)
 	]);
 
 	const totalDuration = allSessions.reduce((acc, s) => acc + (s.duration ?? 0), 0);
@@ -73,6 +75,7 @@ export async function getDashboardData(userId: string) {
 		upcomingEvents,
 		analytics,
 		currency: settings?.currency ?? 'DZD',
+		note,
 		weeklyTraining: getWeeklyTrainingMinutes(allSessions),
 		stats: {
 			itemCount: allItems.length,
@@ -129,4 +132,29 @@ export async function getUpcomingEvents(userId: string, days = 7) {
 	].sort((a, b) => a.date.getTime() - b.date.getTime());
 
 	return events;
+}
+
+// ─── Dashboard Note ──────────────────────────────────────────────────────────
+
+export async function getDashboardNote(userId: string): Promise<string> {
+	const row = await db
+		.select({ content: dashboardNote.content })
+		.from(dashboardNote)
+		.where(eq(dashboardNote.userId, userId))
+		.get();
+	return row?.content ?? '';
+}
+
+export async function saveDashboardNote(userId: string, content: string): Promise<void> {
+	const existing = await db
+		.select({ id: dashboardNote.id })
+		.from(dashboardNote)
+		.where(eq(dashboardNote.userId, userId))
+		.get();
+
+	if (existing) {
+		await db.update(dashboardNote).set({ content }).where(eq(dashboardNote.id, existing.id));
+	} else {
+		await db.insert(dashboardNote).values({ userId, content });
+	}
 }

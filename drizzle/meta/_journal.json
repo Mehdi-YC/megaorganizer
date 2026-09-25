@@ -36,6 +36,13 @@
       "when": 1790177471233,
       "tag": "0004_ordinary_starbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1790335471522,
+      "tag": "0005_panoramic_chat",
+      "breakpoints": true
     }
   ]
 }

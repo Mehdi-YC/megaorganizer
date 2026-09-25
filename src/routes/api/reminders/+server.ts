@@ -9,6 +9,7 @@ import {
 	updateReminderTemplateTodos,
 	deleteReminderTemplate,
 	generateDueReminders,
+	backfillTemplateTimeZones,
 	getDueReminders,
 	getReminderHistory,
 	getReminderById,
@@ -42,6 +43,11 @@ export const GET: RequestHandler = async (event) => {
 	const templateId = event.url.searchParams.get('templateId');
 	const reminderId = event.url.searchParams.get('reminderId');
 	const action = event.url.searchParams.get('action');
+
+	// The browser reports its timezone so template recurrence hours keep
+	// firing at the user's wall-clock time; older templates get it backfilled.
+	const tz = event.url.searchParams.get('tz');
+	if (tz) await backfillTemplateTimeZones(user.id, tz);
 
 	// Generate due reminders first
 	await generateDueReminders(user.id);
