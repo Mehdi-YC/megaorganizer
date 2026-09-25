@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			upcomingEvents: [],
 			analytics: null,
 			currency: 'DZD',
+			note: '',
 			weeklyTraining: [],
 			stats: { itemCount: 0, sessionCount: 0, totalDuration: 0 }
 		};

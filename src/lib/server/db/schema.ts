@@ -845,6 +845,33 @@ export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 	user: one(user, { fields: [userSettings.userId], references: [user.id] })
 }));
 
+// Dashboard scratch pad: one free-text note per user.
+export const dashboardNote = sqliteTable(
+	'dashboard_note',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' })
+			.unique(),
+		content: text('content').default('').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [index('dashboardNote_userId_idx').on(table.userId)]
+);
+
+export const dashboardNoteRelations = relations(dashboardNote, ({ one }) => ({
+	user: one(user, { fields: [dashboardNote.userId], references: [user.id] })
+}));
+
 // ─── HIIT / WOD timers ──────────────────────────────────────────────────────
 export const timerTemplate = sqliteTable(
 	'timer_template',
