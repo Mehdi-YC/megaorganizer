@@ -8,6 +8,8 @@
 		computeRunStats,
 		buildRunPayload,
 		saveRunApi,
+		startBackgroundKeepAlive,
+		stopBackgroundKeepAlive,
 		MS_TO_KMH,
 		TIMER_INTERVAL_MS,
 		GPS_WATCH_OPTIONS,
@@ -89,6 +91,7 @@
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
 		releaseWakeLock();
+		stopBackgroundKeepAlive();
 		if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 	});
 
@@ -139,6 +142,7 @@
 				}, TIMER_INTERVAL_MS);
 				startGpsWatch();
 				acquireWakeLock();
+				startBackgroundKeepAlive('Training - MegaOrganize');
 				setupVisibilityHandler();
 			}
 		}
@@ -259,6 +263,7 @@
 		visibilityHandler = async () => {
 			if (document.visibilityState === 'visible' && timerRunning) {
 				await acquireWakeLock();
+				startBackgroundKeepAlive('Training - MegaOrganize');
 				elapsedTime = Math.floor((Date.now() - startTime) / 1000);
 				// Restart GPS watch — mobile browsers may have killed it while screen was off
 				startGpsWatch();
@@ -285,6 +290,7 @@
 		timerRunning = false;
 		if (timerInterval) clearInterval(timerInterval);
 		releaseWakeLock();
+		stopBackgroundKeepAlive();
 	}
 
 	function startGpsTracking() {
@@ -293,16 +299,19 @@
 			return;
 		}
 		gpsStatus = 'requesting';
+		acquireWakeLock();
+		startBackgroundKeepAlive('Training - MegaOrganize');
 		navigator.geolocation.getCurrentPosition(
 			() => {
 				gpsStatus = 'tracking';
 				startTimer();
 				startGpsWatch();
-				acquireWakeLock();
 				setupVisibilityHandler();
 			},
 			() => {
 				gpsStatus = 'idle';
+				releaseWakeLock();
+				stopBackgroundKeepAlive();
 				gpsError = 'Location permission denied. Please enable location services.';
 			},
 			{ enableHighAccuracy: true }
@@ -314,6 +323,7 @@
 		startTimer();
 		startGpsWatch();
 		acquireWakeLock();
+		startBackgroundKeepAlive('Training - MegaOrganize');
 		setupVisibilityHandler();
 	}
 
@@ -363,6 +373,7 @@
 		pauseTimer();
 		stopGpsWatch();
 		releaseWakeLock();
+		stopBackgroundKeepAlive();
 		if (visibilityHandler) {
 			document.removeEventListener('visibilitychange', visibilityHandler);
 			visibilityHandler = null;

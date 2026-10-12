@@ -230,3 +230,49 @@ export async function saveRunApi(
 	}
 	return data;
 }
+
+// Silent audio keep-alive for mobile background tracking (keeps JS loop and GPS active when phone is locked)
+const SILENT_AUDIO_URI =
+	'data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==';
+
+let keepAliveAudio: HTMLAudioElement | null = null;
+
+export function startBackgroundKeepAlive(title: string = 'Tracking...') {
+	if (typeof window === 'undefined') return;
+	try {
+		if (!keepAliveAudio) {
+			keepAliveAudio = new Audio(SILENT_AUDIO_URI);
+			keepAliveAudio.loop = true;
+			keepAliveAudio.volume = 0.01;
+		}
+		keepAliveAudio.play().catch(() => {
+			/* Autoplay policy might block if not invoked within user gesture */
+		});
+
+		if ('mediaSession' in navigator) {
+			navigator.mediaSession.metadata = new MediaMetadata({
+				title,
+				artist: 'MegaOrganize'
+			});
+			navigator.mediaSession.playbackState = 'playing';
+		}
+	} catch {
+		/* Ignore in unsupported environments */
+	}
+}
+
+export function stopBackgroundKeepAlive() {
+	if (typeof window === 'undefined') return;
+	try {
+		if (keepAliveAudio) {
+			keepAliveAudio.pause();
+			keepAliveAudio.currentTime = 0;
+			keepAliveAudio = null;
+		}
+		if ('mediaSession' in navigator) {
+			navigator.mediaSession.playbackState = 'none';
+		}
+	} catch {
+		/* Ignore */
+	}
+}
