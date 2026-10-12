@@ -6,6 +6,8 @@
 		computeRunStats,
 		buildRunPayload,
 		saveRunApi,
+		startBackgroundKeepAlive,
+		stopBackgroundKeepAlive,
 		MS_TO_KMH,
 		TIMER_INTERVAL_MS,
 		GPS_WATCH_OPTIONS,
@@ -44,8 +46,8 @@
 	let lastPoint: GpsPoint | null = null;
 	let gpsHeartbeat: ReturnType<typeof setInterval> | null = null;
 	let lastFixAt = 0;
-	const GPS_HEARTBEAT_MS = 30_000;
-	const GPS_STALE_MS = 90_000;
+	const GPS_HEARTBEAT_MS = 15_000;
+	const GPS_STALE_MS = 60_000;
 	let wakeLock: WakeLockSentinel | null = null;
 	let visibilityHandler: (() => void) | null = null;
 	let gpsError: string | null = $state(null);
@@ -74,6 +76,7 @@
 				timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
 				startGpsWatch();
 				acquireWakeLock();
+				startBackgroundKeepAlive('Running - MegaOrganize');
 				setupVisibilityHandler();
 			}
 			// 'finished' restores the summary screen so an unsaved run can
@@ -94,6 +97,7 @@
 			if (timerInterval) clearInterval(timerInterval);
 			if (confirmTimer) clearTimeout(confirmTimer);
 			releaseWakeLock();
+			stopBackgroundKeepAlive();
 			if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 		};
 	});
@@ -192,6 +196,7 @@
 		visibilityHandler = async () => {
 			if (document.visibilityState === 'visible' && status === 'running') {
 				await acquireWakeLock();
+				startBackgroundKeepAlive('Running - MegaOrganize');
 				elapsed = Math.floor((Date.now() - startTime) / 1000);
 				// Restart GPS watch — mobile browsers may have killed it while screen was off
 				startGpsWatch();
@@ -208,6 +213,8 @@
 			return;
 		}
 		status = 'requesting';
+		acquireWakeLock();
+		startBackgroundKeepAlive('Running - MegaOrganize');
 		navigator.geolocation.getCurrentPosition(
 			() => {
 				status = 'running';
@@ -215,6 +222,8 @@
 			},
 			() => {
 				status = 'idle';
+				releaseWakeLock();
+				stopBackgroundKeepAlive();
 				gpsError = 'Location permission denied. Please enable location services.';
 			},
 			{ enableHighAccuracy: true }
@@ -225,6 +234,7 @@
 		startTime = Date.now();
 		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
 		acquireWakeLock();
+		startBackgroundKeepAlive('Running - MegaOrganize');
 		setupVisibilityHandler();
 		startGpsWatch();
 	}
@@ -270,6 +280,7 @@
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
 		releaseWakeLock();
+		stopBackgroundKeepAlive();
 	}
 
 	function resumeRun() {
@@ -277,6 +288,7 @@
 		startTime = Date.now() - elapsed * 1000;
 		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
 		acquireWakeLock();
+		startBackgroundKeepAlive('Running - MegaOrganize');
 		startGpsWatch();
 		setupVisibilityHandler();
 	}
@@ -323,6 +335,7 @@
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
 		releaseWakeLock();
+		stopBackgroundKeepAlive();
 		if (visibilityHandler) {
 			document.removeEventListener('visibilitychange', visibilityHandler);
 			visibilityHandler = null;
@@ -366,6 +379,7 @@
 		saveError = null;
 		gpsError = null;
 		finishing = false;
+		stopBackgroundKeepAlive();
 		distance = 0;
 		elapsed = 0;
 		currentSpeed = 0;

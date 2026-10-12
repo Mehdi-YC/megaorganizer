@@ -56,6 +56,17 @@
 		}
 	}
 
+	async function removeChild(childId: string) {
+		const res = await fetch('/api/tree', {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ action: 'removeChild', parentType, parentId, childId })
+		});
+		if (res.ok) {
+			onRemove?.(childId);
+		}
+	}
+
 	async function createAndAdd() {
 		if (!addQuery.trim()) return;
 		const createRes = await fetch('/api/tree', {
@@ -233,7 +244,7 @@
 					<button
 						type="button"
 						class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:hidden sm:group-hover:flex"
-						onclick={() => onRemove?.(child.id)}
+						onclick={() => removeChild(child.id)}
 						aria-label="Remove"
 					>
 						<i class="fas fa-times text-[9px]"></i>

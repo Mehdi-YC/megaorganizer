@@ -283,12 +283,32 @@
 		}
 	});
 
+	async function removeChildFromNode(nodeId: string, childId: string) {
+		const res = await fetch('/api/tree', {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				action: 'removeChild',
+				parentType: 'node',
+				parentId: nodeId,
+				childId
+			})
+		});
+		if (res.ok) {
+			const existing = nodeChildrenCache[nodeId] || [];
+			nodeChildrenCache = {
+				...nodeChildrenCache,
+				[nodeId]: existing.filter((c: { id: string }) => c.id !== childId)
+			};
+		}
+	}
+
 	async function searchForNode(nodeId: string, query: string) {
 		if (!query.trim() || query.trim().length < 3) {
 			nodeSearchResults = { ...nodeSearchResults, [nodeId]: [] };
 			return;
 		}
-		const results = await searchTree(query, 'item');
+		const results = await searchTree(query);
 		nodeSearchResults = { ...nodeSearchResults, [nodeId]: results };
 	}
 
@@ -300,8 +320,8 @@
 		nodeSearchResults = { ...nodeSearchResults, [nodeId]: [] };
 	}
 
-	async function addExistingToNode(nodeId: string, childId: string) {
-		await addChildToNode(nodeId, childId, 'item');
+	async function addExistingToNode(nodeId: string, childId: string, childType: string = 'item') {
+		await addChildToNode(nodeId, childId, childType);
 		nodeAddName = { ...nodeAddName, [nodeId]: '' };
 		nodeSearchResults = { ...nodeSearchResults, [nodeId]: [] };
 	}
@@ -827,7 +847,7 @@
 							{#if isExpanded}
 								<div class="space-y-2 py-2">
 									{#each childNodes as subNode (subNode.id)}
-										<div class="flex items-center gap-2 py-1.5">
+										<div class="group/subnode flex items-center gap-2 py-1.5">
 											<i
 												class="fas {getNodeIcon(subNode)} text-[10px]"
 												style="color: {getNodeColor(subNode)}"
@@ -835,6 +855,18 @@
 											<span class="text-xs font-medium" style="color: {getNodeColor(subNode)}"
 												>{subNode.name}</span
 											>
+											<button
+												type="button"
+												aria-label="Remove from section"
+												class="ml-auto flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-opacity hover:text-error sm:opacity-0 sm:group-hover/subnode:opacity-100"
+												onclick={(e) => {
+													e.preventDefault();
+													e.stopPropagation();
+													removeChildFromNode(node.id, subNode.id);
+												}}
+											>
+												<i class="fas fa-times text-[9px]"></i>
+											</button>
 										</div>
 									{/each}
 
@@ -846,34 +878,50 @@
 
 									<div class="grid grid-cols-4 gap-1.5 sm:grid-cols-6 md:grid-cols-8">
 										{#each childItems as item (item.id)}
-											<a
-												href="/app/item/{item.id}"
-												class="group rounded-sm border {item.favorite
+											<div
+												class="group relative rounded-sm border {item.favorite
 													? 'border-yellow-400/40 bg-yellow-500/5'
 													: 'border-border bg-surface'} p-1.5 transition-all hover:border-primary/50"
-												onmouseenter={(e) => onItemHover(e, item)}
-												onmousemove={onItemHoverMove}
-												onmouseleave={onItemHoverLeave}
 											>
-												<div class="mb-1">
-													<GridItemImage
-														src={item.imageUrl}
-														alt={item.name}
-														height="h-14"
-														icon={item.ydkData ? 'fa-layer-group' : 'fa-cube'}
-													/>
-												</div>
-												<div class="flex items-center gap-0.5">
-													<p
-														class="flex-1 truncate text-[9px] font-medium text-fg-accent group-hover:text-primary"
-													>
-														{item.name}
-													</p>
-													{#if item.favorite}
-														<i class="fas fa-star shrink-0 text-[8px] text-yellow-400"></i>
-													{/if}
-												</div>
-											</a>
+												<button
+													type="button"
+													aria-label="Remove from section"
+													class="absolute top-1 right-1 z-10 flex h-4 w-4 cursor-pointer items-center justify-center rounded-xs bg-surface/90 text-fg-subdued shadow-xs transition-opacity hover:bg-error hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
+													onclick={(e) => {
+														e.preventDefault();
+														e.stopPropagation();
+														removeChildFromNode(node.id, item.id);
+													}}
+												>
+													<i class="fas fa-times text-[8px]"></i>
+												</button>
+												<a
+													href="/app/item/{item.id}"
+													class="block"
+													onmouseenter={(e) => onItemHover(e, item)}
+													onmousemove={onItemHoverMove}
+													onmouseleave={onItemHoverLeave}
+												>
+													<div class="mb-1">
+														<GridItemImage
+															src={item.imageUrl}
+															alt={item.name}
+															height="h-14"
+															icon={item.ydkData ? 'fa-layer-group' : 'fa-cube'}
+														/>
+													</div>
+													<div class="flex items-center gap-0.5">
+														<p
+															class="flex-1 truncate text-[9px] font-medium text-fg-accent group-hover:text-primary"
+														>
+															{item.name}
+														</p>
+														{#if item.favorite}
+															<i class="fas fa-star shrink-0 text-[8px] text-yellow-400"></i>
+														{/if}
+													</div>
+												</a>
+											</div>
 										{/each}
 									</div>
 
@@ -906,7 +954,8 @@
 														<button
 															type="button"
 															class="flex w-full cursor-pointer items-center gap-2 px-2 py-1.5 text-left text-[11px] hover:bg-muted"
-															onclick={() => addExistingToNode(node.id, result.id)}
+															onclick={() =>
+																addExistingToNode(node.id, result.id, result.type || 'item')}
 														>
 															{#if result.imageUrl}
 																<img
@@ -914,10 +963,18 @@
 																	alt={result.name}
 																	class="h-6 w-6 shrink-0 rounded-sm object-cover"
 																/>
+															{:else if result.type === 'node'}
+																<i class="fas fa-folder w-3 shrink-0 text-center text-fg-subdued"
+																></i>
 															{:else}
 																<i class="fas fa-cube w-3 shrink-0 text-center text-fg-subdued"></i>
 															{/if}
-															{result.name}
+															<span class="flex-1 truncate">{result.name}</span>
+															{#if result.type}
+																<span class="text-[9px] text-fg-subdued capitalize"
+																	>{result.type}</span
+																>
+															{/if}
 														</button>
 													{/each}
 												</div>
