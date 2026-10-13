@@ -35,7 +35,7 @@
 	// svelte-ignore state_referenced_locally
 	let externalUrl = $state(item?.externalUrl ?? '');
 	// svelte-ignore state_referenced_locally
-	let tagIds = $state<string[]>(getTagIds(item));
+	let tagIds = $state<string[]>(getTagIds(item ?? {}));
 	// svelte-ignore state_referenced_locally
 	let ydkData = $state(item?.ydkData ?? '');
 	let ydkInput = $state('');

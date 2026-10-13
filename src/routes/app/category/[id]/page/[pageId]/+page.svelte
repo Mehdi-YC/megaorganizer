@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import type { TreeElement } from '$lib/types';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -38,9 +39,7 @@
 	let pageContent = $state(data.pageData?.markdown ?? '');
 	let showAddMenu = $state(false);
 	let searchQuery = $state('');
-	let searchResults = $state<Array<{ id: string; name: string; type: string; imageUrl?: string }>>(
-		[]
-	);
+	let searchResults = $state<TreeElement[]>([]);
 	let newItemName = $state('');
 	let newNodeName = $state('');
 	let expandedNodes = $state<Set<string>>(new Set());

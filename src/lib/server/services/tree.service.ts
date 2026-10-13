@@ -1,5 +1,6 @@
 import { db } from '$lib/server/db';
 import { treeElement, treeRelationship, page } from '$lib/server/db/schema';
+import type { TreeElement, TreeElementNode } from '$lib/types';
 import { eq, and, or, asc, like, inArray, count } from 'drizzle-orm';
 import {
 	rebuildDocLinks,
@@ -108,32 +109,80 @@ export async function deleteTreeElement(userId: string, id: string) {
 	await unlinkDeletedTarget('tree_element', id);
 }
 
-function buildTree(node: any, byId: Map<string, any>): any {
-	const result = { ...node, children: [] as any[] };
-	for (const child of node.children) {
-		const full = byId.get(child.id);
-		if (full) {
-			result.children.push(buildTree(full, byId));
-		}
-	}
-	return result;
+/**
+ * A tree_element row with a children array attached, keyed by id.
+ * Both getFullTree and getSubtreeForItem build one of these.
+ */
+interface NodeWithChildren {
+	element: typeof treeElement.$inferSelect;
+	children: NodeWithChildren[];
 }
 
-export async function getSubtreeForItem(userId: string, itemId: string): Promise<any> {
+/**
+ * Relationships for this user only, fetched with an inner join on
+ * tree_element rather than by loading the whole table and filtering in JS.
+ * The previous version did `select().from(treeRelationship).all()` and then
+ * dropped rows by hand, which read every relationship belonging to every user
+ * on the instance.
+ */
+async function getUserRelationships(userId: string) {
+	return db
+		.select({
+			parentId: treeRelationship.parentId,
+			childId: treeRelationship.childId
+		})
+		.from(treeRelationship)
+		.innerJoin(treeElement, eq(treeRelationship.childId, treeElement.id))
+		.where(eq(treeElement.userId, userId))
+		.all();
+}
+
+/** Flatten the internal {element, children} shape into the public one. */
+function toTree(node: NodeWithChildren): TreeElementNode {
+	return {
+		...node.element,
+		children: node.children.map(toTree).sort((a, b) => a.name.localeCompare(b.name))
+	};
+}
+
+/** Wire parent/child links into a map of nodes, then return the roots. */
+function assemble(
+	elements: (typeof treeElement.$inferSelect)[],
+	relationships: { parentId: string; childId: string }[]
+): NodeWithChildren[] {
+	const byId = new Map<string, NodeWithChildren>(
+		elements.map((e) => [e.id, { element: e, children: [] }])
+	);
+
+	const childIds = new Set<string>();
+	for (const rel of relationships) {
+		const parent = byId.get(rel.parentId);
+		const child = byId.get(rel.childId);
+		if (!parent || !child) continue;
+		parent.children.push(child);
+		childIds.add(rel.childId);
+	}
+
+	return [...byId.values()].filter((n) => !childIds.has(n.element.id));
+}
+
+export async function getSubtreeForItem(
+	userId: string,
+	itemId: string
+): Promise<TreeElementNode | null> {
 	const allElements = await db
 		.select()
 		.from(treeElement)
 		.where(eq(treeElement.userId, userId))
 		.all();
 
-	// Only load relationships relevant to this user's elements
-	const elementIds = new Set(allElements.map((e) => e.id));
-	const allRels = await db.select().from(treeRelationship).all();
-	const userRels = allRels.filter((r) => elementIds.has(r.parentId) && elementIds.has(r.childId));
+	const relationships = await getUserRelationships(userId);
 
-	const byId = new Map(allElements.map((e) => [e.id, { ...e, children: [] as any[] }]));
+	const byId = new Map<string, NodeWithChildren>(
+		allElements.map((e) => [e.id, { element: e, children: [] }])
+	);
 
-	for (const rel of userRels) {
+	for (const rel of relationships) {
 		const parent = byId.get(rel.parentId);
 		const child = byId.get(rel.childId);
 		if (parent && child) {
@@ -144,28 +193,32 @@ export async function getSubtreeForItem(userId: string, itemId: string): Promise
 	const root = byId.get(itemId);
 	if (!root) return null;
 
-	return buildTree(root, byId);
+	return toTree(root);
 }
 
-export async function getChildren(userId: string, parentType: TreeParentType, parentId: string) {
-	const relationships = await db
-		.select()
+export async function getChildren(
+	userId: string,
+	parentType: TreeParentType,
+	parentId: string
+): Promise<TreeElement[]> {
+	// One query, joined. This used to fetch the relationship rows and then
+	// await getTreeElementById once per child, which is N+1 for every node the
+	// user expands.
+	const rows = await db
+		.select({ element: treeElement, position: treeRelationship.position })
 		.from(treeRelationship)
+		.innerJoin(treeElement, eq(treeRelationship.childId, treeElement.id))
 		.where(
-			and(eq(treeRelationship.parentType, parentType), eq(treeRelationship.parentId, parentId))
+			and(
+				eq(treeRelationship.parentType, parentType),
+				eq(treeRelationship.parentId, parentId),
+				eq(treeElement.userId, userId)
+			)
 		)
 		.orderBy(asc(treeRelationship.position))
 		.all();
 
-	const children = [];
-	for (const rel of relationships) {
-		const element = await getTreeElementById(userId, rel.childId);
-		if (element) {
-			children.push({ ...element, position: rel.position });
-		}
-	}
-
-	return children;
+	return rows.map((r) => ({ ...r.element, position: r.position }));
 }
 
 /**
@@ -276,47 +329,10 @@ export async function moveChild(
 		);
 }
 
-export async function getFullTree(userId: string) {
+export async function getFullTree(userId: string): Promise<TreeElementNode[]> {
 	const elements = await db.select().from(treeElement).where(eq(treeElement.userId, userId)).all();
-
-	const elementIds = new Set(elements.map((e) => e.id));
-	const allRels = await db.select().from(treeRelationship).all();
-	const relationships = allRels.filter(
-		(r) => elementIds.has(r.parentId) && elementIds.has(r.childId)
-	);
-
-	const elementMap = new Map(elements.map((e) => [e.id, { ...e, children: [] as any[] }]));
-
-	const rootNodes: any[] = [];
-
-	for (const rel of relationships) {
-		const parent = elementMap.get(rel.parentId);
-		const child = elementMap.get(rel.childId);
-		if (parent && child) {
-			parent.children.push(child);
-		}
-	}
-
-	for (const el of elements) {
-		const node = elementMap.get(el.id)!;
-		const isChild = relationships.some((r) => r.childId === el.id);
-		if (!isChild) {
-			rootNodes.push(node);
-		}
-	}
-
-	for (const node of rootNodes) {
-		sortChildren(node);
-	}
-
-	return rootNodes;
-}
-
-function sortChildren(node: any) {
-	node.children.sort((a: any, b: any) => a.name.localeCompare(b.name));
-	for (const child of node.children) {
-		sortChildren(child);
-	}
+	const relationships = await getUserRelationships(userId);
+	return assemble(elements, relationships).map(toTree);
 }
 
 export async function searchTreeElements(userId: string, query: string) {
