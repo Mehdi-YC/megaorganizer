@@ -44,7 +44,10 @@ type FieldSpec<T> = {
 	label?: string;
 };
 
-type Schema = Record<string, FieldSpec<any>>;
+// The schema maps field names to specs whose value types differ per entry, and
+// InferSchema below recovers each one from its validator. `unknown` is the
+// honest type for that heterogeneous slot: nothing ever reads it as a value.
+type Schema = Record<string, FieldSpec<unknown>>;
 
 type InferSchema<S extends Schema> = {
 	[K in keyof S as S[K]['required'] extends false ? never : K]: S[K]['validate'] extends Validator<

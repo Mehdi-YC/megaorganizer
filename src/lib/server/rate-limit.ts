@@ -5,8 +5,9 @@ const MAX_ATTEMPTS = 10;
 
 // Prevent duplicate intervals on HMR reload
 const CLEANUP_KEY = '__rateLimitCleanup';
-if (!(globalThis as any)[CLEANUP_KEY]) {
-	(globalThis as any)[CLEANUP_KEY] = true;
+const globalStore = globalThis as typeof globalThis & Record<string, boolean>;
+if (!globalStore[CLEANUP_KEY]) {
+	globalStore[CLEANUP_KEY] = true;
 	setInterval(
 		() => {
 			const now = Date.now();
