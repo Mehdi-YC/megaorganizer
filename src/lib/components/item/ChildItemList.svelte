@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { searchTree } from '$lib/utils';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -233,7 +234,10 @@
 					<i
 						class="fas fa-grip-vertical w-3 text-center text-fg-subdued/40 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
 					></i>
-					<a href="/app/item/{child.id}" class="flex flex-1 items-center gap-2 text-fg">
+					<a
+						href={resolve('/app/item/[id]', { id: child.id })}
+						class="flex flex-1 items-center gap-2 text-fg"
+					>
 						{#if child.imageUrl}
 							<img src={child.imageUrl} alt="" class="h-5 w-5 shrink-0 rounded-sm object-cover" />
 						{:else}

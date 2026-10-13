@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { checkSmallImages, getAssignedTags, toggleArrayItem } from '$lib/utils';
@@ -117,7 +118,7 @@
 			const r = await fetch('/api/tree');
 			if (r.ok) allItems = await r.json();
 			filterItems();
-			await goto(`/app/item/${item.id}`);
+			await goto(resolve('/app/item/[id]', { id: item.id }));
 		}
 	}
 </script>
@@ -276,7 +277,7 @@
 			{#each paginatedItems as item (item.id)}
 				{@const itemTags = getAssignedTags(item, allTags)}
 				<a
-					href="/app/item/{item.id}"
+					href={resolve('/app/item/[id]', { id: item.id })}
 					class="group rounded-sm border {item.favorite
 						? 'border-yellow-400/40 bg-yellow-500/5'
 						: 'border-border bg-surface'} transition-all hover:border-primary/50"

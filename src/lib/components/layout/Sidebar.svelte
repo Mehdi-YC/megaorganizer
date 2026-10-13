@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
@@ -87,7 +88,7 @@
 			confirmDeleteCatId = null;
 			await invalidateAll();
 			if (page.url.pathname.includes(`/category/${catId}`)) {
-				goto('/app');
+				goto(resolve('/app'));
 			}
 		}
 	}
@@ -121,7 +122,7 @@
 			next.add(catId);
 			expandedCategories = next;
 			onNavigate();
-			goto(`/app/category/${catId}/page/${pg.id}`);
+			goto(resolve('/app/category/[id]/page/[pageId]', { id: catId, pageId: pg.id }));
 		}
 	}
 
@@ -246,7 +247,7 @@
 
 	<nav class="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
 		<a
-			href="/app"
+			href={resolve('/app')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app'
@@ -258,7 +259,7 @@
 		</a>
 
 		<a
-			href="/app/calendar"
+			href={resolve('/app/calendar')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/calendar'
@@ -270,7 +271,7 @@
 		</a>
 
 		<a
-			href="/app/finance"
+			href={resolve('/app/finance')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/finance'
@@ -282,7 +283,7 @@
 		</a>
 
 		<a
-			href="/app/training"
+			href={resolve('/app/training')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
 				'/app/training'
@@ -298,7 +299,7 @@
 
 		<!-- Reminders (Single link, collapsible not needed) -->
 		<a
-			href="/app/reminders"
+			href={resolve('/app/reminders')}
 			onclick={onNavigate}
 			class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
 				'/app/reminders'
@@ -313,7 +314,7 @@
 		<div class="my-1 h-px bg-border/50"></div>
 
 		<a
-			href="/app/library"
+			href={resolve('/app/library')}
 			onclick={onNavigate}
 			class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/library'
@@ -325,7 +326,7 @@
 		</a>
 
 		<a
-			href="/app/tags"
+			href={resolve('/app/tags')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/tags'
@@ -360,7 +361,7 @@
 					></i>
 				</button>
 				<a
-					href="/app/category/{cat.id}"
+					href={resolve('/app/category/[id]', { id: cat.id })}
 					onclick={onNavigate}
 					class="flex flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors {isActive
 						? 'text-fg-accent'
@@ -416,7 +417,10 @@
 					{#if cat.pages && cat.pages.length > 0}
 						{#each cat.pages as pg (pg.id)}
 							<a
-								href="/app/category/{cat.id}/page/{pg.id}"
+								href={resolve('/app/category/[id]/page/[pageId]', {
+									id: cat.id,
+									pageId: pg.id
+								})}
 								onclick={onNavigate}
 								class="flex items-center gap-2 rounded-sm px-2.5 py-1 text-[13px] transition-colors {isPageActive(
 									pg.id
@@ -466,7 +470,7 @@
 
 		<div class="mt-2 px-2">
 			<a
-				href="/app/category/new"
+				href={resolve('/app/category/new')}
 				onclick={onNavigate}
 				class="flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 			>
@@ -504,7 +508,7 @@
 				</div>
 				<div class="py-1">
 					<a
-						href="/app/settings/profile"
+						href={resolve('/app/settings/profile')}
 						onclick={() => {
 							showUserMenu = false;
 							onNavigate();

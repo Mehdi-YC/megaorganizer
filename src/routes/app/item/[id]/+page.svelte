@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -109,7 +110,7 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ id: item?.id })
 		});
-		if (res.ok) goto('/app/library');
+		if (res.ok) goto(resolve('/app/library'));
 	}
 
 	function toggleTag(tagId: string) {
@@ -150,7 +151,7 @@
 	}
 
 	function handleMindmapNodeClick(node: any) {
-		if (node.type === 'item') goto(`/app/item/${node.id}`);
+		if (node.type === 'item') goto(resolve('/app/item/[id]', { id: node.id }));
 	}
 
 	function parseYdk(text: string) {

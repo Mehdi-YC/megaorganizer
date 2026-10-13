@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { Badge, Button, Checkbox } from '$lib/components/ui';
 
@@ -149,7 +150,7 @@
 			{/if}
 
 			<a
-				href="/app/reminders/{reminder.id}"
+				href={resolve('/app/reminders/[id]', { id: reminder.id })}
 				class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-border"
 				title="View details"
 				aria-label="View details"

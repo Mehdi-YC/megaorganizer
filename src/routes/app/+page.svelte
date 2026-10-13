@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { getSessionIcon } from '$lib/utils/training';
 	import { ReminderCard } from '$lib/components/reminders';
@@ -156,7 +157,9 @@
 					<i class="fas fa-bell text-xs text-primary"></i>
 					Today's Reminders
 				</h2>
-				<a href="/app/reminders" class="text-xs text-primary hover:text-primary-hover">View All</a>
+				<a href={resolve('/app/reminders')} class="text-xs text-primary hover:text-primary-hover"
+					>View All</a
+				>
 			</div>
 			<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
 				{#each dueReminders as reminder (reminder.id)}
@@ -181,7 +184,7 @@
 					<i class="fas fa-calendar-week text-xs text-primary"></i>
 					Upcoming This Week
 				</h2>
-				<a href="/app/calendar" class="text-xs text-primary hover:text-primary-hover"
+				<a href={resolve('/app/calendar')} class="text-xs text-primary hover:text-primary-hover"
 					>View Calendar</a
 				>
 			</div>
@@ -204,8 +207,8 @@
 							{#each dayEvents.slice(0, 3) as event (`${event.type}:${event.id}`)}
 								<a
 									href={event.type === 'training'
-										? `/app/training/session/${event.id}`
-										: `/app/reminders/${event.id}`}
+										? resolve('/app/training/session/[id]', { id: event.id })
+										: resolve('/app/reminders/[id]', { id: event.id })}
 									class="h-2 w-2 rounded-full {event.type === 'training'
 										? 'bg-blue-500'
 										: 'bg-success'}"
@@ -320,13 +323,15 @@
 		<div class="lg:col-span-2">
 			<div class="mb-3 flex items-center justify-between">
 				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Recent Items</h2>
-				<a href="/app/library" class="text-xs text-primary hover:text-primary-hover">View All</a>
+				<a href={resolve('/app/library')} class="text-xs text-primary hover:text-primary-hover"
+					>View All</a
+				>
 			</div>
 			{#if data.recentItems && data.recentItems.length > 0}
 				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 					{#each data.recentItems as item (item.id)}
 						<a
-							href="/app/item/{item.id}"
+							href={resolve('/app/item/[id]', { id: item.id })}
 							class="group flex items-center gap-3 rounded-sm border {item.favorite
 								? 'border-yellow-400/40 bg-yellow-500/5'
 								: 'border-border bg-surface'} p-3 transition-all hover:border-primary/50"
@@ -364,7 +369,7 @@
 				</div>
 			{:else}
 				<EmptyState icon="fa-cube" message="No items yet">
-					<a href="/app/library" class="text-xs text-primary hover:text-primary-hover"
+					<a href={resolve('/app/library')} class="text-xs text-primary hover:text-primary-hover"
 						>Create your first item</a
 					>
 				</EmptyState>
@@ -375,14 +380,15 @@
 		<div>
 			<div class="mb-3 flex items-center justify-between">
 				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Categories</h2>
-				<a href="/app/category/new" class="text-xs text-primary hover:text-primary-hover">Add New</a
+				<a href={resolve('/app/category/new')} class="text-xs text-primary hover:text-primary-hover"
+					>Add New</a
 				>
 			</div>
 			{#if data.categories && data.categories.length > 0}
 				<div class="space-y-1.5">
 					{#each data.categories as cat (cat.id)}
 						<a
-							href="/app/category/{cat.id}"
+							href={resolve('/app/category/[id]', { id: cat.id })}
 							class="flex items-center gap-2.5 rounded-sm border border-border bg-surface px-3 py-2.5 transition-all hover:border-primary/50"
 						>
 							{#if cat.icon}
@@ -407,8 +413,9 @@
 				</div>
 			{:else}
 				<EmptyState icon="fa-folder" message="No categories yet">
-					<a href="/app/category/new" class="text-xs text-primary hover:text-primary-hover"
-						>Create your first category</a
+					<a
+						href={resolve('/app/category/new')}
+						class="text-xs text-primary hover:text-primary-hover">Create your first category</a
 					>
 				</EmptyState>
 			{/if}
@@ -420,10 +427,13 @@
 		<div class="mb-3 flex items-center justify-between">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Recent Training</h2>
 			<div class="flex gap-3">
-				<a href="/app/training/session/new" class="text-xs text-primary hover:text-primary-hover"
-					>New Session</a
+				<a
+					href={resolve('/app/training/session/new')}
+					class="text-xs text-primary hover:text-primary-hover">New Session</a
 				>
-				<a href="/app/training" class="text-xs text-primary hover:text-primary-hover">View All</a>
+				<a href={resolve('/app/training')} class="text-xs text-primary hover:text-primary-hover"
+					>View All</a
+				>
 			</div>
 		</div>
 		{#if data.recentSessions && data.recentSessions.length > 0}
@@ -431,7 +441,7 @@
 				{#each data.recentSessions as session (session.id)}
 					{@const icon = getSessionIcon(session.activityTypes)}
 					<a
-						href="/app/training/session/{session.id}"
+						href={resolve('/app/training/session/[id]', { id: session.id })}
 						class="flex items-center justify-between rounded-sm border border-border bg-surface p-3 transition-all hover:border-primary/50"
 					>
 						<div class="flex items-center gap-3">
@@ -453,8 +463,9 @@
 			</div>
 		{:else}
 			<EmptyState icon="fa-dumbbell" message="No training sessions yet">
-				<a href="/app/training/session/new" class="text-xs text-primary hover:text-primary-hover"
-					>Start your first session</a
+				<a
+					href={resolve('/app/training/session/new')}
+					class="text-xs text-primary hover:text-primary-hover">Start your first session</a
 				>
 			</EmptyState>
 		{/if}

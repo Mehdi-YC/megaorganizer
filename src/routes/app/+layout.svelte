@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
@@ -55,7 +56,7 @@
 			class="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-bg-subdued px-4 lg:hidden"
 		>
 			<a
-				href="/app"
+				href={resolve('/app')}
 				class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-xs font-bold text-white"
 				>M</a
 			>

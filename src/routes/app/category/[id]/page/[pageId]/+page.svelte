@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -416,7 +417,9 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ id: pageData.id })
 		});
-		if (res.ok) goto(`/app/category/${category?.id}`);
+		// category is null only when the load returned no category, in which case
+		// there is no page to delete and we never reach this line.
+		if (res.ok && category) goto(resolve('/app/category/[id]', { id: category.id }));
 	}
 
 	async function persistNodeReorder(fromIdx: number, toIdx: number) {
@@ -644,7 +647,7 @@
 	<div class="border-b border-border bg-bg-subdued px-4 py-2 sm:px-6">
 		<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
 			<a
-				href="/app/category/{category.id}"
+				href={resolve('/app/category/[id]', { id: category.id })}
 				class="max-w-[120px] truncate hover:text-primary sm:max-w-none">{category.name}</a
 			>
 			<i class="fas fa-chevron-right shrink-0 text-[8px]"></i>
@@ -910,7 +913,7 @@
 													<i class="fas fa-times text-[8px]"></i>
 												</button>
 												<a
-													href="/app/item/{item.id}"
+													href={resolve('/app/item/[id]', { id: item.id })}
 													class="block"
 													onmouseenter={(e) => onItemHover(e, item)}
 													onmousemove={onItemHoverMove}
@@ -1028,7 +1031,7 @@
 							<div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
 								{#each topLevelItems as item (item.id)}
 									<a
-										href="/app/item/{item.id}"
+										href={resolve('/app/item/[id]', { id: item.id })}
 										class="group flex items-center gap-2.5 rounded-sm border {item.favorite
 											? 'border-yellow-400/40 bg-yellow-500/5'
 											: 'border-border bg-surface'} p-2.5 transition-all hover:border-primary/50"
@@ -1362,7 +1365,7 @@
 				<div class="max-h-32 space-y-0.5 overflow-y-auto">
 					{#each hoverItemChildren as child (child.id)}
 						<a
-							href="/app/item/{child.id}"
+							href={resolve('/app/item/[id]', { id: child.id })}
 							class="flex items-center gap-1.5 rounded-sm px-1.5 py-1 text-[10px] text-fg hover:bg-muted"
 						>
 							<i class="fas fa-cube w-3 text-center text-[8px] text-fg-subdued"></i>

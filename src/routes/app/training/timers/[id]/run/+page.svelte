@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -238,7 +239,7 @@
 		if (res.ok) {
 			clearPersist();
 			const saved = await res.json();
-			goto(`/app/training/session/${saved.sessionId}`);
+			goto(resolve('/app/training/session/[id]', { id: saved.sessionId }));
 		} else {
 			saveError = 'Could not save the session. The run stays on screen — try again.';
 		}
@@ -246,7 +247,7 @@
 
 	function discard() {
 		clearPersist();
-		goto(`/app/training/timers/${template.id}`);
+		goto(resolve('/app/training/timers/[id]', { id: template.id }));
 	}
 
 	$effect(() => {
@@ -289,7 +290,7 @@
 	<div class="mx-auto flex w-full max-w-md flex-1 flex-col">
 		<div class="mb-4 flex items-center justify-between">
 			<a
-				href="/app/training/timers"
+				href={resolve('/app/training/timers')}
 				class="text-xs text-fg-subdued transition-colors hover:text-fg"
 			>
 				<i class="fas fa-arrow-left mr-1"></i> Timers

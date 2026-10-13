@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
@@ -44,7 +45,7 @@
 		});
 		saving = false;
 		if (res.ok) {
-			goto('/app/training/timers');
+			goto(resolve('/app/training/timers'));
 		} else {
 			const body = await res.json().catch(() => null);
 			error = body?.error || 'Could not save the timer. Try again.';

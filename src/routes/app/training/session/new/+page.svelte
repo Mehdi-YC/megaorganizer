@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
@@ -396,7 +397,7 @@
 				const result = await saveRunApi(runData);
 				if (!result.sessionId) throw new Error('Failed to save session. Please try again.');
 				clearSessionState();
-				goto(`/app/training/session/${result.sessionId}`);
+				goto(resolve('/app/training/session/[id]', { id: result.sessionId }));
 				return;
 			}
 
@@ -433,7 +434,7 @@
 				throw new Error(saved?.error || 'Failed to save session. Please try again.');
 			}
 			clearSessionState();
-			goto(`/app/training/session/${saved.sessionId}`);
+			goto(resolve('/app/training/session/[id]', { id: saved.sessionId }));
 		} catch (e) {
 			console.error('Failed to save session:', e);
 			saveError = e instanceof Error ? e.message : 'Failed to save session. Please try again.';
@@ -448,7 +449,10 @@
 
 <div class="max-w-2xl p-4 sm:p-8">
 	<div class="mb-6">
-		<a href="/app/training" class="text-sm text-fg-subdued transition-colors hover:text-fg">
+		<a
+			href={resolve('/app/training')}
+			class="text-sm text-fg-subdued transition-colors hover:text-fg"
+		>
 			<i class="fas fa-arrow-left mr-1"></i> Back to Training
 		</a>
 	</div>

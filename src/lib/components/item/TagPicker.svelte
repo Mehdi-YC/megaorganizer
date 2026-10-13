@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	let {
@@ -48,8 +49,9 @@
 				</button>
 			{:else}
 				<p class="text-[11px] text-fg-subdued italic">
-					No tags. Create some in <a href="/app/tags" class="text-primary hover:text-primary-hover"
-						>Tags</a
+					No tags. Create some in <a
+						href={resolve('/app/tags')}
+						class="text-primary hover:text-primary-hover">Tags</a
 					> page.
 				</p>
 			{/each}

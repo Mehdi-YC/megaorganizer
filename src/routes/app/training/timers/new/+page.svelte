@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import TimerBuilder, { type StepDraft } from '$lib/components/timers/TimerBuilder.svelte';
@@ -23,7 +24,7 @@
 		saving = false;
 		if (res.ok) {
 			const template = await res.json();
-			goto(`/app/training/timers/${template.id}`);
+			goto(resolve('/app/training/timers/[id]', { id: template.id }));
 		} else {
 			const body = await res.json().catch(() => null);
 			error = body?.error || 'Could not save the timer. Try again.';
