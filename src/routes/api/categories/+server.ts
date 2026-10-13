@@ -28,7 +28,7 @@ export const POST: RequestHandler = async (event) => {
 	});
 	if (!v.ok) return v.error;
 
-	const category = await createCategory(user.id, v.data as any);
+	const category = await createCategory(user.id, v.data);
 	return json(category, { status: 201 });
 };
 

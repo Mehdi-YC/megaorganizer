@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { TreeElement } from '$lib/types';
 	import { resolve } from '$app/paths';
 	import { searchTree } from '$lib/utils';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -13,15 +14,15 @@
 	}: {
 		parentType: string;
 		parentId: string;
-		children?: any[];
-		onAdd?: (child: any) => void;
+		children?: TreeElement[];
+		onAdd?: (child: TreeElement) => void;
 		onRemove?: (childId: string) => void;
 		onReorder?: (fromIdx: number, toIdx: number) => void;
 	} = $props();
 
 	let showAdd = $state(false);
 	let addQuery = $state('');
-	let addResults = $state<any[]>([]);
+	let addResults = $state<TreeElement[]>([]);
 	let dragIdx = $state<number | null>(null);
 	let addInput = $state<HTMLInputElement | null>(null);
 
@@ -38,7 +39,7 @@
 		}
 		const results = await searchTree(addQuery, 'item');
 		addResults = results.filter(
-			(r: any) => r.id !== parentId && !children.some((c) => c.id === r.id)
+			(r: TreeElement) => r.id !== parentId && !children.some((c) => c.id === r.id)
 		);
 	}
 

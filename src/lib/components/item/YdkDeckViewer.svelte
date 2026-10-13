@@ -1,4 +1,18 @@
 <script lang="ts">
+	import type { Tag } from '$lib/types';
+	/**
+	 * A card from the Yu-Gi-Oh deck JSON stored in the element's ydkData column.
+	 * Only the fields this component reads are described; the blob has more.
+	 */
+	type YdkCardImage = { image_url: string; image_url_small: string };
+	type YdkCard = {
+		name?: string;
+		type?: string;
+		race?: string;
+		attribute?: string;
+		card_images?: YdkCardImage[];
+	};
+
 	import Button from '$lib/components/ui/Button.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 
@@ -11,12 +25,12 @@
 		ydkData: string;
 		onEdit: () => void;
 		onDelete: () => void;
-		assignedTags?: Array<{ id: string; name: string; color?: string }>;
+		assignedTags?: Tag[];
 	} = $props();
 
-	let cardCache = $state(new Map<string, any>());
+	let cardCache = $state(new Map<string, YdkCard>());
 	let loadingCards = $state(false);
-	let enlargedCard = $state<any>(null);
+	let enlargedCard = $state<YdkCard | null>(null);
 
 	let parsedDeck = $derived.by(() => {
 		try {
@@ -224,7 +238,7 @@
 		<div class="ygo-card-enlarged card-modal-content">
 			<div class="ygo-card-inner">
 				<img
-					src={enlargedCard.card_images[0].image_url}
+					src={enlargedCard.card_images?.[0].image_url}
 					alt={enlargedCard.name}
 					class="max-h-[75vh] rounded-md"
 					draggable="false"

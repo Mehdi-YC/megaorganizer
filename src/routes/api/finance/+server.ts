@@ -102,7 +102,7 @@ export const POST: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 
-			const settings = await updateUserSettings(user.id, v.data as any);
+			const settings = await updateUserSettings(user.id, v.data);
 			return json(settings);
 		}
 

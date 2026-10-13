@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Tag } from '$lib/types';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -9,7 +10,7 @@
 		onToggle
 	}: {
 		tagIds?: string[];
-		allTags?: Array<{ id: string; name: string; color?: string }>;
+		allTags?: Tag[];
 		editing?: boolean;
 		onToggle?: (tagId: string) => void;
 	} = $props();

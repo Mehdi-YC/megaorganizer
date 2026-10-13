@@ -72,6 +72,139 @@ export interface CategoryWithPages {
 	pages?: PageSummary[];
 }
 
+/** A todo step attached to a reminder template. */
+export interface ReminderTodo {
+	id: string;
+	templateId: string;
+	text: string;
+	completed: boolean;
+	position: number;
+}
+
+/** A reminder, as the dashboard and reminder pages consume it. */
+export interface Reminder {
+	id: string;
+	userId?: string;
+	/** Null for one-off reminders created via quick capture. */
+	templateId?: string | null;
+	title: string;
+	description?: string | null;
+	markdown?: string | null;
+	dueAt: Date | string;
+	completed: boolean;
+	completedAt?: Date | string | null;
+	snoozedUntil?: Date | string | null;
+	notifiedAt?: Date | string | null;
+	/**
+	 * Joined in from reminder_template_todo by the query that feeds the
+	 * dashboard; not a column on the reminder table itself.
+	 */
+	todos?: ReminderTodo[];
+	createdAt?: Date | string | null;
+	updatedAt?: Date | string | null;
+}
+
+/** A finance expense row. */
+export interface Expense {
+	id: string;
+	userId?: string;
+	amount: number;
+	currency: string;
+	description?: string | null;
+	markdown?: string | null;
+	/** JSON array of tag ids. */
+	tags?: string | null;
+	spentAt: Date | string;
+	createdAt?: Date | string | null;
+	updatedAt?: Date | string | null;
+}
+
+/** A running-activity GPS point. */
+export interface TrackPoint {
+	id?: string;
+	activityId?: string;
+	sequence: number;
+	timestamp: Date | string;
+	latitude: number;
+	longitude: number;
+	altitude?: number | null;
+	accuracy?: number | null;
+	speed?: number | null;
+	heading?: number | null;
+}
+
+/** A reminder template, including its parsed todo list. */
+export interface ReminderTemplate {
+	id: string;
+	userId?: string;
+	name: string;
+	title?: string | null;
+	description?: string | null;
+	markdown?: string | null;
+	icon?: string | null;
+	iconColor?: string | null;
+	color?: string | null;
+	/** JSON array of todo steps. */
+	todos?: string | null;
+	recurrenceType?: string | null;
+	/** JSON blob holding the recurrence settings. */
+	recurrenceConfig?: string | null;
+	createdAt?: Date | string | null;
+	updatedAt?: Date | string | null;
+}
+
+/** A training session with its activities, as the lists and dashboard show it. */
+export interface TrainingSession {
+	id: string;
+	userId?: string;
+	title?: string | null;
+	notes?: string | null;
+	startedAt: Date | string;
+	endedAt?: Date | string | null;
+	duration?: number | null;
+	/** Names of the activity types in this session, computed by the service. */
+	activityTypes?: string[];
+	/** Present on the session detail page. */
+	trackPoints?: TrackPoint[];
+	activities?: { id: string; type: string; [key: string]: unknown }[];
+}
+
+/** A running activity, as the session detail page joins it up. */
+export interface RunningActivity {
+	activityId: string;
+	activity?: { id: string; type: string; name?: string | null; [key: string]: unknown };
+	runningActivity?: {
+		id: string;
+		distance?: number | null;
+		duration?: number | null;
+		elevationGain?: number | null;
+		elevationLoss?: number | null;
+		[key: string]: unknown;
+	} | null;
+	trackPoints: TrackPoint[];
+}
+
+/** A generated occurrence of a repeating template, shown on the calendar. */
+export interface VirtualReminder {
+	id: string;
+	templateId: string;
+	title: string;
+	dueAt: Date | string;
+	isVirtual: boolean;
+}
+
+/** An entry on the calendar, which merges several sources. */
+export interface CalendarEvent {
+	id: string;
+	/** training | reminder | expense | scheduled */
+	type: string;
+	title?: string | null;
+	date: Date | string;
+	/** Reminder templates generate repeating instances identified by templateId. */
+	templateId?: string;
+	[key: string]: unknown;
+}
+
 /** Attachment metadata, as the page's attachment grid renders it. */
 export interface Attachment {
 	id: string;

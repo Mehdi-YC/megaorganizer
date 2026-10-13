@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Reminder } from '$lib/types';
 	let {
 		reminders = [],
 		selectedDate = $bindable(null),
@@ -12,7 +13,7 @@
 			templateId: string;
 		}>;
 		selectedDate?: Date | null;
-		onDateClick?: (date: Date, reminders: any[]) => void;
+		onDateClick?: (date: Date, reminders: Reminder[]) => void;
 	} = $props();
 
 	let currentDate = $state(new Date());

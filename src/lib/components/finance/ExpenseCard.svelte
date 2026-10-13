@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Expense } from '$lib/types';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { Badge } from '$lib/components/ui';
 
@@ -8,9 +9,9 @@
 		onEdit,
 		onDelete
 	}: {
-		expense: any;
+		expense: Expense;
 		currency?: string;
-		onEdit?: (expense: any) => void;
+		onEdit?: (expense: Expense) => void;
 		onDelete?: (id: string) => void;
 	} = $props();
 

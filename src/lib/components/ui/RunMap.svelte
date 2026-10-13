@@ -1,4 +1,7 @@
 <script lang="ts">
+	// Named Leaflet, not L: the component holds the runtime module in a variable
+	// called `L`, and a type-only import of the same name collides.
+	import type * as Leaflet from 'leaflet';
 	import { onMount, onDestroy } from 'svelte';
 
 	let {
@@ -18,12 +21,12 @@
 	} = $props();
 
 	let mapEl: HTMLDivElement;
-	let map: any;
-	let marker: any;
-	let routeLine: any;
-	let startMarker: any;
-	let endMarker: any;
-	let L: any;
+	let map: Leaflet.Map | null = null;
+	let marker: Leaflet.CircleMarker | null = null;
+	let routeLine: Leaflet.Polyline | null = null;
+	let startMarker: Leaflet.CircleMarker | null = null;
+	let endMarker: Leaflet.CircleMarker | null = null;
+	let L: typeof import('leaflet') | null = null;
 	let mounted = false;
 
 	onMount(async () => {
@@ -32,7 +35,7 @@
 
 		if (!mapEl) return; // guard against unmount race
 
-		const initialCenter = center
+		const initialCenter: Leaflet.LatLngTuple = center
 			? [center.latitude, center.longitude]
 			: points.length > 0
 				? [points[0].latitude, points[0].longitude]
@@ -78,7 +81,7 @@
 	function drawRoute(pts: Array<{ latitude: number; longitude: number }>) {
 		if (!map || !L || pts.length < 2) return;
 
-		const latLngs = pts.map((p) => [p.latitude, p.longitude] as [number, number]);
+		const latLngs: Leaflet.LatLngTuple[] = pts.map((p) => [p.latitude, p.longitude]);
 
 		if (routeLine) {
 			routeLine.setLatLngs(latLngs);

@@ -136,7 +136,16 @@ export async function updateExpense(
 		spentAt?: Date;
 	}
 ) {
-	const updateData: any = { ...data };
+	// Built field by field rather than spread: `tags` is a string[] on the wire
+	// and a JSON text column in the db, so a blind spread does not typecheck
+	// against the insert type.
+	const updateData: Partial<typeof expense.$inferInsert> = {
+		amount: data.amount,
+		currency: data.currency,
+		description: data.description,
+		markdown: data.markdown,
+		spentAt: data.spentAt
+	};
 	if (data.tags) {
 		updateData.tags = JSON.stringify(data.tags);
 	}

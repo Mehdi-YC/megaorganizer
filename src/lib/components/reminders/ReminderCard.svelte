@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Reminder } from '$lib/types';
 	import { resolve } from '$app/paths';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { Badge, Button, Checkbox } from '$lib/components/ui';
@@ -9,7 +10,7 @@
 		onSnooze,
 		onTodoToggle
 	}: {
-		reminder: any;
+		reminder: Reminder;
 		onComplete?: (id: string) => void;
 		onSnooze?: (id: string, until: Date) => void;
 		onTodoToggle?: (todoId: string, completed: boolean) => void;

@@ -75,7 +75,7 @@ export const POST: RequestHandler = async (event) => {
 				markdown: { validate: isString, label: 'Markdown', required: false }
 			});
 			if (!v.ok) return v.error;
-			const element = await createTreeElement(user.id, v.data.type, v.data as any);
+			const element = await createTreeElement(user.id, v.data.type, v.data);
 			return json(element, { status: 201 });
 		}
 

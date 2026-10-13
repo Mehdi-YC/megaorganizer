@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { CategoryWithPages, PageSummary } from '$lib/types';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -67,10 +68,10 @@
 		expandedCategories = next;
 	}
 
-	function isCategoryActive(cat: any): boolean {
+	function isCategoryActive(cat: CategoryWithPages): boolean {
 		const path = page.url.pathname;
 		if (path === `/app/category/${cat.id}`) return true;
-		if (cat.pages?.some((p: any) => path.includes(`/page/${p.id}`))) return true;
+		if (cat.pages?.some((p: PageSummary) => path.includes(`/page/${p.id}`))) return true;
 		return false;
 	}
 
@@ -166,7 +167,13 @@
 		}
 	}
 
-	function navigateSearchResult(result: any) {
+	function navigateSearchResult(result: {
+		id: string;
+		title: string;
+		type: string;
+		url: string;
+		imageUrl?: string;
+	}) {
 		searchQuery = '';
 		searchSearched = false;
 		searchResults = [];

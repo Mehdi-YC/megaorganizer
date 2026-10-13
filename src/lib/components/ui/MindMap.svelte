@@ -1,23 +1,14 @@
 <script lang="ts">
+	import type { TreeElementNode } from '$lib/types';
 	import { onMount, untrack } from 'svelte';
 	import EmptyState from './EmptyState.svelte';
-
-	type TreeNode = {
-		id: string;
-		name: string;
-		type: 'item' | 'node';
-		description?: string;
-		imageUrl?: string;
-		tags?: string;
-		children: TreeNode[];
-	};
 
 	let {
 		tree = [],
 		onNodeClick = () => {}
 	}: {
-		tree: TreeNode[];
-		onNodeClick?: (node: TreeNode) => void;
+		tree: TreeElementNode[];
+		onNodeClick?: (node: TreeElementNode) => void;
 	} = $props();
 
 	let svgEl: SVGSVGElement;
@@ -64,7 +55,7 @@
 	}
 
 	function layoutTree(
-		treeNodes: TreeNode[],
+		treeNodes: TreeElementNode[],
 		startX: number,
 		depth: number,
 		positions: Record<string, { x: number; y: number }>
@@ -90,7 +81,7 @@
 	const edges = $derived.by(() => {
 		const result: Array<{ from: { x: number; y: number }; to: { x: number; y: number } }> = [];
 
-		function walk(nodes: TreeNode[]) {
+		function walk(nodes: TreeElementNode[]) {
 			for (const node of nodes) {
 				const parentPos = nodePositions[node.id];
 				if (parentPos) {
@@ -117,10 +108,10 @@
 			id: string;
 			name: string;
 			type: string;
-			node: TreeNode;
+			node: TreeElementNode;
 		}> = [];
 
-		function walk(treeNodes: TreeNode[]) {
+		function walk(treeNodes: TreeElementNode[]) {
 			for (const node of treeNodes) {
 				result.push({ id: node.id, name: node.name, type: node.type, node });
 				walk(node.children);

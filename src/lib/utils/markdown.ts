@@ -3,26 +3,39 @@ import type { RendererExtension, TokenizerExtension } from 'marked';
 import DOMPurify from 'dompurify';
 import { createWikilinkExtension, escapeHtml } from '$lib/utils/wikilink';
 
-let mermaidReady = false;
-let mermaidModule: any = null;
-let hljsReady = false;
-let hljsModule: any = null;
+// Both libraries are heavy and only needed when the markdown actually
+// contains a mermaid diagram or a fenced code block, so they load lazily and
+// cache here. Their API hangs off the default export, which is what the
+// initialisers and call sites below use.
+type MermaidApi = typeof import('mermaid').default;
+type HljsApi = typeof import('highlight.js').default;
 
-async function ensureMermaid() {
-	if (mermaidReady) return mermaidModule;
-	mermaidModule = await import('mermaid');
+let mermaidReady = false;
+let mermaidModule: MermaidApi | null = null;
+let hljsReady = false;
+let hljsModule: HljsApi | null = null;
+
+async function ensureMermaid(): Promise<MermaidApi> {
+	if (mermaidReady && mermaidModule) return mermaidModule;
+	const mod = await import('mermaid');
+	mermaidModule = mod.default;
+	// `backgroundColor: 'transparent'` used to be passed here. Mermaid 11 has no
+	// top-level backgroundColor key (it is a per-diagram option, e.g.
+	// wardley.backgroundColor), so mermaid merged and ignored it. Dropping it
+	// changes nothing at runtime; the transparent background comes from the
+	// surrounding container instead.
 	mermaidModule.initialize({
 		startOnLoad: false,
-		theme: 'dark',
-		backgroundColor: 'transparent'
+		theme: 'dark'
 	});
 	mermaidReady = true;
 	return mermaidModule;
 }
 
-async function ensureHljs() {
-	if (hljsReady) return hljsModule;
-	hljsModule = (await import('highlight.js')).default;
+async function ensureHljs(): Promise<HljsApi> {
+	if (hljsReady && hljsModule) return hljsModule;
+	const mod = await import('highlight.js');
+	hljsModule = mod.default;
 	hljsReady = true;
 	return hljsModule;
 }

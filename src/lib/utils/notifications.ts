@@ -1,3 +1,4 @@
+import type { Reminder } from '$lib/types';
 // Browser-side reminder notifications.
 //
 // Display goes through the service worker whenever possible. The page-side
@@ -169,7 +170,9 @@ export async function checkAndNotifyReminders(): Promise<void> {
 		const notifiedKey = 'notified_reminders';
 		const notified: string[] = JSON.parse(sessionStorage.getItem(notifiedKey) ?? '[]');
 
-		const newReminders = reminders.filter((r: any) => !r.completed && !notified.includes(r.id));
+		const newReminders = reminders.filter(
+			(r: Reminder) => !r.completed && !notified.includes(r.id)
+		);
 
 		if (newReminders.length > 0) {
 			// Notify for every new due reminder, not just the first
@@ -178,7 +181,7 @@ export async function checkAndNotifyReminders(): Promise<void> {
 			}
 
 			// Mark as notified
-			const updatedNotified = [...notified, ...newReminders.map((r: any) => r.id)];
+			const updatedNotified = [...notified, ...newReminders.map((r: Reminder) => r.id)];
 			sessionStorage.setItem(notifiedKey, JSON.stringify(updatedNotified));
 		}
 	} catch (error) {
