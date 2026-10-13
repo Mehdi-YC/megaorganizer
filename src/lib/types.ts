@@ -78,6 +78,12 @@ export interface Attachment {
 	originalName: string;
 	mimeType: string;
 	size: number;
-	url?: string;
-	createdAt?: string | null;
+	/** Route that serves the file. Present on attachments the API returns. */
+	url: string;
+	createdAt?: Date | string | null;
+	/**
+	 * Coarse kind derived from mimeType on the server (see mimeCategory in
+	 * attachment.service): image, video, audio, pdf, or file.
+	 */
+	category: string;
 }
