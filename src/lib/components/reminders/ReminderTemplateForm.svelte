@@ -215,7 +215,7 @@
 		<div class="grid grid-cols-2 gap-3">
 			<div>
 				<Select label="ICON" id="reminder-icon" bind:value={icon}>
-					{#each iconOptions as iconOpt}
+					{#each iconOptions as iconOpt (iconOpt)}
 						<option value={iconOpt}>
 							{iconOpt.replace('fa-', '').replace('-', ' ')}
 						</option>
@@ -252,7 +252,7 @@
 				RECURRENCE
 			</span>
 			<div class="grid grid-cols-3 gap-1.5">
-				{#each recurrenceTypes as type}
+				{#each recurrenceTypes as type (type)}
 					<button
 						type="button"
 						class="cursor-pointer rounded-sm px-2 py-2 text-[11px] font-medium transition-colors {recurrenceType ===
@@ -276,7 +276,7 @@
 					bind:value={hour}
 					class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
 				>
-					{#each Array(24) as _, i}
+					{#each Array(24) as _, i (i)}
 						<option value={i}>{i.toString().padStart(2, '0')}</option>
 					{/each}
 				</select>
@@ -285,7 +285,7 @@
 					bind:value={minute}
 					class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
 				>
-					{#each [0, 15, 30, 45] as m}
+					{#each [0, 15, 30, 45] as m (m)}
 						<option value={m}>{m.toString().padStart(2, '0')}</option>
 					{/each}
 				</select>
@@ -297,7 +297,7 @@
 			<div>
 				<span class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"> DAYS </span>
 				<div class="flex gap-1.5">
-					{#each dayNames as day, i}
+					{#each dayNames as day, i (i)}
 						<button
 							type="button"
 							class="flex-1 cursor-pointer rounded-sm px-2 py-2 text-xs font-medium transition-colors {selectedDays.includes(
@@ -319,7 +319,7 @@
 		{#if recurrenceType === 'monthly'}
 			<div>
 				<Select label="DAY OF MONTH" id="day-of-month" bind:value={dayOfMonth}>
-					{#each Array(31) as _, i}
+					{#each Array(31) as _, i (i)}
 						<option value={i + 1}>{i + 1}</option>
 					{/each}
 				</Select>
@@ -331,14 +331,14 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div>
 					<Select label="MONTH" id="yearly-month" bind:value={yearlyMonth}>
-						{#each ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as month, i}
+						{#each ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] as month, i (i)}
 							<option value={i}>{month}</option>
 						{/each}
 					</Select>
 				</div>
 				<div>
 					<Select label="DAY" id="yearly-day" bind:value={yearlyDay}>
-						{#each Array(31) as _, i}
+						{#each Array(31) as _, i (i)}
 							<option value={i + 1}>{i + 1}</option>
 						{/each}
 					</Select>
@@ -351,7 +351,7 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div>
 					<Select label="WEEKDAY" id="relative-weekday" bind:value={relativeWeekday}>
-						{#each dayNames as day, i}
+						{#each dayNames as day, i (i)}
 							<option value={i}>{day}</option>
 						{/each}
 					</Select>
@@ -374,7 +374,7 @@
 				TODO ITEMS
 			</span>
 			<div class="space-y-1.5">
-				{#each todos as todo, i}
+				{#each todos as todo, i (i)}
 					<div class="flex items-center gap-2">
 						<span class="flex-1 text-sm text-fg">{todo}</span>
 						<Button

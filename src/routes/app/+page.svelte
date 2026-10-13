@@ -159,7 +159,7 @@
 				<a href="/app/reminders" class="text-xs text-primary hover:text-primary-hover">View All</a>
 			</div>
 			<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-				{#each dueReminders as reminder}
+				{#each dueReminders as reminder (reminder.id)}
 					<ReminderCard
 						{reminder}
 						onComplete={handleCompleteReminder}
@@ -186,7 +186,7 @@
 				>
 			</div>
 			<div class="flex gap-1 overflow-x-auto pb-2">
-				{#each getWeekDays() as day}
+				{#each getWeekDays() as day, dayIdx (dayIdx)}
 					{@const dayEvents = getEventsForDay(day, data.upcomingEvents ?? [])}
 					{@const isToday = isSameDay(day, new Date())}
 					<div
@@ -201,7 +201,7 @@
 							>{day.getDate()}</span
 						>
 						<div class="mt-1 flex gap-0.5">
-							{#each dayEvents.slice(0, 3) as event}
+							{#each dayEvents.slice(0, 3) as event (`${event.type}:${event.id}`)}
 								<a
 									href={event.type === 'training'
 										? `/app/training/session/${event.id}`
@@ -324,7 +324,7 @@
 			</div>
 			{#if data.recentItems && data.recentItems.length > 0}
 				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{#each data.recentItems as item}
+					{#each data.recentItems as item (item.id)}
 						<a
 							href="/app/item/{item.id}"
 							class="group flex items-center gap-3 rounded-sm border {item.favorite
@@ -380,7 +380,7 @@
 			</div>
 			{#if data.categories && data.categories.length > 0}
 				<div class="space-y-1.5">
-					{#each data.categories as cat}
+					{#each data.categories as cat (cat.id)}
 						<a
 							href="/app/category/{cat.id}"
 							class="flex items-center gap-2.5 rounded-sm border border-border bg-surface px-3 py-2.5 transition-all hover:border-primary/50"
@@ -428,7 +428,7 @@
 		</div>
 		{#if data.recentSessions && data.recentSessions.length > 0}
 			<div class="space-y-1.5">
-				{#each data.recentSessions as session}
+				{#each data.recentSessions as session (session.id)}
 					{@const icon = getSessionIcon(session.activityTypes)}
 					<a
 						href="/app/training/session/{session.id}"

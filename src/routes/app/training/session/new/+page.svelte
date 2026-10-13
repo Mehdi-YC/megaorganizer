@@ -579,7 +579,7 @@
 				<h3 class="mb-2 text-sm font-medium text-fg">Exercises</h3>
 				<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
 				<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
-					{#each data.items as item}
+					{#each data.items as item (item.id)}
 						<div class="rounded-sm px-2 py-1.5 transition-colors hover:bg-muted">
 							<Checkbox
 								checked={selectedItems.includes(item.id)}

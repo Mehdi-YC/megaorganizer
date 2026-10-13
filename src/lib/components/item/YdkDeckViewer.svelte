@@ -182,7 +182,7 @@
 									{#if count && count > 1}
 										<div class="ygo-count-badge">
 											<div class="ygo-count-rects">
-												{#each { length: Math.min(count, 3) } as _}
+												{#each { length: Math.min(count, 3) } as _, i (i)}
 													<div class="ygo-count-rect"></div>
 												{/each}
 											</div>
@@ -201,7 +201,7 @@
 	{#if assignedTags.length > 0}
 		<div class="border-t border-border px-4 py-3 sm:px-5">
 			<div class="flex flex-wrap gap-1">
-				{#each assignedTags as t}
+				{#each assignedTags as t (t.id)}
 					<span
 						class="rounded-sm px-1.5 py-0.5 text-[10px] font-medium text-white"
 						style="background: {t.color || '#5A31F4'}">{t.name}</span

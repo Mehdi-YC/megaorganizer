@@ -86,7 +86,7 @@
 		/>
 	{:else}
 		<div class="space-y-2">
-			{#each filteredSessions as session}
+			{#each filteredSessions as session (session.id)}
 				<SessionListItem {session} />
 			{/each}
 		</div>

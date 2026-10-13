@@ -211,7 +211,7 @@
 				class="absolute top-full right-3 left-3 z-30 mt-1 max-h-[60vh] overflow-y-auto rounded-sm border border-border bg-surface py-1 shadow-xl"
 			>
 				{#if searchResults.length > 0}
-					{#each searchResults as result}
+					{#each searchResults as result (result.url)}
 						<button
 							type="button"
 							class="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
@@ -338,7 +338,7 @@
 
 		<div class="my-1 h-px bg-border/50"></div>
 
-		{#each categories as cat}
+		{#each categories as cat (cat.id)}
 			{@const isActive = isCategoryActive(cat)}
 			{@const isExpanded = expandedCategories.has(cat.id)}
 
@@ -414,7 +414,7 @@
 			{#if isExpanded}
 				<div class="mb-1 ml-7">
 					{#if cat.pages && cat.pages.length > 0}
-						{#each cat.pages as pg}
+						{#each cat.pages as pg (pg.id)}
 							<a
 								href="/app/category/{cat.id}/page/{pg.id}"
 								onclick={onNavigate}
