@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { treeElement, treeRelationship, page } from '$lib/server/db/schema';
-import { eq, and, or, asc, like } from 'drizzle-orm';
+import { eq, and, or, asc, like, inArray, count } from 'drizzle-orm';
 import {
 	rebuildDocLinks,
 	rebindDanglingLinks,
@@ -166,6 +166,34 @@ export async function getChildren(userId: string, parentType: TreeParentType, pa
 	}
 
 	return children;
+}
+
+/**
+ * Number of children each parent has, keyed by parent id. Used to render counts
+ * for nodes whose children have not been fetched yet (collapsed nodes).
+ */
+export async function getChildCounts(
+	userId: string,
+	parentType: TreeParentType,
+	parentIds: string[]
+): Promise<Record<string, number>> {
+	if (parentIds.length === 0) return {};
+
+	const rows = await db
+		.select({ parentId: treeRelationship.parentId, total: count() })
+		.from(treeRelationship)
+		.innerJoin(treeElement, eq(treeRelationship.childId, treeElement.id))
+		.where(
+			and(
+				eq(treeRelationship.parentType, parentType),
+				inArray(treeRelationship.parentId, parentIds),
+				eq(treeElement.userId, userId)
+			)
+		)
+		.groupBy(treeRelationship.parentId)
+		.all();
+
+	return Object.fromEntries(rows.map((r) => [r.parentId, Number(r.total)]));
 }
 
 export async function addChildToParent(

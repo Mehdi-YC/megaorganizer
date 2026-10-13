@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { getCategoryById } from '$lib/server/services/category.service';
 import { getPageById } from '$lib/server/services/page.service';
-import { getChildren } from '$lib/server/services/tree.service';
+import { getChildren, getChildCounts } from '$lib/server/services/tree.service';
 import { getAttachmentsByPage } from '$lib/server/services/attachment.service';
 import { resolveDocLinks, getBacklinks } from '$lib/server/services/wikilink.service';
 
@@ -31,6 +31,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	}
 
 	const treeElements = await getChildren(locals.user.id, 'page', pageData.id);
+	const childCounts = await getChildCounts(
+		locals.user.id,
+		'node',
+		treeElements.filter((el) => el.type === 'node').map((el) => el.id)
+	);
 
 	let attachments: Awaited<ReturnType<typeof getAttachmentsByPage>> = [];
 	try {
@@ -44,5 +49,5 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		getBacklinks(locals.user.id, 'page', pageData.id)
 	]);
 
-	return { category, pageData, treeElements, attachments, links, backlinks };
+	return { category, pageData, treeElements, childCounts, attachments, links, backlinks };
 };

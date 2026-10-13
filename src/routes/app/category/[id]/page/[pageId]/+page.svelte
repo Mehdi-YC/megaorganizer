@@ -32,6 +32,8 @@
 	// svelte-ignore state_referenced_locally
 	let treeElements = $state(data.treeElements ?? []);
 	// svelte-ignore state_referenced_locally
+	let nodeChildCounts = $state<Record<string, number>>(data.childCounts ?? {});
+	// svelte-ignore state_referenced_locally
 	let pageContent = $state(data.pageData?.markdown ?? '');
 	let showAddMenu = $state(false);
 	let searchQuery = $state('');
@@ -197,6 +199,18 @@
 		}
 	}
 
+	function nodeItemCount(nodeId: string) {
+		const cached = nodeChildrenCache[nodeId];
+		return cached ? cached.length : (nodeChildCounts[nodeId] ?? 0);
+	}
+
+	function bumpChildCount(nodeId: string, delta: number) {
+		const current = nodeChildrenCache[nodeId]
+			? nodeChildrenCache[nodeId].length
+			: (nodeChildCounts[nodeId] ?? 0);
+		nodeChildCounts = { ...nodeChildCounts, [nodeId]: Math.max(0, current + delta) };
+	}
+
 	async function loadNodeChildren(nodeId: string) {
 		if (nodeChildrenCache[nodeId]) return;
 		const res = await fetch(`/api/tree?parentType=node&parentId=${nodeId}`);
@@ -223,6 +237,7 @@
 			const el = await fetch(`/api/tree?id=${childId}`).then((r) => r.json());
 			const existing = nodeChildrenCache[nodeId] || [];
 			nodeChildrenCache = { ...nodeChildrenCache, [nodeId]: [...existing, el] };
+			bumpChildCount(nodeId, 1);
 		}
 	}
 
@@ -300,6 +315,7 @@
 				...nodeChildrenCache,
 				[nodeId]: existing.filter((c: { id: string }) => c.id !== childId)
 			};
+			bumpChildCount(nodeId, -1);
 		}
 	}
 
@@ -809,9 +825,7 @@
 								<span class="truncate text-sm font-semibold" style="color: {nodeColor}"
 									>{node.name}</span
 								>
-								<span class="text-[11px] text-fg-subdued"
-									>{childItems.length + childNodes.length} items</span
-								>
+								<span class="text-[11px] text-fg-subdued">{nodeItemCount(node.id)} items</span>
 								<div class="flex-1"></div>
 								<button
 									type="button"
