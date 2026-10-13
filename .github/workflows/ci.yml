@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # svelte-check, prettier, eslint and the service tests all run here. The
+      # point is that `main` can never go red quietly again: the previous cleanup
+      # left 170 errors and main ended up at 270 because nothing ran these.
+      #
+      # DATABASE_URL and BETTER_AUTH_SECRET are set because `svelte-kit sync`
+      # and the svelte-check pass evaluate the server module graph, and
+      # src/lib/server/db/index.ts throws at import time without them. The file
+      # is never opened by these steps.
+      - name: Typecheck, lint, and test
+        env:
+          DATABASE_URL: file:/tmp/ci.db
+          BETTER_AUTH_SECRET: ci-secret-not-used-cryptographically
+          ORIGIN: http://localhost:5173
+        run: |
+          bun run check
+          bun run check:tests
+          bunx prettier --check .
+          bunx eslint .
+          bun test
