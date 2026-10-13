@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
@@ -54,7 +55,7 @@
 
 		<p class="mt-4 text-center text-xs text-fg-subdued">
 			Don't have an account?
-			<a href="/auth/register" class="font-medium text-primary hover:text-primary-hover">
+			<a href={resolve('/auth/register')} class="font-medium text-primary hover:text-primary-hover">
 				Create one
 			</a>
 		</p>

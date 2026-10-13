@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { Tag } from '$lib/types';
+	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	let {
@@ -8,7 +10,7 @@
 		onToggle
 	}: {
 		tagIds?: string[];
-		allTags?: Array<{ id: string; name: string; color?: string }>;
+		allTags?: Tag[];
 		editing?: boolean;
 		onToggle?: (tagId: string) => void;
 	} = $props();
@@ -48,8 +50,9 @@
 				</button>
 			{:else}
 				<p class="text-[11px] text-fg-subdued italic">
-					No tags. Create some in <a href="/app/tags" class="text-primary hover:text-primary-hover"
-						>Tags</a
+					No tags. Create some in <a
+						href={resolve('/app/tags')}
+						class="text-primary hover:text-primary-hover">Tags</a
 					> page.
 				</p>
 			{/each}

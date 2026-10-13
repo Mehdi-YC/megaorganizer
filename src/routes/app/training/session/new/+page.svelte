@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
@@ -396,7 +397,7 @@
 				const result = await saveRunApi(runData);
 				if (!result.sessionId) throw new Error('Failed to save session. Please try again.');
 				clearSessionState();
-				goto(`/app/training/session/${result.sessionId}`);
+				goto(resolve('/app/training/session/[id]', { id: result.sessionId }));
 				return;
 			}
 
@@ -433,7 +434,7 @@
 				throw new Error(saved?.error || 'Failed to save session. Please try again.');
 			}
 			clearSessionState();
-			goto(`/app/training/session/${saved.sessionId}`);
+			goto(resolve('/app/training/session/[id]', { id: saved.sessionId }));
 		} catch (e) {
 			console.error('Failed to save session:', e);
 			saveError = e instanceof Error ? e.message : 'Failed to save session. Please try again.';
@@ -448,7 +449,10 @@
 
 <div class="max-w-2xl p-4 sm:p-8">
 	<div class="mb-6">
-		<a href="/app/training" class="text-sm text-fg-subdued transition-colors hover:text-fg">
+		<a
+			href={resolve('/app/training')}
+			class="text-sm text-fg-subdued transition-colors hover:text-fg"
+		>
 			<i class="fas fa-arrow-left mr-1"></i> Back to Training
 		</a>
 	</div>
@@ -579,7 +583,7 @@
 				<h3 class="mb-2 text-sm font-medium text-fg">Exercises</h3>
 				<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
 				<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
-					{#each data.items as item}
+					{#each data.items as item (item.id)}
 						<div class="rounded-sm px-2 py-1.5 transition-colors hover:bg-muted">
 							<Checkbox
 								checked={selectedItems.includes(item.id)}

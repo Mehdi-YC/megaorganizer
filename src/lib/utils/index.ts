@@ -1,3 +1,5 @@
+import type { NodeMetadata, Tag, Taggable, TreeElement } from '$lib/types';
+
 export const NODE_COLORS = [
 	'#5a31f4',
 	'#e35169',
@@ -32,16 +34,19 @@ export const NODE_ICONS = [
 ];
 export const SMALL_IMAGE_THRESHOLD = { width: 200, height: 150 };
 
-export function parseMetadata(raw: string | null | undefined): Record<string, any> {
+export function parseMetadata(raw: string | null | undefined): NodeMetadata {
 	if (!raw) return {};
 	try {
-		return JSON.parse(raw);
+		const parsed = JSON.parse(raw);
+		// The column is free-form JSON, so anything can be in it. Only an object
+		// is meaningful here; a string or array would break the .color reads.
+		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
 	} catch {
 		return {};
 	}
 }
 
-export function getNodeColor(node: any): string {
+export function getNodeColor(node: Pick<TreeElement, 'name' | 'metadata'>): string {
 	const meta = parseMetadata(node.metadata);
 	if (meta.color) return meta.color;
 	let hash = 0;
@@ -49,12 +54,12 @@ export function getNodeColor(node: any): string {
 	return NODE_COLORS[Math.abs(hash) % NODE_COLORS.length];
 }
 
-export function getNodeIcon(node: any): string {
+export function getNodeIcon(node: Pick<TreeElement, 'metadata'>): string {
 	const meta = parseMetadata(node.metadata);
 	return meta.icon || 'fa-folder';
 }
 
-export function getAssignedTags(item: any, allTags: any[]): any[] {
+export function getAssignedTags(item: Taggable, allTags: Tag[]): Tag[] {
 	let ids: string[] = [];
 	try {
 		ids = item.tags ? JSON.parse(item.tags) : [];
@@ -64,7 +69,7 @@ export function getAssignedTags(item: any, allTags: any[]): any[] {
 	return allTags.filter((t) => ids.includes(t.id));
 }
 
-export function getTagIds(item: any): string[] {
+export function getTagIds(item: Taggable): string[] {
 	try {
 		return item.tags ? JSON.parse(item.tags) : [];
 	} catch {
@@ -86,13 +91,13 @@ export function isSmallImage(url: string): Promise<boolean> {
 }
 
 export async function checkSmallImages(
-	items: any[],
+	items: Pick<TreeElement, 'id' | 'imageUrl'>[],
 	onUpdate: (ids: Set<string>) => void,
 	existing?: Set<string>
 ) {
 	const small = new Set(existing ?? []);
 	await Promise.all(
-		items.map(async (item: any) => {
+		items.map(async (item) => {
 			if (!item.imageUrl || small.has(item.id)) return;
 			if (await isSmallImage(item.imageUrl)) small.add(item.id);
 		})
@@ -100,12 +105,15 @@ export async function checkSmallImages(
 	onUpdate(small);
 }
 
-export async function searchTree(query: string, typeFilter?: string): Promise<any[]> {
+export async function searchTree(
+	query: string,
+	typeFilter?: TreeElement['type']
+): Promise<TreeElement[]> {
 	if (!query.trim() || query.trim().length < 3) return [];
 	const res = await fetch(`/api/tree?search=${encodeURIComponent(query)}`);
 	if (!res.ok) return [];
-	let results = await res.json();
-	if (typeFilter) results = results.filter((r: any) => r.type === typeFilter);
+	let results: TreeElement[] = await res.json();
+	if (typeFilter) results = results.filter((r) => r.type === typeFilter);
 	return results;
 }
 

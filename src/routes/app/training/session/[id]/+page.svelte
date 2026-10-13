@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -60,7 +61,7 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ action: 'deleteSession', sessionId: session?.id })
 		});
-		if (response.ok) goto('/app/training/calendar');
+		if (response.ok) goto(resolve('/app/training/calendar'));
 	}
 </script>
 
@@ -71,7 +72,7 @@
 <div class="p-4 sm:p-8">
 	{#if !session}
 		<EmptyState icon="fa-exclamation-triangle" message="Session not found">
-			<a href="/app/training/calendar" class="text-primary hover:text-primary-hover"
+			<a href={resolve('/app/training/calendar')} class="text-primary hover:text-primary-hover"
 				>Back to Calendar</a
 			>
 		</EmptyState>

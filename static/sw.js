@@ -108,7 +108,7 @@ self.addEventListener('message', (event) => {
 
 // Web Push: show reminder notifications even when no app tab is open.
 self.addEventListener('push', (event) => {
-	let data = {};
+	let data;
 	try {
 		data = event.data ? event.data.json() : {};
 	} catch {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 
@@ -60,7 +61,11 @@
 		);
 		selectedDate = null;
 		selectedEvents = [];
-		goto(url.toString(), { replaceState: true });
+		// resolve() supplies the base path; url.search carries the updated month
+		// plus any other query params already on the URL. The rule cannot see that
+		// the literal is already resolved, because the search string is dynamic.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${resolve('/app/calendar')}${url.search}`, { replaceState: true });
 	}
 
 	function prevMonth() {
@@ -194,6 +199,18 @@
 		);
 	}
 
+	/** Target for a calendar event, matching the shape the server sent. */
+	function eventHref(event: any): string {
+		if (event.type === 'training') return resolve('/app/training/session/[id]', { id: event.id });
+		if (event.type === 'expense') return resolve('/app/finance');
+		if (event.type === 'scheduled') {
+			return resolve('/app/reminders/[id]', {
+				id: event.templateId || event.id.split('_')[1]
+			});
+		}
+		return resolve('/app/reminders/[id]', { id: event.id });
+	}
+
 	function setFilter(newFilter: string | null) {
 		const url = new URL(window.location.href);
 		if (newFilter) {
@@ -201,7 +218,9 @@
 		} else {
 			url.searchParams.delete('filter');
 		}
-		goto(url.toString(), { replaceState: true });
+		// See changeMonth: the path is resolved, the search string is dynamic.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${resolve('/app/calendar')}${url.search}`, { replaceState: true });
 	}
 
 	let selectedDate = $state<Date | null>(null);
@@ -562,14 +581,9 @@
 				{:else}
 					<div class="max-h-[400px] space-y-2 overflow-y-auto pr-1">
 						{#each selectedEvents as event (event.id)}
-							{@const href =
-								event.type === 'training'
-									? `/app/training/session/${event.id}`
-									: event.type === 'expense'
-										? `/app/finance`
-										: event.type === 'scheduled'
-											? `/app/reminders/${event.templateId || event.id.split('_')[1]}`
-											: `/app/reminders/${event.id}`}
+							{@const href = eventHref(event)}
+							<!-- eventHref() returns a resolved path; the rule cannot see through the call. -->
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
 							<a
 								{href}
 								class="flex items-center gap-3 rounded-sm border {event.type === 'training'
@@ -637,7 +651,8 @@
 					<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 						Upcoming Reminders
 					</h3>
-					<a href="/app/reminders" class="text-xs text-primary hover:text-primary-hover">View All</a
+					<a href={resolve('/app/reminders')} class="text-xs text-primary hover:text-primary-hover"
+						>View All</a
 					>
 				</div>
 
@@ -670,9 +685,9 @@
 											minute: '2-digit'
 										})}
 										<a
-											href={item.isVirtual
-												? `/app/reminders/${item.templateId}`
-												: `/app/reminders/${item.id}`}
+											href={resolve('/app/reminders/[id]', {
+												id: item.isVirtual ? item.templateId : item.id
+											})}
 											class="flex items-center gap-2.5 rounded-sm border {item.isVirtual
 												? 'border-muted bg-muted/30'
 												: 'border-error/30 bg-error/5'} px-3 py-2 transition-all hover:border-primary/50"

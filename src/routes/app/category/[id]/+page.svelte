@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -140,7 +141,10 @@
 			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 				{#each pages as pg, idx (pg.id)}
 					<a
-						href="/app/category/{category.id}/page/{pg.id}"
+						href={resolve('/app/category/[id]/page/[pageId]', {
+							id: category.id,
+							pageId: pg.id
+						})}
 						class="group relative flex cursor-move items-start gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
 						draggable="true"
 						ondragstart={(e) => handleDragStart(e, idx)}

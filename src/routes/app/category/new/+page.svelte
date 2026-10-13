@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { goto, invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
@@ -36,7 +37,7 @@
 			});
 			if (response.ok) {
 				await invalidateAll();
-				goto('/app');
+				goto(resolve('/app'));
 			}
 		} finally {
 			saving = false;
@@ -50,7 +51,11 @@
 
 <div class="p-4 sm:p-8">
 	<div class="mb-4 flex items-center gap-3 sm:mb-6">
-		<a href="/app" aria-label="Go back" class="text-fg-subdued transition-colors hover:text-fg">
+		<a
+			href={resolve('/app')}
+			aria-label="Go back"
+			class="text-fg-subdued transition-colors hover:text-fg"
+		>
 			<i class="fas fa-arrow-left text-sm"></i>
 		</a>
 		<h1 class="text-lg font-semibold text-fg-accent">Create Category</h1>

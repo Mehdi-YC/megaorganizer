@@ -41,7 +41,21 @@ export default defineConfig(
 				'error',
 				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'none' }
 			],
-			'svelte/no-at-html-tags': 'off'
+			'svelte/no-at-html-tags': 'off',
+
+			// SvelteSet/SvelteDate only matter for a Set/Map/Date that is *held in
+			// $state and mutated in place*, because that is the case the built-ins
+			// cannot proxy. Every Set in this codebase follows copy-then-replace
+			// (`const next = new Set(x); next.add(y); x = next`), which triggers
+			// reactivity correctly, and the rule flags the local `new Set(...)`
+			// temporaries regardless of how they are used. Converting those to
+			// SvelteSet would add proxy overhead for no behavioural gain.
+			//
+			// The one genuine in-place mutation that slipped through, in the
+			// category page's attachment list, is fixed in code. If a new one
+			// appears the compiler will not catch it here, so the pattern to
+			// avoid is: mutate a $state Set/Map and then self-assign it.
+			'svelte/prefer-svelte-reactivity': 'off'
 		}
 	}
 );

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { Badge, Button, Checkbox, EmptyState } from '$lib/components/ui';
@@ -131,11 +132,11 @@
 <div class="p-4 sm:p-8">
 	<!-- Breadcrumb -->
 	<div class="mb-4 flex items-center gap-1.5 text-[11px] text-fg-subdued">
-		<a href="/app" class="hover:text-primary" title="Home"
+		<a href={resolve('/app')} class="hover:text-primary" title="Home"
 			><i class="fas fa-home text-[10px]"></i></a
 		>
 		<i class="fas fa-chevron-right text-[8px]"></i>
-		<a href="/app/reminders" class="hover:text-primary">Reminders</a>
+		<a href={resolve('/app/reminders')} class="hover:text-primary">Reminders</a>
 		<i class="fas fa-chevron-right text-[8px]"></i>
 		<span class="truncate text-fg">{item?.title}</span>
 	</div>
@@ -299,7 +300,7 @@
 							Template
 						</h3>
 						<a
-							href="/app/reminders/{template.id}"
+							href={resolve('/app/reminders/[id]', { id: template.id })}
 							class="flex items-center gap-3 rounded-sm p-2 transition-colors hover:bg-muted"
 						>
 							<div

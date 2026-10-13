@@ -46,6 +46,10 @@
 </script>
 
 {#if href}
+	<!-- Callers pass an already-resolved path, or an external/asset URL that
+	     resolve() does not apply to (downloads, outbound links). The rule
+	     reports on the href attribute, not the element, so this needs a block. -->
+	<!-- eslint-disable svelte/no-navigation-without-resolve -->
 	<a
 		{href}
 		class="{base} {variants[variant]} {sizes[size]} {className} {inert
@@ -57,6 +61,7 @@
 		{#if loading}<Spinner size="sm" />{/if}
 		{@render children()}
 	</a>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 {:else}
 	<button
 		{type}

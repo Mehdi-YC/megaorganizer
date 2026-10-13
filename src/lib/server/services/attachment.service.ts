@@ -137,7 +137,7 @@ export interface AttachmentData {
 	category: string;
 }
 
-function toResponse(a: any): AttachmentData {
+function toResponse(a: typeof attachment.$inferSelect): AttachmentData {
 	return {
 		id: a.id,
 		originalName: a.originalName,

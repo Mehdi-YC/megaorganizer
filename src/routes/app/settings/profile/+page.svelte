@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -160,7 +161,7 @@
 
 <div class="max-w-2xl p-4 sm:p-8">
 	<div class="mb-6">
-		<a href="/app" class="text-sm text-fg-subdued transition-colors hover:text-fg">
+		<a href={resolve('/app')} class="text-sm text-fg-subdued transition-colors hover:text-fg">
 			<i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
 		</a>
 	</div>

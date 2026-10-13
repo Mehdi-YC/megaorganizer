@@ -191,9 +191,7 @@ export async function getAnalytics(userId: string): Promise<AnalyticsData> {
 			: 0;
 
 	// Calculate streak (consecutive days with all reminders completed)
-	// eslint-disable-next-line no-useless-assignment
-
-	let currentStreak = 0;
+	let currentStreak: number;
 	let bestStreak = 0;
 	let tempStreak = 0;
 

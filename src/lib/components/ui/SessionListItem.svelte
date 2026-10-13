@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { getSessionIcon } from '$lib/utils/training';
 	import { formatTime } from '$lib/utils';
 	import Badge from './Badge.svelte';
@@ -20,7 +21,7 @@
 </script>
 
 <a
-	href="/app/training/session/{session.id}"
+	href={resolve('/app/training/session/[id]', { id: session.id })}
 	class="flex items-center justify-between rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
 >
 	<div class="flex items-center gap-4">

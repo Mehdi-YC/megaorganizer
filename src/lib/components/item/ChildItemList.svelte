@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { TreeElement } from '$lib/types';
+	import { resolve } from '$app/paths';
 	import { searchTree } from '$lib/utils';
 	import Button from '$lib/components/ui/Button.svelte';
 
@@ -12,15 +14,15 @@
 	}: {
 		parentType: string;
 		parentId: string;
-		children?: any[];
-		onAdd?: (child: any) => void;
+		children?: TreeElement[];
+		onAdd?: (child: TreeElement) => void;
 		onRemove?: (childId: string) => void;
 		onReorder?: (fromIdx: number, toIdx: number) => void;
 	} = $props();
 
 	let showAdd = $state(false);
 	let addQuery = $state('');
-	let addResults = $state<any[]>([]);
+	let addResults = $state<TreeElement[]>([]);
 	let dragIdx = $state<number | null>(null);
 	let addInput = $state<HTMLInputElement | null>(null);
 
@@ -37,7 +39,7 @@
 		}
 		const results = await searchTree(addQuery, 'item');
 		addResults = results.filter(
-			(r: any) => r.id !== parentId && !children.some((c) => c.id === r.id)
+			(r: TreeElement) => r.id !== parentId && !children.some((c) => c.id === r.id)
 		);
 	}
 
@@ -233,7 +235,10 @@
 					<i
 						class="fas fa-grip-vertical w-3 text-center text-fg-subdued/40 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
 					></i>
-					<a href="/app/item/{child.id}" class="flex flex-1 items-center gap-2 text-fg">
+					<a
+						href={resolve('/app/item/[id]', { id: child.id })}
+						class="flex flex-1 items-center gap-2 text-fg"
+					>
 						{#if child.imageUrl}
 							<img src={child.imageUrl} alt="" class="h-5 w-5 shrink-0 rounded-sm object-cover" />
 						{:else}

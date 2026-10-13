@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import MindMap from '$lib/components/ui/MindMap.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -28,7 +29,7 @@
 	function navigateToNode() {
 		if (!selectedNode) return;
 		if (selectedNode.type === 'item') {
-			goto(`/app/item/${selectedNode.id}`);
+			goto(resolve('/app/item/[id]', { id: selectedNode.id }));
 		}
 	}
 </script>

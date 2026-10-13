@@ -18,7 +18,7 @@ export const POST: RequestHandler = async (event) => {
 	});
 	if (!v.ok) return v.error;
 
-	const tag = await createTag(user.id, v.data.name, (v.data as any).color);
+	const tag = await createTag(user.id, v.data.name, v.data.color);
 	return json(tag, { status: 201 });
 };
 

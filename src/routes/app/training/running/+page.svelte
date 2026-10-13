@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
@@ -357,7 +358,7 @@
 			.then((data) => {
 				if (data.sessionId) {
 					clearRunningState();
-					goto(`/app/training/session/${data.sessionId}`);
+					goto(resolve('/app/training/session/[id]', { id: data.sessionId }));
 				} else {
 					throw new Error('Failed to save run. Please try again.');
 				}
@@ -568,7 +569,7 @@
 						</Button>
 					{/if}
 					<a
-						href="/app/training/calendar"
+						href={resolve('/app/training/calendar')}
 						class="inline-flex h-12 items-center rounded-sm bg-primary px-6 font-medium text-white transition-colors hover:bg-primary-hover"
 					>
 						View History

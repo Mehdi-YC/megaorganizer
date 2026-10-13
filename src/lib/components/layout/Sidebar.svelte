@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { CategoryWithPages, PageSummary } from '$lib/types';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
@@ -66,10 +68,10 @@
 		expandedCategories = next;
 	}
 
-	function isCategoryActive(cat: any): boolean {
+	function isCategoryActive(cat: CategoryWithPages): boolean {
 		const path = page.url.pathname;
 		if (path === `/app/category/${cat.id}`) return true;
-		if (cat.pages?.some((p: any) => path.includes(`/page/${p.id}`))) return true;
+		if (cat.pages?.some((p: PageSummary) => path.includes(`/page/${p.id}`))) return true;
 		return false;
 	}
 
@@ -87,7 +89,7 @@
 			confirmDeleteCatId = null;
 			await invalidateAll();
 			if (page.url.pathname.includes(`/category/${catId}`)) {
-				goto('/app');
+				goto(resolve('/app'));
 			}
 		}
 	}
@@ -121,7 +123,7 @@
 			next.add(catId);
 			expandedCategories = next;
 			onNavigate();
-			goto(`/app/category/${catId}/page/${pg.id}`);
+			goto(resolve('/app/category/[id]/page/[pageId]', { id: catId, pageId: pg.id }));
 		}
 	}
 
@@ -165,7 +167,13 @@
 		}
 	}
 
-	function navigateSearchResult(result: any) {
+	function navigateSearchResult(result: {
+		id: string;
+		title: string;
+		type: string;
+		url: string;
+		imageUrl?: string;
+	}) {
 		searchQuery = '';
 		searchSearched = false;
 		searchResults = [];
@@ -211,7 +219,7 @@
 				class="absolute top-full right-3 left-3 z-30 mt-1 max-h-[60vh] overflow-y-auto rounded-sm border border-border bg-surface py-1 shadow-xl"
 			>
 				{#if searchResults.length > 0}
-					{#each searchResults as result}
+					{#each searchResults as result (result.url)}
 						<button
 							type="button"
 							class="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
@@ -246,7 +254,7 @@
 
 	<nav class="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
 		<a
-			href="/app"
+			href={resolve('/app')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app'
@@ -258,7 +266,7 @@
 		</a>
 
 		<a
-			href="/app/calendar"
+			href={resolve('/app/calendar')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/calendar'
@@ -270,7 +278,7 @@
 		</a>
 
 		<a
-			href="/app/finance"
+			href={resolve('/app/finance')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/finance'
@@ -282,7 +290,7 @@
 		</a>
 
 		<a
-			href="/app/training"
+			href={resolve('/app/training')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
 				'/app/training'
@@ -298,7 +306,7 @@
 
 		<!-- Reminders (Single link, collapsible not needed) -->
 		<a
-			href="/app/reminders"
+			href={resolve('/app/reminders')}
 			onclick={onNavigate}
 			class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
 				'/app/reminders'
@@ -313,7 +321,7 @@
 		<div class="my-1 h-px bg-border/50"></div>
 
 		<a
-			href="/app/library"
+			href={resolve('/app/library')}
 			onclick={onNavigate}
 			class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/library'
@@ -325,7 +333,7 @@
 		</a>
 
 		<a
-			href="/app/tags"
+			href={resolve('/app/tags')}
 			onclick={onNavigate}
 			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/tags'
@@ -338,7 +346,7 @@
 
 		<div class="my-1 h-px bg-border/50"></div>
 
-		{#each categories as cat}
+		{#each categories as cat (cat.id)}
 			{@const isActive = isCategoryActive(cat)}
 			{@const isExpanded = expandedCategories.has(cat.id)}
 
@@ -360,7 +368,7 @@
 					></i>
 				</button>
 				<a
-					href="/app/category/{cat.id}"
+					href={resolve('/app/category/[id]', { id: cat.id })}
 					onclick={onNavigate}
 					class="flex flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors {isActive
 						? 'text-fg-accent'
@@ -414,9 +422,12 @@
 			{#if isExpanded}
 				<div class="mb-1 ml-7">
 					{#if cat.pages && cat.pages.length > 0}
-						{#each cat.pages as pg}
+						{#each cat.pages as pg (pg.id)}
 							<a
-								href="/app/category/{cat.id}/page/{pg.id}"
+								href={resolve('/app/category/[id]/page/[pageId]', {
+									id: cat.id,
+									pageId: pg.id
+								})}
 								onclick={onNavigate}
 								class="flex items-center gap-2 rounded-sm px-2.5 py-1 text-[13px] transition-colors {isPageActive(
 									pg.id
@@ -466,7 +477,7 @@
 
 		<div class="mt-2 px-2">
 			<a
-				href="/app/category/new"
+				href={resolve('/app/category/new')}
 				onclick={onNavigate}
 				class="flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 			>
@@ -504,7 +515,7 @@
 				</div>
 				<div class="py-1">
 					<a
-						href="/app/settings/profile"
+						href={resolve('/app/settings/profile')}
 						onclick={() => {
 							showUserMenu = false;
 							onNavigate();

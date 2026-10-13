@@ -64,6 +64,28 @@ function isGpsPoint(p: unknown): p is GpsPointInput {
 	);
 }
 
+/**
+ * The stricter shape batchAddTrackPoints writes: unlike isGpsPoint, `sequence`
+ * is required, because the insert relies on it for ordering.
+ */
+function isTrackPoint(p: unknown): p is {
+	sequence: number;
+	timestamp: Date;
+	latitude: number;
+	longitude: number;
+	altitude?: number;
+	accuracy?: number;
+	speed?: number;
+	heading?: number;
+} {
+	return (
+		isGpsPoint(p) &&
+		typeof (p as { sequence?: unknown }).sequence === 'number' &&
+		// JSON has no Date, so the timestamp arrives as a string; it must parse.
+		new Date(p.timestamp as string).getTime() > 0
+	);
+}
+
 export const GET: RequestHandler = async (event) => {
 	const user = requireUser(event);
 
@@ -77,7 +99,11 @@ export const GET: RequestHandler = async (event) => {
 
 	if (sessionId) {
 		const activities = await getTrainingActivities(user.id, sessionId);
-		const allTrackPoints: any[] = [];
+		const allTrackPoints: {
+			activityId: string;
+			runningActivity: NonNullable<Awaited<ReturnType<typeof getRunningActivity>>>;
+			trackPoints: Awaited<ReturnType<typeof getTrackPoints>>;
+		}[] = [];
 		for (const act of activities) {
 			const runningAct = await getRunningActivity(user.id, act.id);
 			if (runningAct) {
@@ -124,11 +150,19 @@ export const POST: RequestHandler = async (event) => {
 			const v = validateBody(body, {
 				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
 				sequence: { validate: isNumber, label: 'Sequence' },
+				// addTrackPoint requires this; the schema never checked it, so a
+				// point without a timestamp reached the insert as undefined.
+				timestamp: { validate: isNonEmptyString, label: 'Timestamp' },
 				latitude: { validate: isNumber, label: 'Latitude' },
 				longitude: { validate: isNumber, label: 'Longitude' }
 			});
 			if (!v.ok) return v.error;
-			const point = await addTrackPoint(user.id, v.data.activityId, body as any);
+			// v.data, not the raw body: the old `body as any` meant the validator
+			// above ran and its result was thrown away.
+			const point = await addTrackPoint(user.id, v.data.activityId, {
+				...v.data,
+				timestamp: new Date(v.data.timestamp)
+			});
 			if (!point) return json({ error: 'Activity not found or access denied' }, { status: 404 });
 			return json(point, { status: 201 });
 		}
@@ -137,10 +171,10 @@ export const POST: RequestHandler = async (event) => {
 			const v = validateBody(body, {
 				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
 				points: {
-					validate: isArray(
-						(p): p is Record<string, unknown> =>
-							hasFields(p) && typeof p.latitude === 'number' && typeof p.longitude === 'number'
-					),
+					// Checks every field batchAddTrackPoints writes. The old check
+					// looked at latitude/longitude only and the mismatch with the
+					// service signature was hidden behind a cast.
+					validate: isArray(isTrackPoint),
 					label: 'Points'
 				}
 			});
@@ -275,7 +309,7 @@ export const PUT: RequestHandler = async (event) => {
 			activityId: { validate: isNonEmptyString, label: 'Activity ID' }
 		});
 		if (!v.ok) return v.error;
-		const activity = await updateRunningActivity(user.id, v.data.activityId, body as any);
+		const activity = await updateRunningActivity(user.id, v.data.activityId, body);
 		if (!activity) return json({ error: 'Activity not found or access denied' }, { status: 404 });
 		return json(activity);
 	}

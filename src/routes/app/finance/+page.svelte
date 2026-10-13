@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { EmptyState } from '$lib/components/ui';
@@ -117,7 +118,10 @@
 			'month',
 			`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 		);
-		goto(url.toString(), { replaceState: true });
+		// The path is resolved; the query string is dynamic, which the rule
+		// cannot infer.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${resolve('/app/finance')}${url.search}`, { replaceState: true });
 	}
 
 	function prevMonth() {
@@ -266,7 +270,7 @@
 
 			<!-- Link to Calendar -->
 			<a
-				href="/app/calendar?filter=finance"
+				href={resolve('/app/calendar?filter=finance')}
 				class="flex items-center gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
 			>
 				<div class="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">

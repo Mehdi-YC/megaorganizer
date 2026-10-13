@@ -73,7 +73,7 @@ export const POST: RequestHandler = async (event) => {
 				startedAt: { validate: isString, required: false }
 			});
 			if (!v.ok) return v.error;
-			const session = await createTrainingSession(user.id, v.data as any);
+			const session = await createTrainingSession(user.id, v.data);
 			return json(session, { status: 201 });
 		}
 
@@ -85,7 +85,7 @@ export const POST: RequestHandler = async (event) => {
 				notes: { validate: isString, required: false }
 			});
 			if (!v.ok) return v.error;
-			const activity = await createTrainingActivity(user.id, v.data.sessionId, v.data as any);
+			const activity = await createTrainingActivity(user.id, v.data.sessionId, v.data);
 			if (!activity) return json({ error: 'Session not found or access denied' }, { status: 404 });
 			return json(activity, { status: 201 });
 		}
@@ -114,12 +114,7 @@ export const POST: RequestHandler = async (event) => {
 				notes: { validate: isString, required: false }
 			});
 			if (!v.ok) return v.error;
-			const record = await createExerciseRecord(
-				user.id,
-				v.data.activityId,
-				v.data.itemId,
-				v.data as any
-			);
+			const record = await createExerciseRecord(user.id, v.data.activityId, v.data.itemId, v.data);
 			if (!record) return json({ error: 'Activity not found or access denied' }, { status: 404 });
 			return json(record, { status: 201 });
 		}
@@ -242,7 +237,7 @@ export const PUT: RequestHandler = async (event) => {
 				duration: { validate: isNumber, required: false }
 			});
 			if (!v.ok) return v.error;
-			const session = await updateTrainingSession(user.id, v.data.sessionId, v.data as any);
+			const session = await updateTrainingSession(user.id, v.data.sessionId, v.data);
 			if (!session) return json({ error: 'Not found' }, { status: 404 });
 			return json(session);
 		}
@@ -253,7 +248,7 @@ export const PUT: RequestHandler = async (event) => {
 				notes: { validate: isString, required: false }
 			});
 			if (!v.ok) return v.error;
-			const activity = await updateTrainingActivity(user.id, v.data.activityId, v.data as any);
+			const activity = await updateTrainingActivity(user.id, v.data.activityId, v.data);
 			if (!activity) return json({ error: 'Not found' }, { status: 404 });
 			return json(activity);
 		}
@@ -270,7 +265,7 @@ export const PUT: RequestHandler = async (event) => {
 				notes: { validate: isString, required: false }
 			});
 			if (!v.ok) return v.error;
-			const record = await updateExerciseRecord(user.id, v.data.recordId, v.data as any);
+			const record = await updateExerciseRecord(user.id, v.data.recordId, v.data);
 			if (!record) return json({ error: 'Not found' }, { status: 404 });
 			return json(record);
 		}

@@ -11,7 +11,12 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler"
-	}
+	},
+	// The service-level tests under tests/ import `bun:test`. Bun's own type
+	// definitions conflict with the DOM `ReadableStream` lib used by the
+	// attachment streaming code, so they are excluded here and applied by
+	// tsconfig.test.json instead. See `bun run check:tests`.
+	"exclude": ["tests"]
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
 	//

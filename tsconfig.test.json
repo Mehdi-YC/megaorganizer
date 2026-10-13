@@ -1,0 +1,17 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"types": ["bun"],
+		"noEmit": true
+	},
+	// .svelte-kit/ambient.d.ts carries the ambient declarations for the
+	// SvelteKit-only modules ($app/environment, $env/dynamic/private) that the
+	// services import. svelte-check picks it up via its own config; tsc needs it
+	// listed explicitly.
+	"include": ["tests/**/*.ts", ".svelte-kit/ambient.d.ts", ".svelte-kit/non-ambient.d.ts"],
+	// The parent config excludes tests/ because Bun's type definitions clash with
+	// the DOM ReadableStream lib used by the attachment streaming code. That
+	// exclusion is specific to svelte-check over src/; here the tests are the only
+	// input, so it has to be overridden rather than inherited.
+	"exclude": []
+}

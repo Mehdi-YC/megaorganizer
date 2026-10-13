@@ -33,7 +33,7 @@ export const POST: RequestHandler = async (event) => {
 	if (!v.ok) return v.error;
 
 	const { categoryId, ...data } = v.data;
-	const page = await createPage(user.id, categoryId, data as any);
+	const page = await createPage(user.id, categoryId, data);
 	return json(page, { status: 201 });
 };
 
