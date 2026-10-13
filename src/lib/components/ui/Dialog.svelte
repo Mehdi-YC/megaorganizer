@@ -48,7 +48,6 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-surface-overlay p-4"
 		onclick={handleBackdropClick}
