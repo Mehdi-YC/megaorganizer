@@ -12,7 +12,7 @@ jobs:
       DATABASE_URL: file:ci.db
       BETTER_AUTH_SECRET: ci-placeholder-secret-not-used-outside-ci
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: oven-sh/setup-bun@v2
         with:
