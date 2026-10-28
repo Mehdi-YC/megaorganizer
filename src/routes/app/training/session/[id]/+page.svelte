@@ -145,7 +145,8 @@
 							<RunMap
 								points={run.trackPoints.map((p) => ({
 									latitude: p.latitude,
-									longitude: p.longitude
+									longitude: p.longitude,
+									timestamp: new Date(p.timestamp).getTime()
 								}))}
 								showRoute={true}
 							/>

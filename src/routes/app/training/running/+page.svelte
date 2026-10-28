@@ -12,6 +12,8 @@
 		MS_TO_KMH,
 		TIMER_INTERVAL_MS,
 		GPS_WATCH_OPTIONS,
+		GPS_HEARTBEAT_MS,
+		GPS_STALE_MS,
 		handleGpsPosition,
 		type GpsPoint
 	} from '$lib/utils/gps';
@@ -47,11 +49,11 @@
 	let lastPoint: GpsPoint | null = null;
 	let gpsHeartbeat: ReturnType<typeof setInterval> | null = null;
 	let lastFixAt = 0;
-	const GPS_HEARTBEAT_MS = 15_000;
-	const GPS_STALE_MS = 60_000;
 	let wakeLock: WakeLockSentinel | null = null;
 	let visibilityHandler: (() => void) | null = null;
 	let gpsError: string | null = $state(null);
+	let gpsGapNotice = $state<string | null>(null);
+	let gapNoticeTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
 		const saved = loadRunningState();
@@ -97,6 +99,7 @@
 			stopGpsWatch();
 			if (timerInterval) clearInterval(timerInterval);
 			if (confirmTimer) clearTimeout(confirmTimer);
+			if (gapNoticeTimer) clearTimeout(gapNoticeTimer);
 			releaseWakeLock();
 			stopBackgroundKeepAlive();
 			if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
@@ -148,6 +151,16 @@
 		gpsPoints = result.updatedState.gpsPoints;
 		lastPoint = result.updatedState.lastPoint;
 		currentPosition = { latitude: result.newPoint.latitude, longitude: result.newPoint.longitude };
+		if (result.gap) {
+			const seconds = Math.max(1, Math.round(result.gap.seconds));
+			const duration = seconds >= 60 ? `${Math.round(seconds / 60)} min` : `${seconds}s`;
+			gpsGapNotice = `GPS paused for ${duration}. The route is split at the gap; distance is estimated.`;
+			if (gapNoticeTimer) clearTimeout(gapNoticeTimer);
+			gapNoticeTimer = setTimeout(() => {
+				gpsGapNotice = null;
+				gapNoticeTimer = null;
+			}, 12_000);
+		}
 		gpsError = null;
 		updateStats();
 		persistState();
@@ -167,11 +180,9 @@
 	function startGpsWatch() {
 		stopGpsWatch();
 		watchId = navigator.geolocation.watchPosition(gpsCallback, gpsErrorCallback, GPS_WATCH_OPTIONS);
-		// Heartbeat: mobile browsers freeze watchPosition while the screen is
-		// off, which draws one straight line across the gap. A periodic
-		// getCurrentPosition fills those gaps (background timers throttle to
-		// roughly one per minute, still far better than nothing) and re-arms
-		// the watch if it went completely silent.
+		// Heartbeat: keep asking for fixes while the page is alive. Background
+		// timers still throttle, so a long gap is expected. The track splits
+		// on that gap instead of drawing a straight line across it.
 		gpsHeartbeat = setInterval(() => {
 			navigator.geolocation.getCurrentPosition(gpsCallback, () => {}, GPS_WATCH_OPTIONS);
 			if (Date.now() - lastFixAt > GPS_STALE_MS) {
@@ -195,12 +206,21 @@
 	function setupVisibilityHandler() {
 		if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 		visibilityHandler = async () => {
+			if (document.visibilityState === 'hidden') {
+				persistState();
+				return;
+			}
 			if (document.visibilityState === 'visible' && status === 'running') {
 				await acquireWakeLock();
 				startBackgroundKeepAlive('Running - MegaOrganize');
 				elapsed = Math.floor((Date.now() - startTime) / 1000);
-				// Restart GPS watch — mobile browsers may have killed it while screen was off
+				// Mobile browsers may have killed the watch while the screen was off.
 				startGpsWatch();
+				// Ask for a fresh fix immediately instead of waiting for the watch.
+				navigator.geolocation.getCurrentPosition(gpsCallback, gpsErrorCallback, {
+					...GPS_WATCH_OPTIONS,
+					maximumAge: 0
+				});
 				updateStats();
 				persistState();
 			}
@@ -337,6 +357,11 @@
 		stopGpsWatch();
 		releaseWakeLock();
 		stopBackgroundKeepAlive();
+		if (gapNoticeTimer) {
+			clearTimeout(gapNoticeTimer);
+			gapNoticeTimer = null;
+		}
+		gpsGapNotice = null;
 		if (visibilityHandler) {
 			document.removeEventListener('visibilitychange', visibilityHandler);
 			visibilityHandler = null;
@@ -379,6 +404,11 @@
 		status = 'idle';
 		saveError = null;
 		gpsError = null;
+		gpsGapNotice = null;
+		if (gapNoticeTimer) {
+			clearTimeout(gapNoticeTimer);
+			gapNoticeTimer = null;
+		}
 		finishing = false;
 		stopBackgroundKeepAlive();
 		distance = 0;
@@ -418,6 +448,10 @@
 				<i class="fas fa-location-crosshairs mr-2"></i>
 				Enable Location
 			</Button>
+			<p class="mt-4 max-w-xs text-center text-[11px] text-fg-subdued">
+				Browsers can pause GPS when the phone locks. Keep this screen open for the most accurate
+				route.
+			</p>
 		</div>
 	{:else if status === 'requesting'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
@@ -447,6 +481,14 @@
 			<div
 				class="flex flex-1 flex-col items-center justify-center p-4 select-text lg:overflow-y-auto"
 			>
+				{#if gpsGapNotice}
+					<div
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
+					>
+						<i class="fas fa-triangle-exclamation"></i>
+						<span>{gpsGapNotice}</span>
+					</div>
+				{/if}
 				{#if gpsError}
 					<div
 						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"

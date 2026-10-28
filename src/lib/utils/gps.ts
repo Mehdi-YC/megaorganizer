@@ -10,6 +10,15 @@ export const GPS_WATCH_OPTIONS: PositionOptions = {
 	timeout: 8000
 };
 
+// A fix this far from the previous one means the browser stopped delivering
+// positions, usually because the phone locked. The missing section is kept
+// open on the map. Its straight-line distance is only a lower-bound estimate
+// and never updates pace.
+export const MAX_TRACK_GAP_S = 30;
+
+export const GPS_HEARTBEAT_MS = 15_000;
+export const GPS_STALE_MS = 60_000;
+
 export interface GpsPoint {
 	latitude: number;
 	longitude: number;
@@ -17,6 +26,14 @@ export interface GpsPoint {
 	accuracy?: number;
 	speed?: number;
 	timestamp: number;
+	// Set on the first fix after a long interruption so the map can split
+	// the route instead of drawing a straight line across the gap.
+	gapBefore?: boolean;
+}
+
+export interface GpsGap {
+	seconds: number;
+	distance: number;
 }
 
 export interface GpsTrackingState {
@@ -59,7 +76,12 @@ export const SPEED_COLD_START_MAX_KMH = 25;
 export function handleGpsPosition(
 	position: GeolocationPosition,
 	state: GpsTrackingState
-): { updatedState: GpsTrackingState; newPoint: GpsPoint; accepted: boolean } {
+): {
+	updatedState: GpsTrackingState;
+	newPoint: GpsPoint;
+	accepted: boolean;
+	gap?: GpsGap;
+} {
 	const point: GpsPoint = {
 		latitude: position.coords.latitude,
 		longitude: position.coords.longitude,
@@ -73,11 +95,41 @@ export function handleGpsPosition(
 		return { updatedState: state, newPoint: point, accepted: false };
 	}
 
+	const previous = state.lastPoint;
+	const gapSeconds = previous ? (point.timestamp - previous.timestamp) / 1000 : 0;
+	const gapBefore = previous !== null && gapSeconds > MAX_TRACK_GAP_S;
+	const gapDistance = gapBefore
+		? calculateDistance(previous.latitude, previous.longitude, point.latitude, point.longitude)
+		: 0;
+	if (gapBefore) point.gapBefore = true;
+
 	let { distance, currentSpeed, maxSpeed } = state;
 	let lastAcceptedSpeedKmh = state.lastAcceptedSpeedKmh ?? state.currentSpeed;
 	let baseline = state.lastPoint;
 
-	if (baseline && point.accuracy !== undefined && point.accuracy <= MAX_DISTANCE_ACCURACY_M) {
+	if (gapBefore) {
+		// The browser was suspended. Keep the straight-line lower bound if it
+		// passes the same speed sanity check, but never use it for pace.
+		if (point.accuracy !== undefined && point.accuracy <= MAX_DISTANCE_ACCURACY_M) {
+			const noiseFloorM = Math.max(MIN_DISTANCE_COUNT_M, point.accuracy * 0.5);
+			const gapSpeedKmh = (gapDistance / gapSeconds) * MS_TO_KMH;
+			const jumpCeiling =
+				lastAcceptedSpeedKmh < 1
+					? SPEED_COLD_START_MAX_KMH
+					: Math.max(
+							lastAcceptedSpeedKmh * SPEED_JUMP_FACTOR,
+							lastAcceptedSpeedKmh + SPEED_JUMP_MIN_KMH
+						);
+			if (gapDistance >= noiseFloorM && gapSpeedKmh <= jumpCeiling) {
+				distance += gapDistance;
+			}
+		}
+		baseline = point;
+	} else if (
+		baseline &&
+		point.accuracy !== undefined &&
+		point.accuracy <= MAX_DISTANCE_ACCURACY_M
+	) {
 		const dist = calculateDistance(
 			baseline.latitude,
 			baseline.longitude,
@@ -131,7 +183,43 @@ export function handleGpsPosition(
 		gpsPoints: state.gpsPoints
 	};
 
-	return { updatedState, newPoint: point, accepted: true };
+	return {
+		updatedState,
+		newPoint: point,
+		accepted: true,
+		gap: gapBefore ? { seconds: gapSeconds, distance: gapDistance } : undefined
+	};
+}
+
+/**
+ * Split a track wherever the browser stopped delivering fixes. The map uses
+ * this instead of connecting the last pre-lock point to the first post-lock
+ * point with a straight line. Timestamp splitting also covers saved runs that
+ * predate the `gapBefore` flag.
+ */
+export function splitTrackSegments<
+	T extends { latitude: number; longitude: number; timestamp?: number; gapBefore?: boolean }
+>(points: T[], maxGapSeconds = MAX_TRACK_GAP_S): T[][] {
+	const segments: T[][] = [];
+	let current: T[] = [];
+
+	for (let i = 0; i < points.length; i++) {
+		const point = points[i];
+		const previous = points[i - 1];
+		const timedGap =
+			previous?.timestamp !== undefined &&
+			point.timestamp !== undefined &&
+			(point.timestamp - previous.timestamp) / 1000 > maxGapSeconds;
+
+		if ((point.gapBefore || timedGap) && current.length > 0) {
+			segments.push(current);
+			current = [];
+		}
+		current.push(point);
+	}
+
+	if (current.length > 0) segments.push(current);
+	return segments;
 }
 
 export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {

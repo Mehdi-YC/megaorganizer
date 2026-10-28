@@ -3,6 +3,7 @@
 	// called `L`, and a type-only import of the same name collides.
 	import type * as Leaflet from 'leaflet';
 	import { onMount, onDestroy } from 'svelte';
+	import { splitTrackSegments } from '$lib/utils/gps';
 
 	let {
 		points = [],
@@ -12,7 +13,12 @@
 		showRoute = true,
 		className = ''
 	}: {
-		points?: Array<{ latitude: number; longitude: number; timestamp?: number }>;
+		points?: Array<{
+			latitude: number;
+			longitude: number;
+			timestamp?: number;
+			gapBefore?: boolean;
+		}>;
 		center?: { latitude: number; longitude: number } | null;
 		zoom?: number;
 		followPosition?: boolean;
@@ -78,15 +84,31 @@
 		}
 	});
 
-	function drawRoute(pts: Array<{ latitude: number; longitude: number }>) {
+	function drawRoute(
+		pts: Array<{
+			latitude: number;
+			longitude: number;
+			timestamp?: number;
+			gapBefore?: boolean;
+		}>
+	) {
 		if (!map || !L || pts.length < 2) return;
 
-		const latLngs: Leaflet.LatLngTuple[] = pts.map((p) => [p.latitude, p.longitude]);
+		// Each segment is drawn separately. A gap gets no line at all, so a
+		// screen-off period cannot look like a straight sprint across the map.
+		const latLngSegments: Leaflet.LatLngTuple[][] = splitTrackSegments(pts)
+			.map((segment) => segment.map((p) => [p.latitude, p.longitude] as Leaflet.LatLngTuple))
+			.filter((segment) => segment.length >= 2);
 
-		if (routeLine) {
-			routeLine.setLatLngs(latLngs);
+		if (latLngSegments.length === 0) {
+			if (routeLine) {
+				routeLine.remove();
+				routeLine = null;
+			}
+		} else if (routeLine) {
+			routeLine.setLatLngs(latLngSegments);
 		} else {
-			routeLine = L.polyline(latLngs, {
+			routeLine = L.polyline(latLngSegments, {
 				color: '#3b82f6',
 				weight: 4,
 				opacity: 0.8,
@@ -95,11 +117,14 @@
 			}).addTo(map);
 		}
 
+		const start: Leaflet.LatLngTuple = [pts[0].latitude, pts[0].longitude];
+		const end: Leaflet.LatLngTuple = [pts[pts.length - 1].latitude, pts[pts.length - 1].longitude];
+
 		// Update or create start marker
 		if (startMarker) {
-			startMarker.setLatLng(latLngs[0]);
+			startMarker.setLatLng(start);
 		} else {
-			startMarker = L.circleMarker(latLngs[0], {
+			startMarker = L.circleMarker(start, {
 				radius: 8,
 				fillColor: '#22c55e',
 				color: '#fff',
@@ -110,9 +135,9 @@
 
 		// Update or create end marker
 		if (endMarker) {
-			endMarker.setLatLng(latLngs[latLngs.length - 1]);
+			endMarker.setLatLng(end);
 		} else {
-			endMarker = L.circleMarker(latLngs[latLngs.length - 1], {
+			endMarker = L.circleMarker(end, {
 				radius: 8,
 				fillColor: '#ef4444',
 				color: '#fff',
