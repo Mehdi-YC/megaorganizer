@@ -7,12 +7,11 @@
 		computeRunStats,
 		buildRunPayload,
 		saveRunApi,
-		startBackgroundKeepAlive,
-		stopBackgroundKeepAlive,
 		MS_TO_KMH,
 		TIMER_INTERVAL_MS,
 		GPS_WATCH_OPTIONS,
 		handleGpsPosition,
+		formatGapNotice,
 		type GpsPoint
 	} from '$lib/utils/gps';
 	import {
@@ -45,13 +44,10 @@
 	let watchId: number | null = null;
 	let timerInterval: ReturnType<typeof setInterval> | null = null;
 	let lastPoint: GpsPoint | null = null;
-	let gpsHeartbeat: ReturnType<typeof setInterval> | null = null;
-	let lastFixAt = 0;
-	const GPS_HEARTBEAT_MS = 15_000;
-	const GPS_STALE_MS = 60_000;
-	let wakeLock: WakeLockSentinel | null = null;
 	let visibilityHandler: (() => void) | null = null;
 	let gpsError: string | null = $state(null);
+	let gpsGapNotice = $state<string | null>(null);
+	let gapNoticeTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
 		const saved = loadRunningState();
@@ -76,8 +72,6 @@
 			if (status === 'running') {
 				timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
 				startGpsWatch();
-				acquireWakeLock();
-				startBackgroundKeepAlive('Running - MegaOrganize');
 				setupVisibilityHandler();
 			}
 			// 'finished' restores the summary screen so an unsaved run can
@@ -97,8 +91,7 @@
 			stopGpsWatch();
 			if (timerInterval) clearInterval(timerInterval);
 			if (confirmTimer) clearTimeout(confirmTimer);
-			releaseWakeLock();
-			stopBackgroundKeepAlive();
+			if (gapNoticeTimer) clearTimeout(gapNoticeTimer);
 			if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
 		};
 	});
@@ -109,30 +102,7 @@
 		}
 	});
 
-	async function acquireWakeLock() {
-		if (!('wakeLock' in navigator)) return;
-		try {
-			wakeLock = await navigator.wakeLock.request('screen');
-			wakeLock.addEventListener('release', () => {
-				wakeLock = null;
-				if (document.visibilityState === 'visible' && status === 'running') {
-					acquireWakeLock();
-				}
-			});
-		} catch (err) {
-			console.warn('Wake Lock failed:', err);
-		}
-	}
-
-	function releaseWakeLock() {
-		if (wakeLock) {
-			wakeLock.release();
-			wakeLock = null;
-		}
-	}
-
 	function gpsCallback(position: GeolocationPosition) {
-		lastFixAt = Date.now();
 		const result = handleGpsPosition(position, {
 			lastPoint,
 			distance,
@@ -148,6 +118,14 @@
 		gpsPoints = result.updatedState.gpsPoints;
 		lastPoint = result.updatedState.lastPoint;
 		currentPosition = { latitude: result.newPoint.latitude, longitude: result.newPoint.longitude };
+		if (result.gap) {
+			gpsGapNotice = formatGapNotice(result.gap);
+			if (gapNoticeTimer) clearTimeout(gapNoticeTimer);
+			gapNoticeTimer = setTimeout(() => {
+				gpsGapNotice = null;
+				gapNoticeTimer = null;
+			}, 12_000);
+		}
 		gpsError = null;
 		updateStats();
 		persistState();
@@ -167,17 +145,6 @@
 	function startGpsWatch() {
 		stopGpsWatch();
 		watchId = navigator.geolocation.watchPosition(gpsCallback, gpsErrorCallback, GPS_WATCH_OPTIONS);
-		// Heartbeat: mobile browsers freeze watchPosition while the screen is
-		// off, which draws one straight line across the gap. A periodic
-		// getCurrentPosition fills those gaps (background timers throttle to
-		// roughly one per minute, still far better than nothing) and re-arms
-		// the watch if it went completely silent.
-		gpsHeartbeat = setInterval(() => {
-			navigator.geolocation.getCurrentPosition(gpsCallback, () => {}, GPS_WATCH_OPTIONS);
-			if (Date.now() - lastFixAt > GPS_STALE_MS) {
-				startGpsWatch();
-			}
-		}, GPS_HEARTBEAT_MS);
 		gpsError = null;
 	}
 
@@ -186,21 +153,24 @@
 			navigator.geolocation.clearWatch(watchId);
 			watchId = null;
 		}
-		if (gpsHeartbeat !== null) {
-			clearInterval(gpsHeartbeat);
-			gpsHeartbeat = null;
-		}
 	}
 
 	function setupVisibilityHandler() {
 		if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler);
-		visibilityHandler = async () => {
+		visibilityHandler = () => {
+			if (document.visibilityState === 'hidden') {
+				persistState();
+				return;
+			}
 			if (document.visibilityState === 'visible' && status === 'running') {
-				await acquireWakeLock();
-				startBackgroundKeepAlive('Running - MegaOrganize');
 				elapsed = Math.floor((Date.now() - startTime) / 1000);
-				// Restart GPS watch — mobile browsers may have killed it while screen was off
+				// Mobile browsers may have killed the watch while the screen was off.
 				startGpsWatch();
+				// Ask for a fresh fix immediately instead of waiting for the watch.
+				navigator.geolocation.getCurrentPosition(gpsCallback, gpsErrorCallback, {
+					...GPS_WATCH_OPTIONS,
+					maximumAge: 0
+				});
 				updateStats();
 				persistState();
 			}
@@ -214,8 +184,6 @@
 			return;
 		}
 		status = 'requesting';
-		acquireWakeLock();
-		startBackgroundKeepAlive('Running - MegaOrganize');
 		navigator.geolocation.getCurrentPosition(
 			() => {
 				status = 'running';
@@ -223,8 +191,6 @@
 			},
 			() => {
 				status = 'idle';
-				releaseWakeLock();
-				stopBackgroundKeepAlive();
 				gpsError = 'Location permission denied. Please enable location services.';
 			},
 			{ enableHighAccuracy: true }
@@ -234,8 +200,6 @@
 	function startTracking() {
 		startTime = Date.now();
 		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
-		acquireWakeLock();
-		startBackgroundKeepAlive('Running - MegaOrganize');
 		setupVisibilityHandler();
 		startGpsWatch();
 	}
@@ -280,16 +244,12 @@
 		status = 'paused';
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
-		releaseWakeLock();
-		stopBackgroundKeepAlive();
 	}
 
 	function resumeRun() {
 		status = 'running';
 		startTime = Date.now() - elapsed * 1000;
 		timerInterval = setInterval(updateTimer, TIMER_INTERVAL_MS);
-		acquireWakeLock();
-		startBackgroundKeepAlive('Running - MegaOrganize');
 		startGpsWatch();
 		setupVisibilityHandler();
 	}
@@ -335,8 +295,11 @@
 		status = 'finished';
 		if (timerInterval) clearInterval(timerInterval);
 		stopGpsWatch();
-		releaseWakeLock();
-		stopBackgroundKeepAlive();
+		if (gapNoticeTimer) {
+			clearTimeout(gapNoticeTimer);
+			gapNoticeTimer = null;
+		}
+		gpsGapNotice = null;
 		if (visibilityHandler) {
 			document.removeEventListener('visibilitychange', visibilityHandler);
 			visibilityHandler = null;
@@ -379,8 +342,12 @@
 		status = 'idle';
 		saveError = null;
 		gpsError = null;
+		gpsGapNotice = null;
+		if (gapNoticeTimer) {
+			clearTimeout(gapNoticeTimer);
+			gapNoticeTimer = null;
+		}
 		finishing = false;
-		stopBackgroundKeepAlive();
 		distance = 0;
 		elapsed = 0;
 		currentSpeed = 0;
@@ -418,6 +385,10 @@
 				<i class="fas fa-location-crosshairs mr-2"></i>
 				Enable Location
 			</Button>
+			<p class="mt-4 max-w-xs text-center text-[11px] text-fg-subdued">
+				Browsers can pause GPS when the phone locks. Keep this screen open and disable auto-lock for
+				the most accurate route.
+			</p>
 		</div>
 	{:else if status === 'requesting'}
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
@@ -447,6 +418,14 @@
 			<div
 				class="flex flex-1 flex-col items-center justify-center p-4 select-text lg:overflow-y-auto"
 			>
+				{#if gpsGapNotice}
+					<div
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
+					>
+						<i class="fas fa-triangle-exclamation"></i>
+						<span>{gpsGapNotice}</span>
+					</div>
+				{/if}
 				{#if gpsError}
 					<div
 						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"

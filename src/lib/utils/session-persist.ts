@@ -28,6 +28,7 @@ export interface RunningSessionState {
 		accuracy?: number;
 		speed?: number;
 		timestamp: number;
+		gapBefore?: boolean;
 	}>;
 	// Form drafts. Optional so state written by older builds still loads.
 	title?: string;
