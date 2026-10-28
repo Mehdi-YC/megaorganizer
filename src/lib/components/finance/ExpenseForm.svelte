@@ -116,12 +116,12 @@
 			<div class="mb-2 flex flex-wrap gap-1.5">
 				{#each tags as tag (tag)}
 					<span
-						class="inline-flex items-center gap-1 rounded-sm bg-primary/10 px-2 py-0.5 text-[11px] text-primary"
+						class="inline-flex items-center gap-1 rounded-sm bg-primary/10 px-2 py-0.5 text-[11px] text-primary-text"
 					>
 						{tag}
 						<button
 							type="button"
-							class="cursor-pointer hover:text-primary-hover"
+							class="cursor-pointer hover:text-primary-text-hover"
 							onclick={() => removeTag(tag)}
 							aria-label="Remove tag {tag}"
 						>
@@ -152,7 +152,7 @@
 		<!-- Toggle markdown content -->
 		<button
 			type="button"
-			class="cursor-pointer text-xs text-primary hover:text-primary-hover"
+			class="cursor-pointer text-xs text-primary-text hover:text-primary-text-hover"
 			onclick={() => (showContent = !showContent)}
 		>
 			{showContent ? 'Hide' : 'Add'} notes

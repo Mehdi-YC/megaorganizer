@@ -281,10 +281,10 @@
 			<!-- Link to Calendar -->
 			<a
 				href={resolve('/app/calendar?filter=finance')}
-				class="flex items-center gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
+				class="flex items-center gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary-text/50"
 			>
 				<div class="flex h-10 w-10 items-center justify-center rounded-sm bg-primary/10">
-					<i class="fas fa-calendar text-sm text-primary"></i>
+					<i class="fas fa-calendar text-sm text-primary-text"></i>
 				</div>
 				<div>
 					<p class="text-sm font-medium text-fg">View in Calendar</p>

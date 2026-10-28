@@ -244,7 +244,7 @@
 						type="text"
 						bind:value={iconColor}
 						placeholder="#000000"
-						class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+						class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 					/>
 				</div>
 			</div>
@@ -278,7 +278,7 @@
 			<div class="flex items-center gap-2">
 				<select
 					bind:value={hour}
-					class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
+					class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary-text focus:outline-none"
 				>
 					{#each Array(24) as _, i (i)}
 						<option value={i}>{i.toString().padStart(2, '0')}</option>
@@ -287,7 +287,7 @@
 				<span class="text-fg-subdued">:</span>
 				<select
 					bind:value={minute}
-					class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary focus:outline-none"
+					class="h-[36px] flex-1 rounded-sm border border-border bg-bg px-3 text-sm text-fg focus:border-primary-text focus:outline-none"
 				>
 					{#each [0, 15, 30, 45] as m (m)}
 						<option value={m}>{m.toString().padStart(2, '0')}</option>

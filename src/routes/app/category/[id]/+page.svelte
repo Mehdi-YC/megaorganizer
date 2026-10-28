@@ -84,10 +84,10 @@
 					{#if category.icon}
 						<i
 							class="fas {category.icon} text-lg"
-							style="color: {category.iconColor || 'var(--color-primary)'}"
+							style="color: {category.iconColor || 'var(--color-primary-text)'}"
 						></i>
 					{:else}
-						<i class="fas fa-folder text-lg text-primary"></i>
+						<i class="fas fa-folder text-lg text-primary-text"></i>
 					{/if}
 				</div>
 				<div class="min-w-0">
@@ -145,7 +145,7 @@
 							id: category.id,
 							pageId: pg.id
 						})}
-						class="group relative flex cursor-move items-start gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
+						class="group relative flex cursor-move items-start gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary-text/50"
 						draggable="true"
 						ondragstart={(e) => handleDragStart(e, idx)}
 						ondragover={(e) => handleDragOver(e, idx)}
@@ -160,14 +160,14 @@
 							{#if pg.icon}
 								<i
 									class="fas {pg.icon} text-sm"
-									style="color: {pg.iconColor || 'var(--color-primary)'}"
+									style="color: {pg.iconColor || 'var(--color-primary-text)'}"
 								></i>
 							{:else}
-								<i class="fas fa-file text-sm text-primary"></i>
+								<i class="fas fa-file text-sm text-primary-text"></i>
 							{/if}
 						</div>
 						<div class="min-w-0 flex-1">
-							<h3 class="truncate text-sm font-medium text-fg group-hover:text-primary">
+							<h3 class="truncate text-sm font-medium text-fg group-hover:text-primary-text">
 								{pg.name}
 							</h3>
 							{#if pg.description}

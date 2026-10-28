@@ -1,11 +1,13 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
+	const uid = $props.id();
+
 	let {
 		value = $bindable(''),
 		label = undefined,
 		name = undefined,
-		id = undefined,
+		id = uid,
 		disabled = false,
 		error = undefined,
 		size = 'md',
@@ -34,7 +36,7 @@
 
 <div class="flex flex-col gap-1.5 {className}">
 	{#if label}
-		<label for={id ?? name} class="text-xs font-semibold tracking-wide text-fg-accent">
+		<label for={id} class="text-xs font-semibold tracking-wide text-fg-accent">
 			{label}
 		</label>
 	{/if}
@@ -45,15 +47,17 @@
 		{onchange}
 		bind:value
 		{...rest}
+		aria-invalid={error ? 'true' : undefined}
+		aria-describedby={error ? `${id}-error` : undefined}
 		class="{sizes[
 			size
-		]} w-full rounded-sm border border-border bg-bg text-fg transition-colors hover:border-fg-subdued focus:border-primary focus:ring-0 focus:outline-none {error
+		]} w-full rounded-sm border border-border-strong bg-bg text-fg transition-colors hover:border-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none {error
 			? 'border-error'
 			: ''} {disabled ? 'cursor-not-allowed opacity-40' : ''}"
 	>
 		{@render children()}
 	</select>
 	{#if error}
-		<p class="text-xs text-error">{error}</p>
+		<p id="{id}-error" class="text-xs text-error">{error}</p>
 	{/if}
 </div>

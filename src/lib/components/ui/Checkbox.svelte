@@ -22,7 +22,7 @@
 		bind:checked
 		{disabled}
 		onchange={(e) => onchange?.(e.currentTarget.checked)}
-		class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+		class="h-4 w-4 rounded border-border-strong text-primary-text focus:ring-primary-text"
 	/>
 	{#if label}
 		<span class="text-sm text-fg">{label}</span>

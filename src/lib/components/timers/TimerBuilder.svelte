@@ -136,7 +136,7 @@
 			case 'start':
 				return 'bg-success/10 text-success';
 			case 'end':
-				return 'bg-primary/10 text-primary';
+				return 'bg-primary/10 text-primary-text';
 			case 'info':
 				return 'bg-muted text-fg-subdued';
 			case 'silent':
@@ -212,7 +212,7 @@
 							<input
 								type="text"
 								bind:value={step.label}
-								class="h-8 min-w-0 flex-1 rounded-sm border border-border bg-surface px-2 text-sm text-fg focus:border-primary focus:outline-none"
+								class="h-8 min-w-0 flex-1 rounded-sm border border-border bg-surface px-2 text-sm text-fg focus:border-primary-text focus:outline-none"
 								aria-label="Step label"
 							/>
 							{#if step.kind === 'group'}
@@ -222,7 +222,7 @@
 									bind:value={step.groupRounds}
 									min={1}
 									step={1}
-									class="h-8 w-12 rounded-sm border border-border bg-surface px-1 text-center text-sm text-fg focus:border-primary focus:outline-none"
+									class="h-8 w-12 rounded-sm border border-border bg-surface px-1 text-center text-sm text-fg focus:border-primary-text focus:outline-none"
 									aria-label="Group rounds"
 								/>
 							{:else if step.kind !== 'info'}
@@ -231,7 +231,7 @@
 									value={mm(step.durationSec)}
 									min={0}
 									step={1}
-									class="h-8 w-12 rounded-sm border border-border bg-surface px-1 text-center text-sm text-fg focus:border-primary focus:outline-none"
+									class="h-8 w-12 rounded-sm border border-border bg-surface px-1 text-center text-sm text-fg focus:border-primary-text focus:outline-none"
 									aria-label="Minutes"
 									oninput={(e) => setMs(step, Number(e.currentTarget.value), ss(step.durationSec))}
 								/>
@@ -242,7 +242,7 @@
 									min={0}
 									max={59}
 									step={1}
-									class="h-8 w-12 rounded-sm border border-border bg-surface px-1 text-center text-sm text-fg focus:border-primary focus:outline-none"
+									class="h-8 w-12 rounded-sm border border-border bg-surface px-1 text-center text-sm text-fg focus:border-primary-text focus:outline-none"
 									aria-label="Seconds"
 									oninput={(e) => setMs(step, mm(step.durationSec), Number(e.currentTarget.value))}
 								/>
@@ -276,7 +276,7 @@
 							<div class="mt-2 border-t border-border/50 pt-2">
 								<button
 									type="button"
-									class="mb-1 cursor-pointer text-[10px] text-primary hover:text-primary-hover"
+									class="mb-1 cursor-pointer text-[10px] text-primary-text hover:text-primary-text-hover"
 									onclick={() => toggleGroupOpen(i)}
 								>
 									<i class="fas fa-chevron-{expandGroups[i] ? 'down' : 'right'} mr-1"></i>
@@ -312,7 +312,7 @@
 												<input
 													type="text"
 													bind:value={child.label}
-													class="h-7 min-w-0 flex-1 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+													class="h-7 min-w-0 flex-1 rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 													aria-label="Child step label"
 												/>
 												<input
@@ -320,7 +320,7 @@
 													value={mm(child.durationSec)}
 													min={0}
 													step={1}
-													class="h-7 w-10 rounded-sm border border-border bg-surface px-1 text-center text-xs text-fg focus:border-primary focus:outline-none"
+													class="h-7 w-10 rounded-sm border border-border bg-surface px-1 text-center text-xs text-fg focus:border-primary-text focus:outline-none"
 													aria-label="Minutes"
 													oninput={(e) =>
 														setMs(child, Number(e.currentTarget.value), ss(child.durationSec))}
@@ -332,7 +332,7 @@
 													min={0}
 													max={59}
 													step={1}
-													class="h-7 w-10 rounded-sm border border-border bg-surface px-1 text-center text-xs text-fg focus:border-primary focus:outline-none"
+													class="h-7 w-10 rounded-sm border border-border bg-surface px-1 text-center text-xs text-fg focus:border-primary-text focus:outline-none"
 													aria-label="Seconds"
 													oninput={(e) =>
 														setMs(child, mm(child.durationSec), Number(e.currentTarget.value))}
@@ -360,7 +360,7 @@
 										{/each}
 										<button
 											type="button"
-											class="cursor-pointer text-[10px] text-primary hover:text-primary-hover"
+											class="cursor-pointer text-[10px] text-primary-text hover:text-primary-text-hover"
 											onclick={() => addGroupChild(i)}
 										>
 											<i class="fas fa-plus mr-1"></i>Add step to group

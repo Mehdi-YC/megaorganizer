@@ -71,10 +71,10 @@ export function createWikilinkExtension(getLinks: () => Record<string, string | 
 			const links = getLinks();
 			const href = links ? links[token.target] : undefined;
 			if (href) {
-				return `<a class="wikilink text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary" href="${escapeHtml(href)}">${escapeHtml(token.label)}</a>`;
+				return `<a class="wikilink text-primary-text underline decoration-primary-text/40 underline-offset-2 hover:decoration-primary-text" href="${escapeHtml(href)}">${escapeHtml(token.label)}</a>`;
 			}
 			const dangling = links ? ' wikilink-unresolved decoration-dashed' : '';
-			return `<span class="wikilink cursor-pointer text-primary/80 underline decoration-primary/30 underline-offset-2 hover:decoration-primary/70${dangling}" data-wikilink="${escapeHtml(token.target)}" title="Open ${escapeHtml(token.target)}">${escapeHtml(token.label)}</span>`;
+			return `<span class="wikilink cursor-pointer text-primary-text/80 underline decoration-primary-text/30 underline-offset-2 hover:decoration-primary-text/70${dangling}" data-wikilink="${escapeHtml(token.target)}" title="Open ${escapeHtml(token.target)}">${escapeHtml(token.label)}</span>`;
 		}
 	};
 }

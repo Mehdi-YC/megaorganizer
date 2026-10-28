@@ -422,7 +422,7 @@
 					</div>
 					<div class="flex items-center gap-2">
 						<div class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary/10">
-							<i class="fas fa-tasks text-[10px] text-primary"></i>
+							<i class="fas fa-tasks text-[10px] text-primary-text"></i>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
@@ -472,7 +472,7 @@
 							class="min-h-[40px] cursor-pointer bg-surface p-1 transition-colors hover:bg-muted sm:min-h-[100px] sm:p-2 {date
 								? ''
 								: 'opacity-0'} {selectedDate && date && selectedDate.getTime() === date.getTime()
-								? 'ring-2 ring-primary'
+								? 'ring-2 ring-primary-text'
 								: ''}"
 							onclick={() => date && handleDateClick(date)}
 							onkeydown={(e) => e.key === 'Enter' && date && handleDateClick(date)}
@@ -570,7 +570,7 @@
 					</h3>
 					<button
 						type="button"
-						class="inline-flex cursor-pointer items-center gap-1 rounded-sm px-2 py-1 text-xs text-primary transition-colors hover:bg-muted"
+						class="inline-flex cursor-pointer items-center gap-1 rounded-sm px-2 py-1 text-xs text-primary-text transition-colors hover:bg-muted"
 						onclick={clearSelection}
 					>
 						<i class="fas fa-arrow-left text-[10px]"></i>
@@ -599,7 +599,7 @@
 											? 'border-muted bg-muted/30'
 											: event.completed
 												? 'border-success/30 bg-success/5'
-												: 'border-error/30 bg-error/5'} p-3 transition-all hover:border-primary/50"
+												: 'border-error/30 bg-error/5'} p-3 transition-all hover:border-primary-text/50"
 							>
 								<div
 									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm {event.type ===
@@ -656,8 +656,9 @@
 					<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 						Upcoming Reminders
 					</h3>
-					<a href={resolve('/app/reminders')} class="text-xs text-primary hover:text-primary-hover"
-						>View All</a
+					<a
+						href={resolve('/app/reminders')}
+						class="text-xs text-primary-text hover:text-primary-text-hover">View All</a
 					>
 				</div>
 
@@ -695,7 +696,7 @@
 											})}
 											class="flex items-center gap-2.5 rounded-sm border {item.isVirtual
 												? 'border-muted bg-muted/30'
-												: 'border-error/30 bg-error/5'} px-3 py-2 transition-all hover:border-primary/50"
+												: 'border-error/30 bg-error/5'} px-3 py-2 transition-all hover:border-primary-text/50"
 										>
 											<span class="w-11 shrink-0 text-[10px] text-fg-subdued">{time}</span>
 											<p

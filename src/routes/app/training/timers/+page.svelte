@@ -85,7 +85,7 @@
 		<div class="space-y-2">
 			{#each templates as t (t.id)}
 				<div
-					class="flex flex-wrap items-center gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary/50"
+					class="flex flex-wrap items-center gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary-text/50"
 				>
 					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-error/10">
 						<i class="fas fa-fire text-sm text-error"></i>

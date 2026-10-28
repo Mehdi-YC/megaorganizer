@@ -155,11 +155,11 @@
 <div class="p-4 sm:p-8">
 	<!-- Breadcrumb -->
 	<div class="mb-4 flex items-center gap-1.5 text-[11px] text-fg-subdued">
-		<a href={resolve('/app')} class="hover:text-primary" title="Home"
+		<a href={resolve('/app')} class="hover:text-primary-text" title="Home"
 			><i class="fas fa-home text-[10px]"></i></a
 		>
 		<i class="fas fa-chevron-right text-[8px]"></i>
-		<a href={resolve('/app/reminders')} class="hover:text-primary">Reminders</a>
+		<a href={resolve('/app/reminders')} class="hover:text-primary-text">Reminders</a>
 		<i class="fas fa-chevron-right text-[8px]"></i>
 		<span class="truncate text-fg">{item?.title}</span>
 	</div>
@@ -181,7 +181,7 @@
 						>
 							<i
 								class="fas {template?.icon || 'fa-bell'} text-xl"
-								style="color: {template?.iconColor || 'var(--color-primary)'}"
+								style="color: {template?.iconColor || 'var(--color-primary-text)'}"
 							></i>
 						</div>
 						<div>
@@ -342,7 +342,7 @@
 							>
 								<i
 									class="fas {template.icon || 'fa-bell'} text-xs"
-									style="color: {template.iconColor || 'var(--color-primary)'}"
+									style="color: {template.iconColor || 'var(--color-primary-text)'}"
 								></i>
 							</div>
 							<div>

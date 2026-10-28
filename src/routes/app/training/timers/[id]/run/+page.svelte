@@ -313,7 +313,7 @@
 			</div>
 		{:else if status === 'finished'}
 			<div class="flex flex-1 flex-col items-center justify-center gap-4">
-				<i class="fas fa-trophy text-5xl text-primary"></i>
+				<i class="fas fa-trophy text-5xl text-primary-text"></i>
 				<p class="text-sm text-fg">Finished in {formatClock(elapsedSec)}</p>
 				{#if saving}
 					<p class="text-xs text-fg-subdued">Saving session...</p>
@@ -329,7 +329,7 @@
 			<div class="flex flex-1 flex-col items-center justify-center gap-3">
 				{#if current}
 					<span
-						class="rounded-sm bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary uppercase"
+						class="rounded-sm bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary-text uppercase"
 					>
 						{current.kind}
 					</span>

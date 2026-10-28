@@ -155,7 +155,7 @@
 		<div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 			{#each tags as t (t.id)}
 				<div
-					class="group flex items-center gap-3 rounded-sm border border-border bg-surface px-4 py-3 transition-all hover:border-primary/50"
+					class="group flex items-center gap-3 rounded-sm border border-border bg-surface px-4 py-3 transition-all hover:border-primary-text/50"
 				>
 					{#if editingId === t.id}
 						<div class="flex w-full flex-col gap-2">

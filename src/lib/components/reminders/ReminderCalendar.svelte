@@ -163,7 +163,7 @@
 			<div
 				class="min-h-[40px] cursor-pointer bg-surface p-1 transition-colors hover:bg-muted sm:min-h-[80px] sm:p-2 {date
 					? ''
-					: 'opacity-0'} {date && isSelected(date) ? 'ring-2 ring-primary' : ''}"
+					: 'opacity-0'} {date && isSelected(date) ? 'ring-2 ring-primary-text' : ''}"
 				onclick={() => date && handleDateClick(date)}
 				onkeydown={(e) => e.key === 'Enter' && date && handleDateClick(date)}
 				role="button"

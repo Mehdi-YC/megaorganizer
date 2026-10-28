@@ -100,9 +100,10 @@
 						{#each iconOptions as opt (opt.value)}
 							<button
 								type="button"
+								aria-pressed={icon === opt.value}
 								class="flex cursor-pointer flex-col items-center gap-1 rounded-sm border p-2.5 transition-all {icon ===
 								opt.value
-									? 'border-primary bg-primary-subdued text-primary'
+									? 'border-primary-text bg-primary-subdued text-primary-text'
 									: 'border-border bg-bg text-fg-subdued hover:border-fg-subdued hover:text-fg'}"
 								onclick={() => (icon = opt.value)}
 							>
@@ -123,12 +124,13 @@
 								type="color"
 								id="iconColor"
 								bind:value={iconColor}
-								class="h-[36px] w-10 cursor-pointer rounded-sm border border-border bg-bg"
+								class="h-[36px] w-10 cursor-pointer rounded-sm border border-border-strong bg-bg"
 							/>
 							<input
 								type="text"
+								aria-label="Icon color hex value"
 								bind:value={iconColor}
-								class="flex-1 rounded-sm border border-border bg-bg px-3 font-mono text-sm text-fg"
+								class="flex-1 rounded-sm border border-border-strong bg-bg px-3 font-mono text-sm text-fg focus:border-primary-text focus:outline-none"
 							/>
 						</div>
 					</div>
@@ -141,12 +143,13 @@
 								type="color"
 								id="accentColor"
 								bind:value={accentColor}
-								class="h-[36px] w-10 cursor-pointer rounded-sm border border-border bg-bg"
+								class="h-[36px] w-10 cursor-pointer rounded-sm border border-border-strong bg-bg"
 							/>
 							<input
 								type="text"
+								aria-label="Accent color hex value"
 								bind:value={accentColor}
-								class="flex-1 rounded-sm border border-border bg-bg px-3 font-mono text-sm text-fg"
+								class="flex-1 rounded-sm border border-border-strong bg-bg px-3 font-mono text-sm text-fg focus:border-primary-text focus:outline-none"
 							/>
 						</div>
 					</div>

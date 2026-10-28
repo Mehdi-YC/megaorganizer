@@ -54,9 +54,9 @@
 
 {#if visible}
 	<div
-		class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-sm border border-primary/40 bg-primary/5 px-3 py-2.5"
+		class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-sm border border-primary-text/40 bg-primary/5 px-3 py-2.5"
 	>
-		<i class="fas fa-bell text-sm text-primary"></i>
+		<i class="fas fa-bell text-sm text-primary-text"></i>
 		<p class="min-w-0 flex-1 text-xs text-fg">
 			Get notified when a reminder is due{pushConfigured ? ', even when the app is closed' : ''}.
 		</p>

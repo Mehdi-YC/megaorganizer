@@ -232,7 +232,7 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="rounded-sm border border-dashed transition-colors {dragOverAttachments
-			? 'border-primary bg-primary/5'
+			? 'border-primary-text bg-primary/5'
 			: 'border-border'}"
 		ondrop={handleDrop}
 		ondragover={handleDragOver}
@@ -252,10 +252,10 @@
 			<div class="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 lg:grid-cols-3">
 				{#each attachments as att (att.id)}
 					<div
-						class="group flex items-center gap-2.5 rounded-sm border border-border bg-surface p-2.5 transition-all hover:border-primary/50 {selectedAttachments.has(
+						class="group flex items-center gap-2.5 rounded-sm border border-border bg-surface p-2.5 transition-all hover:border-primary-text/50 {selectedAttachments.has(
 							att.id
 						)
-							? 'border-primary bg-primary/5'
+							? 'border-primary-text bg-primary/5'
 							: ''}"
 					>
 						<button
@@ -268,7 +268,7 @@
 								class="flex h-5 w-5 items-center justify-center rounded-sm border transition-all {selectedAttachments.has(
 									att.id
 								)
-									? 'border-primary bg-primary text-white'
+									? 'border-primary-text bg-primary text-white'
 									: 'border-border bg-bg'}"
 							>
 								{#if selectedAttachments.has(att.id)}

@@ -380,7 +380,7 @@
 						step="0.01"
 						min="0"
 						placeholder="No limit"
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary focus:ring-0 focus:outline-none"
+						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
 					/>
 					<p class="text-[10px] text-fg-subdued">Leave empty for no limit</p>
 				</div>

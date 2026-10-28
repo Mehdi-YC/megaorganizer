@@ -190,7 +190,7 @@
 
 	const tabs = [
 		{ id: 'finance' as const, label: 'Finance', icon: 'fa-receipt', color: 'text-warning' },
-		{ id: 'reminder' as const, label: 'Reminder', icon: 'fa-bell', color: 'text-primary' },
+		{ id: 'reminder' as const, label: 'Reminder', icon: 'fa-bell', color: 'text-primary-text' },
 		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' },
 		{ id: 'training' as const, label: 'Training', icon: 'fa-dumbbell', color: 'text-fg-accent' }
 	];
@@ -245,7 +245,7 @@
 						type="button"
 						class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors {activeTab ===
 						tab.id
-							? 'border-b-2 border-primary bg-primary/5 text-primary'
+							? 'border-b-2 border-primary-text bg-primary/5 text-primary-text'
 							: 'text-fg-subdued hover:text-fg'}"
 						aria-label={tab.label}
 						onclick={() => {
@@ -296,7 +296,7 @@
 										type="date"
 										id="qc-duedate"
 										bind:value={reminderDueDate}
-										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary-text focus:outline-none sm:text-sm"
 									/>
 								</div>
 								<div>
@@ -309,7 +309,7 @@
 										type="time"
 										id="qc-duetime"
 										bind:value={reminderDueTime}
-										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary focus:outline-none sm:text-sm"
+										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary-text focus:outline-none sm:text-sm"
 									/>
 								</div>
 							</div>

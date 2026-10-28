@@ -266,7 +266,7 @@
 				<button
 					type="button"
 					aria-label="Go back"
-					class="cursor-pointer hover:text-primary"
+					class="cursor-pointer hover:text-primary-text"
 					onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button
 				>
 				<i class="fas fa-chevron-right text-[8px]"></i>
@@ -282,7 +282,7 @@
 							<input
 								type="text"
 								bind:value={name}
-								class="w-full border-b-2 border-primary bg-transparent text-lg font-semibold text-fg-accent focus:outline-none lg:text-xl"
+								class="w-full border-b-2 border-primary-text bg-transparent text-lg font-semibold text-fg-accent focus:outline-none lg:text-xl"
 							/>
 							<input
 								type="text"
@@ -466,7 +466,7 @@
 								rel="noopener noreferrer"
 								variant="ghost"
 								size="sm"
-								class="w-full justify-start gap-2 text-xs text-primary hover:text-primary-hover"
+								class="w-full justify-start gap-2 text-xs text-primary-text hover:text-primary-text-hover"
 							>
 								<i class="fas fa-external-link text-xs"></i>
 								{item.externalUrl}

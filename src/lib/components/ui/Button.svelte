@@ -31,7 +31,7 @@
 	const variants: Record<string, string> = {
 		primary: 'bg-primary text-white hover:bg-primary-hover active:scale-[0.98]',
 		secondary:
-			'bg-muted text-fg border border-border hover:border-fg-subdued hover:text-fg-accent active:scale-[0.98]',
+			'bg-muted text-fg border border-border-strong hover:border-fg-subdued hover:text-fg-accent active:scale-[0.98]',
 		ghost: 'text-fg-subdued hover:text-fg hover:bg-muted active:scale-[0.98]',
 		danger: 'bg-error text-white hover:bg-error/80 active:scale-[0.98]'
 	};

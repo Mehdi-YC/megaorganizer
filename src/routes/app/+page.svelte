@@ -9,6 +9,7 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import type { Reminder, CalendarEvent } from '$lib/types';
+	import { showToast } from '$lib/utils/toast.svelte';
 
 	let { data } = $props();
 
@@ -110,6 +111,7 @@
 			dueReminders = dueReminders.map((r) =>
 				r.id === id ? { ...r, completed: true, completedAt: new Date().toISOString() } : r
 			);
+			showToast('Reminder completed', 'success');
 		}
 	}
 
@@ -121,6 +123,7 @@
 		});
 		if (res.ok) {
 			dueReminders = dueReminders.filter((r) => r.id !== id);
+			showToast('Reminder snoozed', 'success');
 		}
 	}
 
@@ -146,6 +149,41 @@
 <div class="p-4 sm:p-8">
 	<PageHeader title="Dashboard" subtitle="Your personal knowledge & activity operating system" />
 
+	{#if (data.stats?.itemCount ?? 0) === 0 && (data.stats?.sessionCount ?? 0) === 0 && (data.categories?.length ?? 0) === 0}
+		<section class="mb-6 rounded-sm border border-primary-text/30 bg-primary-subdued p-4 sm:p-5">
+			<h2 class="text-sm font-semibold text-fg-accent">Start here</h2>
+			<p class="mt-1 text-xs text-fg-subdued">
+				Everything lives in categories and pages. Pick a first step — you can change it later.
+			</p>
+			<div class="mt-4 grid gap-2 sm:grid-cols-3">
+				<a
+					href={resolve('/app/category/new')}
+					class="group rounded-sm border border-border-strong bg-surface p-3 transition-colors hover:border-primary-text"
+				>
+					<i class="fas fa-folder-plus mb-2 text-sm text-primary-text"></i>
+					<p class="text-sm font-medium text-fg group-hover:text-primary-text">Create a category</p>
+					<p class="mt-0.5 text-[11px] text-fg-subdued">Give your notes a home.</p>
+				</a>
+				<a
+					href={resolve('/app/library')}
+					class="group rounded-sm border border-border-strong bg-surface p-3 transition-colors hover:border-primary-text"
+				>
+					<i class="fas fa-cube mb-2 text-sm text-primary-text"></i>
+					<p class="text-sm font-medium text-fg group-hover:text-primary-text">Add an item</p>
+					<p class="mt-0.5 text-[11px] text-fg-subdued">Track something you own or study.</p>
+				</a>
+				<a
+					href={resolve('/app/training/session/new')}
+					class="group rounded-sm border border-border-strong bg-surface p-3 transition-colors hover:border-primary-text"
+				>
+					<i class="fas fa-dumbbell mb-2 text-sm text-primary-text"></i>
+					<p class="text-sm font-medium text-fg group-hover:text-primary-text">Log a session</p>
+					<p class="mt-0.5 text-[11px] text-fg-subdued">Start the activity half of the app.</p>
+				</a>
+			</div>
+		</section>
+	{/if}
+
 	<NotificationPrompt />
 
 	<!-- Today's Reminders -->
@@ -155,11 +193,12 @@
 				<h2
 					class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
 				>
-					<i class="fas fa-bell text-xs text-primary"></i>
+					<i class="fas fa-bell text-xs text-primary-text"></i>
 					Today's Reminders
 				</h2>
-				<a href={resolve('/app/reminders')} class="text-xs text-primary hover:text-primary-hover"
-					>View All</a
+				<a
+					href={resolve('/app/reminders')}
+					class="text-xs text-primary-text hover:text-primary-text-hover">View All</a
 				>
 			</div>
 			<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -182,11 +221,12 @@
 				<h2
 					class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
 				>
-					<i class="fas fa-calendar-week text-xs text-primary"></i>
+					<i class="fas fa-calendar-week text-xs text-primary-text"></i>
 					Upcoming This Week
 				</h2>
-				<a href={resolve('/app/calendar')} class="text-xs text-primary hover:text-primary-hover"
-					>View Calendar</a
+				<a
+					href={resolve('/app/calendar')}
+					class="text-xs text-primary-text hover:text-primary-text-hover">View Calendar</a
 				>
 			</div>
 			<div class="flex gap-1 overflow-x-auto pb-2">
@@ -195,13 +235,14 @@
 					{@const isToday = isSameDay(day, new Date())}
 					<div
 						class="flex min-w-[60px] flex-col items-center rounded-sm border {isToday
-							? 'border-primary bg-primary/5'
+							? 'border-primary-text bg-primary/5'
 							: 'border-border bg-surface'} p-2"
 					>
-						<span class="text-[10px] font-medium {isToday ? 'text-primary' : 'text-fg-subdued'}"
+						<span
+							class="text-[10px] font-medium {isToday ? 'text-primary-text' : 'text-fg-subdued'}"
 							>{day.toLocaleDateString([], { weekday: 'short' })}</span
 						>
-						<span class="text-sm font-semibold {isToday ? 'text-primary' : 'text-fg'}"
+						<span class="text-sm font-semibold {isToday ? 'text-primary-text' : 'text-fg'}"
 							>{day.getDate()}</span
 						>
 						<div class="mt-1 flex gap-0.5">
@@ -247,7 +288,7 @@
 							<path
 								d={sparklinePath(weeklyTraining)}
 								fill="none"
-								stroke="var(--color-primary)"
+								stroke="var(--color-primary-text)"
 								stroke-width="1.5"
 								stroke-linecap="round"
 								stroke-linejoin="round"
@@ -324,8 +365,9 @@
 		<div class="lg:col-span-2">
 			<div class="mb-3 flex items-center justify-between">
 				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Recent Items</h2>
-				<a href={resolve('/app/library')} class="text-xs text-primary hover:text-primary-hover"
-					>View All</a
+				<a
+					href={resolve('/app/library')}
+					class="text-xs text-primary-text hover:text-primary-text-hover">View All</a
 				>
 			</div>
 			{#if data.recentItems && data.recentItems.length > 0}
@@ -335,7 +377,7 @@
 							href={resolve('/app/item/[id]', { id: item.id })}
 							class="group flex items-center gap-3 rounded-sm border {item.favorite
 								? 'border-yellow-400/40 bg-yellow-500/5'
-								: 'border-border bg-surface'} p-3 transition-all hover:border-primary/50"
+								: 'border-border bg-surface'} p-3 transition-all hover:border-primary-text/50"
 						>
 							{#if item.imageUrl}
 								<img
@@ -356,7 +398,9 @@
 							{/if}
 							<div class="min-w-0 flex-1">
 								<div class="flex items-center gap-1">
-									<p class="flex-1 truncate text-sm font-medium text-fg group-hover:text-primary">
+									<p
+										class="flex-1 truncate text-sm font-medium text-fg group-hover:text-primary-text"
+									>
 										{item.name}
 									</p>
 									{#if item.favorite}
@@ -370,7 +414,9 @@
 				</div>
 			{:else}
 				<EmptyState icon="fa-cube" message="No items yet">
-					<a href={resolve('/app/library')} class="text-xs text-primary hover:text-primary-hover"
+					<a
+						href={resolve('/app/library')}
+						class="text-xs text-primary-text hover:text-primary-text-hover"
 						>Create your first item</a
 					>
 				</EmptyState>
@@ -381,8 +427,9 @@
 		<div>
 			<div class="mb-3 flex items-center justify-between">
 				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Categories</h2>
-				<a href={resolve('/app/category/new')} class="text-xs text-primary hover:text-primary-hover"
-					>Add New</a
+				<a
+					href={resolve('/app/category/new')}
+					class="text-xs text-primary-text hover:text-primary-text-hover">Add New</a
 				>
 			</div>
 			{#if data.categories && data.categories.length > 0}
@@ -390,12 +437,12 @@
 					{#each data.categories as cat (cat.id)}
 						<a
 							href={resolve('/app/category/[id]', { id: cat.id })}
-							class="flex items-center gap-2.5 rounded-sm border border-border bg-surface px-3 py-2.5 transition-all hover:border-primary/50"
+							class="flex items-center gap-2.5 rounded-sm border border-border bg-surface px-3 py-2.5 transition-all hover:border-primary-text/50"
 						>
 							{#if cat.icon}
 								<i
 									class="fas {cat.icon} text-sm"
-									style="color: {cat.iconColor || 'var(--color-primary)'}"
+									style="color: {cat.iconColor || 'var(--color-primary-text)'}"
 								></i>
 							{:else}
 								<i class="fas fa-folder text-sm text-fg-subdued"></i>
@@ -416,7 +463,8 @@
 				<EmptyState icon="fa-folder" message="No categories yet">
 					<a
 						href={resolve('/app/category/new')}
-						class="text-xs text-primary hover:text-primary-hover">Create your first category</a
+						class="text-xs text-primary-text hover:text-primary-text-hover"
+						>Create your first category</a
 					>
 				</EmptyState>
 			{/if}
@@ -430,10 +478,11 @@
 			<div class="flex gap-3">
 				<a
 					href={resolve('/app/training/session/new')}
-					class="text-xs text-primary hover:text-primary-hover">New Session</a
+					class="text-xs text-primary-text hover:text-primary-text-hover">New Session</a
 				>
-				<a href={resolve('/app/training')} class="text-xs text-primary hover:text-primary-hover"
-					>View All</a
+				<a
+					href={resolve('/app/training')}
+					class="text-xs text-primary-text hover:text-primary-text-hover">View All</a
 				>
 			</div>
 		</div>
@@ -443,7 +492,7 @@
 					{@const icon = getSessionIcon(session.activityTypes)}
 					<a
 						href={resolve('/app/training/session/[id]', { id: session.id })}
-						class="flex items-center justify-between rounded-sm border border-border bg-surface p-3 transition-all hover:border-primary/50"
+						class="flex items-center justify-between rounded-sm border border-border bg-surface p-3 transition-all hover:border-primary-text/50"
 					>
 						<div class="flex items-center gap-3">
 							<div class="flex h-9 w-9 items-center justify-center rounded-sm bg-primary/10">
@@ -466,7 +515,8 @@
 			<EmptyState icon="fa-dumbbell" message="No training sessions yet">
 				<a
 					href={resolve('/app/training/session/new')}
-					class="text-xs text-primary hover:text-primary-hover">Start your first session</a
+					class="text-xs text-primary-text hover:text-primary-text-hover"
+					>Start your first session</a
 				>
 			</EmptyState>
 		{/if}
@@ -478,7 +528,7 @@
 			<h2
 				class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
 			>
-				<i class="fas fa-pencil text-xs text-primary"></i>
+				<i class="fas fa-pencil text-xs text-primary-text"></i>
 				Notes
 			</h2>
 			<span class="text-[10px] text-fg-subdued">
