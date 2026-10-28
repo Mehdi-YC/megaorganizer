@@ -15,11 +15,3 @@ export function logError(context: string, error: unknown, metadata?: Record<stri
 		metadata ? JSON.stringify(metadata) : ''
 	);
 }
-
-export function logWarning(context: string, message: string, metadata?: Record<string, unknown>) {
-	const timestamp = new Date().toISOString();
-	console.warn(
-		`[WARN] ${timestamp} [${context}] ${message}`,
-		metadata ? JSON.stringify(metadata) : ''
-	);
-}
