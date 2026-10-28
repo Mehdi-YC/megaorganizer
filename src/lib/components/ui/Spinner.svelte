@@ -15,7 +15,9 @@
 </script>
 
 <div
-	class="animate-spin rounded-full border-primary border-t-transparent {sizes[size]} {className}"
+	class="animate-spin rounded-full border-primary-text border-t-transparent {sizes[
+		size
+	]} {className}"
 	role="status"
 	aria-label="Loading"
 ></div>

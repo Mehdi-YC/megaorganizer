@@ -471,7 +471,7 @@
 							<span>{gpsError}</span>
 						</div>
 					{/if}
-					<i class="fas fa-location-crosshairs mb-4 text-4xl text-primary"></i>
+					<i class="fas fa-location-crosshairs mb-4 text-4xl text-primary-text"></i>
 					<p class="mb-4 text-fg-subdued">GPS tracking for {activityType}</p>
 					<Button variant="primary" onclick={startGpsTracking}>
 						<i class="fas fa-play mr-2"></i> Start {activityType}
@@ -619,7 +619,7 @@
 										value={record.sets}
 										onchange={(e) =>
 											updateRecord(record.itemId, 'sets', parseRecordInt(e.currentTarget.value, 3))}
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 								<div>
@@ -632,7 +632,7 @@
 										type="text"
 										value={record.reps}
 										onchange={(e) => updateRecord(record.itemId, 'reps', e.currentTarget.value)}
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 								<div>
@@ -651,7 +651,7 @@
 													'weight',
 													parseRecordFloat(e.currentTarget.value, 0)
 												)}
-											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+											class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 										/>
 										<span
 											class="ml-1 self-center text-[10px] font-semibold tracking-wide text-fg-subdued"
@@ -672,7 +672,7 @@
 										value={record.rpe}
 										onchange={(e) =>
 											updateRecord(record.itemId, 'rpe', parseRecordInt(e.currentTarget.value, 7))}
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 								<div>
@@ -690,7 +690,7 @@
 												'restTime',
 												parseRecordInt(e.currentTarget.value, 90)
 											)}
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary focus:outline-none"
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 								<div>
@@ -704,7 +704,7 @@
 										value={record.notes}
 										onchange={(e) => updateRecord(record.itemId, 'notes', e.currentTarget.value)}
 										placeholder="optional"
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 							</div>

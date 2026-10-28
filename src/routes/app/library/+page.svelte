@@ -14,6 +14,7 @@
 		SearchInput
 	} from '$lib/components/ui';
 	import type { Tag, TreeElement } from '$lib/types';
+	import { showToast } from '$lib/utils/toast.svelte';
 
 	let items = $state<TreeElement[]>([]);
 	let allTags = $state<Tag[]>([]);
@@ -116,6 +117,7 @@
 			const item = await res.json();
 			newItemName = '';
 			showNewItem = false;
+			showToast('Item created', 'success');
 			const r = await fetch('/api/tree');
 			if (r.ok) allItems = await r.json();
 			filterItems();
@@ -170,7 +172,7 @@
 				type="button"
 				aria-label="Filters"
 				class="inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-sm border {hasActiveFilters
-					? 'border-primary bg-primary/10 text-primary'
+					? 'border-primary-text bg-primary/10 text-primary-text'
 					: 'border-border bg-bg text-fg-subdued hover:bg-muted hover:text-fg'} px-3 text-xs font-medium transition-colors"
 				onclick={() => (showFilters = !showFilters)}
 			>
@@ -191,7 +193,7 @@
 					{#if hasActiveFilters}
 						<button
 							type="button"
-							class="cursor-pointer text-[10px] text-primary hover:text-primary-hover"
+							class="cursor-pointer text-[10px] text-primary-text hover:text-primary-text-hover"
 							onclick={clearFilters}>Clear all</button
 						>
 					{/if}
@@ -281,7 +283,7 @@
 					href={resolve('/app/item/[id]', { id: item.id })}
 					class="group rounded-sm border {item.favorite
 						? 'border-yellow-400/40 bg-yellow-500/5'
-						: 'border-border bg-surface'} transition-all hover:border-primary/50"
+						: 'border-border bg-surface'} transition-all hover:border-primary-text/50"
 				>
 					<div class="h-24 overflow-hidden rounded-t-sm">
 						<GridItemImage
@@ -294,7 +296,7 @@
 					<div class="p-2.5">
 						<div class="flex items-center gap-1">
 							<h3
-								class="flex-1 truncate text-xs font-medium text-fg-accent group-hover:text-primary"
+								class="flex-1 truncate text-xs font-medium text-fg-accent group-hover:text-primary-text"
 							>
 								{item.name}
 							</h3>

@@ -61,7 +61,10 @@
 
 		<p class="mt-4 text-center text-xs text-fg-subdued">
 			Don't have an account?
-			<a href={resolve('/auth/register')} class="font-medium text-primary hover:text-primary-hover">
+			<a
+				href={resolve('/auth/register')}
+				class="font-medium text-primary-text hover:text-primary-text-hover"
+			>
 				Create one
 			</a>
 		</p>

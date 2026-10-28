@@ -29,12 +29,13 @@
 	<input
 		type="search"
 		{placeholder}
+		aria-label={placeholder}
 		bind:this={inputEl}
 		bind:value
 		oninput={() => onsearch?.()}
 		onkeydown={(e) => {
 			if (e.key === 'Enter') onsearch?.();
 		}}
-		class="h-9 w-full rounded-sm border border-border bg-bg pr-3 pl-9 text-base text-fg placeholder:text-fg-subdued focus:border-primary focus:ring-0 focus:outline-none sm:text-sm"
+		class="h-9 w-full rounded-sm border border-border-strong bg-bg pr-3 pl-9 text-base text-fg placeholder:text-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none sm:text-sm"
 	/>
 </div>

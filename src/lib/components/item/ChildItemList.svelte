@@ -187,7 +187,7 @@
 						searchToAdd();
 					}}
 					onkeydown={handleAddKeydown}
-					class="h-7 w-full rounded-sm border border-border bg-bg pr-2 pl-6 text-[11px] text-fg placeholder:text-fg-subdued focus:border-primary focus:ring-0 focus:outline-none"
+					class="h-7 w-full rounded-sm border border-border bg-bg pr-2 pl-6 text-[11px] text-fg placeholder:text-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
 				/>
 			</div>
 			{#if addResults.length > 0}

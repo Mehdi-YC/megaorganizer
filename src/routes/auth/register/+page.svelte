@@ -73,7 +73,10 @@
 
 		<p class="mt-4 text-center text-xs text-fg-subdued">
 			Already have an account?
-			<a href={resolve('/auth/login')} class="font-medium text-primary hover:text-primary-hover">
+			<a
+				href={resolve('/auth/login')}
+				class="font-medium text-primary-text hover:text-primary-text-hover"
+			>
 				Sign in
 			</a>
 		</p>

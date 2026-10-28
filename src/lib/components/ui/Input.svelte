@@ -1,4 +1,6 @@
 <script lang="ts">
+	const uid = $props.id();
+
 	let {
 		value = $bindable(''),
 		placeholder = '',
@@ -7,6 +9,7 @@
 		error = undefined,
 		label = undefined,
 		name = undefined,
+		id = uid,
 		size = 'md',
 		min = undefined,
 		max = undefined,
@@ -23,6 +26,7 @@
 		error?: string;
 		label?: string;
 		name?: string;
+		id?: string;
 		size?: 'sm' | 'md';
 		min?: number;
 		max?: number;
@@ -40,11 +44,12 @@
 
 <div class="flex flex-col gap-1.5 {className}">
 	{#if label}
-		<label for={name} class="text-xs font-semibold tracking-wide text-fg-accent">
+		<label for={id} class="text-xs font-semibold tracking-wide text-fg-accent">
 			{label}
 		</label>
 	{/if}
 	<input
+		{id}
 		{type}
 		{name}
 		{placeholder}
@@ -56,13 +61,15 @@
 		{onchange}
 		bind:value
 		{...rest}
+		aria-invalid={error ? 'true' : undefined}
+		aria-describedby={error ? `${id}-error` : undefined}
 		class="{sizes[
 			size
-		]} w-full rounded-sm border border-border bg-bg text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary {error
+		]} w-full rounded-sm border border-border-strong bg-bg text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary-text {error
 			? 'border-error'
 			: ''} {disabled ? 'cursor-not-allowed opacity-40' : ''}"
 	/>
 	{#if error}
-		<p class="text-xs text-error">{error}</p>
+		<p id="{id}-error" class="text-xs text-error">{error}</p>
 	{/if}
 </div>

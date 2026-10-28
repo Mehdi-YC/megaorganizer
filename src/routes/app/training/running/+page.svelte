@@ -411,7 +411,7 @@
 					<span>{gpsError}</span>
 				</div>
 			{/if}
-			<i class="fas fa-person-running mb-6 text-6xl text-primary"></i>
+			<i class="fas fa-person-running mb-6 text-6xl text-primary-text"></i>
 			<h1 class="mb-2 text-lg font-semibold text-fg-accent">Ready to Run?</h1>
 			<p class="mb-8 text-fg-subdued">GPS permission is required to track your run</p>
 			<Button variant="primary" size="lg" onclick={requestGpsPermission}>
@@ -460,7 +460,7 @@
 						type="text"
 						bind:value={runTitle}
 						placeholder="Name this run (optional)"
-						class="w-full max-w-xs touch-manipulation rounded-sm border border-border bg-surface px-3 py-1.5 text-center text-base text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none sm:text-sm"
+						class="w-full max-w-xs touch-manipulation rounded-sm border border-border bg-surface px-3 py-1.5 text-center text-base text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none sm:text-sm"
 					/>
 				</div>
 				<div class="mb-4 text-center">

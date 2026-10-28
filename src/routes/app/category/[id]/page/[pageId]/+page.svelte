@@ -502,7 +502,7 @@
 		<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
 			<a
 				href={resolve('/app/category/[id]', { id: category.id })}
-				class="max-w-[120px] truncate hover:text-primary sm:max-w-none">{category.name}</a
+				class="max-w-[120px] truncate hover:text-primary-text sm:max-w-none">{category.name}</a
 			>
 			<i class="fas fa-chevron-right shrink-0 text-[8px]"></i>
 			<span class="truncate text-fg">{pageData.name}</span>
@@ -516,12 +516,12 @@
 					<input
 						type="text"
 						bind:value={editPageName}
-						class="w-full border-b-2 border-primary bg-transparent text-xl font-semibold text-fg-accent focus:outline-none"
+						class="w-full border-b-2 border-primary-text bg-transparent text-xl font-semibold text-fg-accent focus:outline-none"
 					/>
 					<input
 						type="text"
 						bind:value={editPageDescription}
-						class="mt-1 w-full border-b border-border bg-transparent text-sm text-fg-subdued focus:border-primary focus:outline-none"
+						class="mt-1 w-full border-b border-border bg-transparent text-sm text-fg-subdued focus:border-primary-text focus:outline-none"
 						placeholder="Description (optional)"
 					/>
 				{:else}
@@ -547,7 +547,7 @@
 									bind:this={addMenuSearchInput}
 									bind:value={searchQuery}
 									oninput={searchItems}
-									class="mb-3 h-9 w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:ring-0 focus:outline-none"
+									class="mb-3 h-9 w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
 								/>
 								{#if searchResults.length > 0}
 									<div class="mb-3 max-h-40 overflow-y-auto">
@@ -760,7 +760,7 @@
 										<div
 											class="group relative rounded-sm border {item.favorite
 												? 'border-yellow-400/40 bg-yellow-500/5'
-												: 'border-border bg-surface'} p-1.5 transition-all hover:border-primary/50"
+												: 'border-border bg-surface'} p-1.5 transition-all hover:border-primary-text/50"
 										>
 											<button
 												type="button"
@@ -791,7 +791,7 @@
 												</div>
 												<div class="flex items-center gap-0.5">
 													<p
-														class="flex-1 truncate text-[9px] font-medium text-fg-accent group-hover:text-primary"
+														class="flex-1 truncate text-[9px] font-medium text-fg-accent group-hover:text-primary-text"
 													>
 														{item.name}
 													</p>
@@ -822,7 +822,7 @@
 												onkeydown={(e) => {
 													if (e.key === 'Enter' && !results.length) addItemToNode(node.id);
 												}}
-												class="h-7 w-full rounded-sm border border-border bg-bg pr-2 pl-6 text-[11px] text-fg placeholder:text-fg-subdued focus:border-primary focus:ring-0 focus:outline-none"
+												class="h-7 w-full rounded-sm border border-border bg-bg pr-2 pl-6 text-[11px] text-fg placeholder:text-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
 											/>
 										</div>
 										{#if results.length > 0}
@@ -895,7 +895,7 @@
 									href={resolve('/app/item/[id]', { id: item.id })}
 									class="group flex items-center gap-2.5 rounded-sm border {item.favorite
 										? 'border-yellow-400/40 bg-yellow-500/5'
-										: 'border-border bg-surface'} p-2.5 transition-all hover:border-primary/50"
+										: 'border-border bg-surface'} p-2.5 transition-all hover:border-primary-text/50"
 								>
 									<div
 										class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-muted"
@@ -909,7 +909,9 @@
 										></i>
 									</div>
 									<div class="min-w-0 flex-1">
-										<p class="truncate text-xs font-medium text-fg-accent group-hover:text-primary">
+										<p
+											class="truncate text-xs font-medium text-fg-accent group-hover:text-primary-text"
+										>
 											{item.name}
 										</p>
 									</div>
@@ -971,7 +973,7 @@
 			{:else}
 				<button
 					type="button"
-					class="w-full cursor-pointer rounded-sm border border-dashed border-border bg-surface py-6 text-center transition-colors hover:border-primary/50"
+					class="w-full cursor-pointer rounded-sm border border-dashed border-border bg-surface py-6 text-center transition-colors hover:border-primary-text/50"
 					onclick={() => (editingPageContent = true)}
 				>
 					<i class="fas fa-file-alt mb-2 text-xl text-fg-subdued/40"></i>
@@ -1023,7 +1025,7 @@
 								aria-label={icon}
 								class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm border transition-all {editIcon ===
 								icon
-									? 'border-primary bg-primary/10 text-primary'
+									? 'border-primary-text bg-primary/10 text-primary-text'
 									: 'border-border bg-bg text-fg-subdued hover:bg-muted hover:text-fg'}"
 								onclick={() => (editIcon = icon)}
 							>

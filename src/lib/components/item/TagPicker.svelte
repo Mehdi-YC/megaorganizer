@@ -46,13 +46,13 @@
 						style="background: {t.color || '#5A31F4'}"
 					></div>
 					<span class="flex-1 text-fg">{t.name}</span>
-					{#if tagIds.includes(t.id)}<i class="fas fa-check text-[9px] text-primary"></i>{/if}
+					{#if tagIds.includes(t.id)}<i class="fas fa-check text-[9px] text-primary-text"></i>{/if}
 				</button>
 			{:else}
 				<p class="text-[11px] text-fg-subdued italic">
 					No tags. Create some in <a
 						href={resolve('/app/tags')}
-						class="text-primary hover:text-primary-hover">Tags</a
+						class="text-primary-text hover:text-primary-text-hover">Tags</a
 					> page.
 				</p>
 			{/each}

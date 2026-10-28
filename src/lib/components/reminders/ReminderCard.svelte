@@ -67,7 +67,7 @@
 <div
 	class="rounded-sm border {isOverdue(reminder.dueAt)
 		? 'border-error/30 bg-error/5'
-		: 'border-border bg-surface'} p-4 transition-all hover:border-primary/50"
+		: 'border-border bg-surface'} p-4 transition-all hover:border-primary-text/50"
 >
 	<div class="flex items-start justify-between gap-3">
 		<div class="min-w-0 flex-1">
@@ -76,7 +76,7 @@
 					type="button"
 					class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border {reminder.completed
 						? 'border-success bg-success text-white'
-						: 'border-border hover:border-primary'} transition-colors"
+						: 'border-border hover:border-primary-text'} transition-colors"
 					onclick={() => onComplete?.(reminder.id)}
 					aria-label="Toggle complete"
 				>

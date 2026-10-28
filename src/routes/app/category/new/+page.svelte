@@ -102,7 +102,7 @@
 								type="button"
 								class="flex cursor-pointer flex-col items-center gap-1 rounded-sm border p-2.5 transition-all {icon ===
 								opt.value
-									? 'border-primary bg-primary-subdued text-primary'
+									? 'border-primary-text bg-primary-subdued text-primary-text'
 									: 'border-border bg-bg text-fg-subdued hover:border-fg-subdued hover:text-fg'}"
 								onclick={() => (icon = opt.value)}
 							>

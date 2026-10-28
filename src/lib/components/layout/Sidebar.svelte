@@ -7,6 +7,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmButton from '$lib/components/ui/ConfirmButton.svelte';
+	import { showToast } from '$lib/utils/toast.svelte';
 
 	let {
 		categories = [],
@@ -80,6 +81,7 @@
 		});
 		if (res.ok) {
 			confirmDeleteCatId = null;
+			showToast('Category deleted', 'success');
 			await invalidateAll();
 			if (page.url.pathname.includes(`/category/${catId}`)) {
 				goto(resolve('/app'));
@@ -111,6 +113,7 @@
 			const pg = await res.json();
 			newPageName = '';
 			creatingPageFor = null;
+			showToast('Page created', 'success');
 			await invalidateAll();
 			const next = new Set(expandedCategories);
 			next.add(catId);
@@ -252,9 +255,9 @@
 		<a
 			href={resolve('/app')}
 			onclick={onNavigate}
-			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
+			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app'
-				? 'bg-primary-subdued font-medium text-primary'
+				? 'bg-primary-subdued font-medium text-primary-text'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
 			<i class="fas fa-home w-4 text-center text-xs"></i>
@@ -264,9 +267,9 @@
 		<a
 			href={resolve('/app/calendar')}
 			onclick={onNavigate}
-			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
+			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/calendar'
-				? 'bg-primary-subdued font-medium text-primary'
+				? 'bg-primary-subdued font-medium text-primary-text'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
 			<i class="fas fa-calendar w-4 text-center text-xs"></i>
@@ -276,9 +279,9 @@
 		<a
 			href={resolve('/app/finance')}
 			onclick={onNavigate}
-			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
+			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/finance'
-				? 'bg-primary-subdued font-medium text-primary'
+				? 'bg-primary-subdued font-medium text-primary-text'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
 			<i class="fas fa-receipt w-4 text-center text-xs"></i>
@@ -288,10 +291,10 @@
 		<a
 			href={resolve('/app/training')}
 			onclick={onNavigate}
-			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
+			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
 				'/app/training'
 			)
-				? 'bg-primary-subdued font-medium text-primary'
+				? 'bg-primary-subdued font-medium text-primary-text'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
 			<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
@@ -304,10 +307,10 @@
 		<a
 			href={resolve('/app/reminders')}
 			onclick={onNavigate}
-			class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
+			class="mt-2 mb-1 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
 				'/app/reminders'
 			)
-				? 'bg-primary-subdued font-medium text-primary'
+				? 'bg-primary-subdued font-medium text-primary-text'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
 			<i class="fas fa-bell w-4 text-center text-xs"></i>
@@ -319,9 +322,9 @@
 		<a
 			href={resolve('/app/library')}
 			onclick={onNavigate}
-			class="mt-2 mb-1 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
+			class="mt-2 mb-1 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/library'
-				? 'bg-primary-subdued font-medium text-primary'
+				? 'bg-primary-subdued font-medium text-primary-text'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
 			<i class="fas fa-cubes w-4 text-center text-xs"></i>
@@ -331,13 +334,25 @@
 		<a
 			href={resolve('/app/tags')}
 			onclick={onNavigate}
-			class="mb-2 flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
+			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
 				.url.pathname === '/app/tags'
-				? 'bg-primary-subdued font-medium text-primary'
+				? 'bg-primary-subdued font-medium text-primary-text'
 				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 		>
 			<i class="fas fa-tags w-4 text-center text-xs"></i>
 			Tags
+		</a>
+
+		<a
+			href={resolve('/app/mindmap')}
+			onclick={onNavigate}
+			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
+				.url.pathname === '/app/mindmap'
+				? 'bg-primary-subdued font-medium text-primary-text'
+				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+		>
+			<i class="fas fa-sitemap w-4 text-center text-xs"></i>
+			Mind Map
 		</a>
 
 		<div class="my-1 h-px bg-border/50"></div>
@@ -350,7 +365,8 @@
 				<button
 					type="button"
 					aria-label="Toggle category"
-					class="flex w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+					aria-expanded={isExpanded}
+					class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 					onclick={(e) => {
 						e.stopPropagation();
 						e.preventDefault();
@@ -373,18 +389,18 @@
 					{#if cat.icon}
 						<i
 							class="fas {cat.icon} w-4 text-center text-xs"
-							style="color: {cat.iconColor || 'var(--color-primary)'}"
+							style="color: {cat.iconColor || 'var(--color-primary-text)'}"
 						></i>
 					{:else}
 						<i class="fas fa-folder w-4 text-center text-xs text-fg-subdued"></i>
 					{/if}
-					<span class="flex-1 truncate text-[10px] font-bold tracking-widest uppercase"
+					<span class="flex-1 truncate text-[11px] font-bold tracking-wide uppercase"
 						>{cat.name}</span
 					>
 				</a>
 				<button
 					type="button"
-					class="mr-1 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-fg"
+					class="mr-0.5 flex h-7 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
 					title="Add Page"
 					aria-label="Add Page"
 					onclick={(e) => {
@@ -396,11 +412,11 @@
 				>
 					<i class="fas fa-plus text-[9px]"></i>
 				</button>
-				<div class="mr-1 w-5 shrink-0">
+				<div class="mr-0.5 flex h-7 w-6 shrink-0 items-center justify-center">
 					<ConfirmButton
 						confirmId={confirmDeleteCatId ?? ''}
 						targetId={cat.id}
-						size="xs"
+						size="sm"
 						onconfirm={() => {
 							if (confirmDeleteCatId === cat.id) {
 								deleteCategory(cat.id);
@@ -425,10 +441,10 @@
 									pageId: pg.id
 								})}
 								onclick={onNavigate}
-								class="flex items-center gap-2 rounded-sm px-2.5 py-1 text-[13px] transition-colors {isPageActive(
+								class="flex min-h-8 items-center gap-2 rounded-sm px-2.5 py-1.5 text-[13px] transition-colors {isPageActive(
 									pg.id
 								)
-									? 'bg-primary-subdued font-medium text-primary'
+									? 'bg-primary-subdued font-medium text-primary-text'
 									: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 							>
 								<i class="fas fa-file w-3 text-center text-[10px]"></i>
@@ -475,7 +491,7 @@
 			<a
 				href={resolve('/app/category/new')}
 				onclick={onNavigate}
-				class="flex items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+				class="flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 			>
 				<i class="fas fa-plus w-4 text-center text-xs"></i>
 				Add Category

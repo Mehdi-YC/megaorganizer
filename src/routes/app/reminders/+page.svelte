@@ -124,7 +124,7 @@
 				<div
 					class="rounded-sm border {template.active
 						? 'border-border'
-						: 'border-border/50 opacity-60'} bg-surface p-4 transition-all hover:border-primary/50"
+						: 'border-border/50 opacity-60'} bg-surface p-4 transition-all hover:border-primary-text/50"
 				>
 					<div class="flex items-start justify-between gap-3">
 						<div class="flex min-w-0 flex-1 items-center gap-3">
@@ -136,7 +136,7 @@
 							>
 								<i
 									class="fas {template.icon || 'fa-bell'} text-sm"
-									style="color: {template.iconColor || 'var(--color-primary)'}"
+									style="color: {template.iconColor || 'var(--color-primary-text)'}"
 								></i>
 							</div>
 							<div class="min-w-0 flex-1">

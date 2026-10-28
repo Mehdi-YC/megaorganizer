@@ -73,8 +73,9 @@
 <div class="p-4 sm:p-8">
 	{#if !session}
 		<EmptyState icon="fa-exclamation-triangle" message="Session not found">
-			<a href={resolve('/app/training/calendar')} class="text-primary hover:text-primary-hover"
-				>Back to Calendar</a
+			<a
+				href={resolve('/app/training/calendar')}
+				class="text-primary-text hover:text-primary-text-hover">Back to Calendar</a
 			>
 		</EmptyState>
 	{:else}
