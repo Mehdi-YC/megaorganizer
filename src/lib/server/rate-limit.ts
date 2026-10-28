@@ -42,6 +42,27 @@ export function checkRateLimit(
 	return { allowed: true, retryAfterMs: 0 };
 }
 
+/**
+ * Inspect a bucket without consuming an attempt. Used where only failures
+ * should count toward a lockout (for example repeated bad credentials).
+ */
+export function rateLimitStatus(
+	key: string,
+	maxAttempts?: number
+): { exceeded: boolean; retryAfterMs: number } {
+	const entry = attempts.get(key);
+	if (!entry) return { exceeded: false, retryAfterMs: 0 };
+
+	const now = Date.now();
+	if (now > entry.resetAt) {
+		attempts.delete(key);
+		return { exceeded: false, retryAfterMs: 0 };
+	}
+
+	const max = maxAttempts ?? MAX_ATTEMPTS;
+	return { exceeded: entry.count >= max, retryAfterMs: entry.resetAt - now };
+}
+
 export function resetRateLimit(key: string) {
 	attempts.delete(key);
 }

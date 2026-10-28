@@ -193,9 +193,105 @@ plus `QuickCapture.svelte` for quick-add capture.
 | `/api/links`          | GET                    | Resolve a wikilink target name to a URL              |
 | `/api/push`           | GET, POST              | Web Push config, device subscribe/unsubscribe        |
 | `/api/search`         | GET                    | FTS5 global search across all content                |
+| `/api/mcp`            | POST                   | Read-only MCP server (bearer token)                  |
 | `/api/cards`          | GET                    | YGOPRODeck card lookup for the deck viewer           |
 | `/api/backup`         | GET, POST              | Full data export (GET) / import (POST)               |
 | `/share-target`       | POST                   | PWA share_target endpoint (Android share sheet)      |
+
+## MCP Server (read-only)
+
+MegaOrganize exposes a read-only [Model Context Protocol](https://modelcontextprotocol.io)
+endpoint so an AI client can answer questions about your own data ("what did I
+do last week?", "how much did I spend in August?", "find my notes on X").
+
+It is a stateless Streamable HTTP server at `POST /api/mcp`. Every tool call is
+scoped to one account; no tool can read or write another user's rows, and no
+tool writes at all.
+
+### Setup
+
+Nothing to configure on the server. Each account authenticates with its own
+email and password, so every user connects their own agent to their own data.
+The endpoint URL is shown under **Edit Profile → AI Access**.
+
+Send the credentials with every request, either as a bearer value or as HTTP
+Basic auth:
+
+```http
+Authorization: Bearer you@example.com:your-password
+Authorization: Basic <base64 of "you@example.com:your-password">
+```
+
+An email is locked out for 15 minutes after 10 failed attempts, and
+authenticated calls are rate-limited per account (120/minute). The endpoint
+never creates a session and never writes a row.
+
+Because the client stores the password, a leaked client config is a leaked
+account, not just read access. Change the password to revoke access everywhere.
+
+### OpenCode
+
+Keep the credential in the environment rather than in the JSON file:
+
+```sh
+export MEGAORGANIZE_MCP_CREDENTIALS="you@example.com:your-password"
+```
+
+```jsonc
+// opencode.json
+{
+	"$schema": "https://opencode.ai/config.json",
+	"mcp": {
+		"megaorganize": {
+			"type": "remote",
+			"url": "https://your.domain/api/mcp",
+			"oauth": false,
+			"headers": {
+				"Authorization": "Bearer {env:MEGAORGANIZE_MCP_CREDENTIALS}"
+			}
+		}
+	}
+}
+```
+
+### Claude Code
+
+```jsonc
+// .mcp.json
+{
+	"mcpServers": {
+		"megaorganize": {
+			"type": "http",
+			"url": "https://your.domain/api/mcp",
+			"headers": {
+				"Authorization": "Bearer ${MEGAORGANIZE_MCP_CREDENTIALS}"
+			}
+		}
+	}
+}
+```
+
+Any other Streamable HTTP MCP client works the same way: POST to `/api/mcp`
+with an `Authorization` header holding `email:password`.
+
+### Tools
+
+| Tool                     | What it returns                                                    |
+| ------------------------ | ------------------------------------------------------------------ |
+| `search`                 | Full-text hits across pages, items, reminders, expenses, training  |
+| `list_categories`        | Categories in display order, with their pages                      |
+| `list_pages`             | Pages, newest first; filter by category or text                    |
+| `get_page`               | Page markdown, category, nested children, backlinks, attachments   |
+| `list_items`             | Nodes/items; filter by type, tag, favorite, text, or date          |
+| `get_item`               | Item markdown, tags, parents, children, backlinks, metadata        |
+| `list_tags`              | Tags with item and expense counts                                  |
+| `list_reminders`         | Reminders with todo checklists; pending/completed/all, date range  |
+| `list_expenses`          | Expenses with total and count for the filter                       |
+| `finance_summary`        | Monthly spending totals, currency, monthly limit                   |
+| `list_training_sessions` | Sessions with activity types and total duration                    |
+| `get_training_session`   | Activities, linked items, exercise records, running metrics        |
+| `timeline`               | Merged activity feed for a date range ("what did I do last week")  |
+| `get_stats`              | Training, spending, habit streaks, counts, pending reminders, note |
 
 ## Scripts
 

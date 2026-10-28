@@ -33,6 +33,18 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		return response;
 	}
 
+	// MCP clients authenticate with the account's email and password, not the
+	// session cookie, and the MCP transport owns request parsing. Skip the
+	// cookie check, the Content-Length requirement, and the REST rate limit for
+	// this path; the route authenticates and rate-limits on its own.
+	if (/^\/api\/mcp\/?$/.test(event.url.pathname)) {
+		const response = await resolve(event);
+		for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+			response.headers.set(key, value);
+		}
+		return response;
+	}
+
 	// Enforce body size on API writes. The check must not depend on
 	// content-length being present and numeric: chunked or malformed
 	// headers are rejected instead of buffered unbounded.

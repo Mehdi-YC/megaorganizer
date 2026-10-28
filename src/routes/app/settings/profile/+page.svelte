@@ -20,6 +20,38 @@
 	// svelte-ignore state_referenced_locally
 	let monthlySpendingLimit = $state(data.financeSettings?.monthlySpendingLimit ?? '');
 
+	// MCP connection snippet, prefilled with this account's email.
+	const mcpSnippet = $derived(
+		JSON.stringify(
+			{
+				$schema: 'https://opencode.ai/config.json',
+				mcp: {
+					megaorganize: {
+						type: 'remote',
+						url: data.mcpUrl,
+						oauth: false,
+						headers: {
+							Authorization: `Bearer ${data.user?.email ?? 'you@example.com'}:<your-password>`
+						}
+					}
+				}
+			},
+			null,
+			2
+		)
+	);
+	let copied = $state(false);
+
+	async function copySnippet() {
+		try {
+			await navigator.clipboard.writeText(mcpSnippet);
+			copied = true;
+			setTimeout(() => (copied = false), 2000);
+		} catch {
+			// Clipboard access can be denied; the snippet stays selectable.
+		}
+	}
+
 	let importStatus = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
 	let importMessage = $state('');
 	let importCounts = $state<Record<string, number> | null>(null);
@@ -393,6 +425,45 @@
 
 				<Button type="submit">Save Finance Settings</Button>
 			</form>
+		</div>
+	</div>
+
+	<!-- AI Access -->
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">AI Access (MCP)</h2>
+		</div>
+		<div class="space-y-4 px-6 py-5">
+			<p class="text-xs text-fg-subdued">
+				Connect an AI client to your account with the Model Context Protocol. Access is read-only
+				and limited to your own data.
+			</p>
+
+			<div class="flex flex-col gap-1.5">
+				<span class="text-xs font-semibold tracking-wide text-fg-accent">Endpoint</span>
+				<code class="rounded-sm border border-border bg-bg px-3 py-2 text-xs text-fg"
+					>{data.mcpUrl}</code
+				>
+			</div>
+
+			<div class="flex flex-col gap-1.5">
+				<div class="flex items-center justify-between gap-2">
+					<span class="text-xs font-semibold tracking-wide text-fg-accent">opencode config</span>
+					<Button variant="ghost" size="sm" type="button" onclick={copySnippet}>
+						<i class="fas {copied ? 'fa-check' : 'fa-copy'} text-xs"></i>
+						{copied ? 'Copied' : 'Copy'}
+					</Button>
+				</div>
+				<pre
+					class="overflow-x-auto rounded-sm border border-border bg-bg px-3 py-2 text-[11px] leading-relaxed text-fg-subdued"><code
+						>{mcpSnippet}</code
+					></pre>
+			</div>
+
+			<p class="text-[10px] text-fg-subdued">
+				The client sends your account email and password on every request, so it stores them in its
+				config file. Changing your password revokes access everywhere.
+			</p>
 		</div>
 	</div>
 </div>
