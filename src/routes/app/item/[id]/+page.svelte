@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { getTagIds, toggleArrayItem } from '$lib/utils';
@@ -14,13 +14,26 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import ItemImage from '$lib/components/ui/ItemImage.svelte';
 	import BacklinksPanel from '$lib/components/ui/BacklinksPanel.svelte';
+	import type { Tag, TreeElement, TreeElementNode } from '$lib/types';
+
+	type ItemUpdate = {
+		id: string;
+		name: string;
+		description: string;
+		markdown: string;
+		imageUrl: string;
+		videoUrl: string;
+		externalUrl: string;
+		tags: string;
+		ydkData?: string;
+	};
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
 	let item = $state(data.item);
 	// svelte-ignore state_referenced_locally
 	let children = $state(data.children ?? []);
-	let allTags = $state<any[]>([]);
+	let allTags = $state<Tag[]>([]);
 	let editing = $state(false);
 	// svelte-ignore state_referenced_locally
 	let name = $state(item?.name ?? '');
@@ -42,12 +55,30 @@
 	// svelte-ignore state_referenced_locally
 	let ydkEnabled = $state(!!item?.ydkData);
 	let showTree = $state(false);
-	let subtree = $state<any[]>([]);
+	let subtree = $state<TreeElementNode[]>([]);
 	// svelte-ignore state_referenced_locally
 	let favorite = $state(item?.favorite ?? false);
 
 	let isDeck = $derived(!!ydkData);
 	let isDeckView = $derived(isDeck && !editing);
+
+	let hasUnsavedChanges = $derived(
+		editing &&
+			(name !== (item?.name ?? '') ||
+				description !== (item?.description ?? '') ||
+				content !== (item?.markdown ?? '') ||
+				imageUrl !== (item?.imageUrl ?? '') ||
+				videoUrl !== (item?.videoUrl ?? '') ||
+				externalUrl !== (item?.externalUrl ?? '') ||
+				ydkData !== (item?.ydkData ?? '') ||
+				JSON.stringify(tagIds) !== JSON.stringify(getTagIds(item ?? {})))
+	);
+
+	beforeNavigate(({ cancel }) => {
+		if (hasUnsavedChanges && !window.confirm('Discard unsaved changes to this item?')) {
+			cancel();
+		}
+	});
 	// Only http(s) URLs may be rendered as links (blocks javascript: click-XSS)
 	let externalHref = $derived(item ? safeHttpUrl(item.externalUrl) : null);
 	let assignedTags = $derived(allTags.filter((t) => tagIds.includes(t.id)));
@@ -80,7 +111,7 @@
 
 	async function saveItem() {
 		if (!item) return;
-		const body: any = {
+		const body: ItemUpdate = {
 			id: item.id,
 			name,
 			description,
@@ -117,12 +148,12 @@
 		tagIds = toggleArrayItem(tagIds, tagId);
 	}
 
-	function handleChildAdd(child: any) {
+	function handleChildAdd(child: TreeElement) {
 		children = [...children, child];
 	}
 
 	function handleChildRemove(childId: string) {
-		children = children.filter((c: any) => c.id !== childId);
+		children = children.filter((c) => c.id !== childId);
 	}
 
 	function handleChildReorder(fromIdx: number, toIdx: number) {
@@ -150,7 +181,7 @@
 		}
 	}
 
-	function handleMindmapNodeClick(node: any) {
+	function handleMindmapNodeClick(node: TreeElementNode) {
 		if (node.type === 'item') goto(resolve('/app/item/[id]', { id: node.id }));
 	}
 
@@ -215,6 +246,12 @@
 </script>
 
 <svelte:head><title>{item?.name || 'Item'} - MegaOrganize</title></svelte:head>
+
+<svelte:window
+	onbeforeunload={(event) => {
+		if (hasUnsavedChanges) event.preventDefault();
+	}}
+/>
 
 {#if !item}
 	<div class="flex h-full items-center justify-center">

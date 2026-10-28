@@ -5,13 +5,14 @@
 	import { ReminderTemplateForm } from '$lib/components/reminders';
 	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
 	import { getRecurrenceLabel } from '$lib/utils/reminders';
+	import type { ReminderTemplateFormData, ReminderTemplateView } from '$lib/types';
 
 	let { data } = $props();
 	let templates = $derived(data.templates ?? []);
 	let showCreateForm = $state(false);
-	let editingTemplate = $state<any>(null);
+	let editingTemplate = $state<ReminderTemplateView | null>(null);
 
-	async function handleCreateTemplate(formData: any) {
+	async function handleCreateTemplate(formData: ReminderTemplateFormData) {
 		const res = await fetch('/api/reminders', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -24,7 +25,7 @@
 		}
 	}
 
-	async function handleUpdateTemplate(formData: any) {
+	async function handleUpdateTemplate(formData: ReminderTemplateFormData) {
 		const res = await fetch('/api/reminders', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },

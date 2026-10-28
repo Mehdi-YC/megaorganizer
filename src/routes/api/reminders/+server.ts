@@ -125,10 +125,17 @@ export const POST: RequestHandler = async (event) => {
 			if (!v.ok) return v.error;
 
 			const template = await createReminderTemplate(user.id, {
-				...v.data,
+				title: v.data.title,
+				description: v.data.description,
+				markdown: v.data.markdown,
+				icon: v.data.icon,
+				iconColor: v.data.iconColor,
+				recurrenceType: v.data.recurrenceType,
+				recurrenceConfig: v.data.recurrenceConfig,
 				nextDueAt: v.data.nextDueAt ? new Date(v.data.nextDueAt) : undefined,
-				todos: v.data.todos as string[] | undefined
-			} as any);
+				position: v.data.position,
+				todos: v.data.todos
+			});
 			return json(template, { status: 201 });
 		}
 
@@ -214,9 +221,17 @@ export const PUT: RequestHandler = async (event) => {
 			if (!v.ok) return v.error;
 
 			const updated = await updateReminderTemplate(user.id, v.data.templateId, {
-				...v.data,
-				nextDueAt: v.data.nextDueAt ? new Date(v.data.nextDueAt) : undefined
-			} as any);
+				title: v.data.title,
+				description: v.data.description,
+				markdown: v.data.markdown,
+				icon: v.data.icon,
+				iconColor: v.data.iconColor,
+				recurrenceType: v.data.recurrenceType,
+				recurrenceConfig: v.data.recurrenceConfig,
+				nextDueAt: v.data.nextDueAt ? new Date(v.data.nextDueAt) : undefined,
+				active: v.data.active,
+				position: v.data.position
+			});
 			return json(updated);
 		}
 

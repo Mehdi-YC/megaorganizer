@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { category, page } from '$lib/server/db/schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, inArray } from 'drizzle-orm';
 
 export async function createCategory(
 	userId: string,
@@ -97,14 +97,39 @@ export async function getCategoryPages(userId: string, categoryId: string) {
 
 export async function getCategoriesWithPages(userId: string) {
 	const categories = await getCategories(userId);
-	return Promise.all(
-		categories.map(async (cat) => {
-			const pages = await db
-				.select({ id: page.id, name: page.name })
-				.from(page)
-				.where(eq(page.categoryId, cat.id))
-				.orderBy(asc(page.position));
-			return { ...cat, pages };
+	if (categories.length === 0) return [];
+
+	// One query for every category's pages instead of one query per category.
+	const allPages = await db
+		.select({
+			id: page.id,
+			categoryId: page.categoryId,
+			name: page.name,
+			icon: page.icon,
+			iconColor: page.iconColor,
+			accentColor: page.accentColor,
+			imageUrl: page.imageUrl,
+			updatedAt: page.updatedAt
 		})
-	);
+		.from(page)
+		.where(
+			inArray(
+				page.categoryId,
+				categories.map((cat) => cat.id)
+			)
+		)
+		.orderBy(asc(page.position))
+		.all();
+
+	const pagesByCategory = new Map<string, typeof allPages>();
+	for (const p of allPages) {
+		const list = pagesByCategory.get(p.categoryId) ?? [];
+		list.push(p);
+		pagesByCategory.set(p.categoryId, list);
+	}
+
+	return categories.map((cat) => ({
+		...cat,
+		pages: pagesByCategory.get(cat.id) ?? []
+	}));
 }

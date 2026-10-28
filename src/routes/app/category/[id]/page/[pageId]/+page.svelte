@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import type { TreeElement } from '$lib/types';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import BacklinksPanel from '$lib/components/ui/BacklinksPanel.svelte';
@@ -43,23 +43,36 @@
 	let newItemName = $state('');
 	let newNodeName = $state('');
 	let expandedNodes = $state<Set<string>>(new Set());
-	let nodeChildrenCache = $state<Record<string, any[]>>({});
+	let nodeChildrenCache = $state<Record<string, TreeElement[]>>({});
 	let editingNode = $state<string | null>(null);
 	let editColor = $state('');
 	let editIcon = $state('');
 	let editNodeMarkdown = $state('');
 	let nodeAddName = $state<Record<string, string>>({});
-	let nodeSearchResults = $state<Record<string, any[]>>({});
+	let nodeSearchResults = $state<Record<string, TreeElement[]>>({});
 	let editingPageContent = $state(false);
 	let confirmDeleteId = $state<string | null>(null);
 	let nodeAddOpen = $state<Record<string, boolean>>({});
-	let hoverItem = $state<any>(null);
-	let hoverItemChildren = $state<any[]>([]);
+	let hoverItem = $state<TreeElement | null>(null);
+	let hoverItemChildren = $state<TreeElement[]>([]);
 	let hoverPos = $state({ x: 0, y: 0 });
 	let hoverTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 	let editingPage = $state(false);
 	let editPageName = $state('');
 	let editPageDescription = $state('');
+
+	let hasUnsavedChanges = $derived(
+		(editingPageContent && pageContent !== (pageData?.markdown ?? '')) ||
+			(editingPage &&
+				(editPageName !== (pageData?.name ?? '') ||
+					editPageDescription !== (pageData?.description ?? '')))
+	);
+
+	beforeNavigate(({ cancel }) => {
+		if (hasUnsavedChanges && !window.confirm('Discard unsaved changes to this page?')) {
+			cancel();
+		}
+	});
 	let smallImages = $state(new Set<string>());
 	let nodeDragIdx = $state<number | null>(null);
 	let addMenuSearchInput = $state<HTMLInputElement | null>(null);
@@ -97,8 +110,8 @@
 		}
 	});
 
-	let topLevelNodes = $derived(treeElements.filter((el: any) => el.type === 'node'));
-	let topLevelItems = $derived(treeElements.filter((el: any) => el.type === 'item'));
+	let topLevelNodes = $derived(treeElements.filter((el) => el.type === 'node'));
+	let topLevelItems = $derived(treeElements.filter((el) => el.type === 'item'));
 	let renderedContent = $state('');
 
 	$effect(() => {
@@ -185,7 +198,7 @@
 			})
 		});
 		if (res.ok) {
-			treeElements = treeElements.filter((el: any) => el.id !== id);
+			treeElements = treeElements.filter((el) => el.id !== id);
 		}
 	}
 
@@ -244,7 +257,7 @@
 	}
 
 	async function saveNodeMeta(nodeId: string) {
-		const node = treeElements.find((el: any) => el.id === nodeId);
+		const node = treeElements.find((el) => el.id === nodeId);
 		if (!node) return;
 		const meta = parseMetadata(node.metadata);
 		meta.color = editColor;
@@ -259,7 +272,7 @@
 			})
 		});
 		if (res.ok) {
-			treeElements = treeElements.map((el: any) =>
+			treeElements = treeElements.map((el) =>
 				el.id === nodeId
 					? { ...el, metadata: JSON.stringify(meta), markdown: editNodeMarkdown || null }
 					: el
@@ -268,7 +281,7 @@
 		}
 	}
 
-	function startEditNode(node: any) {
+	function startEditNode(node: TreeElement) {
 		const meta = parseMetadata(node.metadata);
 		editColor = meta.color || getNodeColor(node);
 		editIcon = meta.icon || 'fa-folder';
@@ -332,7 +345,7 @@
 		nodeSearchResults = { ...nodeSearchResults, [nodeId]: [] };
 	}
 
-	async function onItemHover(e: MouseEvent, item: any) {
+	async function onItemHover(e: MouseEvent, item: TreeElement) {
 		if (hoverTimeout) clearTimeout(hoverTimeout);
 		hoverPos = { x: e.clientX, y: e.clientY };
 		hoverItem = item;
@@ -450,10 +463,10 @@
 	function handleNodeDragOver(e: DragEvent, idx: number) {
 		e.preventDefault();
 		if (nodeDragIdx === null || nodeDragIdx === idx) return;
-		const topLevel = treeElements.filter((el: any) => el.type === 'node');
+		const topLevel = treeElements.filter((el) => el.type === 'node');
 		const moved = topLevel[nodeDragIdx];
 		const target = topLevel[idx];
-		const allIdx = treeElements.map((el: any) => el.id);
+		const allIdx = treeElements.map((el) => el.id);
 		const movedAllIdx = allIdx.indexOf(moved.id);
 		const targetAllIdx = allIdx.indexOf(target.id);
 		if (movedAllIdx === -1 || targetAllIdx === -1) return;
@@ -471,6 +484,12 @@
 </script>
 
 <svelte:head><title>{pageData?.name || 'Page'} - MegaOrganize</title></svelte:head>
+
+<svelte:window
+	onbeforeunload={(event) => {
+		if (hasUnsavedChanges) event.preventDefault();
+	}}
+/>
 
 {#if !category || !pageData}
 	<div class="flex h-full items-center justify-center">
@@ -637,8 +656,8 @@
 					{@const nodeColor = getNodeColor(node)}
 					{@const nodeIcon = getNodeIcon(node)}
 					{@const children = nodeChildrenCache[node.id] ?? []}
-					{@const childItems = children.filter((c: any) => c.type === 'item')}
-					{@const childNodes = children.filter((c: any) => c.type === 'node')}
+					{@const childItems = children.filter((c) => c.type === 'item')}
+					{@const childNodes = children.filter((c) => c.type === 'node')}
 					{@const results = nodeSearchResults[node.id] ?? []}
 
 					<div
@@ -971,7 +990,7 @@
 	</div>
 
 	{#if editingNode}
-		{@const node = treeElements.find((el: any) => el.id === editingNode)}
+		{@const node = treeElements.find((el) => el.id === editingNode)}
 		{#if node}
 			<Dialog open={true} onclose={() => (editingNode = null)} title="Edit Section: {node.name}">
 				<div class="mb-4">

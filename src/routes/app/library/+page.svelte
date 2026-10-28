@@ -13,14 +13,15 @@
 		PageHeader,
 		SearchInput
 	} from '$lib/components/ui';
+	import type { Tag, TreeElement } from '$lib/types';
 
-	let items = $state<any[]>([]);
-	let allTags = $state<any[]>([]);
+	let items = $state<TreeElement[]>([]);
+	let allTags = $state<Tag[]>([]);
 	let searchQuery = $state('');
 	let loading = $state(true);
 	let showNewItem = $state(false);
 	let newItemName = $state('');
-	let allItems = $state<any[]>([]);
+	let allItems = $state<TreeElement[]>([]);
 	let filterTagIds = $state<string[]>([]);
 	let filterYdk = $state(false);
 	let filterFavorite = $state(false);
@@ -39,12 +40,12 @@
 	});
 
 	function filterItems() {
-		let result = allItems.filter((item: any) => item.type !== 'node');
+		let result = allItems.filter((item) => item.type !== 'node');
 
 		if (searchQuery.trim()) {
 			const q = searchQuery.toLowerCase();
 			result = result.filter(
-				(item: any) =>
+				(item) =>
 					item.name?.toLowerCase().includes(q) ||
 					item.description?.toLowerCase().includes(q) ||
 					item.markdown?.toLowerCase().includes(q)
@@ -52,7 +53,7 @@
 		}
 
 		if (filterTagIds.length > 0) {
-			result = result.filter((item: any) => {
+			result = result.filter((item) => {
 				let ids: string[] = [];
 				try {
 					ids = item.tags ? JSON.parse(item.tags) : [];
@@ -64,11 +65,11 @@
 		}
 
 		if (filterFavorite) {
-			result = result.filter((item: any) => !!item.favorite);
+			result = result.filter((item) => !!item.favorite);
 		}
 
 		if (filterYdk) {
-			result = result.filter((item: any) => !!item.ydkData);
+			result = result.filter((item) => !!item.ydkData);
 		}
 
 		items = result;

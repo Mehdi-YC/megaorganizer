@@ -8,11 +8,21 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import { ExpenseForm, ExpenseCard, MonthlySummary } from '$lib/components/finance';
+	import type { Expense } from '$lib/types';
+
+	type ExpenseInput = {
+		amount: number;
+		description?: string;
+		markdown?: string;
+		tags?: string[];
+		spentAt: string;
+		currency: string;
+	};
 
 	let { data } = $props();
-	let expenses = $derived<any[]>(data.expenses ?? []);
+	let expenses = $derived(data.expenses ?? []);
 	let monthlyStats = $derived(data.monthlyStats ?? { total: 0, count: 0 });
-	let settings = $derived<any>(
+	let settings = $derived(
 		data.settings ?? { currency: 'DZD', currencyRate: 1, monthlySpendingLimit: null }
 	);
 	let year = $derived(data.year ?? new Date().getFullYear());
@@ -20,7 +30,7 @@
 
 	// Add / edit dialog
 	let showForm = $state(false);
-	let editing = $state<any>(null);
+	let editing = $state<Expense | null>(null);
 	let saving = $state(false);
 	let formError = $state('');
 
@@ -67,13 +77,13 @@
 		showForm = true;
 	}
 
-	function openEdit(expense: any) {
+	function openEdit(expense: Expense) {
 		editing = expense;
 		formError = '';
 		showForm = true;
 	}
 
-	async function handleSave(expenseData: any) {
+	async function handleSave(expenseData: ExpenseInput) {
 		if (saving) return;
 		saving = true;
 		formError = '';

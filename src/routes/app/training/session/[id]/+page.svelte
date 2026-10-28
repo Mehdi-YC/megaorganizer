@@ -11,6 +11,7 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import type { RunningActivity } from '$lib/types';
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
@@ -22,7 +23,7 @@
 	// svelte-ignore state_referenced_locally
 	let notes = $state(session?.notes ?? '');
 
-	let runningData = $state<any[]>([]);
+	let runningData = $state<RunningActivity[]>([]);
 	let loadingRunning = $state(false);
 
 	onMount(() => {
@@ -141,7 +142,7 @@
 					{#if run.trackPoints && run.trackPoints.length > 0}
 						<div class="overflow-hidden rounded-sm border border-border" style="height: 400px;">
 							<RunMap
-								points={run.trackPoints.map((p: any) => ({
+								points={run.trackPoints.map((p) => ({
 									latitude: p.latitude,
 									longitude: p.longitude
 								}))}

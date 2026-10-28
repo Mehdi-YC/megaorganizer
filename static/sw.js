@@ -1,5 +1,5 @@
-const CACHE_NAME = 'megorganize-v4';
-const RUNTIME_CACHE = 'megorganize-runtime-v4';
+const CACHE_NAME = 'megorganize-v5';
+const RUNTIME_CACHE = 'megorganize-runtime-v5';
 
 // Precache only unauthenticated URLs that always return 200. Auth-gated
 // pages and redirects make cache.addAll reject, which aborts the whole
@@ -68,12 +68,17 @@ self.addEventListener('fetch', (event) => {
 	if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
 	if (url.origin !== self.location.origin) return;
 
-	// API calls: network-first (fall back to cache if offline)
+	// API calls are never cached. They carry private data and mutation
+	// responses; a stale copy outliving a logout is worse than being offline.
 	if (url.pathname.startsWith('/api/')) {
 		event.respondWith(
-			fetch(request)
-				.then((response) => cacheIfUsable(RUNTIME_CACHE, request, response))
-				.catch(() => caches.match(request).then((cached) => cached ?? offlineResponse()))
+			fetch(request).catch(
+				() =>
+					new Response(JSON.stringify({ error: 'You are offline' }), {
+						status: 503,
+						headers: { 'Content-Type': 'application/json' }
+					})
+			)
 		);
 		return;
 	}
@@ -99,10 +104,20 @@ self.addEventListener('fetch', (event) => {
 	}
 });
 
-// Keep the service worker alive during GPS tracking
+// Keep the service worker alive during GPS tracking, and let the app wipe
+// private navigation caches when the session ends.
 self.addEventListener('message', (event) => {
-	if (event.data && event.data.type === 'PING') {
+	if (!event.data) return;
+	if (event.data.type === 'PING') {
 		event.source.postMessage({ type: 'PONG' });
+	}
+	if (event.data.type === 'CLEAR_CACHES') {
+		event.waitUntil(
+			caches
+				.keys()
+				.then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+				.then(() => event.source?.postMessage({ type: 'CACHES_CLEARED' }))
+		);
 	}
 });
 

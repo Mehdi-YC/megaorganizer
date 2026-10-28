@@ -3,13 +3,33 @@
 	import { goto } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 
+	type UpcomingItem = {
+		id: string;
+		templateId?: string | null;
+		title: string;
+		dueAt: Date | string;
+		isVirtual: boolean;
+	};
+
+	type CalendarEntry = {
+		type: 'training' | 'reminder' | 'scheduled' | 'expense';
+		id: string;
+		templateId?: string | null;
+		title: string;
+		completed?: boolean;
+		isVirtual?: boolean;
+		time?: string;
+		amount?: number;
+		duration?: number | null;
+	};
+
 	let { data } = $props();
-	let sessions = $derived<any[]>(data.sessions ?? []);
-	let reminders = $derived<any[]>(data.reminders ?? []);
-	let virtualReminders = $derived<any[]>(data.virtualReminders ?? []);
-	let expenses = $derived<any[]>(data.expenses ?? []);
-	let upcoming = $derived<any[]>(data.upcoming ?? []);
-	let expenseSettings = $derived<any>(data.expenseSettings ?? { currency: 'DZD' });
+	let sessions = $derived(data.sessions ?? []);
+	let reminders = $derived(data.reminders ?? []);
+	let virtualReminders = $derived(data.virtualReminders ?? []);
+	let expenses = $derived(data.expenses ?? []);
+	let upcoming = $derived<UpcomingItem[]>(data.upcoming ?? []);
+	let expenseSettings = $derived(data.expenseSettings ?? { currency: 'DZD' });
 	let filter = $derived(data.filter);
 	let currentDate = $derived.by(() => {
 		const m = data.month;
@@ -76,16 +96,8 @@
 		changeMonth(1);
 	}
 
-	function getEventsForDate(date: Date) {
-		const events: Array<{
-			type: 'training' | 'reminder' | 'scheduled' | 'expense';
-			id: string;
-			title: string;
-			completed?: boolean;
-			isVirtual?: boolean;
-			time?: string;
-			amount?: number;
-		}> = [];
+	function getEventsForDate(date: Date): CalendarEntry[] {
+		const events: CalendarEntry[] = [];
 
 		// Add training sessions
 		if (!filter || filter === 'training') {
@@ -154,6 +166,7 @@
 					events.push({
 						type: 'scheduled',
 						id: vReminder.id,
+						templateId: vReminder.templateId,
 						title: vReminder.title,
 						isVirtual: true,
 						time: new Date(vReminder.dueAt).toLocaleTimeString([], {
@@ -200,7 +213,7 @@
 	}
 
 	/** Target for a calendar event, matching the shape the server sent. */
-	function eventHref(event: any): string {
+	function eventHref(event: CalendarEntry): string {
 		if (event.type === 'training') return resolve('/app/training/session/[id]', { id: event.id });
 		if (event.type === 'expense') return resolve('/app/finance');
 		if (event.type === 'scheduled') {
@@ -224,7 +237,7 @@
 	}
 
 	let selectedDate = $state<Date | null>(null);
-	let selectedEvents = $state<any[]>([]);
+	let selectedEvents = $state<CalendarEntry[]>([]);
 
 	function handleDateClick(date: Date) {
 		selectedDate = date;
@@ -252,17 +265,9 @@
 		);
 	}
 
-	type UpcomingItem = {
-		id: string;
-		templateId: string;
-		title: string;
-		dueAt: Date | string;
-		isVirtual: boolean;
-	};
-
 	let upcomingGroups = $derived.by(() => {
 		const groups: Array<{ date: Date; items: UpcomingItem[] }> = [];
-		for (const item of upcoming as UpcomingItem[]) {
+		for (const item of upcoming) {
 			const d = new Date(item.dueAt);
 			const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
 			const last = groups[groups.length - 1];
@@ -686,7 +691,7 @@
 										})}
 										<a
 											href={resolve('/app/reminders/[id]', {
-												id: item.isVirtual ? item.templateId : item.id
+												id: item.isVirtual ? (item.templateId ?? item.id) : item.id
 											})}
 											class="flex items-center gap-2.5 rounded-sm border {item.isVirtual
 												? 'border-muted bg-muted/30'

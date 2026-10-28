@@ -5,12 +5,22 @@ import { ensureSearchIndex } from './search-index';
 import { building } from '$app/environment';
 import { env } from '$env/dynamic/private';
 
-if (!env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
+if (!env.DATABASE_URL) {
+	throw new Error(
+		'DATABASE_URL is not set. Copy .env.example to .env for local development, or set it in the environment.'
+	);
+}
 
 const client = createClient({ url: env.DATABASE_URL });
 
 // Enable foreign key enforcement (SQLite defaults to OFF)
 await client.execute('PRAGMA foreign_keys = ON');
+
+// WAL lets reads continue while a write is in flight. Without a busy timeout
+// SQLite fails immediately with "database is locked" instead of waiting for
+// the writer to finish, which shows up as random 500s under normal use.
+await client.execute('PRAGMA journal_mode = WAL');
+await client.execute('PRAGMA busy_timeout = 5000');
 
 // Full-text search index: created, trigger-backed, and backfilled if empty.
 // Skipped at build time, where this module graph is only evaluated.

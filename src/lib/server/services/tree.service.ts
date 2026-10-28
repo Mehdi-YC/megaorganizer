@@ -249,6 +249,66 @@ export async function getChildCounts(
 	return Object.fromEntries(rows.map((r) => [r.parentId, Number(r.total)]));
 }
 
+/**
+ * A parent can be a page or another tree element. Check that it belongs to
+ * this user and that the declared type matches the row's real type, so a
+ * caller cannot write an edge under a foreign parent or mislabel it.
+ */
+async function verifyParent(userId: string, parentType: TreeParentType, parentId: string) {
+	if (parentType === 'page') {
+		const ownPage = await db
+			.select({ id: page.id })
+			.from(page)
+			.where(and(eq(page.id, parentId), eq(page.userId, userId)))
+			.get();
+		return !!ownPage;
+	}
+
+	const element = await db
+		.select({ type: treeElement.type })
+		.from(treeElement)
+		.where(and(eq(treeElement.id, parentId), eq(treeElement.userId, userId)))
+		.get();
+	return element?.type === parentType;
+}
+
+/**
+ * True when making `childId` a child of `parentId` would close a loop, which
+ * would make the subtree walk recurse forever. Walk up from the prospective
+ * parent: if the child is one of its ancestors, the edge is invalid.
+ */
+async function wouldCreateCycle(userId: string, parentId: string, childId: string) {
+	if (parentId === childId) return true;
+
+	const edges = await db
+		.select({
+			parentId: treeRelationship.parentId,
+			childId: treeRelationship.childId
+		})
+		.from(treeRelationship)
+		.innerJoin(treeElement, eq(treeRelationship.childId, treeElement.id))
+		.where(eq(treeElement.userId, userId))
+		.all();
+
+	const parentsByChild = new Map<string, string[]>();
+	for (const edge of edges) {
+		const parents = parentsByChild.get(edge.childId) ?? [];
+		parents.push(edge.parentId);
+		parentsByChild.set(edge.childId, parents);
+	}
+
+	const seen = new Set<string>();
+	const stack = [parentId];
+	while (stack.length > 0) {
+		const current = stack.pop() as string;
+		if (current === childId) return true;
+		if (seen.has(current)) continue;
+		seen.add(current);
+		stack.push(...(parentsByChild.get(current) ?? []));
+	}
+	return false;
+}
+
 export async function addChildToParent(
 	userId: string,
 	parentType: TreeParentType,
@@ -256,9 +316,30 @@ export async function addChildToParent(
 	childType: TreeElementType,
 	childId: string
 ) {
-	// Verify the child element belongs to this user
-	const childOwned = await verifyElementOwnership(userId, childId);
-	if (!childOwned) return null;
+	const child = await db
+		.select({ type: treeElement.type })
+		.from(treeElement)
+		.where(and(eq(treeElement.id, childId), eq(treeElement.userId, userId)))
+		.get();
+	if (!child || child.type !== childType) return null;
+
+	if (!(await verifyParent(userId, parentType, parentId))) return null;
+	if (await wouldCreateCycle(userId, parentId, childId)) return null;
+
+	// Adding an existing child is a no-op rather than a duplicate edge.
+	const existing = await db
+		.select()
+		.from(treeRelationship)
+		.where(
+			and(
+				eq(treeRelationship.parentType, parentType),
+				eq(treeRelationship.parentId, parentId),
+				eq(treeRelationship.childType, childType),
+				eq(treeRelationship.childId, childId)
+			)
+		)
+		.get();
+	if (existing) return existing;
 
 	const maxPosition = await db
 		.select({ position: treeRelationship.position })
