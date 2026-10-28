@@ -13,14 +13,7 @@
 		user,
 		onNavigate = () => {}
 	}: {
-		categories?: Array<{
-			id: string;
-			name: string;
-			icon?: string;
-			iconColor?: string;
-			accentColor?: string;
-			pages?: Array<{ id: string; name: string; icon?: string }>;
-		}>;
+		categories?: CategoryWithPages[];
 		user?: { name: string; email: string; image?: string | null };
 		onNavigate?: () => void;
 	} = $props();
@@ -178,6 +171,9 @@
 		searchSearched = false;
 		searchResults = [];
 		onNavigate();
+		// Search results carry a path built by the server, which resolve() cannot
+		// type-check at compile time.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(result.url);
 	}
 

@@ -4,10 +4,16 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import type { ActionData } from './$types';
+	import { onMount } from 'svelte';
+	import { clearAppCaches } from '$lib/utils/cache';
 
 	let { form }: { form: ActionData } = $props();
 	let email = $state('');
 	let password = $state('');
+
+	onMount(() => {
+		void clearAppCaches();
+	});
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-bg p-4">

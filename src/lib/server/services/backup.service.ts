@@ -31,6 +31,8 @@ import {
 	timerStep
 } from '$lib/server/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
+import type { SQL } from 'drizzle-orm';
+import type { AnySQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core';
 import { readFile } from 'fs/promises';
 import { getCategories, getCategoryPages } from './category.service';
 import { getTagsByUser } from './tag.service';
@@ -493,12 +495,28 @@ export async function exportUserData(userId: string) {
 
 // ─── Import (non-destructive) ────────────────────────────────────────────────
 
-async function findExisting(executor: Db, dbTable: any, whereClause: any) {
+/** Tables passed here key on `id`, except runningActivity, which uses activityId. */
+type TableWithPrimaryKey = SQLiteTable & {
+	id?: AnySQLiteColumn;
+	activityId?: AnySQLiteColumn;
+};
+
+async function findExisting(
+	executor: Db,
+	dbTable: TableWithPrimaryKey,
+	whereClause: SQL | undefined
+): Promise<{ id: string } | undefined> {
 	// runningActivity uses activityId as its PK instead of id.
 	const idColumn = dbTable.id ?? dbTable.activityId;
-	return executor.select({ id: idColumn }).from(dbTable).where(whereClause).get();
+	if (!idColumn) throw new Error('findExisting: table has no id column');
+	const row = await executor.select({ id: idColumn }).from(dbTable).where(whereClause).get();
+	return row as { id: string } | undefined;
 }
 
+// The import payload is untrusted JSON from a user-supplied backup file. It is
+// narrowed and mapped field by field during the import; a single structural
+// type here would claim more than the file format guarantees.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function importUserData(userId: string, data: any) {
 	if (!data || (data.version !== 1 && data.version !== 2 && data.version !== 3)) {
 		return { success: false, message: 'Invalid backup format', counts: {} };

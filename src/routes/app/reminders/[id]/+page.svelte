@@ -5,15 +5,38 @@
 	import { Badge, Button, Checkbox, EmptyState } from '$lib/components/ui';
 	import { ReminderCalendar, ReminderTemplateForm } from '$lib/components/reminders';
 	import { getRecurrenceLabel } from '$lib/utils/reminders';
+	import type { ReminderTemplateFormData } from '$lib/types';
 
 	let { data } = $props();
 	let showEditForm = $state(false);
 	let renderedMarkdown = $state('');
 
+	// Reminders and templates share the display fields below. Fields that only
+	// exist on a reminder (dueAt, completed, completedAt) are read inside
+	// isReminder branches, where the cast is true.
+	type ReminderPageItem = {
+		id: string;
+		title: string;
+		description?: string | null;
+		markdown?: string | null;
+		icon?: string | null;
+		iconColor?: string | null;
+		dueAt: Date | string;
+		completed: boolean;
+		completedAt?: Date | string | null;
+		recurrenceType?: string | null;
+		recurrenceConfig?: string | null;
+		createdAt?: Date | string | null;
+		updatedAt?: Date | string | null;
+		todos?: Array<{ id: string; text: string; completed?: boolean; position: number }>;
+	};
+
 	const isReminder = $derived(data.type === 'reminder');
-	const item = $derived<any>(isReminder ? data.reminder : data.template);
-	const template = $derived<any>(data.template);
-	const history = $derived<any[]>(data.history ?? []);
+	const item = $derived(
+		(data.type === 'reminder' ? data.reminder : data.template) as ReminderPageItem
+	);
+	const template = $derived(data.template);
+	const history = $derived(data.history ?? []);
 
 	$effect(() => {
 		if (item?.markdown) {
@@ -70,7 +93,7 @@
 		}
 	}
 
-	async function handleUpdateTemplate(formData: any) {
+	async function handleUpdateTemplate(formData: ReminderTemplateFormData) {
 		const res = await fetch('/api/reminders', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
@@ -117,8 +140,8 @@
 	// Stats from history
 	const stats = $derived.by(() => {
 		const total = history.length;
-		const completed = history.filter((r: any) => r.completed).length;
-		const missed = history.filter((r: any) => !r.completed && isOverdue(r.dueAt)).length;
+		const completed = history.filter((r) => r.completed).length;
+		const missed = history.filter((r) => !r.completed && isOverdue(r.dueAt)).length;
 		const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
 		return { total, completed, missed, rate };
@@ -185,7 +208,7 @@
 								</div>
 							{:else}
 								<p class="mt-2 text-xs text-fg-subdued">
-									{getRecurrenceLabel(item.recurrenceType, item.recurrenceConfig)}
+									{getRecurrenceLabel(item.recurrenceType ?? 'daily', item.recurrenceConfig)}
 								</p>
 							{/if}
 						</div>
@@ -218,19 +241,27 @@
 							Todo Items
 						</h3>
 						<div class="space-y-2">
-							{#each item.todos as todo (todo.id)}
-								<Checkbox
-									checked={todo.completed}
-									onchange={() => handleTodoToggle(todo.id, !todo.completed)}
-									label={todo.text}
-								/>
-							{/each}
+							{#if isReminder}
+								{#each item.todos as todo (todo.id)}
+									<Checkbox
+										checked={!!todo.completed}
+										onchange={() => handleTodoToggle(todo.id, !todo.completed)}
+										label={todo.text}
+									/>
+								{/each}
+							{:else}
+								{#each item.todos as todo (todo.id)}
+									<p class="text-sm text-fg">{todo.text}</p>
+								{/each}
+							{/if}
 						</div>
-						<div class="mt-3 border-t border-border pt-3">
-							<p class="text-[10px] text-fg-subdued">
-								{item.todos.filter((t: any) => t.completed).length} of {item.todos.length} completed
-							</p>
-						</div>
+						{#if isReminder}
+							<div class="mt-3 border-t border-border pt-3">
+								<p class="text-[10px] text-fg-subdued">
+									{item.todos.filter((t) => t.completed).length} of {item.todos.length} completed
+								</p>
+							</div>
+						{/if}
 					</div>
 				{/if}
 

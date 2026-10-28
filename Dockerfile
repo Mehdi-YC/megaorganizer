@@ -2,10 +2,11 @@ FROM oven/bun:1 AS base
 
 WORKDIR /app
 
-# The server module graph is evaluated during `vite build`, so these must be
-# present at build time. They are supplied by docker-compose build args.
+# The server module graph is evaluated during `vite build`, so both names must
+# exist. The secret is a build-time placeholder only: auth reads the real value
+# at runtime from the environment. Do not bake a real secret into the image.
 ARG DATABASE_URL=file:local.db
-ARG BETTER_AUTH_SECRET
+ARG BETTER_AUTH_SECRET=build-time-placeholder-not-used-at-runtime
 ENV DATABASE_URL=$DATABASE_URL
 ENV BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
 
@@ -51,5 +52,9 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 
 EXPOSE 3000
+
+# The login page is a cheap 200 that does not touch the database.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+	CMD bun -e "fetch('http://127.0.0.1:3000/auth/login').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

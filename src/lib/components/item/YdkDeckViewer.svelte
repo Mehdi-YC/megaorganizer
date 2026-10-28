@@ -55,9 +55,7 @@
 		if (unique.length === 0) return;
 		loadingCards = true;
 		try {
-			const res = await fetch(
-				`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${unique.slice(0, 50).join(',')}`
-			);
+			const res = await fetch(`/api/cards?ids=${unique.slice(0, 50).join(',')}`);
 			if (res.ok) {
 				const d = await res.json();
 				const newCache = new Map(cardCache);

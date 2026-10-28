@@ -10,7 +10,7 @@
 			title: string;
 			dueAt: Date | string;
 			completed: boolean;
-			templateId: string;
+			templateId?: string | null;
 		}>;
 		selectedDate?: Date | null;
 		onDateClick?: (date: Date, reminders: Reminder[]) => void;

@@ -87,10 +87,13 @@ export const POST: RequestHandler = async (event) => {
 			if (!v.ok) return v.error;
 
 			const newExpense = await createExpense(user.id, {
-				...v.data,
+				amount: v.data.amount,
 				spentAt: new Date(v.data.spentAt),
-				tags: v.data.tags as string[] | undefined
-			} as any);
+				currency: v.data.currency,
+				description: v.data.description,
+				markdown: v.data.markdown,
+				tags: v.data.tags
+			});
 			return json(newExpense, { status: 201 });
 		}
 
@@ -130,11 +133,14 @@ export const PUT: RequestHandler = async (event) => {
 			});
 			if (!v.ok) return v.error;
 
-			const updateData: any = { ...v.data };
-			if (v.data.spentAt) updateData.spentAt = new Date(v.data.spentAt);
-			if (v.data.tags) updateData.tags = v.data.tags;
-
-			const updated = await updateExpense(user.id, v.data.expenseId, updateData);
+			const updated = await updateExpense(user.id, v.data.expenseId, {
+				amount: v.data.amount,
+				spentAt: v.data.spentAt ? new Date(v.data.spentAt) : undefined,
+				currency: v.data.currency,
+				description: v.data.description,
+				markdown: v.data.markdown,
+				tags: v.data.tags
+			});
 			if (!updated) return json({ error: 'Not found' }, { status: 404 });
 			return json(updated);
 		}

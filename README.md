@@ -133,15 +133,10 @@ src/
 - Assign multiple items to tags
 - Filter by tags in library
 
-### Roadmap & Tier List
+### Dashboard
 
-- Graph-based roadmaps with nodes and edges
-- Drag-and-drop tier lists
-
-### Dashboard & Analytics
-
-- Dashboard with upcoming reminders and training overview
-- Analytics across training, running, and activity data
+- Upcoming reminders and training overview
+- Activity stats across training, running, and finance
 
 ### PWA
 
@@ -167,7 +162,6 @@ Reusable components in `src/lib/components/ui/`:
 | `Input`           | Text input with consistent styling |
 | `ItemImage`       | Auto small/large image display     |
 | `MindMap`         | Graph/roadmap visualization        |
-| `NavItem`         | Navigation item                    |
 | `PageHeader`      | Page title + actions layout        |
 | `RunMap`          | Leaflet map for GPS runs           |
 | `SearchInput`     | Search input with icon             |
@@ -199,6 +193,7 @@ plus `QuickCapture.svelte` for quick-add capture.
 | `/api/links`          | GET                    | Resolve a wikilink target name to a URL              |
 | `/api/push`           | GET, POST              | Web Push config, device subscribe/unsubscribe        |
 | `/api/search`         | GET                    | FTS5 global search across all content                |
+| `/api/cards`          | GET                    | YGOPRODeck card lookup for the deck viewer           |
 | `/api/backup`         | GET, POST              | Full data export (GET) / import (POST)               |
 | `/share-target`       | POST                   | PWA share_target endpoint (Android share sheet)      |
 

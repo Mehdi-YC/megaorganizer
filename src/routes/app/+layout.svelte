@@ -8,13 +8,17 @@
 	import { page } from '$app/state';
 	import { startReminderPolling } from '$lib/utils/notifications';
 	import { initWikilinkClicks } from '$lib/utils/wikilink-click';
+	import type { CategoryWithPages } from '$lib/types';
 
 	let {
 		children,
 		data
 	}: {
 		children: Snippet;
-		data: { categories?: any[]; user?: { name: string; email: string; image?: string | null } };
+		data: {
+			categories?: CategoryWithPages[];
+			user?: { name: string; email: string; image?: string | null };
+		};
 	} = $props();
 	let sidebarOpen = $state(false);
 

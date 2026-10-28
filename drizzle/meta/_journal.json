@@ -43,6 +43,13 @@
       "when": 1790335471522,
       "tag": "0005_panoramic_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793186779127,
+      "tag": "0006_organic_pixie",
+      "breakpoints": true
     }
   ]
 }

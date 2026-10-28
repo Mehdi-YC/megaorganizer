@@ -7,7 +7,7 @@
 		alt = '',
 		height = 'h-20',
 		icon = 'fa-cube'
-	}: { src?: string; alt?: string; height?: string; icon?: string } = $props();
+	}: { src?: string | null; alt?: string; height?: string; icon?: string } = $props();
 
 	let small = $state(false);
 

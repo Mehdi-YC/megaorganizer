@@ -4,10 +4,11 @@
 	import MindMap from '$lib/components/ui/MindMap.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import type { TreeElementNode } from '$lib/types';
 
-	let tree = $state<any[]>([]);
+	let tree = $state<TreeElementNode[]>([]);
 	let loading = $state(true);
-	let selectedNode = $state<any>(null);
+	let selectedNode = $state<TreeElementNode | null>(null);
 
 	$effect(() => {
 		fetch('/api/tree/hierarchy')
@@ -22,7 +23,7 @@
 			});
 	});
 
-	function handleNodeClick(node: any) {
+	function handleNodeClick(node: TreeElementNode) {
 		selectedNode = node;
 	}
 

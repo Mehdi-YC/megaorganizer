@@ -1,6 +1,6 @@
 import { relations, sql } from 'drizzle-orm';
 import type { AnySQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { integer, sqliteTable, text, real, index } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { user } from './auth.schema';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -118,7 +118,15 @@ export const treeRelationship = sqliteTable(
 	},
 	(table) => [
 		index('treeRelationship_parent_idx').on(table.parentType, table.parentId),
-		index('treeRelationship_child_idx').on(table.childType, table.childId)
+		index('treeRelationship_child_idx').on(table.childType, table.childId),
+		// One edge per parent/child pair. The service checks before inserting,
+		// this index is the backstop if two requests race.
+		uniqueIndex('treeRelationship_parent_child_unique').on(
+			table.parentType,
+			table.parentId,
+			table.childType,
+			table.childId
+		)
 	]
 );
 

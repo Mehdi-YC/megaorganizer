@@ -58,6 +58,9 @@ export interface PageSummary {
 	id: string;
 	name: string;
 	description?: string | null;
+	icon?: string | null;
+	iconColor?: string | null;
+	accentColor?: string | null;
 	imageUrl?: string | null;
 	updatedAt?: string | null;
 }
@@ -68,14 +71,24 @@ export interface CategoryWithPages {
 	name: string;
 	color?: string | null;
 	icon?: string | null;
+	iconColor?: string | null;
+	accentColor?: string | null;
 	updatedAt?: string | null;
 	pages?: PageSummary[];
 }
 
 /** A todo step attached to a reminder template. */
-export interface ReminderTodo {
+export interface ReminderTemplateTodo {
 	id: string;
 	templateId: string;
+	text: string;
+	position: number;
+}
+
+/** A todo step on a concrete reminder. */
+export interface ReminderTodo {
+	id: string;
+	reminderId: string;
 	text: string;
 	completed: boolean;
 	position: number;
@@ -133,11 +146,27 @@ export interface TrackPoint {
 	heading?: number | null;
 }
 
+/** The recurrence modes the reminder scheduler understands. */
+export type ReminderRecurrenceType =
+	'daily' | 'weekly' | 'monthly' | 'yearly' | 'yearly_date' | 'monthly_relative';
+
+/** Wall-clock recurrence settings stored as JSON on a template. */
+export interface ReminderRecurrenceConfig {
+	hour?: number;
+	minute?: number;
+	timeZone?: string;
+	days?: number[];
+	dayOfMonth?: number;
+	month?: number;
+	day?: number;
+	weekday?: number;
+	weekdayOrdinal?: number;
+}
+
 /** A reminder template, including its parsed todo list. */
 export interface ReminderTemplate {
 	id: string;
 	userId?: string;
-	name: string;
 	title?: string | null;
 	description?: string | null;
 	markdown?: string | null;
@@ -149,8 +178,30 @@ export interface ReminderTemplate {
 	recurrenceType?: string | null;
 	/** JSON blob holding the recurrence settings. */
 	recurrenceConfig?: string | null;
+	active?: boolean;
+	position?: number;
+	nextDueAt?: Date | string | null;
 	createdAt?: Date | string | null;
 	updatedAt?: Date | string | null;
+}
+
+/** A template with its todos joined in, as the reminders page loads it. */
+export interface ReminderTemplateView extends Omit<ReminderTemplate, 'todos'> {
+	todos?: ReminderTemplateTodo[];
+}
+
+/** What ReminderTemplateForm emits to its onSave handler. */
+export interface ReminderTemplateFormData {
+	title: string;
+	description?: string;
+	markdown?: string;
+	icon: string;
+	iconColor?: string;
+	recurrenceType: ReminderRecurrenceType;
+	recurrenceConfig: string;
+	nextDueAt: string;
+	todos: string[];
+	templateId?: string;
 }
 
 /** A training session with its activities, as the lists and dashboard show it. */
@@ -177,6 +228,12 @@ export interface RunningActivity {
 		id: string;
 		distance?: number | null;
 		duration?: number | null;
+		elapsedDuration?: number | null;
+		movingDuration?: number | null;
+		averagePace?: number | null;
+		averageSpeed?: number | null;
+		maxSpeed?: number | null;
+		bestPace?: number | null;
 		elevationGain?: number | null;
 		elevationLoss?: number | null;
 		[key: string]: unknown;

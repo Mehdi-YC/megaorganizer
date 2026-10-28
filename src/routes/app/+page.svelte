@@ -8,11 +8,12 @@
 	import StatGroupCard from '$lib/components/ui/StatGroupCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import type { Reminder, CalendarEvent } from '$lib/types';
 
 	let { data } = $props();
 
 	// svelte-ignore state_referenced_locally
-	let dueReminders = $state<any[]>(data.dueReminders ?? []);
+	let dueReminders = $state<Reminder[]>(data.dueReminders ?? []);
 
 	let analytics = $derived(data.analytics);
 	let currency = $derived(data.currency ?? 'DZD');
@@ -95,7 +96,7 @@
 		);
 	}
 
-	function getEventsForDay(day: Date, events: any[]): any[] {
+	function getEventsForDay(day: Date, events: CalendarEvent[]): CalendarEvent[] {
 		return events.filter((e) => isSameDay(new Date(e.date), day));
 	}
 
@@ -130,9 +131,9 @@
 			body: JSON.stringify({ action: 'updateTodo', todoId, completed })
 		});
 		if (res.ok) {
-			dueReminders = dueReminders.map((r: any) => ({
+			dueReminders = dueReminders.map((r) => ({
 				...r,
-				todos: r.todos.map((t: any) => (t.id === todoId ? { ...t, completed } : t))
+				todos: (r.todos ?? []).map((t) => (t.id === todoId ? { ...t, completed } : t))
 			}));
 		}
 	}

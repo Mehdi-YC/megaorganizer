@@ -6,8 +6,9 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
+	import type { Tag } from '$lib/types';
 
-	let tags = $state<any[]>([]);
+	let tags = $state<Tag[]>([]);
 	let loading = $state(true);
 	let showNew = $state(false);
 	let newName = $state('');
@@ -75,7 +76,7 @@
 		if (res.ok) tags = tags.filter((t) => t.id !== id);
 	}
 
-	function startEdit(t: any) {
+	function startEdit(t: Tag) {
 		editingId = t.id;
 		editName = t.name;
 		editColor = t.color || '#5A31F4';

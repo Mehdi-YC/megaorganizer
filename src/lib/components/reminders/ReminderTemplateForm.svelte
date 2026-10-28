@@ -1,5 +1,11 @@
 <script lang="ts">
 	import { Button, Input, Select, Textarea, Dialog } from '$lib/components/ui';
+	import type {
+		ReminderTemplateView,
+		ReminderTemplateFormData,
+		ReminderRecurrenceConfig,
+		ReminderRecurrenceType
+	} from '$lib/types';
 
 	let {
 		open = $bindable(false),
@@ -8,8 +14,8 @@
 		onClose
 	}: {
 		open?: boolean;
-		template?: any;
-		onSave?: (data: any) => void;
+		template?: ReminderTemplateView | null;
+		onSave?: (data: ReminderTemplateFormData) => void;
 		onClose?: () => void;
 	} = $props();
 
@@ -18,9 +24,7 @@
 	let markdown = $state('');
 	let icon = $state('fa-bell');
 	let iconColor = $state('');
-	let recurrenceType = $state<
-		'daily' | 'weekly' | 'monthly' | 'yearly' | 'yearly_date' | 'monthly_relative'
-	>('daily');
+	let recurrenceType = $state<ReminderRecurrenceType>('daily');
 	let hour = $state(9);
 	let minute = $state(0);
 	let selectedDays = $state<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
@@ -36,13 +40,13 @@
 			markdown = template.markdown ?? '';
 			icon = template.icon ?? 'fa-bell';
 			iconColor = template.iconColor ?? '';
-			recurrenceType = template.recurrenceType ?? 'daily';
-			todos = template.todos?.map((t: any) => t.text) ?? [];
+			recurrenceType = (template.recurrenceType ?? 'daily') as ReminderRecurrenceType;
+			todos = template.todos?.map((t) => t.text) ?? [];
 
 			// Parse config
 			if (template.recurrenceConfig) {
 				try {
-					const config = JSON.parse(template.recurrenceConfig);
+					const config = JSON.parse(template.recurrenceConfig) as ReminderRecurrenceConfig;
 					if (config.hour !== undefined) hour = config.hour;
 					if (config.minute !== undefined) minute = config.minute;
 					if (config.days) selectedDays = config.days;
@@ -118,7 +122,7 @@
 	function buildRecurrenceConfig(): string {
 		// Recurrence hours are wall-clock in the user's timezone; the server
 		// needs the zone to compute the next occurrences from it.
-		const config: any = {
+		const config: ReminderRecurrenceConfig = {
 			hour,
 			minute,
 			timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -165,7 +169,7 @@
 	function handleSave() {
 		if (!title.trim()) return;
 
-		const data: any = {
+		const data: ReminderTemplateFormData = {
 			title: title.trim(),
 			description: description.trim() || undefined,
 			markdown: markdown.trim() || undefined,

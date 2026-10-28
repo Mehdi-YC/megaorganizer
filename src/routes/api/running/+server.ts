@@ -70,7 +70,7 @@ function isGpsPoint(p: unknown): p is GpsPointInput {
  */
 function isTrackPoint(p: unknown): p is {
 	sequence: number;
-	timestamp: Date;
+	timestamp: string;
 	latitude: number;
 	longitude: number;
 	altitude?: number;
@@ -82,6 +82,7 @@ function isTrackPoint(p: unknown): p is {
 		isGpsPoint(p) &&
 		typeof (p as { sequence?: unknown }).sequence === 'number' &&
 		// JSON has no Date, so the timestamp arrives as a string; it must parse.
+		typeof (p as { timestamp?: unknown }).timestamp === 'string' &&
 		new Date(p.timestamp as string).getTime() > 0
 	);
 }
@@ -182,7 +183,11 @@ export const POST: RequestHandler = async (event) => {
 			if (v.data.points.length > MAX_GPS_POINTS) {
 				return json({ error: `Too many GPS points (max ${MAX_GPS_POINTS})` }, { status: 400 });
 			}
-			const points = await batchAddTrackPoints(user.id, v.data.activityId, v.data.points as any);
+			const points = await batchAddTrackPoints(
+				user.id,
+				v.data.activityId,
+				v.data.points.map((p) => ({ ...p, timestamp: new Date(p.timestamp) }))
+			);
 			return json(points, { status: 201 });
 		}
 

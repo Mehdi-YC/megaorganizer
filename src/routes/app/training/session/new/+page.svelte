@@ -604,7 +604,7 @@
 				<div class="space-y-3">
 					<h3 class="text-sm font-medium text-fg">Exercise Records</h3>
 					{#each exerciseRecords as record (record.itemId)}
-						{@const item = data.items.find((i: any) => i.id === record.itemId)}
+						{@const item = data.items.find((i) => i.id === record.itemId)}
 						<div class="rounded-sm border border-border bg-bg p-3">
 							<p class="mb-2 text-sm font-medium text-fg">{item?.name || 'Exercise'}</p>
 							<div class="grid grid-cols-3 gap-2">

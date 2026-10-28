@@ -16,10 +16,6 @@ export function isBoolean(v: unknown): v is boolean {
 	return typeof v === 'boolean';
 }
 
-export function isOptional<T>(isValid: Validator<T>): Validator<T | undefined | null> {
-	return (v: unknown): v is T | undefined | null => v === undefined || v === null || isValid(v);
-}
-
 export function isNonEmptyString(v: unknown): v is string {
 	return isString(v) && v.trim().length > 0;
 }

@@ -179,6 +179,64 @@ describe('tree.service', () => {
 			await el('n1', OWNER, 'node');
 			expect(await addChildToParent(OWNER, 'node', 'n1', 'item', 'ghost')).toBeNull();
 		});
+
+		test('rejects a child whose declared type does not match the row', async () => {
+			await el('n1', OWNER, 'node');
+			await el('i1', OWNER, 'item');
+			expect(await addChildToParent(OWNER, 'node', 'n1', 'node', 'i1')).toBeNull();
+		});
+
+		test('rejects a parent the caller does not own', async () => {
+			await el('theirs', OTHER, 'node');
+			await el('mine', OWNER, 'item');
+			expect(await addChildToParent(OWNER, 'node', 'theirs', 'item', 'mine')).toBeNull();
+			expect(await getChildCounts(OTHER, 'node', ['theirs'])).toEqual({});
+		});
+
+		test('is idempotent when the edge already exists', async () => {
+			await el('n1', OWNER, 'node');
+			await el('i1', OWNER, 'item');
+			const first = await addChildToParent(OWNER, 'node', 'n1', 'item', 'i1');
+			const second = await addChildToParent(OWNER, 'node', 'n1', 'item', 'i1');
+
+			expect(second!.id).toBe(first!.id);
+			expect(await getChildCounts(OWNER, 'node', ['n1'])).toEqual({ n1: 1 });
+		});
+
+		test('rejects a self-edge', async () => {
+			await el('n1', OWNER, 'node');
+			expect(await addChildToParent(OWNER, 'node', 'n1', 'node', 'n1')).toBeNull();
+		});
+
+		test('rejects an edge that would close a cycle', async () => {
+			await el('a', OWNER, 'node');
+			await el('b', OWNER, 'node');
+			await el('c', OWNER, 'node');
+			await addChildToParent(OWNER, 'node', 'a', 'node', 'b');
+			await addChildToParent(OWNER, 'node', 'b', 'node', 'c');
+
+			// a -> b -> c, so c cannot become a's parent.
+			expect(await addChildToParent(OWNER, 'node', 'c', 'node', 'a')).toBeNull();
+			// The tree is still walkable after the refusal.
+			const tree = await getFullTree(OWNER);
+			expect(tree).toHaveLength(1);
+			expect(tree[0].id).toBe('a');
+		});
+
+		test('allows a diamond because it is not a cycle', async () => {
+			await el('root', OWNER, 'node');
+			await el('left', OWNER, 'node');
+			await el('right', OWNER, 'node');
+			await el('leaf', OWNER, 'item');
+			await addChildToParent(OWNER, 'node', 'root', 'node', 'left');
+			await addChildToParent(OWNER, 'node', 'root', 'node', 'right');
+			await addChildToParent(OWNER, 'node', 'left', 'item', 'leaf');
+			await addChildToParent(OWNER, 'node', 'right', 'item', 'leaf');
+
+			const tree = await getFullTree(OWNER);
+			expect(tree).toHaveLength(1);
+			expect(tree[0].children).toHaveLength(2);
+		});
 	});
 
 	describe('removeChildFromParent', () => {
@@ -270,6 +328,34 @@ describe('tree.service', () => {
 			await el('theirs', OTHER, 'node');
 			const roots = await getFullTree(OWNER);
 			expect(roots.map((r) => r.id)).toEqual(['mine']);
+		});
+
+		test('cuts a cycle that predates the write guard', async () => {
+			await el('root', OWNER, 'node');
+			await el('a', OWNER, 'node');
+			await el('b', OWNER, 'node');
+			await addChildToParent(OWNER, 'node', 'root', 'node', 'a');
+			await addChildToParent(OWNER, 'node', 'a', 'node', 'b');
+			// Bypass the service: old rows can still close the loop.
+			await db
+				.insert(treeRelationship)
+				.values({
+					parentType: 'node',
+					parentId: 'b',
+					childType: 'node',
+					childId: 'a',
+					position: 0
+				})
+				.run();
+
+			const roots = await getFullTree(OWNER);
+			expect(roots.map((r) => r.id)).toEqual(['root']);
+
+			const a = roots[0].children[0];
+			const b = a.children[0];
+			expect(b.id).toBe('b');
+			expect(b.children[0].id).toBe('a');
+			expect(b.children[0].children).toEqual([]);
 		});
 	});
 

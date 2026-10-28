@@ -3,15 +3,14 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
+	import type { TrainingSession } from '$lib/types';
 
 	let { data } = $props();
-	let sessions = $derived<any[]>(data.sessions ?? []);
+	let sessions = $derived<TrainingSession[]>(data.sessions ?? []);
 	let filterType = $state('all');
 
 	let filteredSessions = $derived(
-		filterType === 'all'
-			? sessions
-			: sessions.filter((s: any) => s.activityTypes?.includes(filterType))
+		filterType === 'all' ? sessions : sessions.filter((s) => s.activityTypes?.includes(filterType))
 	);
 </script>
 

@@ -38,6 +38,34 @@ const activityTypes = [
 	'hiit',
 	'other'
 ] as const;
+
+/**
+ * The record shape batchCreateExerciseRecords writes. Optional fields are
+ * validated when present instead of being passed through on trust.
+ */
+function isExerciseRecord(r: unknown): r is {
+	itemId: string;
+	sets?: number;
+	reps?: string;
+	weight?: number;
+	unit?: string;
+	rpe?: number;
+	restTime?: number;
+	notes?: string;
+	position?: number;
+} {
+	if (!hasFields(r) || typeof r.itemId !== 'string') return false;
+
+	for (const key of ['sets', 'weight', 'rpe', 'restTime', 'position']) {
+		const value = r[key];
+		if (value !== undefined && value !== null && typeof value !== 'number') return false;
+	}
+	for (const key of ['reps', 'unit', 'notes']) {
+		const value = r[key];
+		if (value !== undefined && value !== null && typeof value !== 'string') return false;
+	}
+	return true;
+}
 const sessionStatuses = ['active', 'paused', 'completed', 'cancelled'] as const;
 
 export const GET: RequestHandler = async (event) => {
@@ -123,20 +151,14 @@ export const POST: RequestHandler = async (event) => {
 			const v = validateBody(body, {
 				activityId: { validate: isNonEmptyString, label: 'Activity ID' },
 				records: {
-					validate: isArray(
-						(r): r is Record<string, unknown> => hasFields(r) && typeof r.itemId === 'string'
-					),
+					validate: isArray(isExerciseRecord),
 					label: 'Records'
 				}
 			});
 			if (!v.ok) return v.error;
 			if (v.data.records.length > 50)
 				return json({ error: 'Too many records (max 50)' }, { status: 400 });
-			const result = await batchCreateExerciseRecords(
-				user.id,
-				v.data.activityId,
-				v.data.records as any
-			);
+			const result = await batchCreateExerciseRecords(user.id, v.data.activityId, v.data.records);
 			if (!result) return json({ error: 'Activity not found or access denied' }, { status: 404 });
 			return json(result, { status: 201 });
 		}
