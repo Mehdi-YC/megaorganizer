@@ -329,6 +329,34 @@ describe('tree.service', () => {
 			const roots = await getFullTree(OWNER);
 			expect(roots.map((r) => r.id)).toEqual(['mine']);
 		});
+
+		test('cuts a cycle that predates the write guard', async () => {
+			await el('root', OWNER, 'node');
+			await el('a', OWNER, 'node');
+			await el('b', OWNER, 'node');
+			await addChildToParent(OWNER, 'node', 'root', 'node', 'a');
+			await addChildToParent(OWNER, 'node', 'a', 'node', 'b');
+			// Bypass the service: old rows can still close the loop.
+			await db
+				.insert(treeRelationship)
+				.values({
+					parentType: 'node',
+					parentId: 'b',
+					childType: 'node',
+					childId: 'a',
+					position: 0
+				})
+				.run();
+
+			const roots = await getFullTree(OWNER);
+			expect(roots.map((r) => r.id)).toEqual(['root']);
+
+			const a = roots[0].children[0];
+			const b = a.children[0];
+			expect(b.id).toBe('b');
+			expect(b.children[0].id).toBe('a');
+			expect(b.children[0].children).toEqual([]);
+		});
 	});
 
 	describe('searchTreeElements', () => {

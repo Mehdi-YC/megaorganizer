@@ -138,11 +138,21 @@ async function getUserRelationships(userId: string) {
 }
 
 /** Flatten the internal {element, children} shape into the public one. */
-function toTree(node: NodeWithChildren): TreeElementNode {
-	return {
-		...node.element,
-		children: node.children.map(toTree).sort((a, b) => a.name.localeCompare(b.name))
-	};
+function toTree(node: NodeWithChildren, seen = new Set<string>()): TreeElementNode {
+	// Rows written before addChildToParent rejected cycles can still contain
+	// one. Cut the edge on the read path instead of recursing until the stack
+	// dies; the rest of the branch still renders.
+	if (seen.has(node.element.id)) {
+		return { ...node.element, children: [] };
+	}
+
+	seen.add(node.element.id);
+	const children = node.children
+		.map((child) => toTree(child, seen))
+		.sort((a, b) => a.name.localeCompare(b.name));
+	seen.delete(node.element.id);
+
+	return { ...node.element, children };
 }
 
 /** Wire parent/child links into a map of nodes, then return the roots. */
@@ -413,7 +423,7 @@ export async function moveChild(
 export async function getFullTree(userId: string): Promise<TreeElementNode[]> {
 	const elements = await db.select().from(treeElement).where(eq(treeElement.userId, userId)).all();
 	const relationships = await getUserRelationships(userId);
-	return assemble(elements, relationships).map(toTree);
+	return assemble(elements, relationships).map((node) => toTree(node));
 }
 
 export async function searchTreeElements(userId: string, query: string) {
