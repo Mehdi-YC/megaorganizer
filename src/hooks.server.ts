@@ -33,10 +33,10 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 		return response;
 	}
 
-	// MCP clients authenticate with a bearer token, not the session cookie,
-	// and the MCP transport owns request parsing. Skip the cookie check, the
-	// Content-Length requirement, and the REST rate limit for this path; the
-	// route authenticates and rate-limits on its own.
+	// MCP clients authenticate with the account's email and password, not the
+	// session cookie, and the MCP transport owns request parsing. Skip the
+	// cookie check, the Content-Length requirement, and the REST rate limit for
+	// this path; the route authenticates and rate-limits on its own.
 	if (/^\/api\/mcp\/?$/.test(event.url.pathname)) {
 		const response = await resolve(event);
 		for (const [key, value] of Object.entries(SECURITY_HEADERS)) {

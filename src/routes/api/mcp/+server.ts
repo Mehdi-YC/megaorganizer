@@ -8,7 +8,7 @@ import { checkRateLimit } from '$lib/server/rate-limit';
 // transport bound to the account behind the bearer token, so no session state
 // is kept between requests and a restart cannot strand a client.
 //
-// Auth is a static token from the environment (see mcp/auth.ts), not the app
+// Auth is the account's email and password (see mcp/auth.ts), not the app
 // session cookie. hooks.server.ts skips its cookie check for this path.
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };

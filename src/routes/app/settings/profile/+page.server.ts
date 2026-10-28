@@ -4,7 +4,7 @@ import { auth } from '$lib/server/auth';
 import { handleAuthError } from '$lib/server/api-helpers';
 import { getUserSettings } from '$lib/server/services/finance.service';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
 		throw redirect(302, '/auth/login');
 	}
@@ -16,7 +16,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			name: locals.user.name,
 			email: locals.user.email
 		},
-		financeSettings: settings
+		financeSettings: settings,
+		mcpUrl: `${url.origin}/api/mcp`
 	};
 };
 

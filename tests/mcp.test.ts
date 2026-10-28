@@ -1,7 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { env } from '$env/dynamic/private';
+import { hashPassword } from 'better-auth/crypto';
 import { db } from '../src/lib/server/db';
 import {
+	account,
 	category,
 	expense,
 	page,
@@ -9,6 +10,7 @@ import {
 	reminderTodo,
 	runningActivity,
 	runningTrackPoint,
+	session,
 	tag,
 	trainingActivity,
 	trainingExerciseRecord,
@@ -20,6 +22,7 @@ import {
 	wikilink
 } from '../src/lib/server/db/schema';
 import { authenticateMcpRequest } from '../src/lib/server/mcp/auth';
+import { resetRateLimit } from '../src/lib/server/rate-limit';
 import {
 	financeSummary,
 	getItem,
@@ -40,6 +43,12 @@ import {
 const OWNER = 'user-owner';
 const OTHER = 'user-other';
 const NOW = new Date('2026-10-28T12:00:00.000Z');
+
+const OWNER_PASSWORD = 'owner-password-123';
+const OTHER_PASSWORD = 'other-password-123';
+// Hashing is deliberately slow; do it once for the whole file.
+const OWNER_HASH = await hashPassword(OWNER_PASSWORD);
+const OTHER_HASH = await hashPassword(OTHER_PASSWORD);
 
 // Child tables first so foreign keys stay satisfied while clearing.
 const TABLES = [
@@ -92,6 +101,29 @@ async function seed() {
 		.values([
 			{ id: OWNER, name: 'Owner', email: 'owner@example.com', emailVerified: true },
 			{ id: OTHER, name: 'Other', email: 'other@example.com', emailVerified: true }
+		])
+		.run();
+
+	// Credential accounts, as better-auth writes them for email/password users.
+	await db
+		.insert(account)
+		.values([
+			{
+				id: 'acc-owner',
+				issuer: 'credential',
+				accountId: OWNER,
+				providerId: 'credential',
+				userId: OWNER,
+				password: OWNER_HASH
+			},
+			{
+				id: 'acc-other',
+				issuer: 'credential',
+				accountId: OTHER,
+				providerId: 'credential',
+				userId: OTHER,
+				password: OTHER_HASH
+			}
 		])
 		.run();
 
@@ -474,71 +506,113 @@ describe('mcp queries', () => {
 });
 
 describe('mcp auth', () => {
-	const mutableEnv = env as unknown as Record<string, string | undefined>;
-	const saved = {
-		MCP_TOKEN: mutableEnv.MCP_TOKEN,
-		MCP_USER_EMAIL: mutableEnv.MCP_USER_EMAIL,
-		MCP_USER_ID: mutableEnv.MCP_USER_ID
-	};
-
 	beforeEach(async () => {
 		await reset();
 		await seed();
+		resetRateLimit('mcp-auth:owner@example.com');
+		resetRateLimit('mcp-auth:other@example.com');
 	});
 
 	afterEach(() => {
-		for (const [key, value] of Object.entries(saved)) {
-			if (value === undefined) delete mutableEnv[key];
-			else mutableEnv[key] = value;
-		}
+		resetRateLimit('mcp-auth:owner@example.com');
+		resetRateLimit('mcp-auth:other@example.com');
 	});
 
 	function request(headers: Record<string, string> = {}) {
 		return new Request('https://example.com/api/mcp', { method: 'POST', headers });
 	}
 
-	test('is disabled without a configured token', async () => {
-		delete mutableEnv.MCP_TOKEN;
-		const result = await authenticateMcpRequest(request());
+	function bearer(email: string, password: string) {
+		return request({ authorization: `Bearer ${email}:${password}` });
+	}
+
+	function basic(email: string, password: string) {
+		return request({
+			authorization: `Basic ${btoa(`${email}:${password}`)}`
+		});
+	}
+
+	test('rejects a missing or malformed authorization header', async () => {
+		for (const header of [undefined, '', 'Bearer', 'Bearer no-colon-here', 'Basic !!!not-base64']) {
+			const result = await authenticateMcpRequest(request(header ? { authorization: header } : {}));
+			expect(result.ok).toBe(false);
+			if (!result.ok) expect(result.status).toBe(401);
+		}
+	});
+
+	test('rejects a wrong password', async () => {
+		const result = await authenticateMcpRequest(bearer('owner@example.com', 'wrong-password'));
 		expect(result.ok).toBe(false);
-		if (!result.ok) expect(result.status).toBe(503);
+		if (!result.ok) expect(result.status).toBe(401);
 	});
 
-	test('rejects a missing or wrong token', async () => {
-		mutableEnv.MCP_TOKEN = 'a'.repeat(32);
-		mutableEnv.MCP_USER_EMAIL = 'owner@example.com';
-
-		const missing = await authenticateMcpRequest(request());
-		expect(missing.ok).toBe(false);
-		if (!missing.ok) expect(missing.status).toBe(401);
-
-		const wrong = await authenticateMcpRequest(
-			request({ authorization: `Bearer ${'b'.repeat(32)}` })
-		);
-		expect(wrong.ok).toBe(false);
-		if (!wrong.ok) expect(wrong.status).toBe(401);
+	test('rejects an unknown email', async () => {
+		const result = await authenticateMcpRequest(bearer('nobody@example.com', OWNER_PASSWORD));
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.status).toBe(401);
 	});
 
-	test('resolves the configured account for a valid token', async () => {
-		mutableEnv.MCP_TOKEN = 'a'.repeat(32);
-		mutableEnv.MCP_USER_EMAIL = 'owner@example.com';
-
-		const result = await authenticateMcpRequest(
-			request({ authorization: `Bearer ${'a'.repeat(32)}` })
-		);
+	test('accepts email and password as a bearer value', async () => {
+		const result = await authenticateMcpRequest(bearer('owner@example.com', OWNER_PASSWORD));
 		expect(result.ok).toBe(true);
 		if (result.ok) expect(result.userId).toBe(OWNER);
 	});
 
-	test('requires an account choice when the instance has several users', async () => {
-		mutableEnv.MCP_TOKEN = 'a'.repeat(32);
-		delete mutableEnv.MCP_USER_EMAIL;
-		delete mutableEnv.MCP_USER_ID;
+	test('accepts HTTP basic auth', async () => {
+		const result = await authenticateMcpRequest(basic('owner@example.com', OWNER_PASSWORD));
+		expect(result.ok).toBe(true);
+		if (result.ok) expect(result.userId).toBe(OWNER);
+	});
 
-		const result = await authenticateMcpRequest(
-			request({ authorization: `Bearer ${'a'.repeat(32)}` })
-		);
+	test('matches the email case-insensitively', async () => {
+		const result = await authenticateMcpRequest(bearer('Owner@Example.COM', OWNER_PASSWORD));
+		expect(result.ok).toBe(true);
+		if (result.ok) expect(result.userId).toBe(OWNER);
+	});
+
+	test('resolves each account from its own credentials', async () => {
+		const owner = await authenticateMcpRequest(bearer('owner@example.com', OWNER_PASSWORD));
+		const other = await authenticateMcpRequest(bearer('other@example.com', OTHER_PASSWORD));
+
+		expect(owner.ok).toBe(true);
+		expect(other.ok).toBe(true);
+		if (owner.ok && other.ok) {
+			expect(owner.userId).toBe(OWNER);
+			expect(other.userId).toBe(OTHER);
+		}
+	});
+
+	test('rejects an account that has no password', async () => {
+		await db
+			.insert(user)
+			.values({ id: 'user-oauth', name: 'OAuth', email: 'oauth@example.com' })
+			.run();
+
+		const result = await authenticateMcpRequest(bearer('oauth@example.com', 'anything-at-all'));
 		expect(result.ok).toBe(false);
-		if (!result.ok) expect(result.error).toContain('Multiple accounts');
+		if (!result.ok) expect(result.status).toBe(401);
+	});
+
+	test('locks out an email after repeated failures', async () => {
+		for (let attempt = 0; attempt < 10; attempt++) {
+			const result = await authenticateMcpRequest(bearer('owner@example.com', 'wrong-password'));
+			expect(result.ok).toBe(false);
+		}
+
+		const locked = await authenticateMcpRequest(bearer('owner@example.com', OWNER_PASSWORD));
+		expect(locked.ok).toBe(false);
+		if (!locked.ok) {
+			expect(locked.status).toBe(429);
+			expect(locked.headers?.['Retry-After']).toBeDefined();
+		}
+	});
+
+	test('does not create a session or write anything', async () => {
+		const before = await db.select().from(session).all();
+		const result = await authenticateMcpRequest(bearer('owner@example.com', OWNER_PASSWORD));
+		const after = await db.select().from(session).all();
+
+		expect(result.ok).toBe(true);
+		expect(after.length).toBe(before.length);
 	});
 });

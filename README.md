@@ -210,26 +210,32 @@ tool writes at all.
 
 ### Setup
 
-1. Generate a token and add it to `.env` (the Docker `env_file` picks it up):
+Nothing to configure on the server. Each account authenticates with its own
+email and password, so every user connects their own agent to their own data.
+The endpoint URL is shown under **Edit Profile → AI Access**.
 
-   ```sh
-   openssl rand -hex 32
-   ```
+Send the credentials with every request, either as a bearer value or as HTTP
+Basic auth:
 
-   ```sh
-   MCP_TOKEN="<the token>"
-   # Only needed when the instance has more than one account:
-   MCP_USER_EMAIL="you@example.com"
-   ```
+```http
+Authorization: Bearer you@example.com:your-password
+Authorization: Basic <base64 of "you@example.com:your-password">
+```
 
-2. Restart the app.
+An email is locked out for 15 minutes after 10 failed attempts, and
+authenticated calls are rate-limited per account (120/minute). The endpoint
+never creates a session and never writes a row.
 
-3. Point the client at `https://your.domain/api/mcp` with the bearer token.
-
-Without `MCP_TOKEN` the endpoint returns `503`; with a wrong or missing token it
-returns `401`. Requests are rate-limited per account (120/minute).
+Because the client stores the password, a leaked client config is a leaked
+account, not just read access. Change the password to revoke access everywhere.
 
 ### OpenCode
+
+Keep the credential in the environment rather than in the JSON file:
+
+```sh
+export MEGAORGANIZE_MCP_CREDENTIALS="you@example.com:your-password"
+```
 
 ```jsonc
 // opencode.json
@@ -241,14 +247,12 @@ returns `401`. Requests are rate-limited per account (120/minute).
 			"url": "https://your.domain/api/mcp",
 			"oauth": false,
 			"headers": {
-				"Authorization": "Bearer {env:MEGAORGANIZE_MCP_TOKEN}"
+				"Authorization": "Bearer {env:MEGAORGANIZE_MCP_CREDENTIALS}"
 			}
 		}
 	}
 }
 ```
-
-Export `MEGAORGANIZE_MCP_TOKEN` in the shell that starts OpenCode.
 
 ### Claude Code
 
@@ -260,7 +264,7 @@ Export `MEGAORGANIZE_MCP_TOKEN` in the shell that starts OpenCode.
 			"type": "http",
 			"url": "https://your.domain/api/mcp",
 			"headers": {
-				"Authorization": "Bearer ${MEGAORGANIZE_MCP_TOKEN}"
+				"Authorization": "Bearer ${MEGAORGANIZE_MCP_CREDENTIALS}"
 			}
 		}
 	}
@@ -268,7 +272,7 @@ Export `MEGAORGANIZE_MCP_TOKEN` in the shell that starts OpenCode.
 ```
 
 Any other Streamable HTTP MCP client works the same way: POST to `/api/mcp`
-with an `Authorization: Bearer <token>` header.
+with an `Authorization` header holding `email:password`.
 
 ### Tools
 
