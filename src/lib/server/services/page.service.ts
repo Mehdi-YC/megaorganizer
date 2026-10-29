@@ -77,14 +77,14 @@ export async function updatePage(
 	pageId: string,
 	data: {
 		name?: string;
-		description?: string;
-		markdown?: string;
-		icon?: string;
+		description?: string | null;
+		markdown?: string | null;
+		icon?: string | null;
 		iconColor?: string;
 		accentColor?: string;
 		backgroundColor?: string;
-		imageUrl?: string;
-		coverImageUrl?: string;
+		imageUrl?: string | null;
+		coverImageUrl?: string | null;
 		position?: number;
 	}
 ) {

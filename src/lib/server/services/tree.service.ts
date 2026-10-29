@@ -65,11 +65,11 @@ export async function updateTreeElement(
 	id: string,
 	data: {
 		name?: string;
-		description?: string;
-		markdown?: string;
-		imageUrl?: string;
-		videoUrl?: string;
-		externalUrl?: string;
+		description?: string | null;
+		markdown?: string | null;
+		imageUrl?: string | null;
+		videoUrl?: string | null;
+		externalUrl?: string | null;
 		tags?: string;
 		metadata?: string;
 		ydkData?: string;

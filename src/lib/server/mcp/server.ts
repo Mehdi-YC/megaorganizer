@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { updateItem, updatePage } from './mutations';
 import {
 	financeSummary,
 	getItem,
@@ -18,11 +19,19 @@ import {
 	ToolInputError
 } from './queries';
 
-// All tools are read-only. The user id is bound when the server is created
-// (one server per HTTP request), so no tool takes a user id from the client.
+// Read tools only read; the two update_* tools edit existing rows. The user id
+// is bound when the server is created (one server per HTTP request), so no
+// tool takes a user id from the client.
 
 const READ_ONLY = {
 	readOnlyHint: true,
+	destructiveHint: false,
+	idempotentHint: true,
+	openWorldHint: false
+} as const;
+
+const WRITE = {
+	readOnlyHint: false,
 	destructiveHint: false,
 	idempotentHint: true,
 	openWorldHint: false
@@ -56,11 +65,11 @@ async function safe(run: () => Promise<unknown>): Promise<ToolResponse> {
 
 export function createMcpServer(userId: string): McpServer {
 	const server = new McpServer(
-		{ name: 'megaorganize', version: '1.0.0' },
+		{ name: 'megaorganize', version: '1.1.0' },
 		{
 			capabilities: { tools: {} },
 			instructions:
-				'Read-only access to one MegaOrganize account. Start with "search" when you do not know an id, or "timeline" for questions about recent activity. Use list_* tools to browse, then get_page/get_item/get_training_session for full detail. Dates are ISO 8601; date-only arguments are interpreted in the server timezone. Nothing here writes data.'
+				'Access to one MegaOrganize account, with read and edit tools. Start with "search" when you do not know an id, or "timeline" for questions about recent activity. Use list_* tools to browse, then get_page/get_item/get_training_session for full detail. To change existing content use update_page or update_item: only the fields you pass change, and null clears a field. Edits are saved immediately and visible in the app. Dates are ISO 8601; date-only arguments are interpreted in the server timezone.'
 		}
 	);
 
@@ -323,6 +332,80 @@ export function createMcpServer(userId: string): McpServer {
 			annotations: READ_ONLY
 		},
 		async () => safe(() => getStats(userId))
+	);
+
+	server.registerTool(
+		'update_item',
+		{
+			title: 'Edit a node or item',
+			description:
+				'Edit an existing node or item in place. Only the fields you pass are changed; pass null (or an empty string) to clear description, markdown, or a media URL. "tags" replaces the whole tag list and accepts tag names or ids; use list_tags to see them. Images are public http(s) URLs, not file uploads. Call get_item first to read the current values. Changes are saved immediately.',
+			inputSchema: {
+				id: z.string().min(1).describe('Node or item id'),
+				name: z.string().min(1).optional().describe('New name'),
+				description: z.string().nullable().optional().describe('Short description; null clears it'),
+				markdown: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Markdown body, replacing the current one; null clears it'),
+				imageUrl: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Public http(s) image URL; null removes the image'),
+				videoUrl: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Public http(s) video URL; null removes it'),
+				externalUrl: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Public http(s) link to an external resource; null removes it'),
+				tags: z
+					.array(z.string().min(1))
+					.max(50)
+					.optional()
+					.describe('Full replacement tag list, by name or id; [] removes all tags'),
+				favorite: z.boolean().optional().describe('Mark as favorite or not')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => updateItem(userId, args))
+	);
+
+	server.registerTool(
+		'update_page',
+		{
+			title: 'Edit a page',
+			description:
+				'Edit an existing markdown page. Only the fields you pass are changed; pass null (or an empty string) to clear description, markdown, icon, or an image URL. Images are public http(s) URLs, not file uploads. Call get_page first to read the current values. Changes are saved immediately.',
+			inputSchema: {
+				id: z.string().min(1).describe('Page id'),
+				name: z.string().min(1).optional().describe('New name'),
+				description: z.string().nullable().optional().describe('Short description; null clears it'),
+				markdown: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Markdown body, replacing the current one; null clears it'),
+				imageUrl: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Public http(s) image URL; null removes the image'),
+				coverImageUrl: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Public http(s) cover image URL; null removes it'),
+				icon: z.string().nullable().optional().describe('Icon class or short text; null clears it')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => updatePage(userId, args))
 	);
 
 	return server;

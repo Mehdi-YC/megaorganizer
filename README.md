@@ -193,20 +193,22 @@ plus `QuickCapture.svelte` for quick-add capture.
 | `/api/links`          | GET                    | Resolve a wikilink target name to a URL              |
 | `/api/push`           | GET, POST              | Web Push config, device subscribe/unsubscribe        |
 | `/api/search`         | GET                    | FTS5 global search across all content                |
-| `/api/mcp`            | POST                   | Read-only MCP server (bearer token)                  |
+| `/api/mcp`            | POST                   | MCP server (bearer token, read + edit)               |
 | `/api/cards`          | GET                    | YGOPRODeck card lookup for the deck viewer           |
 | `/api/backup`         | GET, POST              | Full data export (GET) / import (POST)               |
 | `/share-target`       | POST                   | PWA share_target endpoint (Android share sheet)      |
 
-## MCP Server (read-only)
+## MCP Server
 
-MegaOrganize exposes a read-only [Model Context Protocol](https://modelcontextprotocol.io)
+MegaOrganize exposes a [Model Context Protocol](https://modelcontextprotocol.io)
 endpoint so an AI client can answer questions about your own data ("what did I
-do last week?", "how much did I spend in August?", "find my notes on X").
+do last week?", "how much did I spend in August?", "find my notes on X") and
+edit existing items and pages.
 
 It is a stateless Streamable HTTP server at `POST /api/mcp`. Every tool call is
-scoped to one account; no tool can read or write another user's rows, and no
-tool writes at all.
+scoped to one account; no tool can read or write another user's rows. Most
+tools only read; `update_item` and `update_page` edit existing content and
+never create or delete rows.
 
 ### Setup
 
@@ -224,10 +226,12 @@ Authorization: Basic <base64 of "you@example.com:your-password">
 
 An email is locked out for 15 minutes after 10 failed attempts, and
 authenticated calls are rate-limited per account (120/minute). The endpoint
-never creates a session and never writes a row.
+never creates a session, and the edit tools write only to the calling account's
+own rows.
 
 Because the client stores the password, a leaked client config is a leaked
-account, not just read access. Change the password to revoke access everywhere.
+account with edit access, not just read access. Change the password to revoke
+access everywhere.
 
 ### OpenCode
 
@@ -284,6 +288,8 @@ with an `Authorization` header holding `email:password`.
 | `get_page`               | Page markdown, category, nested children, backlinks, attachments   |
 | `list_items`             | Nodes/items; filter by type, tag, favorite, text, or date          |
 | `get_item`               | Item markdown, tags, parents, children, backlinks, metadata        |
+| `update_item`            | Edit an item's name, description, markdown, image/video URL, tags  |
+| `update_page`            | Edit a page's name, description, markdown, image/cover, icon       |
 | `list_tags`              | Tags with item and expense counts                                  |
 | `list_reminders`         | Reminders with todo checklists; pending/completed/all, date range  |
 | `list_expenses`          | Expenses with total and count for the filter                       |
