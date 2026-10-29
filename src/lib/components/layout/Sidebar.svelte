@@ -343,18 +343,6 @@
 			Tags
 		</a>
 
-		<a
-			href={resolve('/app/mindmap')}
-			onclick={onNavigate}
-			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-				.url.pathname === '/app/mindmap'
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-sitemap w-4 text-center text-xs"></i>
-			Mind Map
-		</a>
-
 		<div class="my-1 h-px bg-border/50"></div>
 
 		{#each categories as cat (cat.id)}
