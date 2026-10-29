@@ -650,7 +650,7 @@
 			<div class="space-y-0">
 				{#each topLevelNodes as node, nodeIdx (node.id)}
 					{#if nodeIdx > 0}
-						<hr class="my-3 border-border" />
+						<hr class="my-7 border-border" />
 					{/if}
 					{@const isExpanded = expandedNodes.has(node.id)}
 					{@const nodeColor = getNodeColor(node)}
@@ -671,7 +671,7 @@
 						<div
 							role="button"
 							tabindex="0"
-							class="group flex cursor-pointer items-center gap-2 sm:gap-2.5"
+							class="group flex cursor-pointer items-center gap-2 pt-1 sm:gap-3"
 							onclick={() => toggleNode(node.id)}
 							onkeydown={(e) => {
 								if (e.key === 'Enter' || e.key === ' ') toggleNode(node.id);
@@ -681,16 +681,16 @@
 								class="fas fa-grip-vertical shrink-0 cursor-move text-[8px] text-fg-subdued/30 transition-opacity sm:opacity-0 sm:group-hover/node:opacity-100"
 							></i>
 							<i
-								class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isExpanded
+								class="fas fa-chevron-right text-[10px] transition-transform duration-150 {isExpanded
 									? 'rotate-90'
 									: ''}"
 								style="color: {nodeColor}"
 							></i>
-							<i class="fas {nodeIcon} text-[11px]" style="color: {nodeColor}"></i>
-							<span class="truncate text-sm font-semibold" style="color: {nodeColor}"
+							<i class="fas {nodeIcon} text-base" style="color: {nodeColor}"></i>
+							<span class="truncate text-lg font-semibold" style="color: {nodeColor}"
 								>{node.name}</span
 							>
-							<span class="text-[11px] text-fg-subdued">{nodeItemCount(node.id)} items</span>
+							<span class="text-xs text-fg-subdued">{nodeItemCount(node.id)} items</span>
 							<div class="flex-1"></div>
 							<button
 								type="button"
