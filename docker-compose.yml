@@ -22,7 +22,7 @@ services:
       # restart the container after replacing it. `static/uploads` is the
       # legacy upload location and stays mounted so pre-existing files keep
       # working (copy them into `data/uploads` when convenient).
-      - ./local.db:/app/local.db
-      - ./data/uploads:/app/data/uploads
-      - ./static/uploads:/app/static/uploads
+      - ./local.db:/app/local.db:z
+      - ./data/uploads:/app/data/uploads:z
+      - ./static/uploads:/app/static/uploads:z
     restart: unless-stopped
