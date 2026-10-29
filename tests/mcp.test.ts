@@ -22,6 +22,7 @@ import {
 	wikilink
 } from '../src/lib/server/db/schema';
 import { authenticateMcpRequest } from '../src/lib/server/mcp/auth';
+import { updateItem, updatePage } from '../src/lib/server/mcp/mutations';
 import { resetRateLimit } from '../src/lib/server/rate-limit';
 import {
 	financeSummary,
@@ -501,6 +502,98 @@ describe('mcp queries', () => {
 			expect(result.counts.categories).toBe(1);
 			expect(result.counts.tags).toBe(1);
 			expect(result.counts.pendingReminders).toBe(1);
+		});
+	});
+});
+
+describe('mcp edits', () => {
+	beforeEach(async () => {
+		await reset();
+		await seed();
+	});
+
+	describe('updateItem', () => {
+		test('sets a description and image URL and reports what changed', async () => {
+			const result = await updateItem(OWNER, {
+				id: 'i1',
+				description: 'Chest day',
+				imageUrl: 'https://example.com/bench.jpg'
+			});
+
+			expect(result.changed.sort()).toEqual(['description', 'imageUrl']);
+			expect(result.item.description).toBe('Chest day');
+			expect(result.item.imageUrl).toBe('https://example.com/bench.jpg');
+
+			const persisted = await getItem(OWNER, 'i1');
+			expect(persisted.item.description).toBe('Chest day');
+			expect(persisted.item.imageUrl).toBe('https://example.com/bench.jpg');
+		});
+
+		test('leaves omitted fields untouched', async () => {
+			await updateItem(OWNER, { id: 'i1', name: 'Incline Press' });
+
+			const item = (await getItem(OWNER, 'i1')).item;
+			expect(item.name).toBe('Incline Press');
+			expect(item.description).toBe('Push day');
+			expect(item.markdown).toBe('Three sets of five.');
+		});
+
+		test('clears nullable fields with null or an empty string', async () => {
+			await updateItem(OWNER, { id: 'i1', description: null, imageUrl: '' });
+
+			const item = (await getItem(OWNER, 'i1')).item;
+			expect(item.description).toBeNull();
+			expect(item.imageUrl).toBeNull();
+			expect(item.markdown).toBe('Three sets of five.');
+		});
+
+		test('replaces tags by name and clears them with an empty list', async () => {
+			await updateItem(OWNER, { id: 'i1', tags: ['Focus'] });
+			expect((await getItem(OWNER, 'i1')).item.tags.map((t) => t.id)).toEqual(['t1']);
+
+			await updateItem(OWNER, { id: 'i1', tags: [] });
+			expect((await getItem(OWNER, 'i1')).item.tags).toEqual([]);
+		});
+
+		test('rejects unknown tags without touching the row', async () => {
+			await expect(updateItem(OWNER, { id: 'i1', tags: ['Nope'] })).rejects.toThrow('Unknown tag');
+			expect((await getItem(OWNER, 'i1')).item.tags.map((t) => t.id)).toEqual(['t1']);
+		});
+
+		test('rejects non-http image URLs', async () => {
+			await expect(
+				updateItem(OWNER, { id: 'i1', imageUrl: 'javascript:alert(1)' })
+			).rejects.toThrow('must use http or https');
+			expect((await getItem(OWNER, 'i1')).item.imageUrl).toBeNull();
+		});
+
+		test('refuses another account and leaves the item alone', async () => {
+			await expect(updateItem(OTHER, { id: 'i1', description: 'Hijacked' })).rejects.toThrow(
+				'No item or node'
+			);
+			expect((await getItem(OWNER, 'i1')).item.description).toBe('Push day');
+		});
+	});
+
+	describe('updatePage', () => {
+		test('sets a description and image URL', async () => {
+			const result = await updatePage(OWNER, {
+				id: 'p1',
+				description: 'Yearly planning',
+				imageUrl: 'https://example.com/plan.png'
+			});
+
+			expect(result.changed.sort()).toEqual(['description', 'imageUrl']);
+			const page = (await getPage(OWNER, 'p1')).page;
+			expect(page.description).toBe('Yearly planning');
+			expect(page.imageUrl).toBe('https://example.com/plan.png');
+		});
+
+		test('refuses another account', async () => {
+			await expect(updatePage(OTHER, { id: 'p1', description: 'Hijacked' })).rejects.toThrow(
+				'No page'
+			);
+			expect((await getPage(OWNER, 'p1')).page.description).toBe('Quarterly planning');
 		});
 	});
 });

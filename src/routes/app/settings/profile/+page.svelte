@@ -435,8 +435,8 @@
 		</div>
 		<div class="space-y-4 px-6 py-5">
 			<p class="text-xs text-fg-subdued">
-				Connect an AI client to your account with the Model Context Protocol. Access is read-only
-				and limited to your own data.
+				Connect an AI client to your account with the Model Context Protocol. Access is limited to
+				your own data: the client can read your content and edit existing items and pages.
 			</p>
 
 			<div class="flex flex-col gap-1.5">
