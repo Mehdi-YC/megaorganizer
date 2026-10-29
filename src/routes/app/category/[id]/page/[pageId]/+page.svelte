@@ -650,7 +650,7 @@
 			<div class="space-y-0">
 				{#each topLevelNodes as node, nodeIdx (node.id)}
 					{#if nodeIdx > 0}
-						<hr class="my-7 border-border" />
+						<p class="my-8 border-border" ></p>
 					{/if}
 					{@const isExpanded = expandedNodes.has(node.id)}
 					{@const nodeColor = getNodeColor(node)}
