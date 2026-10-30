@@ -32,4 +32,5 @@ vite.config.ts.timestamp-*
 
 # Uploads
 static/uploads
+data/
 .worktrees/

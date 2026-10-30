@@ -239,8 +239,8 @@
 		<!-- Main Form (Left 2 Columns) -->
 		<div class="space-y-6 lg:col-span-2">
 			<!-- Invoice Meta Card -->
-			<div class="rounded-sm border border-border bg-surface p-5">
-				<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+			<div class="rounded-xl border border-border/80 bg-surface/90 p-5 shadow-xs">
+				<h2 class="mb-4 text-xs font-bold tracking-wider text-fg-subdued uppercase">
 					Informations Générales
 				</h2>
 
@@ -248,22 +248,22 @@
 					<!-- Client -->
 					<div class="flex flex-col gap-1.5">
 						<div class="flex items-center justify-between">
-							<label for="clientSelect" class="text-xs font-semibold text-fg-accent">
+							<label for="clientSelect" class="text-xs font-semibold text-fg">
 								Client / Entreprise <span class="text-error">*</span>
 							</label>
 							<button
 								type="button"
-								class="cursor-pointer text-[11px] text-primary-text hover:underline"
+								class="cursor-pointer text-[11px] font-medium text-primary-text hover:underline"
 								onclick={() => (showNewClientModal = true)}
 							>
-								+ Nouveau Client
+								<i class="fas fa-plus text-[10px]"></i> Nouveau Client
 							</button>
 						</div>
 						{#if clients.length > 0}
 							<select
 								id="clientSelect"
 								bind:value={clientId}
-								class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:border-primary-text focus:outline-none"
+								class="h-9 w-full rounded-lg border border-border/80 bg-bg px-3 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 							>
 								{#each clients as c (c.id)}
 									<option value={c.id}>{c.name} {c.city ? `(${c.city})` : ''}</option>
@@ -271,7 +271,7 @@
 							</select>
 						{:else}
 							<div
-								class="flex items-center justify-between rounded border border-border bg-bg p-2 text-xs"
+								class="flex items-center justify-between rounded-lg border border-border bg-bg p-2 text-xs"
 							>
 								<span class="text-fg-subdued">Aucun client enregistré</span>
 								<Button size="sm" type="button" onclick={() => (showNewClientModal = true)}>
@@ -283,7 +283,7 @@
 
 					<!-- Invoice Number -->
 					<div class="flex flex-col gap-1.5">
-						<label for="invNumber" class="text-xs font-semibold text-fg-accent">
+						<label for="invNumber" class="text-xs font-semibold text-fg">
 							Numéro de Facture <span class="text-error">*</span>
 						</label>
 						<Input
@@ -297,52 +297,48 @@
 
 					<!-- Invoice Date -->
 					<div class="flex flex-col gap-1.5">
-						<label for="invDate" class="text-xs font-semibold text-fg-accent">
-							Date de Facturation
-						</label>
+						<label for="invDate" class="text-xs font-semibold text-fg"> Date de Facturation </label>
 						<input
 							id="invDate"
 							type="date"
 							bind:value={invoiceDate}
-							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:border-primary-text focus:outline-none"
+							class="h-9 w-full rounded-lg border border-border/80 bg-bg px-3 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 						/>
 					</div>
 
 					<!-- Due Date -->
 					<div class="flex flex-col gap-1.5">
-						<label for="invDue" class="text-xs font-semibold text-fg-accent">
-							Date d'Échéance
-						</label>
+						<label for="invDue" class="text-xs font-semibold text-fg"> Date d'Échéance </label>
 						<input
 							id="invDue"
 							type="date"
 							bind:value={dueDate}
-							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:border-primary-text focus:outline-none"
+							class="h-9 w-full rounded-lg border border-border/80 bg-bg px-3 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 						/>
 					</div>
 				</div>
 			</div>
 
 			<!-- Line Items Card -->
-			<div class="rounded-sm border border-border bg-surface p-5">
+			<div class="rounded-xl border border-border/80 bg-surface/90 p-5 shadow-xs">
 				<div class="mb-4 flex items-center justify-between">
-					<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+					<h2 class="text-xs font-bold tracking-wider text-fg-subdued uppercase">
 						Prestations & Articles
 					</h2>
 					<Button size="sm" variant="secondary" onclick={addLine}>
-						<i class="fas fa-plus mr-1 text-xs"></i> Ajouter une ligne
+						<i class="fas fa-plus mr-1 text-xs text-primary-text"></i> Ajouter une ligne
 					</Button>
 				</div>
 
 				<div class="space-y-4">
 					{#each lines as line, i (line.id)}
-						<div class="rounded-sm border border-border/80 bg-bg p-3">
-							<div class="mb-2 flex items-center justify-between">
-								<span class="text-[11px] font-semibold text-fg-subdued">Ligne #{i + 1}</span>
+						<div class="rounded-lg border border-border/80 bg-bg/70 p-3.5">
+							<div class="mb-2.5 flex items-center justify-between">
+								<span class="text-[11px] font-bold text-fg-subdued">Ligne #{i + 1}</span>
 								<div class="flex items-center gap-2">
 									{#if products.length > 0}
 										<select
-											class="h-7 rounded-sm border border-border bg-surface px-2 text-[11px] text-fg focus:outline-none"
+											class="h-7 rounded-md border border-border bg-surface px-2 text-[11px] text-fg transition-colors focus:outline-hidden"
 											onchange={(e) => onProductSelect(i, (e.target as HTMLSelectElement).value)}
 										>
 											<option value="">Remplir depuis le catalogue...</option>
@@ -353,7 +349,7 @@
 									{/if}
 									<button
 										type="button"
-										class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
+										class="flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-rose-400"
 										title="Supprimer la ligne"
 										onclick={() => removeLine(line.id)}
 									>
@@ -367,7 +363,7 @@
 									type="text"
 									bind:value={line.description}
 									placeholder="Description du produit ou service (ex: Développement site web)..."
-									class="h-8 w-full rounded-sm border border-border bg-surface px-2.5 text-xs text-fg focus:border-primary-text focus:outline-none"
+									class="h-9 w-full rounded-lg border border-border/80 bg-surface px-3 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 								/>
 							</div>
 
@@ -382,7 +378,7 @@
 										step="0.01"
 										min="0.01"
 										bind:value={line.quantity}
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:outline-none"
+										class="h-8 w-full rounded-md border border-border bg-surface px-2.5 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 									/>
 								</div>
 								<div>
@@ -394,7 +390,7 @@
 										type="text"
 										bind:value={line.unit}
 										placeholder="Unité(s)"
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:outline-none"
+										class="h-8 w-full rounded-md border border-border bg-surface px-2.5 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 									/>
 								</div>
 								<div>
@@ -407,7 +403,7 @@
 										step="0.01"
 										min="0"
 										bind:value={line.unitPrice}
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:outline-none"
+										class="h-8 w-full rounded-md border border-border bg-surface px-2.5 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 									/>
 								</div>
 								<div>
@@ -417,7 +413,7 @@
 									<select
 										id="line-tva-{line.id}"
 										bind:value={line.tvaRate}
-										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:outline-none"
+										class="h-8 w-full rounded-md border border-border bg-surface px-2.5 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 									>
 										<option value={0}>0%</option>
 										<option value={9}>9%</option>
@@ -426,7 +422,7 @@
 								</div>
 							</div>
 
-							<div class="mt-2 text-right text-xs font-medium text-fg">
+							<div class="mt-2.5 text-right text-xs font-semibold text-fg">
 								Total : {formatDZD(line.quantity * line.unitPrice)}
 							</div>
 						</div>
@@ -435,25 +431,32 @@
 			</div>
 
 			<!-- Notes Card -->
-			<div class="rounded-sm border border-border bg-surface p-5">
-				<h2 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-					Notes & Communication
+			<div class="rounded-xl border border-border/80 bg-surface/90 p-5 shadow-xs">
+				<h2 class="mb-3 text-xs font-bold tracking-wider text-fg-subdued uppercase">
+					Notes & Instructions de Paiement
 				</h2>
 				<textarea
 					bind:value={notes}
 					rows="3"
 					placeholder="Instructions de virement, communication ou coordonnées bancaires..."
-					class="w-full rounded-sm border border-border bg-bg p-3 text-xs text-fg focus:border-primary-text focus:outline-none"
+					class="w-full rounded-lg border border-border/80 bg-bg p-3 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 				></textarea>
 			</div>
 		</div>
 
 		<!-- Right Summary Column -->
 		<div class="space-y-6">
-			<div class="rounded-sm border border-border bg-surface p-5">
-				<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-					Récapitulatif Financier
-				</h2>
+			<div class="rounded-xl border border-border/80 bg-surface/90 p-5 shadow-xs">
+				<div class="mb-4 flex items-center justify-between">
+					<h2 class="text-xs font-bold tracking-wider text-fg-subdued uppercase">
+						Récapitulatif Financier
+					</h2>
+					<span
+						class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400"
+					>
+						<i class="fas fa-shield-halved text-[9px]"></i> Conforme DZ
+					</span>
+				</div>
 
 				<div class="space-y-3 text-xs">
 					<div class="flex justify-between text-fg-subdued">
@@ -464,16 +467,18 @@
 						<span>TVA Totale</span>
 						<span class="font-medium text-fg">{formatDZD(tvaAmount)}</span>
 					</div>
-					<div class="border-t border-border pt-3">
-						<div class="flex justify-between text-sm font-bold text-fg-accent">
+					<div class="border-t border-border/80 pt-3">
+						<div class="flex justify-between text-base font-bold text-fg">
 							<span>Total TTC</span>
-							<span class="text-[#4fa9b2]">{formatDZD(total)}</span>
+							<span class="text-primary-text">{formatDZD(total)}</span>
 						</div>
 					</div>
 
-					<div class="border-t border-border pt-3">
-						<span class="text-[11px] text-fg-subdued">Montant en toutes lettres :</span>
-						<div class="mt-1 font-medium text-fg italic">
+					<div class="rounded-lg border border-border/70 bg-bg/70 p-3">
+						<span class="text-[10px] font-semibold tracking-wider text-fg-subdued uppercase"
+							>Montant en toutes lettres :</span
+						>
+						<div class="mt-1 text-xs font-medium text-fg italic">
 							{totalWords}
 						</div>
 					</div>
@@ -481,11 +486,11 @@
 
 				<div class="mt-6 space-y-3">
 					<div class="flex flex-col gap-1.5">
-						<label for="invStatus" class="text-xs font-semibold text-fg-accent">Statut</label>
+						<label for="invStatus" class="text-xs font-semibold text-fg">Statut Initial</label>
 						<select
 							id="invStatus"
 							bind:value={status}
-							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:outline-none"
+							class="h-9 w-full rounded-lg border border-border/80 bg-bg px-3 text-xs text-fg transition-colors focus:border-primary-text focus:outline-hidden"
 						>
 							<option value="draft">Brouillon</option>
 							<option value="sent">Envoyée</option>
@@ -495,7 +500,7 @@
 					</div>
 
 					<Button class="w-full" onclick={handleSave} disabled={isSubmitting}>
-						<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer
+						<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer la facture
 					</Button>
 				</div>
 			</div>
