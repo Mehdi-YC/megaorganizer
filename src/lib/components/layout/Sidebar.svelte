@@ -11,13 +11,74 @@
 
 	let {
 		categories = [],
+		invoiceYears = [],
 		user,
 		onNavigate = () => {}
 	}: {
 		categories?: CategoryWithPages[];
+		invoiceYears?: number[];
 		user?: { name: string; email: string; image?: string | null };
 		onNavigate?: () => void;
 	} = $props();
+
+	let invoicingExpanded = $state(
+		typeof sessionStorage !== 'undefined'
+			? sessionStorage.getItem('sidebar_invoicing_expanded') !== 'false'
+			: true
+	);
+
+	let expandedInvoiceYears = $state(
+		new Set<number>(
+			JSON.parse(
+				typeof sessionStorage !== 'undefined'
+					? sessionStorage.getItem('sidebar_invoice_years') || '[]'
+					: '[]'
+			)
+		)
+	);
+
+	function toggleInvoicing() {
+		invoicingExpanded = !invoicingExpanded;
+		if (typeof sessionStorage !== 'undefined') {
+			sessionStorage.setItem('sidebar_invoicing_expanded', String(invoicingExpanded));
+		}
+	}
+
+	function toggleInvoiceYear(year: number) {
+		const next = new Set(expandedInvoiceYears);
+		if (next.has(year)) next.delete(year);
+		else next.add(year);
+		expandedInvoiceYears = next;
+		if (typeof sessionStorage !== 'undefined') {
+			sessionStorage.setItem('sidebar_invoice_years', JSON.stringify([...next]));
+		}
+	}
+
+	async function exportYearFromSidebar(e: Event, year: number) {
+		e.stopPropagation();
+		e.preventDefault();
+		try {
+			showToast(`Exportation du dossier ${year}...`, 'info');
+			const res = await fetch('/api/invoicing/export', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ exportType: 'year', year })
+			});
+			if (!res.ok) throw new Error('Erreur');
+			const blob = await res.blob();
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `dossier-fiscal-${year}.zip`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			showToast(`Dossier ${year} exporté avec succès`, 'success');
+		} catch {
+			showToast("Échec de l'exportation du dossier", 'error');
+		}
+	}
 
 	let expandedCategories = $state(
 		new Set<string>(
@@ -287,6 +348,168 @@
 			<i class="fas fa-receipt w-4 text-center text-xs"></i>
 			Finance
 		</a>
+
+		<!-- Facturation (Collapsible Block) -->
+		<div class="mb-2">
+			<div class="flex items-center">
+				<button
+					type="button"
+					aria-label="Toggle facturation"
+					aria-expanded={invoicingExpanded}
+					class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+					onclick={(e) => {
+						e.stopPropagation();
+						e.preventDefault();
+						toggleInvoicing();
+					}}
+				>
+					<i
+						class="fas fa-chevron-right text-[9px] transition-transform duration-150 {invoicingExpanded
+							? 'rotate-90'
+							: ''}"
+					></i>
+				</button>
+				<a
+					href={resolve('/app/invoicing')}
+					onclick={onNavigate}
+					class="flex flex-1 items-center gap-2 rounded-sm px-1 py-1.5 text-left text-[13px] transition-colors {page.url.pathname.startsWith(
+						'/app/invoicing'
+					)
+						? 'bg-primary-subdued font-medium text-primary-text'
+						: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+				>
+					<i class="fas fa-file-invoice w-4 text-center text-xs"></i>
+					<span class="flex-1 truncate">Facturation</span>
+				</a>
+				<a
+					href={resolve('/app/invoicing/new')}
+					onclick={onNavigate}
+					class="mr-1 flex h-7 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
+					title="Nouvelle Facture"
+					aria-label="Nouvelle Facture"
+				>
+					<i class="fas fa-plus text-[9px]"></i>
+				</a>
+			</div>
+
+			{#if invoicingExpanded}
+				<div class="mt-1 ml-5 space-y-0.5 border-l border-border/60 pl-2">
+					<a
+						href={resolve('/app/invoicing/new')}
+						onclick={onNavigate}
+						class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
+							.url.pathname === '/app/invoicing/new'
+							? 'bg-primary-subdued font-medium text-primary-text'
+							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+					>
+						<i class="fas fa-plus-circle w-3.5 text-center text-[10px]"></i>
+						<span class="truncate">Nouvelle Facture</span>
+					</a>
+
+					<a
+						href={resolve('/app/invoicing/clients')}
+						onclick={onNavigate}
+						class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
+							.url.pathname === '/app/invoicing/clients'
+							? 'bg-primary-subdued font-medium text-primary-text'
+							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+					>
+						<i class="fas fa-users w-3.5 text-center text-[10px]"></i>
+						<span class="truncate">Clients</span>
+					</a>
+
+					<a
+						href={resolve('/app/invoicing/products')}
+						onclick={onNavigate}
+						class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
+							.url.pathname === '/app/invoicing/products'
+							? 'bg-primary-subdued font-medium text-primary-text'
+							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+					>
+						<i class="fas fa-box w-3.5 text-center text-[10px]"></i>
+						<span class="truncate">Produits & Services</span>
+					</a>
+
+					<!-- Folders for each Year -->
+					<div class="my-1.5 h-px bg-border/40"></div>
+					<div class="px-2 py-0.5 text-[10px] font-semibold text-fg-subdued uppercase">
+						Dossiers Annuels
+					</div>
+
+					{#each invoiceYears.length > 0 ? invoiceYears : [new Date().getFullYear()] as yr (yr)}
+						{@const isYrExpanded = expandedInvoiceYears.has(yr)}
+						{@const isYrActive = page.url.pathname === `/app/invoicing/year/${yr}`}
+
+						<div class="space-y-0.5">
+							<div class="group flex items-center justify-between rounded-sm pr-1">
+								<button
+									type="button"
+									aria-label="Toggle dossier {yr}"
+									class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
+									onclick={(e) => {
+										e.stopPropagation();
+										e.preventDefault();
+										toggleInvoiceYear(yr);
+									}}
+								>
+									<i
+										class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isYrExpanded
+											? 'rotate-90'
+											: ''}"
+									></i>
+								</button>
+
+								<a
+									href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
+									onclick={onNavigate}
+									class="flex flex-1 items-center gap-1.5 py-1 text-xs transition-colors {isYrActive
+										? 'font-medium text-primary-text'
+										: 'text-fg-subdued hover:text-fg'}"
+								>
+									<i
+										class="fas {isYrExpanded
+											? 'fa-folder-open'
+											: 'fa-folder'} text-[10px] text-primary-text"
+									></i>
+									<span class="truncate">{yr}</span>
+								</a>
+
+								<!-- Export Button for Year Folder -->
+								<button
+									type="button"
+									class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued opacity-70 hover:text-primary-text hover:opacity-100"
+									title="Exporter le dossier {yr} (G12, G12 bis & Factures)"
+									onclick={(e) => exportYearFromSidebar(e, yr)}
+								>
+									<i class="fas fa-file-zipper text-[10px]"></i>
+								</button>
+							</div>
+
+							{#if isYrExpanded}
+								<div class="ml-4 space-y-0.5 border-l border-border/40 pl-2">
+									<a
+										href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
+										onclick={onNavigate}
+										class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
+									>
+										<i class="fas fa-file-shield text-[9px]"></i>
+										<span class="truncate">G12 / G12 bis</span>
+									</a>
+									<a
+										href={resolve('/app/invoicing')}
+										onclick={onNavigate}
+										class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
+									>
+										<i class="fas fa-list text-[9px]"></i>
+										<span class="truncate">Factures {yr}</span>
+									</a>
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 
 		<a
 			href={resolve('/app/training')}

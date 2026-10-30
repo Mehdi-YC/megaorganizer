@@ -277,3 +277,104 @@ export interface Attachment {
 	 */
 	category: string;
 }
+
+// ─── Invoicing ──────────────────────────────────────────────────────────────
+
+export interface InvoiceClient {
+	id: string;
+	userId?: string;
+	name: string;
+	address?: string | null;
+	city?: string | null;
+	wilaya?: string | null;
+	country?: string | null;
+	nif?: string | null;
+	nis?: string | null;
+	rc?: string | null;
+	ai?: string | null;
+	nTva?: string | null;
+	phone?: string | null;
+	email?: string | null;
+	createdAt?: Date | string | null;
+	updatedAt?: Date | string | null;
+}
+
+export interface InvoiceProduct {
+	id: string;
+	userId?: string;
+	name: string;
+	description?: string | null;
+	unitPrice: number;
+	unit: string;
+	tvaRate: number;
+	createdAt?: Date | string | null;
+	updatedAt?: Date | string | null;
+}
+
+export interface InvoiceLine {
+	id: string;
+	invoiceId?: string;
+	productId?: string | null;
+	description: string;
+	quantity: number;
+	unitPrice: number;
+	unit: string;
+	tvaRate: number;
+	total: number;
+	position: number;
+}
+
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'cancelled';
+
+export interface Invoice {
+	id: string;
+	userId?: string;
+	clientId: string;
+	invoiceNumber: string;
+	invoiceDate: Date | string;
+	dueDate: Date | string;
+	status: InvoiceStatus;
+	notes?: string | null;
+	subtotal: number;
+	tvaAmount: number;
+	total: number;
+	year: number;
+	createdAt?: Date | string | null;
+	updatedAt?: Date | string | null;
+}
+
+export interface InvoiceWithDetails extends Invoice {
+	client: InvoiceClient;
+	lines: InvoiceLine[];
+}
+
+export interface InvoiceYearlyDoc {
+	id: string;
+	userId?: string;
+	year: number;
+	docType: 'g12' | 'g12_bis';
+	originalName: string;
+	storedName: string;
+	mimeType: string;
+	size: number;
+	url?: string;
+	createdAt?: Date | string | null;
+}
+
+export interface InvoiceUserData {
+	id: string;
+	name: string;
+	email: string;
+	image?: string | null;
+	signatureUrl?: string | null;
+	stampUrl?: string | null;
+	brandName?: string | null;
+	brandTagline?: string | null;
+	address?: string | null;
+	phone?: string | null;
+	nif?: string | null;
+	anae?: string | null;
+	rc?: string | null;
+	nis?: string | null;
+	ai?: string | null;
+}

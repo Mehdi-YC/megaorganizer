@@ -7,6 +7,17 @@ export const user = sqliteTable('user', {
 	email: text('email').notNull().unique(),
 	emailVerified: integer('email_verified', { mode: 'boolean' }).default(false).notNull(),
 	image: text('image'),
+	signatureUrl: text('signature_url'),
+	stampUrl: text('stamp_url'),
+	brandName: text('brand_name'),
+	brandTagline: text('brand_tagline'),
+	address: text('address'),
+	phone: text('phone'),
+	nif: text('nif'),
+	anae: text('anae'),
+	rc: text('rc'),
+	nis: text('nis'),
+	ai: text('ai'),
 	createdAt: integer('created_at', { mode: 'timestamp_ms' })
 		.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 		.notNull(),

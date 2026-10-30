@@ -3,6 +3,11 @@ import type { Actions, PageServerLoad } from './$types';
 import { auth } from '$lib/server/auth';
 import { handleAuthError } from '$lib/server/api-helpers';
 import { getUserSettings } from '$lib/server/services/finance.service';
+import {
+	getUserInvoiceProfile,
+	updateUserInvoiceProfile,
+	saveUserMediaFile
+} from '$lib/server/services/invoice.service';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
@@ -10,6 +15,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	}
 
 	const settings = await getUserSettings(locals.user.id);
+	const invoicingProfile = await getUserInvoiceProfile(locals.user.id);
 
 	return {
 		user: {
@@ -17,6 +23,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			email: locals.user.email
 		},
 		financeSettings: settings,
+		invoicingProfile,
 		mcpUrl: `${url.origin}/api/mcp`
 	};
 };
@@ -110,5 +117,78 @@ export const actions: Actions = {
 		}
 
 		return { financeMessage: { text: 'Finance settings updated successfully', ok: true } };
+	},
+
+	updateInvoicingProfile: async (event) => {
+		if (!event.locals.user) {
+			throw redirect(302, '/auth/login');
+		}
+
+		const formData = await event.request.formData();
+		const brandName = formData.get('brandName')?.toString() || null;
+		const brandTagline = formData.get('brandTagline')?.toString() || null;
+		const address = formData.get('address')?.toString() || null;
+		const phone = formData.get('phone')?.toString() || null;
+		const nif = formData.get('nif')?.toString() || null;
+		const anae = formData.get('anae')?.toString() || null;
+		const rc = formData.get('rc')?.toString() || null;
+		const nis = formData.get('nis')?.toString() || null;
+		const ai = formData.get('ai')?.toString() || null;
+
+		try {
+			await updateUserInvoiceProfile(event.locals.user.id, {
+				brandName,
+				brandTagline,
+				address,
+				phone,
+				nif,
+				anae,
+				rc,
+				nis,
+				ai
+			});
+		} catch (error) {
+			return fail(500, {
+				invoicingMessage: {
+					text: 'Erreur lors de la mise à jour des informations de facturation',
+					ok: false
+				}
+			});
+		}
+
+		return {
+			invoicingMessage: { text: 'Informations de facturation mises à jour avec succès', ok: true }
+		};
+	},
+
+	uploadMedia: async (event) => {
+		if (!event.locals.user) {
+			throw redirect(302, '/auth/login');
+		}
+
+		const formData = await event.request.formData();
+		const type = formData.get('type')?.toString() as 'signature' | 'stamp';
+		const file = formData.get('file') as File | null;
+
+		if (!file || file.size === 0 || (type !== 'signature' && type !== 'stamp')) {
+			return fail(400, {
+				mediaMessage: { text: 'Fichier invalide ou type incorrect', ok: false }
+			});
+		}
+
+		try {
+			await saveUserMediaFile(event.locals.user.id, type, file);
+		} catch (error) {
+			return fail(500, {
+				mediaMessage: { text: 'Erreur lors du téléversement du fichier', ok: false }
+			});
+		}
+
+		return {
+			mediaMessage: {
+				text: `${type === 'signature' ? 'Signature' : 'Cachet'} téléversé avec succès`,
+				ok: true
+			}
+		};
 	}
 };

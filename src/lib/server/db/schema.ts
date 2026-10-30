@@ -880,6 +880,181 @@ export const dashboardNoteRelations = relations(dashboardNote, ({ one }) => ({
 	user: one(user, { fields: [dashboardNote.userId], references: [user.id] })
 }));
 
+// ─── Invoicing ──────────────────────────────────────────────────────────────
+
+// Client/Enterprise directory for invoicing
+export const invoiceClient = sqliteTable(
+	'invoice_client',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		address: text('address'),
+		city: text('city'),
+		wilaya: text('wilaya'),
+		country: text('country').default('Algérie'),
+		nif: text('nif'),
+		nis: text('nis'),
+		rc: text('rc'),
+		ai: text('ai'),
+		nTva: text('n_tva'),
+		phone: text('phone'),
+		email: text('email'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [index('invoiceClient_userId_idx').on(table.userId)]
+);
+
+// Products & services catalog
+export const invoiceProduct = sqliteTable(
+	'invoice_product',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		description: text('description'),
+		unitPrice: real('unit_price').notNull().default(0),
+		unit: text('unit').default('Unité(s)').notNull(),
+		tvaRate: real('tva_rate').default(0).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [index('invoiceProduct_userId_idx').on(table.userId)]
+);
+
+// Invoices
+export const invoice = sqliteTable(
+	'invoice',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		clientId: text('client_id')
+			.notNull()
+			.references(() => invoiceClient.id, { onDelete: 'restrict' }),
+		invoiceNumber: text('invoice_number').notNull().unique(),
+		invoiceDate: integer('invoice_date', { mode: 'timestamp_ms' }).notNull(),
+		dueDate: integer('due_date', { mode: 'timestamp_ms' }).notNull(),
+		status: text('status', { enum: ['draft', 'sent', 'paid', 'cancelled'] })
+			.default('draft')
+			.notNull(),
+		notes: text('notes'),
+		subtotal: real('subtotal').default(0).notNull(),
+		tvaAmount: real('tva_amount').default(0).notNull(),
+		total: real('total').default(0).notNull(),
+		year: integer('year').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('invoice_userId_idx').on(table.userId),
+		index('invoice_clientId_idx').on(table.clientId),
+		index('invoice_year_idx').on(table.year),
+		index('invoice_status_idx').on(table.status)
+	]
+);
+
+// Invoice line items
+export const invoiceLine = sqliteTable(
+	'invoice_line',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		invoiceId: text('invoice_id')
+			.notNull()
+			.references(() => invoice.id, { onDelete: 'cascade' }),
+		productId: text('product_id').references(() => invoiceProduct.id, {
+			onDelete: 'set null'
+		}),
+		description: text('description').notNull(),
+		quantity: real('quantity').notNull().default(1),
+		unitPrice: real('unit_price').notNull().default(0),
+		unit: text('unit').default('Unité(s)').notNull(),
+		tvaRate: real('tva_rate').default(0).notNull(),
+		total: real('total').default(0).notNull(),
+		position: integer('position').notNull().default(0)
+	},
+	(table) => [index('invoiceLine_invoiceId_idx').on(table.invoiceId)]
+);
+
+// Yearly G12/G12bis document uploads
+export const invoiceYearlyDoc = sqliteTable(
+	'invoice_yearly_doc',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		year: integer('year').notNull(),
+		docType: text('doc_type', { enum: ['g12', 'g12_bis'] }).notNull(),
+		originalName: text('original_name').notNull(),
+		storedName: text('stored_name').notNull(),
+		mimeType: text('mime_type').notNull(),
+		size: integer('size').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [
+		index('invoiceYearlyDoc_userId_idx').on(table.userId),
+		index('invoiceYearlyDoc_year_idx').on(table.year)
+	]
+);
+
+export const invoiceClientRelations = relations(invoiceClient, ({ one, many }) => ({
+	user: one(user, { fields: [invoiceClient.userId], references: [user.id] }),
+	invoices: many(invoice)
+}));
+
+export const invoiceProductRelations = relations(invoiceProduct, ({ one }) => ({
+	user: one(user, { fields: [invoiceProduct.userId], references: [user.id] })
+}));
+
+export const invoiceRelations = relations(invoice, ({ one, many }) => ({
+	user: one(user, { fields: [invoice.userId], references: [user.id] }),
+	client: one(invoiceClient, { fields: [invoice.clientId], references: [invoiceClient.id] }),
+	lines: many(invoiceLine)
+}));
+
+export const invoiceLineRelations = relations(invoiceLine, ({ one }) => ({
+	invoice: one(invoice, { fields: [invoiceLine.invoiceId], references: [invoice.id] }),
+	product: one(invoiceProduct, { fields: [invoiceLine.productId], references: [invoiceProduct.id] })
+}));
+
+export const invoiceYearlyDocRelations = relations(invoiceYearlyDoc, ({ one }) => ({
+	user: one(user, { fields: [invoiceYearlyDoc.userId], references: [user.id] })
+}));
+
 // ─── HIIT / WOD timers ──────────────────────────────────────────────────────
 export const timerTemplate = sqliteTable(
 	'timer_template',

@@ -17,6 +17,7 @@
 		children: Snippet;
 		data: {
 			categories?: CategoryWithPages[];
+			invoiceYears?: number[];
 			user?: { name: string; email: string; image?: string | null };
 		};
 	} = $props();
@@ -50,6 +51,7 @@
 	>
 		<Sidebar
 			categories={data.categories ?? []}
+			invoiceYears={data.invoiceYears ?? []}
 			user={data.user}
 			onNavigate={() => (sidebarOpen = false)}
 		/>

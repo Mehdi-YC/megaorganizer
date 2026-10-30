@@ -20,6 +20,26 @@
 	// svelte-ignore state_referenced_locally
 	let monthlySpendingLimit = $state(data.financeSettings?.monthlySpendingLimit ?? '');
 
+	// Invoicing profile settings
+	// svelte-ignore state_referenced_locally
+	let brandName = $state(data.invoicingProfile?.brandName ?? '');
+	// svelte-ignore state_referenced_locally
+	let brandTagline = $state(data.invoicingProfile?.brandTagline ?? '');
+	// svelte-ignore state_referenced_locally
+	let address = $state(data.invoicingProfile?.address ?? '');
+	// svelte-ignore state_referenced_locally
+	let phone = $state(data.invoicingProfile?.phone ?? '');
+	// svelte-ignore state_referenced_locally
+	let nif = $state(data.invoicingProfile?.nif ?? '');
+	// svelte-ignore state_referenced_locally
+	let anae = $state(data.invoicingProfile?.anae ?? '');
+	// svelte-ignore state_referenced_locally
+	let rc = $state(data.invoicingProfile?.rc ?? '');
+	// svelte-ignore state_referenced_locally
+	let nis = $state(data.invoicingProfile?.nis ?? '');
+	// svelte-ignore state_referenced_locally
+	let ai = $state(data.invoicingProfile?.ai ?? '');
+
 	// MCP connection snippet, prefilled with this account's email.
 	const mcpSnippet = $derived(
 		JSON.stringify(
@@ -425,6 +445,199 @@
 
 				<Button type="submit">Save Finance Settings</Button>
 			</form>
+		</div>
+	</div>
+
+	<!-- Facturation & Conformité Algérienne -->
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+				Facturation & Conformité Algérienne
+			</h2>
+		</div>
+		<div class="space-y-6 px-6 py-5">
+			<p class="text-xs text-fg-subdued">
+				Ces informations apparaissent sur vos factures et permettent la conformité fiscale
+				algérienne (NIF, ANAE, RC, etc.).
+			</p>
+
+			<form method="post" action="?/updateInvoicingProfile" use:enhance class="space-y-4">
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="Nom de marque / Enseigne"
+						type="text"
+						id="brandName"
+						name="brandName"
+						bind:value={brandName}
+						placeholder="ex: Mehdi YC"
+					/>
+					<Input
+						label="Slogan / Activité"
+						type="text"
+						id="brandTagline"
+						name="brandTagline"
+						bind:value={brandTagline}
+						placeholder="ex: Automatisation & Digitalisation"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="Adresse professionnelle"
+						type="text"
+						id="address"
+						name="address"
+						bind:value={address}
+						placeholder="ex: Cité 5 Juillet, Bab Ezzouar 16042, Alger"
+					/>
+					<Input
+						label="Téléphone"
+						type="text"
+						id="phone"
+						name="phone"
+						bind:value={phone}
+						placeholder="ex: +213 553 09 12 35"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+					<Input
+						label="NIF (Numéro d'Identification Fiscale)"
+						type="text"
+						id="nif"
+						name="nif"
+						bind:value={nif}
+						placeholder="ex: 19816170319014941680"
+					/>
+					<Input
+						label="ANAE (Auto-entrepreneur)"
+						type="text"
+						id="anae"
+						name="anae"
+						bind:value={anae}
+						placeholder="ex: 15199589"
+					/>
+					<Input
+						label="RC (Registre de Commerce)"
+						type="text"
+						id="rc"
+						name="rc"
+						bind:value={rc}
+						placeholder="Optionnel"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="NIS (Numéro d'Identification Statistique)"
+						type="text"
+						id="nis"
+						name="nis"
+						bind:value={nis}
+						placeholder="Optionnel"
+					/>
+					<Input
+						label="Article d'Imposition (AI)"
+						type="text"
+						id="ai"
+						name="ai"
+						bind:value={ai}
+						placeholder="Optionnel"
+					/>
+				</div>
+
+				{#if form?.invoicingMessage}
+					<p class="text-xs {form.invoicingMessage.ok ? 'text-success' : 'text-error'}">
+						{form.invoicingMessage.text}
+					</p>
+				{/if}
+
+				<Button type="submit">Enregistrer les informations de facturation</Button>
+			</form>
+
+			<div class="my-4 border-t border-border/50 pt-4">
+				<h3 class="mb-3 text-xs font-semibold text-fg">Signature & Cachet</h3>
+				<p class="mb-4 text-xs text-fg-subdued">
+					Téléversez votre signature numérique et le cachet de votre entreprise/auto-entreprise pour
+					les apposer automatiquement sur vos factures.
+				</p>
+
+				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+					<!-- Signature Upload -->
+					<div class="rounded-sm border border-border bg-bg p-4">
+						<span class="text-xs font-semibold text-fg">Signature</span>
+						<div
+							class="mt-2 flex h-28 items-center justify-center rounded border border-dashed border-border bg-surface"
+						>
+							{#if data.invoicingProfile?.signatureUrl}
+								<img
+									src={data.invoicingProfile.signatureUrl}
+									alt="Signature"
+									class="max-h-24 max-w-full object-contain"
+								/>
+							{:else}
+								<span class="text-xs text-fg-subdued">Aucune signature</span>
+							{/if}
+						</div>
+						<form
+							method="post"
+							action="?/uploadMedia"
+							enctype="multipart/form-data"
+							class="mt-3 flex items-center gap-2"
+						>
+							<input type="hidden" name="type" value="signature" />
+							<input
+								type="file"
+								name="file"
+								accept="image/*"
+								required
+								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-sm file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+							/>
+							<Button size="sm" type="submit">Uploader</Button>
+						</form>
+					</div>
+
+					<!-- Stamp Upload -->
+					<div class="rounded-sm border border-border bg-bg p-4">
+						<span class="text-xs font-semibold text-fg">Cachet / Tampon</span>
+						<div
+							class="mt-2 flex h-28 items-center justify-center rounded border border-dashed border-border bg-surface"
+						>
+							{#if data.invoicingProfile?.stampUrl}
+								<img
+									src={data.invoicingProfile.stampUrl}
+									alt="Cachet"
+									class="max-h-24 max-w-full object-contain"
+								/>
+							{:else}
+								<span class="text-xs text-fg-subdued">Aucun cachet</span>
+							{/if}
+						</div>
+						<form
+							method="post"
+							action="?/uploadMedia"
+							enctype="multipart/form-data"
+							class="mt-3 flex items-center gap-2"
+						>
+							<input type="hidden" name="type" value="stamp" />
+							<input
+								type="file"
+								name="file"
+								accept="image/*"
+								required
+								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-sm file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+							/>
+							<Button size="sm" type="submit">Uploader</Button>
+						</form>
+					</div>
+				</div>
+
+				{#if form?.mediaMessage}
+					<p class="mt-3 text-xs {form.mediaMessage.ok ? 'text-success' : 'text-error'}">
+						{form.mediaMessage.text}
+					</p>
+				{/if}
+			</div>
 		</div>
 	</div>
 
