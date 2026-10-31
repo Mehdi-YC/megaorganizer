@@ -33,13 +33,8 @@ export default defineConfig({
 					'script-src': ['self'],
 					'object-src': ['none'],
 					'base-uri': ['self'],
-					'style-src': [
-						'self',
-						'unsafe-inline',
-						'https://cdnjs.cloudflare.com',
-						'https://unpkg.com'
-					],
-					'font-src': ['self', 'https://cdnjs.cloudflare.com'],
+					'style-src': ['self', 'unsafe-inline'],
+					'font-src': ['self'],
 					'img-src': ['self', 'data:', 'blob:', 'https:'],
 					'connect-src': ['self', 'ws:', 'wss:'],
 					'frame-src': ['self', 'https://www.youtube.com', 'https://www.google.com']

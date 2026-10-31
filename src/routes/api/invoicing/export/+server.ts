@@ -15,6 +15,7 @@ import type { InvoiceWithDetails, InvoiceUserData, InvoiceLine } from '$lib/type
 import { PassThrough, Readable } from 'stream';
 import { readFile } from 'fs/promises';
 import { createRequire } from 'module';
+import { escapeHtml as esc } from '$lib/utils/html';
 
 const require = createRequire(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,11 +32,11 @@ function generateInvoiceHtml(
 		.map(
 			(line: InvoiceLine) => `
 		<tr>
-			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${line.description}</td>
-			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${line.quantity.toFixed(2).replace('.', ',')} ${line.unit}</td>
-			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatDZD(line.unitPrice).replace(' DA', '')}</td>
-			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${line.tvaRate}%</td>
-			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 500;">${formatDZD(line.total)}</td>
+			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb;">${esc(line.description)}</td>
+			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${line.quantity.toFixed(2).replace('.', ',')} ${esc(line.unit)}</td>
+			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${esc(formatDZD(line.unitPrice).replace(' DA', ''))}</td>
+			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right;">${esc(Number(line.tvaRate).toFixed(2))}%</td>
+			<td style="padding: 10px 8px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 500;">${esc(formatDZD(line.total))}</td>
 		</tr>
 	`
 		)
@@ -45,7 +46,7 @@ function generateInvoiceHtml(
 <html lang="fr">
 <head>
 	<meta charset="UTF-8">
-	<title>${inv.invoiceNumber}</title>
+	<title>${esc(inv.invoiceNumber)}</title>
 	<style>
 		@page { size: A4 portrait; margin: 10mm 12mm; }
 		* { box-sizing: border-box; }
@@ -92,34 +93,34 @@ function generateInvoiceHtml(
 <body>
 	<div class="header">
 		<div>
-			<div class="brand-name">${profile?.brandName || profile?.name || 'Facture'}</div>
-			${profile?.brandTagline ? `<div class="brand-tagline">${profile.brandTagline}</div>` : ''}
+			<div class="brand-name">${esc(profile?.brandName || profile?.name || 'Facture')}</div>
+			${profile?.brandTagline ? `<div class="brand-tagline">${esc(profile.brandTagline)}</div>` : ''}
 
 			<div class="client-box">
 				<div class="client-label">Facturé à :</div>
-				<div class="client-name">${inv.client.name}</div>
-				${inv.client.address ? `<div>${inv.client.address}</div>` : ''}
-				<div>${inv.client.city ? inv.client.city : ''}${inv.client.city && inv.client.country ? ', ' : ''}${inv.client.country || ''}</div>
+				<div class="client-name">${esc(inv.client.name)}</div>
+				${inv.client.address ? `<div>${esc(inv.client.address)}</div>` : ''}
+				<div>${esc(inv.client.city ? inv.client.city : '')}${inv.client.city && inv.client.country ? ', ' : ''}${esc(inv.client.country || '')}</div>
 				<div class="client-ids">
-					${inv.client.nif || inv.client.nTva ? `<div><strong>NIF :</strong> ${inv.client.nif || inv.client.nTva}</div>` : ''}
-					${inv.client.nis ? `<div><strong>NIS :</strong> ${inv.client.nis}</div>` : ''}
-					${inv.client.rc ? `<div><strong>RC :</strong> ${inv.client.rc}</div>` : ''}
-					${inv.client.ai ? `<div><strong>AI :</strong> ${inv.client.ai}</div>` : ''}
+					${inv.client.nif || inv.client.nTva ? `<div><strong>NIF :</strong> ${esc(inv.client.nif || inv.client.nTva)}</div>` : ''}
+					${inv.client.nis ? `<div><strong>NIS :</strong> ${esc(inv.client.nis)}</div>` : ''}
+					${inv.client.rc ? `<div><strong>RC :</strong> ${esc(inv.client.rc)}</div>` : ''}
+					${inv.client.ai ? `<div><strong>AI :</strong> ${esc(inv.client.ai)}</div>` : ''}
 				</div>
 			</div>
 		</div>
 
 		<div class="seller-info">
-			<div>NIF : ${profile?.nif || ''} ${profile?.anae ? `/ ANAE : ${profile.anae}` : ''}</div>
-			<div style="font-weight: bold; color: #111827; font-size: 12px; margin-top: 2px;">${profile?.name || ''}</div>
-			<div>${profile?.address || ''}</div>
-			<div>${profile?.phone || ''} ${profile?.email ? `• ${profile.email}` : ''}</div>
-			${profile?.rib ? `<div style="font-family: monospace; margin-top: 2px;"><strong>RIB :</strong> ${profile.rib}</div>` : ''}
+			<div>NIF : ${esc(profile?.nif || '')} ${profile?.anae ? `/ ANAE : ${esc(profile.anae)}` : ''}</div>
+			<div style="font-weight: bold; color: #111827; font-size: 12px; margin-top: 2px;">${esc(profile?.name || '')}</div>
+			<div>${esc(profile?.address || '')}</div>
+			<div>${esc(profile?.phone || '')} ${profile?.email ? `• ${esc(profile.email)}` : ''}</div>
+			${profile?.rib ? `<div style="font-family: monospace; margin-top: 2px;"><strong>RIB :</strong> ${esc(profile.rib)}</div>` : ''}
 		</div>
 	</div>
 
 	<div class="title-bar">
-		<div class="title">Facture ${inv.invoiceNumber}</div>
+		<div class="title">Facture ${esc(inv.invoiceNumber)}</div>
 		<div class="dates">
 			<div>
 				<strong>Date de facturation</strong>
@@ -152,11 +153,11 @@ function generateInvoiceHtml(
 	<div class="bottom-section">
 		<div class="conditions-box">
 			<div class="conditions-title">Conditions & Règlement</div>
-			<div><strong>Mode de règlement :</strong> ${inv.paymentMode || 'Virement bancaire / Chèque'}</div>
-			<div><strong>Conditions de paiement :</strong> ${inv.paymentConditions || '30% au démarrage, le solde à la livraison'}</div>
-			<div><strong>Communication :</strong> ${inv.invoiceNumber}</div>
-			${profile?.rib ? `<div style="font-family: monospace; margin-top: 4px;"><strong>RIB / RIP :</strong> ${profile.rib}</div>` : ''}
-			${inv.notes ? `<div style="margin-top: 4px; color: #6b7280; font-style: italic;">${inv.notes}</div>` : ''}
+			<div><strong>Mode de règlement :</strong> ${esc(inv.paymentMode || 'Virement bancaire / Chèque')}</div>
+			<div><strong>Conditions de paiement :</strong> ${esc(inv.paymentConditions || '30% au démarrage, le solde à la livraison')}</div>
+			<div><strong>Communication :</strong> ${esc(inv.invoiceNumber)}</div>
+			${profile?.rib ? `<div style="font-family: monospace; margin-top: 4px;"><strong>RIB / RIP :</strong> ${esc(profile.rib)}</div>` : ''}
+			${inv.notes ? `<div style="margin-top: 4px; color: #6b7280; font-style: italic;">${esc(inv.notes)}</div>` : ''}
 		</div>
 
 		<div class="totals-table">
@@ -174,7 +175,7 @@ function generateInvoiceHtml(
 			</div>
 			<div class="words">
 				Montant total en toutes lettres :
-				<div class="words-val">${totalWords}</div>
+				<div class="words-val">${esc(totalWords)}</div>
 			</div>
 
 			<div class="stamps" style="margin-top: 15px; display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
@@ -189,7 +190,7 @@ function generateInvoiceHtml(
 	</div>
 
 	<div class="footer">
-		<div>${profile?.phone || ''} ${profile?.email ? `• ${profile.email}` : ''}</div>
+		<div>${esc(profile?.phone || '')} ${profile?.email ? `• ${esc(profile.email)}` : ''}</div>
 		<div>Page 1 / 1</div>
 	</div>
 </body>

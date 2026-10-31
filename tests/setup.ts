@@ -28,6 +28,8 @@ const dbPath = join(scratchDir, 'test.db');
 process.env.DATABASE_URL = `file:${dbPath}`;
 process.env.BETTER_AUTH_SECRET = 'test-secret-not-used-cryptographically';
 process.env.ORIGIN = 'http://localhost:5173';
+// Uploads go to the scratch directory, never the repo's data/uploads.
+process.env.UPLOAD_DIR = join(scratchDir, 'uploads');
 
 // Stub the SvelteKit virtual modules before anything imports them.
 mock.module('$app/environment', () => ({

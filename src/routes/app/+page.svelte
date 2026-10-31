@@ -10,6 +10,7 @@
 	import type { Reminder, Todo } from '$lib/types';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { formatIconClass, getContrastTextColor } from '$lib/utils';
+	import { toDateKey } from '$lib/utils/date';
 
 	let { data } = $props();
 
@@ -26,7 +27,7 @@
 		if (!quickTodoTitle.trim() || isAddingTodo) return;
 		isAddingTodo = true;
 		const title = quickTodoTitle.trim();
-		const todayStr = new Date().toISOString().slice(0, 10);
+		const todayStr = toDateKey();
 		try {
 			const res = await fetch('/api/todos', {
 				method: 'POST',

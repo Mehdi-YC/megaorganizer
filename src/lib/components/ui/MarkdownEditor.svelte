@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { renderMarkdown } from '$lib/utils/markdown';
-	import { onMount } from 'svelte';
 
 	let {
 		value = $bindable(''),
@@ -28,30 +27,39 @@
 	let previewHtml = $state('');
 	let isFullscreen = $state(false);
 	let renderTimer: ReturnType<typeof setTimeout> | undefined;
+	// Rendering is async (markdown + wikilinks): without a sequence guard a
+	// slow earlier render can resolve after a newer one and overwrite the
+	// preview with stale text.
+	let renderSeq = 0;
 
 	let wordCount = $derived(value.trim() ? value.trim().split(/\s+/).length : 0);
 	let charCount = $derived(value.length);
 
 	async function updatePreview() {
+		const seq = ++renderSeq;
+		const snapshot = value;
+		const links = docLinks;
 		try {
-			previewHtml = await renderMarkdown(value, docLinks);
+			const html = await renderMarkdown(snapshot, links);
+			if (seq === renderSeq) previewHtml = html;
 		} catch {
-			previewHtml = '<p class="text-error text-xs">Error rendering preview</p>';
+			if (seq === renderSeq) {
+				previewHtml = '<p class="text-error text-xs">Error rendering preview</p>';
+			}
 		}
 	}
 
 	$effect(() => {
-		// Re-render when value or mode changes
-		if (mode === 'preview' || mode === 'split') {
-			clearTimeout(renderTimer);
-			renderTimer = setTimeout(updatePreview, 100);
-		}
-	});
+		// Track the inputs the preview depends on. Reading `value` and
+		// `docLinks` here (not inside the async render) is what makes the
+		// split preview follow typing and late-arriving doc links.
+		const inPreview = mode === 'preview' || mode === 'split';
+		void value;
+		void docLinks;
+		if (!inPreview) return;
 
-	onMount(() => {
-		if (mode !== 'write') {
-			updatePreview();
-		}
+		clearTimeout(renderTimer);
+		renderTimer = setTimeout(updatePreview, 100);
 		return () => clearTimeout(renderTimer);
 	});
 

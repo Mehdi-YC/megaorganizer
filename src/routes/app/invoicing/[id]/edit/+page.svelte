@@ -8,6 +8,7 @@
 	import { formatDZD, numberToFrenchWords } from '$lib/utils/invoice';
 	import type { InvoiceLine } from '$lib/types';
 	import type { PageData } from './$types';
+	import { toDateKey } from '$lib/utils/date';
 
 	let { data }: { data: PageData } = $props();
 
@@ -21,9 +22,9 @@
 	// svelte-ignore state_referenced_locally
 	let invoiceNumber = $state(data.invoice.invoiceNumber);
 	// svelte-ignore state_referenced_locally
-	let invoiceDate = $state(new Date(data.invoice.invoiceDate).toISOString().slice(0, 10));
+	let invoiceDate = $state(toDateKey(new Date(data.invoice.invoiceDate)));
 	// svelte-ignore state_referenced_locally
-	let dueDate = $state(new Date(data.invoice.dueDate).toISOString().slice(0, 10));
+	let dueDate = $state(toDateKey(new Date(data.invoice.dueDate)));
 	// svelte-ignore state_referenced_locally
 	let status = $state(data.invoice.status);
 	// svelte-ignore state_referenced_locally

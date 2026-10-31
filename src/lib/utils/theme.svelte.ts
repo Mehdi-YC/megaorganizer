@@ -21,11 +21,15 @@ class ThemeState {
 
 	private updateDom(resolved: 'light' | 'dark') {
 		if (typeof document === 'undefined') return;
+		const root = document.documentElement;
 		if (resolved === 'dark') {
-			document.documentElement.classList.add('dark');
+			root.classList.add('dark');
 		} else {
-			document.documentElement.classList.remove('dark');
+			root.classList.remove('dark');
 		}
+		// Keeps native widgets, scrollbars, and form controls on the same
+		// scheme as the app (matches static/theme-init.js).
+		root.style.colorScheme = resolved;
 	}
 
 	private applyTheme(newTheme: Theme) {

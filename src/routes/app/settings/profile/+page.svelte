@@ -381,7 +381,19 @@
 				</div>
 			</div>
 		</div>
-		<form method="post" action="?/updateFeatures" class="space-y-4 px-6 py-5">
+		<form
+			method="post"
+			action="?/updateFeatures"
+			use:enhance={() =>
+				async ({ update }) => {
+					// Enhanced submit keeps the URL clean (no ?/updateFeatures) and
+					// avoids a full document reload. update() refreshes all data on
+					// success, so the sidebar and dashboard drop the modules that
+					// were just disabled.
+					await update();
+				}}
+			class="space-y-4 px-6 py-5"
+		>
 			<div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
 				<!-- Tasks -->
 				<label
@@ -901,25 +913,27 @@
 							method="post"
 							action="?/uploadMedia"
 							enctype="multipart/form-data"
+							use:enhance
 							class="flex items-center gap-2"
 						>
 							<input type="hidden" name="type" value="signature" />
 							<input
 								type="file"
 								name="file"
-								accept="image/*"
+								accept="image/png,image/jpeg,image/webp"
 								required
 								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
 							/>
 							<Button size="sm" type="submit">Upload</Button>
 						</form>
+						<p class="text-[11px] text-fg-subdued">PNG, JPEG or WebP, max 2 MB.</p>
 					</div>
 
 					<!-- Stamp Upload -->
 					<div class="space-y-2">
 						<span class="text-xs font-semibold text-fg">Official Stamp</span>
 						<div
-							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/20"
+							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20"
 						>
 							{#if data.invoicingProfile?.stampUrl}
 								<img
@@ -935,18 +949,20 @@
 							method="post"
 							action="?/uploadMedia"
 							enctype="multipart/form-data"
+							use:enhance
 							class="flex items-center gap-2"
 						>
 							<input type="hidden" name="type" value="stamp" />
 							<input
 								type="file"
 								name="file"
-								accept="image/*"
+								accept="image/png,image/jpeg,image/webp"
 								required
 								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
 							/>
 							<Button size="sm" type="submit">Upload</Button>
 						</form>
+						<p class="text-[11px] text-fg-subdued">PNG, JPEG or WebP, max 2 MB.</p>
 					</div>
 				</div>
 

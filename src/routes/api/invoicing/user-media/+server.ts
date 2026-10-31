@@ -22,17 +22,25 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 	const fileStat = await stat(filePath);
 	const stream = Readable.toWeb(createReadStream(filePath)) as ReadableStream;
 	const ext = path.extname(filePath).toLowerCase();
+	// Only raster formats are accepted on upload; anything else (including a
+	// legacy SVG) is refused rather than served inline.
 	let mime = 'image/png';
 	if (ext === '.jpg' || ext === '.jpeg') mime = 'image/jpeg';
 	else if (ext === '.webp') mime = 'image/webp';
-	else if (ext === '.svg') mime = 'image/svg+xml';
+	else if (ext !== '.png') {
+		return json({ error: 'Unsupported image' }, { status: 415 });
+	}
 
 	return new Response(stream, {
 		headers: {
 			'Content-Type': mime,
 			'Content-Length': fileStat.size.toString(),
 			'Cache-Control': 'private, max-age=60',
-			'Content-Disposition': 'inline'
+			'Content-Disposition': 'inline',
+			// Defence in depth: even if a non-image slips into the folder it
+			// is rendered inert and cannot script the app origin.
+			'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+			'X-Content-Type-Options': 'nosniff'
 		}
 	});
 };
@@ -55,7 +63,10 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		const res = await saveUserMediaFile(locals.user.id, type, file);
 		return json(res);
 	} catch (e: unknown) {
+		// Validation failures are the user's fault (wrong format/too large),
+		// so report them as 400 with the message instead of a 500.
 		const msg = e instanceof Error ? e.message : 'Failed to save media file';
-		return json({ error: msg }, { status: 500 });
+		const status = /smaller than|must be a PNG|Invalid file path/.test(msg) ? 400 : 500;
+		return json({ error: msg }, { status });
 	}
 };

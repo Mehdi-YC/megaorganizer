@@ -1,5 +1,5 @@
-const CACHE_NAME = 'megorganize-v5';
-const RUNTIME_CACHE = 'megorganize-runtime-v5';
+const CACHE_NAME = 'megorganize-v6';
+const RUNTIME_CACHE = 'megorganize-runtime-v6';
 
 // Precache only unauthenticated URLs that always return 200. Auth-gated
 // pages and redirects make cache.addAll reject, which aborts the whole
