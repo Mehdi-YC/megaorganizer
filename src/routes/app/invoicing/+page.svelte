@@ -138,22 +138,30 @@
 		subtitle="Gestion conforme aux normes fiscales algériennes"
 		descriptionOnHover
 	>
-		<div class="flex items-center gap-2">
-			<a href={resolve('/app/invoicing/clients')}>
-				<Button variant="secondary" size="sm">
-					<i class="fas fa-users mr-1 text-xs"></i> Clients
-				</Button>
-			</a>
-			<a href={resolve('/app/invoicing/products')}>
-				<Button variant="secondary" size="sm">
-					<i class="fas fa-box mr-1 text-xs"></i> Services
-				</Button>
-			</a>
-			<a href={resolve('/app/invoicing/new')}>
-				<Button size="sm">
-					<i class="fas fa-plus mr-1 text-xs"></i> Facture
-				</Button>
-			</a>
+		<div class="flex flex-nowrap items-center gap-1.5 sm:gap-2">
+			<Button
+				href={resolve('/app/invoicing/clients')}
+				variant="secondary"
+				size="xs"
+				class="!text-[10px] whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
+			>
+				<i class="fas fa-users mr-1 text-[9px] sm:text-xs"></i> Clients
+			</Button>
+			<Button
+				href={resolve('/app/invoicing/products')}
+				variant="secondary"
+				size="xs"
+				class="!text-[10px] whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
+			>
+				<i class="fas fa-box mr-1 text-[9px] sm:text-xs"></i> Services
+			</Button>
+			<Button
+				href={resolve('/app/invoicing/new')}
+				size="xs"
+				class="px-2.5 whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
+			>
+				<i class="fas fa-plus mr-1 text-[10px] sm:text-xs"></i> Facture
+			</Button>
 		</div>
 	</PageHeader>
 
