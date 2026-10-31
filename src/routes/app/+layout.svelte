@@ -36,7 +36,7 @@
 	});
 </script>
 
-<div class="flex h-dvh h-screen overflow-hidden bg-bg text-fg">
+<div class="flex h-full w-full overflow-hidden bg-bg text-fg">
 	{#if sidebarOpen}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->

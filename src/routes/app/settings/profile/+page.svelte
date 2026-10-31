@@ -315,7 +315,7 @@
 		</div>
 	</div>
 
-	<div class="mt-6 rounded-sm border border-border bg-surface">
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Change Password</h2>
 		</div>
@@ -382,10 +382,10 @@
 			</div>
 		</div>
 		<form method="post" action="?/updateFeatures" class="space-y-4 px-6 py-5">
-			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+			<div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
 				<!-- Tasks -->
 				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
 					<div class="flex items-center gap-3">
 						<div
@@ -415,7 +415,7 @@
 
 				<!-- Reminders -->
 				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
 					<div class="flex items-center gap-3">
 						<div
@@ -445,7 +445,7 @@
 
 				<!-- Finance -->
 				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
 					<div class="flex items-center gap-3">
 						<div
@@ -475,7 +475,7 @@
 
 				<!-- Invoicing -->
 				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
 					<div class="flex items-center gap-3">
 						<div
@@ -505,7 +505,7 @@
 
 				<!-- Training -->
 				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
 					<div class="flex items-center gap-3">
 						<div
@@ -537,7 +537,7 @@
 
 				<!-- Mindmap -->
 				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
 					<div class="flex items-center gap-3">
 						<div
@@ -567,7 +567,7 @@
 
 				<!-- YDK -->
 				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
 					<div class="flex items-center gap-3">
 						<div
@@ -703,7 +703,7 @@
 	</div>
 
 	<!-- Finance Settings -->
-	<div class="mt-6 rounded-sm border border-border bg-surface">
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Finance Settings</h2>
 		</div>
@@ -882,10 +882,10 @@
 
 				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 					<!-- Signature Upload -->
-					<div class="rounded-xl border border-border bg-bg p-4">
+					<div class="space-y-2">
 						<span class="text-xs font-semibold text-fg">Digital Signature</span>
 						<div
-							class="mt-2 flex h-28 items-center justify-center rounded-lg border border-dashed border-border bg-surface"
+							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20"
 						>
 							{#if data.invoicingProfile?.signatureUrl}
 								<img
@@ -901,7 +901,7 @@
 							method="post"
 							action="?/uploadMedia"
 							enctype="multipart/form-data"
-							class="mt-3 flex items-center gap-2"
+							class="flex items-center gap-2"
 						>
 							<input type="hidden" name="type" value="signature" />
 							<input
@@ -916,10 +916,10 @@
 					</div>
 
 					<!-- Stamp Upload -->
-					<div class="rounded-xl border border-border bg-bg p-4">
+					<div class="space-y-2">
 						<span class="text-xs font-semibold text-fg">Official Stamp</span>
 						<div
-							class="mt-2 flex h-28 items-center justify-center rounded-lg border border-dashed border-border bg-surface"
+							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/20"
 						>
 							{#if data.invoicingProfile?.stampUrl}
 								<img
@@ -935,7 +935,7 @@
 							method="post"
 							action="?/uploadMedia"
 							enctype="multipart/form-data"
-							class="mt-3 flex items-center gap-2"
+							class="flex items-center gap-2"
 						>
 							<input type="hidden" name="type" value="stamp" />
 							<input

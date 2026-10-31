@@ -17,7 +17,9 @@
 	});
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-bg p-4 sm:p-6">
+<div
+	class="flex h-full min-h-screen w-full items-center justify-center overflow-y-auto bg-bg p-4 sm:p-6"
+>
 	<div class="w-full max-w-sm">
 		<div class="mb-8 text-center">
 			<div class="mb-4 flex justify-center">

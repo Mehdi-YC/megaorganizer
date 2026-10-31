@@ -261,9 +261,9 @@
 		</EmptyState>
 	</div>
 {:else}
-	<div class="flex min-h-full flex-col lg:h-full">
+	<div class="flex min-h-full flex-col">
 		<div
-			class="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface/50 px-4 backdrop-blur-xs sm:px-6 lg:px-8"
+			class="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md sm:px-6 lg:px-8"
 		>
 			<div class="flex min-w-0 items-center gap-2.5">
 				<button
@@ -339,7 +339,7 @@
 			</div>
 		</div>
 
-		<div class="flex-1 overflow-y-auto p-4 pt-6 sm:p-6 sm:pt-6 lg:p-8 lg:pt-6">
+		<div class="p-4 pt-6 sm:p-6 sm:pt-6 lg:p-8 lg:pt-6">
 			<div class="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:items-start">
 				<div class="min-w-0 flex-1 space-y-6 {isDeckView ? 'order-1' : 'order-2'} lg:order-1">
 					{#if editing}

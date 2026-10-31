@@ -96,11 +96,15 @@ html {
 	font-family: var(--font-sans);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	height: 100%;
+	overflow: hidden;
 }
 
 body {
 	background-color: var(--color-bg);
 	color: var(--color-fg);
+	height: 100%;
+	overflow: hidden;
 }
 
 ::-webkit-scrollbar {
