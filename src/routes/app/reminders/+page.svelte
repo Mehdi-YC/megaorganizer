@@ -87,7 +87,7 @@
 	<title>Reminders - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<div class="mb-6 flex items-center justify-between">
 		<div>
 			<h1 class="text-xl font-semibold text-fg-accent">Reminders</h1>

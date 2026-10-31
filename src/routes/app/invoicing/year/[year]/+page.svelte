@@ -61,11 +61,11 @@
 				body: formData
 			});
 
-			if (!res.ok) throw new Error('Erreur lors du téléversement');
-			showToast(`Déclaration ${docType.toUpperCase().replace('_', ' ')} enregistrée`, 'success');
+			if (!res.ok) throw new Error('Upload error');
+			showToast(`Tax filing ${docType.toUpperCase().replace('_', ' ')} saved`, 'success');
 			await invalidateAll();
 		} catch {
-			showToast('Échec du téléversement', 'error');
+			showToast('Upload failed', 'error');
 		} finally {
 			if (docType === 'g12') isUploadingG12 = false;
 			else isUploadingG12Bis = false;
@@ -78,11 +78,11 @@
 			const res = await fetch(`/api/invoicing/yearly-docs?id=${docId}`, {
 				method: 'DELETE'
 			});
-			if (!res.ok) throw new Error('Erreur');
-			showToast(`${label} supprimée`, 'success');
+			if (!res.ok) throw new Error('Error');
+			showToast(`${label} deleted`, 'success');
 			await invalidateAll();
 		} catch {
-			showToast('Erreur suppression document', 'error');
+			showToast('Failed to delete document', 'error');
 		}
 	}
 
@@ -98,20 +98,20 @@
 				})
 			});
 
-			if (!res.ok) throw new Error('Erreur export');
+			if (!res.ok) throw new Error('Export error');
 
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `dossier-fiscal-${data.year}.zip`;
+			a.download = `tax-record-${data.year}.zip`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-			showToast(`Dossier ${data.year} exporté avec succès`, 'success');
+			showToast(`Year ${data.year} folder exported successfully`, 'success');
 		} catch {
-			showToast("Échec de l'exportation du dossier", 'error');
+			showToast('Failed to export tax folder', 'error');
 		} finally {
 			isExporting = false;
 		}
@@ -130,20 +130,20 @@
 				})
 			});
 
-			if (!res.ok) throw new Error('Erreur export');
+			if (!res.ok) throw new Error('Export error');
 
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `factures-${data.year}-selection.zip`;
+			a.download = `invoices-${data.year}-selection.zip`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-			showToast('Factures exportées avec succès', 'success');
+			showToast('Invoices exported successfully', 'success');
 		} catch {
-			showToast("Échec de l'exportation", 'error');
+			showToast('Export failed', 'error');
 		} finally {
 			isExporting = false;
 		}
@@ -152,34 +152,34 @@
 	function getStatusBadge(status: string) {
 		switch (status) {
 			case 'paid':
-				return { label: 'Payée', variant: 'success' as const };
+				return { label: 'Paid', variant: 'success' as const };
 			case 'sent':
-				return { label: 'Envoyée', variant: 'warning' as const };
+				return { label: 'Sent', variant: 'warning' as const };
 			case 'cancelled':
-				return { label: 'Annulée', variant: 'danger' as const };
+				return { label: 'Cancelled', variant: 'danger' as const };
 			default:
-				return { label: 'Brouillon', variant: 'default' as const };
+				return { label: 'Draft', variant: 'default' as const };
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Exercice {data.year} - Facturation</title>
+	<title>Fiscal Year {data.year} - Invoicing</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<div class="mb-6">
 		<a
 			href={resolve('/app/invoicing')}
 			class="text-xs text-fg-subdued transition-colors hover:text-fg"
 		>
-			<i class="fas fa-arrow-left mr-1"></i> Retour à la facturation
+			<i class="fas fa-arrow-left mr-1"></i> Back to invoicing
 		</a>
 	</div>
 
 	<PageHeader
-		title="Dossier Fiscal : Exercice {data.year}"
-		subtitle="Factures, déclarations annuelles G12 / G12 bis et exportations"
+		title="Tax Record: Fiscal Year {data.year}"
+		subtitle="Invoices, annual filings (G12 / G12 bis) and exports"
 		descriptionOnHover
 	>
 		<div class="flex flex-nowrap items-center gap-1.5 sm:gap-2">
@@ -191,8 +191,8 @@
 				class="whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
 			>
 				<i class="fas fa-folder-arrow-down mr-1 text-[10px] text-primary-text sm:text-xs"></i>
-				<span class="hidden sm:inline">Exporter dossier {data.year}</span>
-				<span class="sm:hidden">Exporter {data.year}</span>
+				<span class="hidden sm:inline">Export year {data.year}</span>
+				<span class="sm:hidden">Export {data.year}</span>
 			</Button>
 
 			{#if selectedInvoiceIds.length > 0}
@@ -203,14 +203,14 @@
 					class="whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
 				>
 					<i class="fas fa-file-zipper mr-1 text-[10px] sm:text-xs"></i>
-					<span class="hidden sm:inline">Exporter sélection ({selectedInvoiceIds.length})</span>
-					<span class="sm:hidden">Sélection ({selectedInvoiceIds.length})</span>
+					<span class="hidden sm:inline">Export selected ({selectedInvoiceIds.length})</span>
+					<span class="sm:hidden">Selected ({selectedInvoiceIds.length})</span>
 				</Button>
 			{/if}
 
 			<a href={resolve('/app/invoicing/new')}>
 				<Button size="xs" class="whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs">
-					<i class="fas fa-plus mr-1 text-[10px] sm:text-xs"></i> Facture
+					<i class="fas fa-plus mr-1 text-[10px] sm:text-xs"></i> Invoice
 				</Button>
 			</a>
 		</div>
@@ -221,7 +221,7 @@
 		<div class="rounded-sm border border-border bg-surface p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
-					>Nombre de factures</span
+					>Number of invoices</span
 				>
 				<i class="fas fa-file-invoice text-xs text-fg-subdued"></i>
 			</div>
@@ -230,7 +230,7 @@
 		<div class="rounded-sm border border-border bg-surface p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
-					>Total Exercice {data.year}</span
+					>Total Fiscal Year {data.year}</span
 				>
 				<i class="fas fa-coins text-xs text-fg-subdued"></i>
 			</div>
@@ -239,7 +239,7 @@
 		<div class="rounded-sm border border-border bg-surface p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
-					>Total Encaissé</span
+					>Total Collected</span
 				>
 				<i class="fas fa-circle-check text-xs text-success"></i>
 			</div>
@@ -250,7 +250,7 @@
 	<!-- Declarations G12 & G12 Bis Cards -->
 	<div class="mb-8">
 		<h2 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-			Déclarations Fiscales de l'Exercice {data.year}
+			Tax Filings for Fiscal Year {data.year}
 		</h2>
 
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -264,16 +264,16 @@
 							<i class="fas fa-file-shield text-sm"></i>
 						</div>
 						<div>
-							<h3 class="text-sm font-bold text-fg">Déclaration G12</h3>
+							<h3 class="text-sm font-bold text-fg">Declaration G12</h3>
 							<p class="text-[11px] text-fg-subdued">
-								Déclaration annuelle de l'impôt forfaitaire unique (IFU)
+								Annual declaration of single flat-rate tax (IFU)
 							</p>
 						</div>
 					</div>
 					{#if data.g12Doc}
-						<Badge variant="success">Téléversé</Badge>
+						<Badge variant="success">Uploaded</Badge>
 					{:else}
-						<Badge variant="default">Non renseigné</Badge>
+						<Badge variant="default">Not filed</Badge>
 					{/if}
 				</div>
 
@@ -292,7 +292,7 @@
 									{doc.originalName}
 								</a>
 								<div class="text-[10px] text-fg-subdued">
-									{(doc.size / 1024).toFixed(1)} Ko • Ajouté le {formatDateDZ(doc.createdAt || '')}
+									{(doc.size / 1024).toFixed(1)} KB • Added {formatDateDZ(doc.createdAt || '')}
 								</div>
 							</div>
 							<div class="flex items-center gap-1.5">
@@ -300,15 +300,15 @@
 									href="/api/invoicing/yearly-docs?id={doc.id}"
 									download={doc.originalName}
 									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
-									title="Télécharger"
+									title="Download"
 								>
 									<i class="fas fa-download text-xs"></i>
 								</a>
 								<button
 									type="button"
 									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
-									title="Supprimer"
-									onclick={() => handleDeleteDoc(doc.id, 'Déclaration G12')}
+									title="Delete"
+									onclick={() => handleDeleteDoc(doc.id, 'Declaration G12')}
 								>
 									<i class="fas fa-trash-can text-xs"></i>
 								</button>
@@ -317,7 +317,7 @@
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{:else}
 						<div class="py-2 text-center">
-							<p class="text-xs text-fg-subdued">Aucun document G12 pour {data.year}</p>
+							<p class="text-xs text-fg-subdued">No G12 document for {data.year}</p>
 						</div>
 					{/if}
 				</div>
@@ -328,7 +328,7 @@
 							class="inline-flex items-center gap-1.5 rounded-sm border border-border bg-bg px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:bg-muted"
 						>
 							<i class="fas fa-upload text-xs"></i>
-							{data.g12Doc ? 'Remplacer le document G12' : 'Téléverser le G12'}
+							{data.g12Doc ? 'Replace G12 document' : 'Upload G12'}
 						</span>
 						<input
 							type="file"
@@ -339,7 +339,7 @@
 					</label>
 					{#if isUploadingG12}
 						<span class="text-xs text-fg-subdued"
-							><i class="fas fa-spinner fa-spin mr-1"></i> Envoi...</span
+							><i class="fas fa-spinner fa-spin mr-1"></i> Uploading...</span
 						>
 					{/if}
 				</div>
@@ -355,16 +355,14 @@
 							<i class="fas fa-file-invoice text-sm"></i>
 						</div>
 						<div>
-							<h3 class="text-sm font-bold text-fg">Déclaration G12 Bis</h3>
-							<p class="text-[11px] text-fg-subdued">
-								Déclaration définitive du chiffre d'affaires annuel
-							</p>
+							<h3 class="text-sm font-bold text-fg">Declaration G12 Bis</h3>
+							<p class="text-[11px] text-fg-subdued">Final declaration of annual turnover</p>
 						</div>
 					</div>
 					{#if data.g12BisDoc}
-						<Badge variant="success">Téléversé</Badge>
+						<Badge variant="success">Uploaded</Badge>
 					{:else}
-						<Badge variant="default">Non renseigné</Badge>
+						<Badge variant="default">Not filed</Badge>
 					{/if}
 				</div>
 
@@ -383,7 +381,7 @@
 									{doc.originalName}
 								</a>
 								<div class="text-[10px] text-fg-subdued">
-									{(doc.size / 1024).toFixed(1)} Ko • Ajouté le {formatDateDZ(doc.createdAt || '')}
+									{(doc.size / 1024).toFixed(1)} KB • Added {formatDateDZ(doc.createdAt || '')}
 								</div>
 							</div>
 							<div class="flex items-center gap-1.5">
@@ -391,15 +389,15 @@
 									href="/api/invoicing/yearly-docs?id={doc.id}"
 									download={doc.originalName}
 									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
-									title="Télécharger"
+									title="Download"
 								>
 									<i class="fas fa-download text-xs"></i>
 								</a>
 								<button
 									type="button"
 									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
-									title="Supprimer"
-									onclick={() => handleDeleteDoc(doc.id, 'Déclaration G12 Bis')}
+									title="Delete"
+									onclick={() => handleDeleteDoc(doc.id, 'Declaration G12 Bis')}
 								>
 									<i class="fas fa-trash-can text-xs"></i>
 								</button>
@@ -408,7 +406,7 @@
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{:else}
 						<div class="py-2 text-center">
-							<p class="text-xs text-fg-subdued">Aucun document G12 Bis pour {data.year}</p>
+							<p class="text-xs text-fg-subdued">No G12 Bis document for {data.year}</p>
 						</div>
 					{/if}
 				</div>
@@ -419,7 +417,7 @@
 							class="inline-flex items-center gap-1.5 rounded-sm border border-border bg-bg px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:bg-muted"
 						>
 							<i class="fas fa-upload text-xs"></i>
-							{data.g12BisDoc ? 'Remplacer le document G12 Bis' : 'Téléverser le G12 Bis'}
+							{data.g12BisDoc ? 'Replace G12 Bis document' : 'Upload G12 Bis'}
 						</span>
 						<input
 							type="file"
@@ -430,7 +428,7 @@
 					</label>
 					{#if isUploadingG12Bis}
 						<span class="text-xs text-fg-subdued"
-							><i class="fas fa-spinner fa-spin mr-1"></i> Envoi...</span
+							><i class="fas fa-spinner fa-spin mr-1"></i> Uploading...</span
 						>
 					{/if}
 				</div>
@@ -442,18 +440,18 @@
 	<div class="space-y-3">
 		<div class="flex items-center justify-between">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
-				Factures de l'Exercice {data.year} ({data.invoices.length})
+				Invoices for Fiscal Year {data.year} ({data.invoices.length})
 			</h2>
 			{#if selectedInvoiceIds.length > 0}
 				<div class="flex items-center gap-2">
-					<span class="text-xs text-fg-subdued">{selectedInvoiceIds.length} sélectionnée(s)</span>
+					<span class="text-xs text-fg-subdued">{selectedInvoiceIds.length} selected</span>
 					<Button
 						size="sm"
 						variant="secondary"
 						onclick={exportSelectedInvoices}
 						disabled={isExporting}
 					>
-						<i class="fas fa-download mr-1.5 text-xs"></i> Exporter la sélection
+						<i class="fas fa-download mr-1.5 text-xs"></i> Export Selection
 					</Button>
 				</div>
 			{/if}
@@ -473,12 +471,12 @@
 									class="rounded-sm border-border"
 								/>
 							</th>
-							<th class="px-3 py-2.5 font-semibold">Numéro</th>
+							<th class="px-3 py-2.5 font-semibold">Number</th>
 							<th class="px-3 py-2.5 font-semibold">Client</th>
 							<th class="px-3 py-2.5 font-semibold">Date</th>
-							<th class="px-3 py-2.5 font-semibold">Échéance</th>
-							<th class="px-3 py-2.5 text-right font-semibold">Montant TTC</th>
-							<th class="px-3 py-2.5 text-center font-semibold">Statut</th>
+							<th class="px-3 py-2.5 font-semibold">Due Date</th>
+							<th class="px-3 py-2.5 text-right font-semibold">Total (inc. VAT)</th>
+							<th class="px-3 py-2.5 text-center font-semibold">Status</th>
 							<th class="px-3 py-2.5 text-right font-semibold">Actions</th>
 						</tr>
 					</thead>
@@ -500,7 +498,7 @@
 									</a>
 								</td>
 								<td class="px-3 py-3 font-medium text-fg">
-									{inv.client?.name || 'Inconnu'}
+									{inv.client?.name || 'Unknown'}
 								</td>
 								<td class="px-3 py-3 text-fg-subdued">
 									{formatDateDZ(inv.invoiceDate)}
@@ -518,14 +516,14 @@
 									<div class="flex items-center justify-end gap-1">
 										<a
 											href={resolve('/app/invoicing/[id]', { id: inv.id })}
-											title="Consulter"
+											title="View"
 											class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
 										>
 											<i class="fas fa-eye text-xs"></i>
 										</a>
 										<a
 											href={resolve('/app/invoicing/[id]/edit', { id: inv.id })}
-											title="Modifier"
+											title="Edit"
 											class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
 										>
 											<i class="fas fa-pencil text-xs"></i>
@@ -541,7 +539,7 @@
 			<div
 				class="rounded-sm border border-border bg-surface p-8 text-center text-xs text-fg-subdued"
 			>
-				Aucune facture enregistrée pour l'exercice {data.year}.
+				No invoices registered for fiscal year {data.year}.
 			</div>
 		{/if}
 	</div>

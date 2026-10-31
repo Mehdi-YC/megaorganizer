@@ -22,7 +22,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		finance: true,
 		invoicing: true,
 		training: true,
-		ydk: true
+		ydk: true,
+		mindmap: true
 	};
 
 	if (settings?.enabledFeatures) {

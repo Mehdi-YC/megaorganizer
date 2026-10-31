@@ -162,7 +162,7 @@
 	<title>Finance - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<PageHeader title="Finance" subtitle="Track your expenses and spending">
 		<Button size="sm" onclick={openAdd}>
 			<i class="fas fa-plus mr-2 text-xs"></i>

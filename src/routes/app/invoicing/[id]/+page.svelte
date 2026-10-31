@@ -23,12 +23,12 @@
 					status: newStatus
 				})
 			});
-			if (!res.ok) throw new Error('Erreur');
+			if (!res.ok) throw new Error('Failed to update status');
 			currentStatus = newStatus;
-			showToast('Statut mis à jour', 'success');
+			showToast('Status updated', 'success');
 			await invalidateAll();
 		} catch {
-			showToast('Erreur mise à jour statut', 'error');
+			showToast('Failed to update status', 'error');
 		}
 	}
 
@@ -37,10 +37,10 @@
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			showToast('Facture supprimée', 'success');
+			showToast('Invoice deleted', 'success');
 			goto(resolve('/app/invoicing'));
 		} else {
-			showToast('Erreur lors de la suppression', 'error');
+			showToast('Failed to delete invoice', 'error');
 		}
 	}
 
@@ -58,19 +58,19 @@
 					invoiceIds: [data.invoice.id]
 				})
 			});
-			if (!res.ok) throw new Error('Erreur export');
+			if (!res.ok) throw new Error('Export error');
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `facture-${data.invoice.invoiceNumber.replace(/\//g, '_')}.html`;
+			a.download = `invoice-${data.invoice.invoiceNumber.replace(/\//g, '_')}.html`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-			showToast('Facture HTML exportée', 'success');
+			showToast('Invoice HTML exported', 'success');
 		} catch {
-			showToast("Échec de l'exportation", 'error');
+			showToast('Export failed', 'error');
 		} finally {
 			isExportingHtml = false;
 		}
@@ -81,7 +81,7 @@
 	<title>{data.invoice.invoiceNumber} - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl p-4 sm:p-8">
+<div class="mx-auto max-w-4xl px-3.5 py-4 sm:p-6 lg:p-8">
 	<!-- Actions Bar (hidden on print) -->
 	<div
 		class="no-print mb-6 flex flex-col justify-between gap-4 rounded-sm border border-border bg-surface p-3.5 sm:flex-row sm:items-center"
@@ -90,13 +90,13 @@
 			<a
 				href={resolve('/app/invoicing')}
 				class="flex h-8 w-8 items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
-				title="Retour aux factures"
+				title="Back to invoices"
 			>
 				<i class="fas fa-arrow-left text-sm"></i>
 			</a>
 			<div>
 				<h1 class="text-sm font-bold text-fg-accent">{data.invoice.invoiceNumber}</h1>
-				<span class="text-xs text-fg-subdued">Client : {data.invoice.client.name}</span>
+				<span class="text-xs text-fg-subdued">Client: {data.invoice.client.name}</span>
 			</div>
 		</div>
 
@@ -110,10 +110,10 @@
 					)}
 				class="h-8 rounded-sm border border-border-strong bg-bg px-2.5 text-xs font-medium text-fg focus:outline-none"
 			>
-				<option value="draft">Brouillon</option>
-				<option value="sent">Envoyée</option>
-				<option value="paid">Payée</option>
-				<option value="cancelled">Annulée</option>
+				<option value="draft">Draft</option>
+				<option value="sent">Sent</option>
+				<option value="paid">Paid</option>
+				<option value="cancelled">Cancelled</option>
 			</select>
 
 			<a
@@ -122,17 +122,17 @@
 				rel="noreferrer"
 			>
 				<Button variant="secondary" size="sm">
-					<i class="fas fa-print mr-1.5 text-xs"></i> Imprimer / PDF
+					<i class="fas fa-print mr-1.5 text-xs"></i> Print / PDF
 				</Button>
 			</a>
 
 			<Button variant="secondary" size="sm" onclick={downloadSingleHtml} disabled={isExportingHtml}>
-				<i class="fas fa-download mr-1.5 text-xs"></i> Exporter HTML
+				<i class="fas fa-download mr-1.5 text-xs"></i> Export HTML
 			</Button>
 
 			<a href={resolve('/app/invoicing/[id]/edit', { id: data.invoice.id })}>
 				<Button variant="secondary" size="sm">
-					<i class="fas fa-pencil mr-1.5 text-xs"></i> Modifier
+					<i class="fas fa-pencil mr-1.5 text-xs"></i> Edit
 				</Button>
 			</a>
 

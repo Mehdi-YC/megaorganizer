@@ -353,7 +353,7 @@
 	<title>Calendar - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<PageHeader title="Calendar" subtitle="View all your events in one place">
 		<!-- Filter buttons -->
 		<button
@@ -407,7 +407,7 @@
 			onclick={() => setFilter('todos')}
 		>
 			<i class="fas fa-check-square text-[10px]"></i>
-			Tâches
+			Tasks
 		</button>
 	</PageHeader>
 
@@ -580,7 +580,7 @@
 					</div>
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-primary-text"></div>
-						<span>Tâches</span>
+						<span>Tasks</span>
 					</div>
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-success"></div>

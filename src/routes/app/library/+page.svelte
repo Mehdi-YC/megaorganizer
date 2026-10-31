@@ -129,7 +129,7 @@
 
 <svelte:head><title>Item Library - MegaOrganize</title></svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<PageHeader title="Item Library" subtitle="{items.length} items">
 		<Button size="md" onclick={() => (showNewItem = true)}>
 			<i class="fas fa-plus text-xs"></i> <span class="hidden sm:inline">New Item</span>

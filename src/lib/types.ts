@@ -391,6 +391,7 @@ export interface EnabledFeatures {
 	invoicing?: boolean;
 	training?: boolean;
 	ydk?: boolean;
+	mindmap?: boolean;
 }
 
 export interface Todo {

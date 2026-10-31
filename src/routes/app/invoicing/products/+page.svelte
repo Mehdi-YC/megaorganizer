@@ -57,7 +57,7 @@
 
 	async function handleSubmit() {
 		if (!formName.trim()) {
-			showToast('Le nom du produit ou service est obligatoire', 'error');
+			showToast('Service or item name is required', 'error');
 			return;
 		}
 
@@ -79,14 +79,14 @@
 
 			if (!res.ok) {
 				const err = await res.json();
-				throw new Error(err.error || 'Erreur lors de la sauvegarde');
+				throw new Error(err.error || 'Failed to save');
 			}
 
-			showToast(isEdit ? 'Produit mis à jour' : 'Produit créé', 'success');
+			showToast(isEdit ? 'Item updated' : 'Item created', 'success');
 			showModal = false;
 			await invalidateAll();
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Échec de la sauvegarde';
+			const msg = e instanceof Error ? e.message : 'Failed to save';
 			showToast(msg, 'error');
 		} finally {
 			isSaving = false;
@@ -100,13 +100,13 @@
 			});
 			if (!res.ok) {
 				const err = await res.json();
-				throw new Error(err.error || 'Impossible de supprimer');
+				throw new Error(err.error || 'Failed to delete');
 			}
-			showToast('Produit supprimé', 'success');
+			showToast('Item deleted', 'success');
 			confirmDeleteId = null;
 			await invalidateAll();
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Échec de suppression';
+			const msg = e instanceof Error ? e.message : 'Failed to delete';
 			showToast(msg, 'error');
 		}
 	}
@@ -116,19 +116,19 @@
 	<title>Services - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<div class="mb-6">
 		<a
 			href={resolve('/app/invoicing')}
 			class="text-xs text-fg-subdued transition-colors hover:text-fg"
 		>
-			<i class="fas fa-arrow-left mr-1"></i> Retour à la facturation
+			<i class="fas fa-arrow-left mr-1"></i> Back to invoicing
 		</a>
 	</div>
 
 	<PageHeader
-		title="Services"
-		subtitle="Catalogue de prestations et articles avec tarifs et taux de TVA par défaut"
+		title="Services & Products"
+		subtitle="Catalog of services and items with default rates and VAT"
 		descriptionOnHover
 	>
 		<Button size="sm" onclick={openCreateModal}>
@@ -145,12 +145,12 @@
 			<input
 				type="search"
 				bind:value={searchQuery}
-				placeholder="Rechercher par libellé..."
+				placeholder="Search by name..."
 				class="h-8 w-full rounded-sm border border-border-strong bg-bg pr-3 pl-8 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 			/>
 		</div>
 		<span class="text-xs text-fg-subdued">
-			{filteredProducts.length} référence(s)
+			{filteredProducts.length} item(s)
 		</span>
 	</div>
 
@@ -159,11 +159,11 @@
 			<table class="w-full min-w-[600px] border-collapse text-left text-xs">
 				<thead>
 					<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
-						<th class="px-4 py-2.5 font-semibold">Libellé</th>
+						<th class="px-4 py-2.5 font-semibold">Item / Service</th>
 						<th class="px-4 py-2.5 font-semibold">Description</th>
-						<th class="px-4 py-2.5 text-right font-semibold">Prix Unitaire</th>
-						<th class="px-4 py-2.5 font-semibold">Unité</th>
-						<th class="px-4 py-2.5 text-center font-semibold">Taux TVA</th>
+						<th class="px-4 py-2.5 text-right font-semibold">Unit Price</th>
+						<th class="px-4 py-2.5 font-semibold">Unit</th>
+						<th class="px-4 py-2.5 text-center font-semibold">VAT Rate</th>
 						<th class="px-4 py-2.5 text-right font-semibold">Actions</th>
 					</tr>
 				</thead>
@@ -190,7 +190,7 @@
 									<button
 										type="button"
 										class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
-										title="Modifier"
+										title="Edit"
 										onclick={() => openEditModal(p)}
 									>
 										<i class="fas fa-pencil text-xs"></i>
@@ -220,11 +220,11 @@
 	{:else}
 		<EmptyState
 			icon="fa-box-open"
-			message="Aucun produit ou service"
-			submessage="Créez votre catalogue pour pré-remplir automatiquement les lignes de vos factures."
+			message="No products or services"
+			submessage="Create your catalog to quickly prefill line items when drafting invoices."
 		>
 			<Button size="sm" onclick={openCreateModal}>
-				<i class="fas fa-plus mr-1.5 text-xs"></i> Ajouter une référence
+				<i class="fas fa-plus mr-1.5 text-xs"></i> Add Item
 			</Button>
 		</EmptyState>
 	{/if}
@@ -233,7 +233,7 @@
 <!-- Modal Create / Edit Product -->
 <Dialog
 	open={showModal}
-	title={editingProduct ? 'Modifier la Référence' : 'Nouvelle Référence'}
+	title={editingProduct ? 'Edit Item' : 'New Item'}
 	onclose={() => (showModal = false)}
 >
 	<form
@@ -244,10 +244,10 @@
 		class="space-y-3"
 	>
 		<Input
-			label="Désignation / Nom *"
+			label="Name / Title *"
 			type="text"
 			bind:value={formName}
-			placeholder="ex: Développement site web, Maintenance serveur..."
+			placeholder="e.g., Web Development, Server Maintenance..."
 			required
 		/>
 
@@ -257,7 +257,7 @@
 				id="prodDesc"
 				bind:value={formDescription}
 				rows="2"
-				placeholder="Détails complémentaires de la prestation..."
+				placeholder="Additional details about the service..."
 				class="w-full rounded-sm border border-border bg-bg p-2 text-xs text-fg focus:outline-none"
 			></textarea>
 		</div>
@@ -265,7 +265,7 @@
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			<div class="flex flex-col gap-1.5">
 				<label for="formUnitPrice" class="text-xs font-semibold text-fg-accent"
-					>Prix Unitaire (DA) *</label
+					>Unit Price (DA) *</label
 				>
 				<input
 					id="formUnitPrice"
@@ -278,32 +278,32 @@
 				/>
 			</div>
 			<Input
-				label="Unité"
+				label="Unit"
 				type="text"
 				bind:value={formUnit}
-				placeholder="Unité(s), Heure(s), Jour(s), Forfait"
+				placeholder="Unit(s), Hour(s), Day(s), Flat fee"
 			/>
 		</div>
 
 		<div class="flex flex-col gap-1.5">
-			<label for="tvaRate" class="text-xs font-semibold text-fg-accent">Taux TVA</label>
+			<label for="tvaRate" class="text-xs font-semibold text-fg-accent">VAT Rate</label>
 			<select
 				id="tvaRate"
 				bind:value={formTvaRate}
 				class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:outline-none"
 			>
-				<option value={0}>0% (Exonéré / Non applicable / Auto-entrepreneur)</option>
-				<option value={9}>9% (Taux réduit)</option>
-				<option value={19}>19% (Taux normal)</option>
+				<option value={0}>0% (Exempt / Not applicable / Freelance)</option>
+				<option value={9}>9% (Reduced rate)</option>
+				<option value={19}>19% (Standard rate)</option>
 			</select>
 		</div>
 
 		<div class="flex justify-end gap-2 pt-3">
 			<Button variant="secondary" size="sm" type="button" onclick={() => (showModal = false)}>
-				Annuler
+				Cancel
 			</Button>
 			<Button size="sm" type="submit" disabled={isSaving}>
-				{isSaving ? 'Enregistrement...' : editingProduct ? 'Mettre à jour' : 'Créer'}
+				{isSaving ? 'Saving...' : editingProduct ? 'Update' : 'Create'}
 			</Button>
 		</div>
 	</form>

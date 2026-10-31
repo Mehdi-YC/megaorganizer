@@ -84,11 +84,11 @@
 	});
 
 	let tabFilterItems = $derived([
-		{ id: 'today', label: "Aujourd'hui", count: counts.today },
-		{ id: 'upcoming', label: 'À venir', count: counts.upcoming },
-		{ id: 'nodate', label: 'Sans date', count: counts.nodate },
-		{ id: 'all', label: 'Toutes', count: counts.total },
-		{ id: 'completed', label: 'Terminées', count: counts.completed }
+		{ id: 'today', label: 'Today', count: counts.today },
+		{ id: 'upcoming', label: 'Upcoming', count: counts.upcoming },
+		{ id: 'nodate', label: 'No Date', count: counts.nodate },
+		{ id: 'all', label: 'All', count: counts.total },
+		{ id: 'completed', label: 'Completed', count: counts.completed }
 	]);
 
 	async function handleAdd() {
@@ -110,13 +110,13 @@
 				newTitle = '';
 				newDueDate = '';
 				newPriority = 'medium';
-				showToast('Tâche créée', 'success');
+				showToast('Task added', 'success');
 				await invalidateAll();
 			} else {
-				showToast('Erreur lors de la création', 'error');
+				showToast('Failed to add task', 'error');
 			}
 		} catch {
-			showToast('Erreur', 'error');
+			showToast('Error', 'error');
 		} finally {
 			isAdding = false;
 		}
@@ -135,13 +135,13 @@
 			});
 			if (!res.ok) {
 				t.completed = !t.completed;
-				showToast('Erreur lors de la mise à jour', 'error');
+				showToast('Failed to update task', 'error');
 			} else {
 				await invalidateAll();
 			}
 		} catch {
 			t.completed = !t.completed;
-			showToast('Erreur', 'error');
+			showToast('Error', 'error');
 		}
 	}
 
@@ -156,41 +156,44 @@
 				})
 			});
 			if (res.ok) {
-				showToast('Tâche supprimée', 'success');
+				showToast('Task deleted', 'success');
 				await invalidateAll();
 			} else {
-				showToast('Erreur', 'error');
+				showToast('Failed to delete task', 'error');
 			}
 		} catch {
-			showToast('Erreur', 'error');
+			showToast('Error', 'error');
 		}
 	}
 
 	function formatDueDate(dueDate: string | null | undefined): { text: string; isOverdue: boolean } {
 		if (!dueDate) return { text: '', isOverdue: false };
-		if (dueDate === todayStr) return { text: "Aujourd'hui", isOverdue: false };
+		if (dueDate === todayStr) return { text: 'Today', isOverdue: false };
 
 		const tomorrow = new Date();
 		tomorrow.setDate(tomorrow.getDate() + 1);
 		const tomorrowStr = tomorrow.toISOString().slice(0, 10);
-		if (dueDate === tomorrowStr) return { text: 'Demain', isOverdue: false };
+		if (dueDate === tomorrowStr) return { text: 'Tomorrow', isOverdue: false };
 
 		const [y, m, d] = dueDate.split('-');
 		const formatted = `${d}/${m}/${y}`;
 		const isOverdue = dueDate < todayStr;
-		return { text: isOverdue ? `${formatted} (En retard)` : formatted, isOverdue };
+		return { text: isOverdue ? `${formatted} (Overdue)` : formatted, isOverdue };
 	}
 </script>
 
 <svelte:head>
-	<title>Tâches - MegaOrganize</title>
+	<title>Tasks - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-6 p-4 sm:p-8">
-	<PageHeader title="Tâches" subtitle="Gestion rapide et moderne de vos to-dos et échéances" />
+<div class="mx-auto max-w-4xl space-y-6 px-3.5 py-4 sm:p-6 lg:p-8">
+	<PageHeader
+		title="Tasks"
+		subtitle="Fast and modern management of your daily todos and deadlines"
+	/>
 
 	<!-- Quick Add Form -->
-	<div class="rounded-xl border border-border bg-surface p-5 shadow-xs transition-all">
+	<div class="rounded-xl border border-border bg-surface p-4 shadow-xs transition-all sm:p-5">
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
@@ -202,19 +205,19 @@
 				<input
 					type="text"
 					bind:value={newTitle}
-					placeholder="Ajouter une tâche... (ex: Envoyer devis client, Préparer réunion)"
+					placeholder="Add a task... (e.g. Prepare meeting notes, Review invoice draft)"
 					class="flex-1 rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
 				/>
 				<Button type="submit" disabled={!newTitle.trim() || isAdding}>
 					<i class="fas fa-plus mr-1.5 text-xs"></i>
-					<span>Ajouter</span>
+					<span>Add</span>
 				</Button>
 			</div>
 
 			<!-- Quick Options: Date & Priority -->
 			<div class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-fg-subdued">
 				<div class="flex flex-wrap items-center gap-1.5">
-					<span class="mr-1 text-xs font-medium text-fg-subdued">Échéance :</span>
+					<span class="mr-1 text-xs font-medium text-fg-subdued">Due:</span>
 					<button
 						type="button"
 						class="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors {newDueDate ===
@@ -223,7 +226,7 @@
 							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => setQuickDate(0)}
 					>
-						Aujourd'hui
+						Today
 					</button>
 					<button
 						type="button"
@@ -233,7 +236,7 @@
 							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => setQuickDate(1)}
 					>
-						Demain
+						Tomorrow
 					</button>
 					<button
 						type="button"
@@ -242,7 +245,7 @@
 							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => setQuickDate(null)}
 					>
-						Sans date
+						No date
 					</button>
 					<input
 						type="date"
@@ -252,14 +255,14 @@
 				</div>
 
 				<div class="flex items-center gap-2">
-					<span class="text-xs font-medium text-fg-subdued">Priorité :</span>
+					<span class="text-xs font-medium text-fg-subdued">Priority:</span>
 					<select
 						bind:value={newPriority}
 						class="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-fg focus:border-primary focus:outline-none"
 					>
-						<option value="low">Basse</option>
-						<option value="medium">Moyenne</option>
-						<option value="high">Haute</option>
+						<option value="low">Low</option>
+						<option value="medium">Medium</option>
+						<option value="high">High</option>
 					</select>
 				</div>
 			</div>
@@ -274,7 +277,7 @@
 			<input
 				type="text"
 				bind:value={searchQuery}
-				placeholder="Filtrer les tâches..."
+				placeholder="Filter tasks..."
 				class="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
 			/>
 		</div>
@@ -319,9 +322,9 @@
 
 					<div class="flex items-center gap-2">
 						{#if t.priority === 'high'}
-							<Badge variant="danger" size="sm">Haute</Badge>
+							<Badge variant="danger" size="sm">High</Badge>
 						{:else if t.priority === 'low'}
-							<Badge variant="default" size="sm">Basse</Badge>
+							<Badge variant="default" size="sm">Low</Badge>
 						{/if}
 
 						{#if dueInfo.text}
@@ -340,7 +343,7 @@
 							type="button"
 							class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-error"
 							onclick={() => handleDelete(t.id)}
-							title="Supprimer"
+							title="Delete"
 						>
 							<i class="fas fa-trash text-xs"></i>
 						</button>
@@ -350,10 +353,10 @@
 		</div>
 	{:else}
 		<EmptyState
-			message="Aucune tâche"
+			message="No tasks found"
 			submessage={currentFilter === 'today'
-				? "Vous n'avez aucune tâche prévue pour aujourd'hui !"
-				: 'Aucune tâche trouvée pour ce filtre.'}
+				? 'You have no tasks scheduled for today!'
+				: 'No tasks match this filter.'}
 			icon="fa-check-circle"
 		/>
 	{/if}

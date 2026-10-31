@@ -83,8 +83,12 @@
 				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-primary/10">
 					{#if category.icon}
 						<i
-							class="fas {category.icon} text-lg"
-							style="color: {category.iconColor || 'var(--color-primary-text)'}"
+							class="{category.icon.startsWith('fas ') || category.icon.startsWith('fa-solid ')
+								? category.icon
+								: `fas ${category.icon.startsWith('fa-') ? category.icon : `fa-${category.icon}`}`} text-lg"
+							style="color: {category.iconColor ||
+								category.accentColor ||
+								'var(--color-primary-text)'}"
 						></i>
 					{:else}
 						<i class="fas fa-folder text-lg text-primary-text"></i>

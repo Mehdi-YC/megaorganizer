@@ -198,7 +198,7 @@
 	<title>Dashboard - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
+<div class="mx-auto max-w-7xl space-y-6 px-3.5 py-4 sm:p-6 lg:p-8">
 	<!-- Page Header with Modern Actions -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>

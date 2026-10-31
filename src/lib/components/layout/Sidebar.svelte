@@ -18,7 +18,8 @@
 			finance: true,
 			invoicing: true,
 			training: true,
-			ydk: true
+			ydk: true,
+			mindmap: true
 		},
 		user,
 		onNavigate = () => {}
@@ -274,6 +275,20 @@
 	function getUserInitial(): string {
 		if (user?.name) return user.name.charAt(0).toUpperCase();
 		return '?';
+	}
+
+	function formatIconClass(icon?: string | null): string {
+		if (!icon) return '';
+		if (
+			icon.startsWith('fa-solid ') ||
+			icon.startsWith('fas ') ||
+			icon.startsWith('far ') ||
+			icon.startsWith('fab ')
+		) {
+			return icon;
+		}
+		const clean = icon.startsWith('fa-') ? icon : `fa-${icon}`;
+		return `fas ${clean}`;
 	}
 
 	async function handleLogout() {
@@ -662,11 +677,19 @@
 								onclick={onNavigate}
 								class="flex flex-1 items-center gap-2 truncate py-1 text-inherit"
 							>
-								<!-- Colored indicator dot / icon like in the screenshot -->
-								<span
-									class="h-2 w-2 shrink-0 rounded-xs"
-									style="background-color: {cat.iconColor || 'var(--color-primary)'}"
-								></span>
+								{#if cat.icon}
+									<i
+										class="{formatIconClass(cat.icon)} w-3.5 shrink-0 text-center text-xs"
+										style="color: {cat.iconColor || cat.accentColor || 'var(--color-primary-text)'}"
+									></i>
+								{:else}
+									<span
+										class="h-2 w-2 shrink-0 rounded-xs"
+										style="background-color: {cat.iconColor ||
+											cat.accentColor ||
+											'var(--color-primary)'}"
+									></span>
+								{/if}
 								<span class="truncate">{cat.name}</span>
 							</a>
 
@@ -792,19 +815,21 @@
 				{#if !collapsed}<span>Library</span>{/if}
 			</a>
 
-			<a
-				href={resolve('/app/mindmap')}
-				onclick={onNavigate}
-				title="Mindmap"
-				class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-					? 'justify-center px-0'
-					: 'px-2.5'} {page.url.pathname === '/app/mindmap'
-					? 'bg-muted font-semibold text-fg'
-					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
-			>
-				<i class="fas fa-network-wired w-4 text-center text-xs"></i>
-				{#if !collapsed}<span>Mindmap</span>{/if}
-			</a>
+			{#if enabledFeatures.mindmap !== false}
+				<a
+					href={resolve('/app/mindmap')}
+					onclick={onNavigate}
+					title="Mindmap"
+					class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
+						? 'justify-center px-0'
+						: 'px-2.5'} {page.url.pathname === '/app/mindmap'
+						? 'bg-muted font-semibold text-fg'
+						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+				>
+					<i class="fas fa-network-wired w-4 text-center text-xs"></i>
+					{#if !collapsed}<span>Mindmap</span>{/if}
+				</a>
+			{/if}
 
 			{#if enabledFeatures.training !== false}
 				<a
@@ -836,6 +861,38 @@
 				{#if !collapsed}<span>Tags</span>{/if}
 			</a>
 		</div>
+
+		{#if collapsed && categories.length > 0}
+			<div class="space-y-1.5 border-t border-border/40 pt-2.5">
+				{#each categories as cat (cat.id)}
+					<a
+						href={resolve('/app/category/[id]', { id: cat.id })}
+						onclick={onNavigate}
+						title={cat.name}
+						class="mx-auto flex h-8 w-8 items-center justify-center rounded-lg text-xs transition-colors {isCategoryActive(
+							cat
+						)
+							? 'bg-muted text-fg'
+							: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+					>
+						{#if cat.icon}
+							<i
+								class="{formatIconClass(cat.icon)} text-xs"
+								style="color: {cat.iconColor || cat.accentColor || 'var(--color-primary-text)'}"
+							></i>
+						{:else}
+							<span
+								class="h-2.5 w-2.5 rounded-xs"
+								style="background-color: {cat.iconColor ||
+									cat.accentColor ||
+									cat.color ||
+									'var(--color-primary)'}"
+							></span>
+						{/if}
+					</a>
+				{/each}
+			</div>
+		{/if}
 	</nav>
 
 	<!-- Footer: Theme Switcher & User Profile -->

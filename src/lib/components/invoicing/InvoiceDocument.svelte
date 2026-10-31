@@ -27,7 +27,7 @@
 						{@const words = profile.brandName.split(' ')}
 						{words[0]} <span class="text-[#4fa9b2]">{words.slice(1).join(' ')}</span>
 					{:else}
-						{profile?.name || 'Facture'}
+						{profile?.name || 'Invoice'}
 					{/if}
 				</div>
 				{#if profile?.brandTagline}
@@ -39,7 +39,7 @@
 
 			<!-- Client Box (Positioned on the Left for Single-Page Layout) -->
 			<div class="mt-5 text-xs leading-relaxed text-gray-700">
-				<div class="text-[10px] font-bold tracking-wider text-gray-400 uppercase">Facturé à :</div>
+				<div class="text-[10px] font-bold tracking-wider text-gray-400 uppercase">Billed to:</div>
 				<div class="mt-0.5 text-sm font-bold text-gray-900">
 					{invoice.client.name}
 				</div>
@@ -53,25 +53,25 @@
 				<div class="mt-1 space-y-0.5 text-[11px] text-gray-600">
 					{#if invoice.client.nif || invoice.client.nTva}
 						<div>
-							<span class="font-semibold text-gray-900">NIF :</span>
+							<span class="font-semibold text-gray-900">NIF:</span>
 							{invoice.client.nif || invoice.client.nTva}
 						</div>
 					{/if}
 					{#if invoice.client.nis}
 						<div>
-							<span class="font-semibold text-gray-900">NIS :</span>
+							<span class="font-semibold text-gray-900">NIS:</span>
 							{invoice.client.nis}
 						</div>
 					{/if}
 					{#if invoice.client.rc}
 						<div>
-							<span class="font-semibold text-gray-900">RC :</span>
+							<span class="font-semibold text-gray-900">RC:</span>
 							{invoice.client.rc}
 						</div>
 					{/if}
 					{#if invoice.client.ai}
 						<div>
-							<span class="font-semibold text-gray-900">AI :</span>
+							<span class="font-semibold text-gray-900">AI:</span>
 							{invoice.client.ai}
 						</div>
 					{/if}
@@ -82,11 +82,11 @@
 		<!-- Right: Seller Legal Info (Always Right Aligned) -->
 		<div class="space-y-1 text-right text-xs leading-relaxed text-gray-600">
 			<div class="font-semibold text-gray-800">
-				{#if profile?.nif}<span>NIF : {profile.nif}</span>{/if}
+				{#if profile?.nif}<span>NIF: {profile.nif}</span>{/if}
 				{#if profile?.nif && profile?.anae}
 					/
 				{/if}
-				{#if profile?.anae}<span>ANAE : {profile.anae}</span>{/if}
+				{#if profile?.anae}<span>ANAE: {profile.anae}</span>{/if}
 			</div>
 			<div class="text-sm font-bold text-gray-900">{profile?.name || ''}</div>
 			<div>{profile?.address || ''}</div>
@@ -101,7 +101,7 @@
 			{/if}
 			{#if profile?.rib}
 				<div class="font-mono text-[11px] text-gray-700">
-					<span class="font-sans font-semibold text-gray-900">RIB :</span>
+					<span class="font-sans font-semibold text-gray-900">RIB / IBAN:</span>
 					{profile.rib}
 				</div>
 			{/if}
@@ -111,18 +111,18 @@
 	<!-- Invoice Title & Dates -->
 	<div class="mt-5 flex items-baseline justify-between gap-4 border-b border-gray-200 pb-2">
 		<div class="text-2xl font-semibold text-[#4fa9b2]">
-			Facture {invoice.invoiceNumber}
+			Invoice {invoice.invoiceNumber}
 		</div>
 		<div class="flex gap-8 text-right text-xs">
 			<div>
 				<span class="block text-[10px] font-semibold tracking-wider text-gray-400 uppercase"
-					>Date de facturation</span
+					>Invoice date</span
 				>
 				<span class="font-medium text-gray-900">{formatDateDZ(invoice.invoiceDate)}</span>
 			</div>
 			<div>
 				<span class="block text-[10px] font-semibold tracking-wider text-gray-400 uppercase"
-					>Échéance</span
+					>Due date</span
 				>
 				<span class="font-medium text-gray-900">{formatDateDZ(invoice.dueDate)}</span>
 			</div>
@@ -135,10 +135,10 @@
 			<thead>
 				<tr class="border-b border-gray-200 text-gray-700">
 					<th class="py-2 text-left font-semibold">Description</th>
-					<th class="py-2 text-right font-semibold">Quantité</th>
-					<th class="py-2 text-right font-semibold">Prix unitaire</th>
-					<th class="py-2 text-right font-semibold">Taxes</th>
-					<th class="py-2 text-right font-semibold">Montant</th>
+					<th class="py-2 text-right font-semibold">Quantity</th>
+					<th class="py-2 text-right font-semibold">Unit Price</th>
+					<th class="py-2 text-right font-semibold">VAT</th>
+					<th class="py-2 text-right font-semibold">Amount</th>
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-gray-100">
@@ -167,23 +167,23 @@
 		<!-- Left: Payment Conditions, Mode & Bank details (Clean typography without border/bg) -->
 		<div class="max-w-[340px] space-y-1 text-xs leading-relaxed text-gray-700">
 			<div class="text-[11px] font-bold tracking-wider text-gray-900 uppercase">
-				Conditions & Règlement
+				Terms & Payment
 			</div>
 			<div>
-				<span class="font-semibold text-gray-800">Mode de règlement :</span>
-				<span>{invoice.paymentMode || 'Virement bancaire / Chèque'}</span>
+				<span class="font-semibold text-gray-800">Payment method:</span>
+				<span>{invoice.paymentMode || 'Bank transfer / Check'}</span>
 			</div>
 			<div>
-				<span class="font-semibold text-gray-800">Conditions de paiement :</span>
-				<span>{invoice.paymentConditions || '30% au démarrage, le solde à la livraison'}</span>
+				<span class="font-semibold text-gray-800">Payment terms:</span>
+				<span>{invoice.paymentConditions || '30% upfront, balance upon delivery'}</span>
 			</div>
 			<div>
-				<span class="font-semibold text-gray-800">Communication de paiement :</span>
+				<span class="font-semibold text-gray-800">Payment reference:</span>
 				<strong class="font-bold text-gray-900">{invoice.invoiceNumber}</strong>
 			</div>
 			{#if profile?.rib}
 				<div class="mt-0.5 font-mono text-[11px] text-gray-800">
-					<span class="font-sans font-semibold">RIB / RIP :</span>
+					<span class="font-sans font-semibold">RIB / IBAN:</span>
 					{profile.rib}
 				</div>
 			{/if}
@@ -198,24 +198,24 @@
 		<div class="w-[340px] shrink-0">
 			<div class="border-t border-gray-900 pt-1 text-xs">
 				<div class="flex justify-between py-0.5 text-gray-700">
-					<span>Montant hors taxes</span>
+					<span>Subtotal (excl. VAT)</span>
 					<span class="font-medium text-gray-900">{formatDZD(invoice.subtotal)}</span>
 				</div>
 				<div class="flex justify-between py-0.5 text-gray-700">
-					<span>TVA (0% - Exonéré IFU)</span>
-					<span class="font-medium text-gray-900">0,00 DA</span>
+					<span>VAT (0% - Exempt)</span>
+					<span class="font-medium text-gray-900">0.00 DA</span>
 				</div>
 				<div
 					class="mt-1 flex justify-between border-t border-[#4fa9b2] pt-1.5 text-sm font-bold text-[#4fa9b2]"
 				>
-					<span>Total Net à Payer</span>
+					<span>Total Due</span>
 					<span>{formatDZD(invoice.total)}</span>
 				</div>
 			</div>
 
 			<!-- Amount in Words -->
 			<div class="mt-2 text-right text-xs">
-				<span class="text-gray-500">Montant total en toutes lettres :</span>
+				<span class="text-gray-500">Total amount in words:</span>
 				<div class="mt-0.5 font-medium text-gray-800 italic">
 					{formattedTotalWords}
 				</div>
@@ -237,7 +237,7 @@
 				{/if}
 				<div class="relative flex min-h-[75px] w-48 items-center justify-center">
 					{#if profile?.stampUrl}
-						<img src={profile.stampUrl} alt="Cachet" class="max-h-20 max-w-full object-contain" />
+						<img src={profile.stampUrl} alt="Stamp" class="max-h-20 max-w-full object-contain" />
 					{/if}
 					{#if profile?.signatureUrl}
 						<img
@@ -250,7 +250,7 @@
 						<div
 							class="flex h-18 w-44 items-center justify-center rounded border border-dashed border-gray-300 text-[11px] text-gray-400"
 						>
-							Cachet et Signature
+							Stamp and Signature
 						</div>
 					{/if}
 				</div>

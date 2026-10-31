@@ -24,7 +24,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		finance: true,
 		invoicing: true,
 		training: true,
-		ydk: true
+		ydk: true,
+		mindmap: true
 	};
 
 	if (settings?.enabledFeatures) {
@@ -225,7 +226,8 @@ export const actions: Actions = {
 			finance: formData.get('finance') === 'on',
 			invoicing: formData.get('invoicing') === 'on',
 			training: formData.get('training') === 'on',
-			ydk: formData.get('ydk') === 'on'
+			ydk: formData.get('ydk') === 'on',
+			mindmap: formData.get('mindmap') === 'on'
 		};
 
 		try {
@@ -235,12 +237,12 @@ export const actions: Actions = {
 			});
 		} catch {
 			return fail(500, {
-				featuresMessage: { text: 'Erreur lors de la mise à jour des fonctionnalités', ok: false }
+				featuresMessage: { text: 'Error updating modules', ok: false }
 			});
 		}
 
 		return {
-			featuresMessage: { text: 'Fonctionnalités mises à jour avec succès', ok: true }
+			featuresMessage: { text: 'Modules updated successfully', ok: true }
 		};
 	}
 };

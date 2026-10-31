@@ -17,7 +17,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.invoice.invoiceNumber} - Impression</title>
+	<title>{data.invoice.invoiceNumber} - Print</title>
 </svelte:head>
 
 <div
@@ -31,14 +31,14 @@
 		<a href={resolve('/app/invoicing/[id]', { id: data.invoice.id })}>
 			<Button variant="secondary" size="sm">
 				<i class="fas fa-arrow-left mr-1.5 text-xs"></i>
-				Retour à la facture
+				Back to invoice
 			</Button>
 		</a>
 
 		<div class="flex items-center gap-2">
 			<Button size="sm" onclick={() => window.print()}>
 				<i class="fas fa-print mr-1.5 text-xs"></i>
-				Imprimer / Enregistrer en PDF
+				Print / Save as PDF
 			</Button>
 		</div>
 	</div>

@@ -79,11 +79,11 @@
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			showToast('Facture supprimée', 'success');
+			showToast('Invoice deleted', 'success');
 			confirmDeleteId = null;
 			await invalidateAll();
 		} else {
-			showToast('Erreur lors de la suppression', 'error');
+			showToast('Error deleting invoice', 'error');
 		}
 	}
 
@@ -98,19 +98,19 @@
 					invoiceIds: selectedInvoiceIds
 				})
 			});
-			if (!res.ok) throw new Error('Erreur');
+			if (!res.ok) throw new Error('Export failed');
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `factures-selection-${Date.now()}.zip`;
+			a.download = `invoices-selection-${Date.now()}.zip`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-			showToast('Export réussi', 'success');
+			showToast('Selection exported successfully', 'success');
 		} catch {
-			showToast("Échec de l'export", 'error');
+			showToast('Export failed', 'error');
 		}
 	}
 
@@ -120,13 +120,13 @@
 	} {
 		switch (status) {
 			case 'draft':
-				return { variant: 'default', label: 'Brouillon' };
+				return { variant: 'default', label: 'Draft' };
 			case 'sent':
-				return { variant: 'warning', label: 'Envoyée' };
+				return { variant: 'warning', label: 'Sent' };
 			case 'paid':
-				return { variant: 'success', label: 'Payée' };
+				return { variant: 'success', label: 'Paid' };
 			case 'cancelled':
-				return { variant: 'danger', label: 'Annulée' };
+				return { variant: 'danger', label: 'Cancelled' };
 			default:
 				return { variant: 'default', label: status };
 		}
@@ -134,23 +134,23 @@
 </script>
 
 <svelte:head>
-	<title>Facturation - MegaOrganize</title>
+	<title>Invoicing - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
+<div class="mx-auto max-w-7xl space-y-6 px-3.5 py-4 sm:p-6 lg:p-8">
 	<PageHeader
-		title="Facturation"
-		subtitle="Gestion et suivi conforme aux normes fiscales algériennes"
+		title="Invoicing"
+		subtitle="Management and compliance tracking for Algerian fiscal standards"
 	>
 		<div class="flex flex-wrap items-center gap-2">
 			<Button href={resolve('/app/invoicing/clients')} variant="secondary" size="sm">
 				<i class="fas fa-users mr-1.5 text-xs"></i> Clients
 			</Button>
 			<Button href={resolve('/app/invoicing/products')} variant="secondary" size="sm">
-				<i class="fas fa-cubes-stacked mr-1.5 text-xs"></i> Services
+				<i class="fas fa-cubes-stacked mr-1.5 text-xs"></i> Services & Rates
 			</Button>
 			<Button href={resolve('/app/invoicing/new')} size="sm">
-				<i class="fas fa-plus mr-1.5 text-xs"></i> Nouvelle Facture
+				<i class="fas fa-plus mr-1.5 text-xs"></i> New Invoice
 			</Button>
 		</div>
 	</PageHeader>
@@ -158,11 +158,11 @@
 	<!-- Modern SaaS Stats Cards -->
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 		<div
-			class="flex flex-col rounded-xl border border-border bg-surface p-5 shadow-xs transition-all hover:border-border-strong"
+			class="flex flex-col rounded-xl border border-border bg-surface p-4 shadow-xs transition-all hover:border-border-strong sm:p-5"
 		>
 			<div class="mb-3 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
-					>Total Facturé</span
+					>Total Invoiced</span
 				>
 				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-fg-subdued">
 					<i class="fas fa-file-invoice text-xs"></i>
@@ -174,11 +174,11 @@
 		</div>
 
 		<div
-			class="flex flex-col rounded-xl border border-border bg-surface p-5 shadow-xs transition-all hover:border-border-strong"
+			class="flex flex-col rounded-xl border border-border bg-surface p-4 shadow-xs transition-all hover:border-border-strong sm:p-5"
 		>
 			<div class="mb-3 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
-					>Montant Encaissé</span
+					>Paid Amount</span
 				>
 				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
 					<i class="fas fa-circle-check text-xs"></i>
@@ -190,11 +190,11 @@
 		</div>
 
 		<div
-			class="flex flex-col rounded-xl border border-border bg-surface p-5 shadow-xs transition-all hover:border-border-strong"
+			class="flex flex-col rounded-xl border border-border bg-surface p-4 shadow-xs transition-all hover:border-border-strong sm:p-5"
 		>
 			<div class="mb-3 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
-					>En Attente</span
+					>Pending Balance</span
 				>
 				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10 text-warning">
 					<i class="fas fa-clock text-xs"></i>
@@ -216,7 +216,7 @@
 				<input
 					type="search"
 					bind:value={searchQuery}
-					placeholder="Rechercher numéro, client..."
+					placeholder="Search number, client..."
 					class="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-xs text-fg shadow-xs placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
 				/>
 			</div>
@@ -226,7 +226,7 @@
 					bind:value={selectedYear}
 					class="h-9 w-full rounded-lg border border-border bg-surface px-3 text-xs text-fg shadow-xs focus:border-primary focus:outline-none sm:w-auto"
 				>
-					<option value="all">Toutes les années</option>
+					<option value="all">All Years</option>
 					{#each data.years as y (y)}
 						<option value={String(y)}>{y}</option>
 					{/each}
@@ -236,11 +236,11 @@
 					bind:value={selectedStatus}
 					class="h-9 w-full rounded-lg border border-border bg-surface px-3 text-xs text-fg shadow-xs focus:border-primary focus:outline-none sm:w-auto"
 				>
-					<option value="all">Tous les statuts</option>
-					<option value="draft">Brouillons</option>
-					<option value="sent">Envoyées</option>
-					<option value="paid">Payées</option>
-					<option value="cancelled">Annulées</option>
+					<option value="all">All Statuses</option>
+					<option value="draft">Draft</option>
+					<option value="sent">Sent</option>
+					<option value="paid">Paid</option>
+					<option value="cancelled">Cancelled</option>
 				</select>
 			</div>
 		</div>
@@ -248,10 +248,10 @@
 		{#if selectedInvoiceIds.length > 0}
 			<div class="flex items-center justify-between gap-3 pt-1 sm:justify-end sm:pt-0">
 				<span class="text-xs font-medium text-fg-subdued">
-					{selectedInvoiceIds.length} sélectionnée(s)
+					{selectedInvoiceIds.length} selected
 				</span>
 				<Button size="sm" variant="secondary" onclick={exportSelection}>
-					<i class="fas fa-file-zipper mr-1.5 text-xs"></i> Exporter la sélection
+					<i class="fas fa-file-zipper mr-1.5 text-xs"></i> Export Selection
 				</Button>
 			</div>
 		{/if}
@@ -272,12 +272,12 @@
 								class="rounded border-border"
 							/>
 						</th>
-						<th class="px-3.5 py-3 font-semibold">Numéro</th>
+						<th class="px-3.5 py-3 font-semibold">Invoice #</th>
 						<th class="px-3.5 py-3 font-semibold">Client</th>
 						<th class="px-3.5 py-3 font-semibold">Date</th>
-						<th class="px-3.5 py-3 font-semibold">Échéance</th>
-						<th class="px-3.5 py-3 text-right font-semibold">Montant TTC</th>
-						<th class="px-3.5 py-3 text-center font-semibold">Statut</th>
+						<th class="px-3.5 py-3 font-semibold">Due Date</th>
+						<th class="px-3.5 py-3 text-right font-semibold">Amount (TTC)</th>
+						<th class="px-3.5 py-3 text-center font-semibold">Status</th>
 						<th class="px-3.5 py-3 text-right font-semibold">Actions</th>
 					</tr>
 				</thead>
@@ -302,7 +302,7 @@
 								</a>
 							</td>
 							<td class="px-3.5 py-3 font-medium text-fg">
-								{inv.client?.name || 'Inconnu'}
+								{inv.client?.name || 'Unknown'}
 							</td>
 							<td class="px-3.5 py-3 text-fg-subdued">
 								{formatDateDZ(inv.invoiceDate)}
@@ -320,14 +320,14 @@
 								<div class="flex items-center justify-end gap-1.5">
 									<a
 										href={resolve('/app/invoicing/[id]', { id: inv.id })}
-										title="Consulter"
+										title="View invoice"
 										class="flex h-7 w-7 items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 									>
 										<i class="fas fa-eye text-xs"></i>
 									</a>
 									<a
 										href={resolve('/app/invoicing/[id]/edit', { id: inv.id })}
-										title="Modifier"
+										title="Edit invoice"
 										class="flex h-7 w-7 items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 									>
 										<i class="fas fa-pencil text-xs"></i>
@@ -357,12 +357,12 @@
 	{:else}
 		<EmptyState
 			icon="fa-file-invoice-dollar"
-			message="Aucune facture trouvée"
-			submessage="Créez votre première facture pour commencer votre facturation conforme."
+			message="No invoices found"
+			submessage="Create your first invoice to start generating compliant billing documents."
 		>
 			<a href={resolve('/app/invoicing/new')}>
 				<Button size="sm">
-					<i class="fas fa-plus mr-1.5 text-xs"></i> Créer une facture
+					<i class="fas fa-plus mr-1.5 text-xs"></i> Create Invoice
 				</Button>
 			</a>
 		</EmptyState>
