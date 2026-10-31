@@ -498,14 +498,16 @@
 		</EmptyState>
 	</div>
 {:else}
-	<div class="border-b border-border bg-bg-subdued px-4 py-2 sm:px-6">
-		<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
+	<div
+		class="flex h-14 shrink-0 items-center border-b border-border bg-surface/50 px-4 backdrop-blur-xs sm:px-6"
+	>
+		<div class="flex items-center gap-2 text-xs text-fg-subdued">
 			<a
 				href={resolve('/app/category/[id]', { id: category.id })}
 				class="max-w-[120px] truncate hover:text-primary-text sm:max-w-none">{category.name}</a
 			>
-			<i class="fas fa-chevron-right shrink-0 text-[8px]"></i>
-			<span class="truncate text-fg">{pageData.name}</span>
+			<i class="fas fa-chevron-right shrink-0 text-[8px] text-fg-subdued/50"></i>
+			<span class="truncate font-semibold text-fg">{pageData.name}</span>
 		</div>
 	</div>
 

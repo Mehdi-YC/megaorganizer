@@ -262,82 +262,99 @@
 	</div>
 {:else}
 	<div class="flex min-h-full flex-col lg:h-full">
-		<div class="shrink-0 border-b border-border bg-bg-subdued px-4 py-2 sm:px-6">
-			<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
+		<div
+			class="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface/50 px-4 backdrop-blur-xs sm:px-6 lg:px-8"
+		>
+			<div class="flex min-w-0 items-center gap-2.5">
 				<button
 					type="button"
 					aria-label="Go back"
-					class="cursor-pointer hover:text-primary-text"
-					onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button
+					class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+					onclick={() => history.back()}
 				>
-				<i class="fas fa-chevron-right text-[8px]"></i>
-				<span class="truncate text-fg">{item.name}</span>
+					<i class="fas fa-arrow-left text-xs"></i>
+				</button>
+				<i class="fas fa-chevron-right text-[10px] text-fg-subdued/50"></i>
+				{#if editing}
+					<input
+						type="text"
+						bind:value={name}
+						class="rounded-lg border border-border bg-bg px-2.5 py-1 text-sm font-semibold text-fg focus:border-primary focus:outline-none"
+						placeholder="Item name"
+					/>
+				{:else}
+					<span
+						class="cursor-help truncate text-sm font-semibold text-fg sm:text-base"
+						title={item.description || item.name}
+					>
+						{item.name}
+					</span>
+					<span
+						class="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-fg-subdued capitalize"
+					>
+						{item.type}
+					</span>
+				{/if}
+			</div>
+
+			<div class="flex shrink-0 items-center gap-1.5">
+				{#if editing}
+					<Button variant="primary" size="sm" onclick={saveItem}>
+						<i class="fas fa-check mr-1.5 text-xs"></i> Save
+					</Button>
+					<Button variant="secondary" size="sm" onclick={resetForm}>Cancel</Button>
+				{:else}
+					{#if !isDeckView}
+						<button
+							type="button"
+							aria-label="Toggle tree view"
+							title={showTree ? 'Switch to standard view' : 'Switch to tree view'}
+							class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors {showTree
+								? 'bg-primary text-white'
+								: 'border border-border bg-surface text-fg-subdued hover:bg-muted hover:text-fg'}"
+							onclick={toggleTreeView}
+						>
+							<i class="fas fa-project-diagram text-xs"></i>
+						</button>
+					{/if}
+					<Button
+						variant="secondary"
+						size="sm"
+						aria-label="Edit"
+						title="Edit item"
+						onclick={() => (editing = true)}
+					>
+						<i class="fas fa-pen text-xs"></i>
+					</Button>
+					<Button
+						variant="danger"
+						size="sm"
+						aria-label="Delete"
+						title="Delete item"
+						onclick={deleteItem}
+					>
+						<i class="fas fa-trash text-xs"></i>
+					</Button>
+				{/if}
 			</div>
 		</div>
 
 		<div class="space-y-4 p-4 sm:p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-0 lg:p-0">
-			<div class="lg:shrink-0 lg:px-6 lg:pt-6 xl:px-8 xl:pt-8">
-				<div class="flex flex-wrap items-center justify-between gap-3">
-					<div class="min-w-0 flex-1">
-						{#if editing}
-							<input
-								type="text"
-								bind:value={name}
-								class="w-full border-b-2 border-primary-text bg-transparent text-lg font-semibold text-fg-accent focus:outline-none lg:text-xl"
-							/>
-							<input
-								type="text"
-								bind:value={description}
-								placeholder="Description (optional)"
-								class="mt-1 w-full border-b border-border bg-transparent text-base text-fg-subdued placeholder:text-fg-subdued/50 focus:outline-none sm:text-sm"
-							/>
-						{:else}
-							<h1
-								class="cursor-help truncate text-lg font-semibold text-fg-accent lg:text-xl"
-								title={item.description || item.name}
-							>
-								{item.name}
-							</h1>
-							{#if item.description}
-								<p class="mt-0.5 hidden text-sm text-fg-subdued sm:block">
-									{item.description}
-								</p>
-							{/if}
-							<p class="mt-1 text-[10px] text-fg-subdued capitalize lg:hidden">{item.type}</p>
-						{/if}
-					</div>
-					<div class="flex shrink-0 items-center gap-1.5 pr-1">
-						{#if editing}
-							<Button variant="primary" size="md" onclick={saveItem}
-								><i class="fas fa-check text-xs"></i> Save</Button
-							>
-							<Button variant="secondary" size="md" onclick={resetForm}>Cancel</Button>
-						{:else}
-							{#if !isDeckView}
-								<button
-									type="button"
-									aria-label="Toggle tree view"
-									class="inline-flex h-[36px] cursor-pointer items-center gap-1.5 rounded-sm {showTree
-										? 'bg-primary text-white'
-										: 'bg-muted text-fg'} px-3 text-sm font-medium transition-colors hover:bg-border"
-									onclick={toggleTreeView}
-								>
-									<i class="fas fa-project-diagram text-xs"></i>
-								</button>
-							{/if}
-							<Button
-								variant="secondary"
-								size="md"
-								aria-label="Edit"
-								onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></Button
-							>
-							<Button variant="danger" size="md" aria-label="Delete" onclick={deleteItem}
-								><i class="fas fa-trash text-xs"></i></Button
-							>
-						{/if}
+			{#if editing}
+				<div class="px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pt-6">
+					<div class="rounded-xl border border-border bg-surface p-4 shadow-xs">
+						<label for="item-desc-input" class="mb-1 block text-xs font-semibold text-fg-subdued">
+							Description
+						</label>
+						<Input
+							id="item-desc-input"
+							name="description"
+							bind:value={description}
+							placeholder="Description (optional)"
+						/>
 					</div>
 				</div>
-			</div>
+			{/if}
 
 			<div class="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:gap-0 lg:space-y-0">
 				<div
