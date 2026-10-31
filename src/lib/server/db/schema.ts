@@ -965,6 +965,7 @@ export const invoice = sqliteTable(
 			'30% au démarrage, le solde à la livraison'
 		),
 		notes: text('notes'),
+		showTvaStamp: integer('show_tva_stamp', { mode: 'boolean' }).default(true).notNull(),
 		subtotal: real('subtotal').default(0).notNull(),
 		tvaAmount: real('tva_amount').default(0).notNull(),
 		total: real('total').default(0).notNull(),

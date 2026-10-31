@@ -74,7 +74,8 @@ function generateInvoiceHtml(
 		.dates strong { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 2px; }
 		table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
 		th { padding: 8px 6px; border-bottom: 2px solid #e5e7eb; font-weight: 600; font-size: 11px; color: #374151; }
-		.legal-mention { font-size: 11px; font-style: italic; color: #4b5563; margin: 8px 0 4px; }
+		.legal-mention { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-style: italic; color: #4b5563; margin: 8px 0 4px; }
+		.tva-stamp { display: inline-block; border: 2.5px solid #dc2626; color: #dc2626; font-weight: 900; font-size: 11px; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 2px; transform: rotate(-3deg); text-transform: uppercase; user-select: none; }
 		.divider { border: 0; border-top: 1px solid #e5e7eb; margin: 6px 0 16px; }
 		.bottom-section { display: flex; justify-content: space-between; align-items: flex-start; }
 		.conditions-box { max-width: 340px; font-size: 11px; line-height: 1.5; color: #374151; }
@@ -147,7 +148,8 @@ function generateInvoiceHtml(
 	</table>
 
 	<div class="legal-mention">
-		Facture non soumise à la TVA (Régime de l'IFU - Statut Auto-Entrepreneur)
+		<div>Facture non soumise à la TVA (Régime de l'IFU - Statut Auto-Entrepreneur)</div>
+		${(inv.showTvaStamp ?? inv.tvaAmount === 0) ? '<div class="tva-stamp">NON SOUMIS À LA TVA</div>' : ''}
 	</div>
 	<hr class="divider" />
 

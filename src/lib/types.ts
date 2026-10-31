@@ -338,6 +338,7 @@ export interface Invoice {
 	paymentMode?: string | null;
 	paymentConditions?: string | null;
 	notes?: string | null;
+	showTvaStamp?: boolean | null;
 	subtotal: number;
 	tvaAmount: number;
 	total: number;

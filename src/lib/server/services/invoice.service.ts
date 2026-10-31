@@ -286,6 +286,7 @@ export async function createInvoice(
 		paymentMode?: string | null;
 		paymentConditions?: string | null;
 		notes?: string | null;
+		showTvaStamp?: boolean;
 		lines: InvoiceLineInput[];
 	}
 ) {
@@ -334,6 +335,7 @@ export async function createInvoice(
 			paymentConditions:
 				data.paymentConditions?.trim() || '30% au démarrage, le solde à la livraison',
 			notes: data.notes?.trim() || null,
+			showTvaStamp: data.showTvaStamp !== undefined ? data.showTvaStamp : tvaAmount === 0,
 			subtotal,
 			tvaAmount,
 			total,
@@ -365,6 +367,7 @@ export async function updateInvoice(
 		paymentMode?: string | null;
 		paymentConditions?: string | null;
 		notes?: string | null;
+		showTvaStamp?: boolean;
 		lines?: InvoiceLineInput[];
 	}
 ) {
@@ -386,6 +389,7 @@ export async function updateInvoice(
 	if (data.paymentConditions !== undefined)
 		updateData.paymentConditions = data.paymentConditions?.trim() || null;
 	if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null;
+	if (data.showTvaStamp !== undefined) updateData.showTvaStamp = data.showTvaStamp;
 
 	if (data.lines) {
 		await db.delete(invoiceLine).where(eq(invoiceLine.invoiceId, invoiceId));

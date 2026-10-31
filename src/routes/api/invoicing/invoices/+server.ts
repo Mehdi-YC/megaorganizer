@@ -58,6 +58,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			paymentMode: body.paymentMode,
 			paymentConditions: body.paymentConditions,
 			notes: body.notes || null,
+			showTvaStamp: body.showTvaStamp,
 			lines: body.lines
 		});
 
@@ -86,6 +87,7 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 			paymentMode: body.paymentMode,
 			paymentConditions: body.paymentConditions,
 			notes: body.notes,
+			showTvaStamp: body.showTvaStamp,
 			lines: body.lines
 		});
 

@@ -26,6 +26,7 @@
 	let paymentMode = $state('Virement bancaire / Chèque');
 	let paymentConditions = $state('30% au démarrage, le solde à la livraison');
 	let notes = $state('');
+	let showTvaStamp = $state(true);
 
 	interface FormLine {
 		id: string;
@@ -142,6 +143,7 @@
 					paymentMode,
 					paymentConditions,
 					notes,
+					showTvaStamp,
 					lines: validLines.map((l, idx) => ({
 						productId: l.productId || null,
 						description: l.description,
@@ -356,6 +358,26 @@
 							bind:value={paymentConditions}
 							placeholder="ex: 30% au démarrage, le solde à la livraison"
 						/>
+					</div>
+
+					<!-- Tampon Exonération TVA -->
+					<div
+						class="flex items-center justify-between rounded-sm border border-border bg-bg p-3 sm:col-span-2"
+					>
+						<div class="flex items-center gap-2.5">
+							<input
+								id="showTvaStamp"
+								type="checkbox"
+								bind:checked={showTvaStamp}
+								class="h-4 w-4 rounded-sm border-border text-primary focus:ring-0"
+							/>
+							<label for="showTvaStamp" class="cursor-pointer text-xs font-semibold text-fg">
+								Tampon « NON SOUMIS À LA TVA »
+							</label>
+						</div>
+						<span class="text-[11px] text-fg-subdued">
+							{showTvaStamp ? 'Affiché sur la facture' : 'Désactivé'}
+						</span>
 					</div>
 				</div>
 			</div>
