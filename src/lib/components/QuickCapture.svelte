@@ -201,7 +201,7 @@
 <!-- FAB Button -->
 <button
 	type="button"
-	class="no-print fixed right-6 bottom-6 z-40 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover active:scale-95"
+	class="no-print fixed right-4 bottom-5 z-40 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 sm:right-6 sm:bottom-6"
 	onclick={() => open()}
 	aria-label="Quick capture"
 >

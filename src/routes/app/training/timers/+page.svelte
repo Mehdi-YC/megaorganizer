@@ -63,7 +63,7 @@
 	<title>Timers - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="p-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title="HIIT & WOD Timers" subtitle="Saved interval timers you can run again">
 		<Button href="/app/training" variant="secondary" size="md">
 			<i class="fas fa-arrow-left mr-2 text-xs"></i>
@@ -71,7 +71,7 @@
 		</Button>
 		<Button href="/app/training/timers/new" variant="primary" size="md">
 			<i class="fas fa-plus mr-2 text-xs"></i>
-			New Timer
+			Timer
 		</Button>
 	</PageHeader>
 

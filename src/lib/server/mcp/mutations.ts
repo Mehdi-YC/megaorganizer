@@ -1,6 +1,18 @@
 import { getTagsByUser } from '$lib/server/services/tag.service';
 import { updatePage as updatePageRecord } from '$lib/server/services/page.service';
 import { updateTreeElement } from '$lib/server/services/tree.service';
+import {
+	createClient as createClientService,
+	updateClient as updateClientService,
+	createProduct as createProductService,
+	updateProduct as updateProductService,
+	createInvoice as createInvoiceService,
+	updateInvoice as updateInvoiceService,
+	getClient as getClientService,
+	getProduct as getProductService,
+	getInvoice as getInvoiceService,
+	type InvoiceLineInput
+} from '$lib/server/services/invoice.service';
 import { getItem, getPage, ToolInputError } from './queries';
 
 // Write operations behind the MCP edit tools. Like the read queries, every
@@ -144,4 +156,301 @@ export async function updatePage(userId: string, args: UpdatePageArgs) {
 
 	const detail = await getPage(userId, args.id, 1);
 	return { changed, page: detail.page };
+}
+
+// ─── Invoicing Mutations (Clients, Products, Invoices) ───────────────────────
+
+export interface CreateClientArgs {
+	name: string;
+	address?: string | null;
+	city?: string | null;
+	wilaya?: string | null;
+	country?: string | null;
+	nif?: string | null;
+	nis?: string | null;
+	rc?: string | null;
+	ai?: string | null;
+	nTva?: string | null;
+	phone?: string | null;
+	email?: string | null;
+}
+
+export interface UpdateClientArgs {
+	id: string;
+	name?: string;
+	address?: string | null;
+	city?: string | null;
+	wilaya?: string | null;
+	country?: string | null;
+	nif?: string | null;
+	nis?: string | null;
+	rc?: string | null;
+	ai?: string | null;
+	nTva?: string | null;
+	phone?: string | null;
+	email?: string | null;
+}
+
+export async function createClient(userId: string, args: CreateClientArgs) {
+	const name = cleanName(args.name);
+	if (!name) throw new ToolInputError('"name" is required for a client.');
+
+	const client = await createClientService(userId, {
+		name,
+		address: cleanText(args.address),
+		city: cleanText(args.city),
+		wilaya: cleanText(args.wilaya),
+		country: cleanText(args.country) ?? 'Algérie',
+		nif: cleanText(args.nif),
+		nis: cleanText(args.nis),
+		rc: cleanText(args.rc),
+		ai: cleanText(args.ai),
+		nTva: cleanText(args.nTva),
+		phone: cleanText(args.phone),
+		email: cleanText(args.email)
+	});
+
+	return { client };
+}
+
+export async function updateClient(userId: string, args: UpdateClientArgs) {
+	const existing = await getClientService(userId, args.id);
+	if (!existing) throw new ToolInputError(`No client found with id "${args.id}".`);
+
+	const patch: Parameters<typeof updateClientService>[2] = {};
+	if (args.name !== undefined) patch.name = cleanName(args.name);
+	if (args.address !== undefined) patch.address = cleanText(args.address) ?? null;
+	if (args.city !== undefined) patch.city = cleanText(args.city) ?? null;
+	if (args.wilaya !== undefined) patch.wilaya = cleanText(args.wilaya) ?? null;
+	if (args.country !== undefined) patch.country = cleanText(args.country) ?? null;
+	if (args.nif !== undefined) patch.nif = cleanText(args.nif) ?? null;
+	if (args.nis !== undefined) patch.nis = cleanText(args.nis) ?? null;
+	if (args.rc !== undefined) patch.rc = cleanText(args.rc) ?? null;
+	if (args.ai !== undefined) patch.ai = cleanText(args.ai) ?? null;
+	if (args.nTva !== undefined) patch.nTva = cleanText(args.nTva) ?? null;
+	if (args.phone !== undefined) patch.phone = cleanText(args.phone) ?? null;
+	if (args.email !== undefined) patch.email = cleanText(args.email) ?? null;
+
+	const changed = Object.keys(patch);
+	if (changed.length === 0) {
+		throw new ToolInputError('Provide at least one client field to update.');
+	}
+
+	const updated = await updateClientService(userId, args.id, patch);
+	return { changed, client: updated };
+}
+
+export interface CreateProductArgs {
+	name: string;
+	description?: string | null;
+	unitPrice: number;
+	unit?: string | null;
+	tvaRate?: number;
+}
+
+export interface UpdateProductArgs {
+	id: string;
+	name?: string;
+	description?: string | null;
+	unitPrice?: number;
+	unit?: string;
+	tvaRate?: number;
+}
+
+export async function createProduct(userId: string, args: CreateProductArgs) {
+	const name = cleanName(args.name);
+	if (!name) throw new ToolInputError('"name" is required for a product.');
+	if (typeof args.unitPrice !== 'number' || isNaN(args.unitPrice) || args.unitPrice < 0) {
+		throw new ToolInputError('"unitPrice" must be a non-negative number.');
+	}
+
+	const product = await createProductService(userId, {
+		name,
+		description: cleanText(args.description),
+		unitPrice: args.unitPrice,
+		unit: cleanText(args.unit) ?? 'Unité(s)',
+		tvaRate: args.tvaRate ?? 0
+	});
+
+	return { product };
+}
+
+export async function updateProduct(userId: string, args: UpdateProductArgs) {
+	const existing = await getProductService(userId, args.id);
+	if (!existing) throw new ToolInputError(`No product found with id "${args.id}".`);
+
+	const patch: Parameters<typeof updateProductService>[2] = {};
+	if (args.name !== undefined) patch.name = cleanName(args.name);
+	if (args.description !== undefined) patch.description = cleanText(args.description) ?? null;
+	if (args.unitPrice !== undefined) {
+		if (typeof args.unitPrice !== 'number' || isNaN(args.unitPrice) || args.unitPrice < 0) {
+			throw new ToolInputError('"unitPrice" must be a non-negative number.');
+		}
+		patch.unitPrice = args.unitPrice;
+	}
+	if (args.unit !== undefined) {
+		const unit = cleanText(args.unit);
+		if (!unit) throw new ToolInputError('"unit" cannot be empty.');
+		patch.unit = unit;
+	}
+	if (args.tvaRate !== undefined) {
+		if (typeof args.tvaRate !== 'number' || isNaN(args.tvaRate) || args.tvaRate < 0) {
+			throw new ToolInputError('"tvaRate" must be a non-negative number.');
+		}
+		patch.tvaRate = args.tvaRate;
+	}
+
+	const changed = Object.keys(patch);
+	if (changed.length === 0) {
+		throw new ToolInputError('Provide at least one product field to update.');
+	}
+
+	const updated = await updateProductService(userId, args.id, patch);
+	return { changed, product: updated };
+}
+
+export interface InvoiceLineParam {
+	productId?: string | null;
+	description: string;
+	quantity: number;
+	unitPrice: number;
+	unit?: string;
+	tvaRate?: number;
+	position?: number;
+}
+
+export interface CreateInvoiceArgs {
+	clientId: string;
+	invoiceNumber?: string;
+	invoiceDate?: string;
+	dueDate?: string;
+	status?: 'draft' | 'sent' | 'paid' | 'cancelled';
+	paymentMode?: string | null;
+	paymentConditions?: string | null;
+	notes?: string | null;
+	showTvaStamp?: boolean;
+	lines: InvoiceLineParam[];
+}
+
+export interface UpdateInvoiceArgs {
+	id: string;
+	clientId?: string;
+	invoiceNumber?: string;
+	invoiceDate?: string;
+	dueDate?: string;
+	status?: 'draft' | 'sent' | 'paid' | 'cancelled';
+	paymentMode?: string | null;
+	paymentConditions?: string | null;
+	notes?: string | null;
+	showTvaStamp?: boolean;
+	lines?: InvoiceLineParam[];
+}
+
+function sanitizeLines(lines: InvoiceLineParam[]): InvoiceLineInput[] {
+	if (!lines || lines.length === 0) {
+		throw new ToolInputError('An invoice must contain at least one line.');
+	}
+	return lines.map((l, index) => {
+		const desc = l.description?.trim();
+		if (!desc) throw new ToolInputError(`Line ${index + 1} must have a description.`);
+		const qty = Number(l.quantity);
+		if (isNaN(qty) || qty <= 0) throw new ToolInputError(`Line ${index + 1} quantity must be > 0.`);
+		const price = Number(l.unitPrice);
+		if (isNaN(price) || price < 0)
+			throw new ToolInputError(`Line ${index + 1} unitPrice must be >= 0.`);
+
+		return {
+			productId: l.productId?.trim() || null,
+			description: desc,
+			quantity: qty,
+			unitPrice: price,
+			unit: l.unit?.trim() || 'Unité(s)',
+			tvaRate: typeof l.tvaRate === 'number' ? l.tvaRate : 0,
+			position: l.position ?? index
+		};
+	});
+}
+
+export async function createInvoice(userId: string, args: CreateInvoiceArgs) {
+	if (!args.clientId?.trim()) throw new ToolInputError('"clientId" is required.');
+	const client = await getClientService(userId, args.clientId.trim());
+	if (!client) throw new ToolInputError(`No client found with id "${args.clientId}".`);
+
+	const now = new Date();
+	const invoiceDate = args.invoiceDate ? new Date(args.invoiceDate) : now;
+	if (isNaN(invoiceDate.getTime())) throw new ToolInputError('"invoiceDate" is invalid.');
+
+	let dueDate: Date;
+	if (args.dueDate) {
+		dueDate = new Date(args.dueDate);
+		if (isNaN(dueDate.getTime())) throw new ToolInputError('"dueDate" is invalid.');
+	} else {
+		dueDate = new Date(invoiceDate);
+		dueDate.setDate(dueDate.getDate() + 30);
+	}
+
+	const lines = sanitizeLines(args.lines);
+
+	const inv = await createInvoiceService(userId, {
+		clientId: args.clientId.trim(),
+		invoiceNumber: args.invoiceNumber?.trim() || undefined,
+		invoiceDate,
+		dueDate,
+		status: args.status || 'draft',
+		paymentMode: cleanText(args.paymentMode),
+		paymentConditions: cleanText(args.paymentConditions),
+		notes: cleanText(args.notes),
+		showTvaStamp: args.showTvaStamp,
+		lines
+	});
+
+	return { invoice: inv };
+}
+
+export async function updateInvoice(userId: string, args: UpdateInvoiceArgs) {
+	const existing = await getInvoiceService(userId, args.id);
+	if (!existing) throw new ToolInputError(`No invoice found with id "${args.id}".`);
+
+	const patch: Parameters<typeof updateInvoiceService>[2] = {};
+
+	if (args.clientId !== undefined) {
+		const cId = args.clientId.trim();
+		const client = await getClientService(userId, cId);
+		if (!client) throw new ToolInputError(`No client found with id "${cId}".`);
+		patch.clientId = cId;
+	}
+	if (args.invoiceNumber !== undefined) {
+		const invNum = cleanName(args.invoiceNumber);
+		if (!invNum) throw new ToolInputError('"invoiceNumber" cannot be empty.');
+		patch.invoiceNumber = invNum;
+	}
+	if (args.invoiceDate !== undefined) {
+		const d = new Date(args.invoiceDate);
+		if (isNaN(d.getTime())) throw new ToolInputError('"invoiceDate" is invalid.');
+		patch.invoiceDate = d;
+	}
+	if (args.dueDate !== undefined) {
+		const d = new Date(args.dueDate);
+		if (isNaN(d.getTime())) throw new ToolInputError('"dueDate" is invalid.');
+		patch.dueDate = d;
+	}
+	if (args.status !== undefined) {
+		patch.status = args.status;
+	}
+	if (args.paymentMode !== undefined) patch.paymentMode = cleanText(args.paymentMode) ?? null;
+	if (args.paymentConditions !== undefined)
+		patch.paymentConditions = cleanText(args.paymentConditions) ?? null;
+	if (args.notes !== undefined) patch.notes = cleanText(args.notes) ?? null;
+	if (args.showTvaStamp !== undefined) patch.showTvaStamp = args.showTvaStamp;
+	if (args.lines !== undefined) {
+		patch.lines = sanitizeLines(args.lines);
+	}
+
+	const changed = Object.keys(patch);
+	if (changed.length === 0) {
+		throw new ToolInputError('Provide at least one invoice field to update.');
+	}
+
+	const updated = await updateInvoiceService(userId, args.id, patch);
+	return { changed, invoice: updated };
 }

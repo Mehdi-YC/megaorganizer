@@ -102,7 +102,7 @@
 				</div>
 			</div>
 			<Button size="sm" onclick={() => (showNewPage = true)}>
-				<i class="fas fa-plus mr-2 text-xs"></i> New Page
+				<i class="fas fa-plus mr-1.5 text-xs"></i> Page
 			</Button>
 		</div>
 

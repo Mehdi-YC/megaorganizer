@@ -272,7 +272,7 @@
 								class="cursor-pointer text-[11px] text-primary-text hover:underline"
 								onclick={() => (showNewClientModal = true)}
 							>
-								+ New Client
+								+ Client
 							</button>
 						</div>
 						{#if clients.length > 0}

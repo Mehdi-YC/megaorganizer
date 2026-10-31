@@ -1,6 +1,15 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { updateItem, updatePage } from './mutations';
+import {
+	updateItem,
+	updatePage,
+	createClient,
+	updateClient,
+	createProduct,
+	updateProduct,
+	createInvoice,
+	updateInvoice
+} from './mutations';
 import {
 	financeSummary,
 	getItem,
@@ -14,6 +23,10 @@ import {
 	listReminders,
 	listTags,
 	listTrainingSessions,
+	listClients,
+	listProducts,
+	listInvoices,
+	getInvoice,
 	searchAll,
 	timeline,
 	ToolInputError
@@ -69,7 +82,7 @@ export function createMcpServer(userId: string): McpServer {
 		{
 			capabilities: { tools: {} },
 			instructions:
-				'Access to one MegaOrganize account, with read and edit tools. Start with "search" when you do not know an id, or "timeline" for questions about recent activity. Use list_* tools to browse, then get_page/get_item/get_training_session for full detail. To change existing content use update_page or update_item: only the fields you pass change, and null clears a field. Edits are saved immediately and visible in the app. Dates are ISO 8601; date-only arguments are interpreted in the server timezone.'
+				'Access to one MegaOrganize account, with read and edit tools. Start with "search" when you do not know an id, or "timeline" for questions about recent activity. Use list_* tools to browse, then get_page/get_item/get_training_session/get_invoice for full detail. To manage content and invoicing, use update_page, update_item, create_client, update_client, create_product, update_product, create_invoice, or update_invoice. Only the fields you pass change, and null clears an optional field. Edits are saved immediately and visible in the app. Dates are ISO 8601; date-only arguments are interpreted in the server timezone.'
 		}
 	);
 
@@ -406,6 +419,255 @@ export function createMcpServer(userId: string): McpServer {
 			annotations: WRITE
 		},
 		async (args) => safe(() => updatePage(userId, args))
+	);
+
+	// ─── Clients ─────────────────────────────────────────────────────────────
+
+	server.registerTool(
+		'list_clients',
+		{
+			title: 'List invoicing clients',
+			description: 'List all invoicing clients belonging to the authenticated user.',
+			inputSchema: {},
+			annotations: READ_ONLY
+		},
+		async () => safe(() => listClients(userId))
+	);
+
+	server.registerTool(
+		'create_client',
+		{
+			title: 'Create invoicing client',
+			description: 'Create a new invoicing client with optional tax and contact information.',
+			inputSchema: {
+				name: z.string().min(1).describe('Client or business name'),
+				address: z.string().nullable().optional().describe('Street address'),
+				city: z.string().nullable().optional().describe('City'),
+				wilaya: z.string().nullable().optional().describe('Wilaya / province'),
+				country: z.string().nullable().optional().describe('Country (defaults to Algérie)'),
+				nif: z.string().nullable().optional().describe('Tax identification number (NIF)'),
+				nis: z.string().nullable().optional().describe('Statistical identification number (NIS)'),
+				rc: z.string().nullable().optional().describe('Trade registry number (RC)'),
+				ai: z.string().nullable().optional().describe('Article d’imposition (AI)'),
+				nTva: z.string().nullable().optional().describe('VAT registration number'),
+				phone: z.string().nullable().optional().describe('Phone number'),
+				email: z.string().nullable().optional().describe('Email address')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => createClient(userId, args))
+	);
+
+	server.registerTool(
+		'update_client',
+		{
+			title: 'Update invoicing client',
+			description:
+				'Update an existing invoicing client. Pass only the fields you want to change; pass null to clear an optional field.',
+			inputSchema: {
+				id: z.string().min(1).describe('Client ID'),
+				name: z.string().min(1).optional().describe('Client or business name'),
+				address: z.string().nullable().optional().describe('Street address; null clears it'),
+				city: z.string().nullable().optional().describe('City; null clears it'),
+				wilaya: z.string().nullable().optional().describe('Wilaya; null clears it'),
+				country: z.string().nullable().optional().describe('Country; null clears it'),
+				nif: z.string().nullable().optional().describe('NIF; null clears it'),
+				nis: z.string().nullable().optional().describe('NIS; null clears it'),
+				rc: z.string().nullable().optional().describe('RC; null clears it'),
+				ai: z.string().nullable().optional().describe('AI; null clears it'),
+				nTva: z.string().nullable().optional().describe('VAT number; null clears it'),
+				phone: z.string().nullable().optional().describe('Phone number; null clears it'),
+				email: z.string().nullable().optional().describe('Email address; null clears it')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => updateClient(userId, args))
+	);
+
+	// ─── Products ────────────────────────────────────────────────────────────
+
+	server.registerTool(
+		'list_products',
+		{
+			title: 'List invoicing products and services',
+			description: 'List all predefined products and services for invoicing.',
+			inputSchema: {},
+			annotations: READ_ONLY
+		},
+		async () => safe(() => listProducts(userId))
+	);
+
+	server.registerTool(
+		'create_product',
+		{
+			title: 'Create invoicing product/service',
+			description: 'Create a new reusable catalog product or service for invoicing.',
+			inputSchema: {
+				name: z.string().min(1).describe('Product or service name'),
+				description: z.string().nullable().optional().describe('Description'),
+				unitPrice: z.number().nonnegative().describe('Unit price in currency (DZD)'),
+				unit: z.string().nullable().optional().describe('Unit label (defaults to Unité(s))'),
+				tvaRate: z.number().nonnegative().optional().describe('VAT rate percentage (e.g. 19 or 0)')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => createProduct(userId, args))
+	);
+
+	server.registerTool(
+		'update_product',
+		{
+			title: 'Update invoicing product/service',
+			description: 'Update an existing invoicing product or service.',
+			inputSchema: {
+				id: z.string().min(1).describe('Product ID'),
+				name: z.string().min(1).optional().describe('Product or service name'),
+				description: z.string().nullable().optional().describe('Description; null clears it'),
+				unitPrice: z.number().nonnegative().optional().describe('Unit price in currency (DZD)'),
+				unit: z.string().min(1).optional().describe('Unit label'),
+				tvaRate: z.number().nonnegative().optional().describe('VAT rate percentage')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => updateProduct(userId, args))
+	);
+
+	// ─── Invoices ────────────────────────────────────────────────────────────
+
+	server.registerTool(
+		'list_invoices',
+		{
+			title: 'List invoices',
+			description: 'List invoices, optionally filtered by year, status, or client.',
+			inputSchema: {
+				year: z.number().int().optional().describe('Filter by fiscal year (e.g. 2026)'),
+				status: z
+					.enum(['draft', 'sent', 'paid', 'cancelled'])
+					.optional()
+					.describe('Filter by invoice status'),
+				clientId: z.string().optional().describe('Filter by client ID'),
+				limit: z.number().int().min(1).max(100).optional().describe('Maximum results (default 50)')
+			},
+			annotations: READ_ONLY
+		},
+		async (args) => safe(() => listInvoices(userId, args))
+	);
+
+	server.registerTool(
+		'get_invoice',
+		{
+			title: 'Get invoice details',
+			description: 'Retrieve full details of an invoice including client and itemized lines.',
+			inputSchema: {
+				id: z.string().min(1).describe('Invoice ID')
+			},
+			annotations: READ_ONLY
+		},
+		async (args) => safe(() => getInvoice(userId, args.id))
+	);
+
+	server.registerTool(
+		'create_invoice',
+		{
+			title: 'Create invoice',
+			description:
+				'Create a new invoice with itemized lines. Computes subtotal, VAT, and total automatically. If invoiceNumber is omitted, a sequential number (FAC/YYYY/NNNNN) is generated automatically.',
+			inputSchema: {
+				clientId: z.string().min(1).describe('Client ID for this invoice'),
+				invoiceNumber: z
+					.string()
+					.optional()
+					.describe('Custom invoice number (e.g. FAC/2026/00001)'),
+				invoiceDate: z
+					.string()
+					.optional()
+					.describe('Invoice date (ISO string or YYYY-MM-DD; defaults to today)'),
+				dueDate: z
+					.string()
+					.optional()
+					.describe('Due date (ISO string or YYYY-MM-DD; defaults to invoiceDate + 30 days)'),
+				status: z
+					.enum(['draft', 'sent', 'paid', 'cancelled'])
+					.optional()
+					.describe('Status (default draft)'),
+				paymentMode: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Payment method (e.g. Virement bancaire / Chèque)'),
+				paymentConditions: z.string().nullable().optional().describe('Payment terms'),
+				notes: z.string().nullable().optional().describe('Public notes or legal remarks'),
+				showTvaStamp: z
+					.boolean()
+					.optional()
+					.describe('Whether to show the TVA stamp / article mention'),
+				lines: z
+					.array(
+						z.object({
+							productId: z.string().nullable().optional().describe('Referenced product ID'),
+							description: z.string().min(1).describe('Line description or service detail'),
+							quantity: z.number().positive().describe('Quantity'),
+							unitPrice: z.number().nonnegative().describe('Unit price'),
+							unit: z.string().optional().describe('Unit label (defaults to Unité(s))'),
+							tvaRate: z
+								.number()
+								.nonnegative()
+								.optional()
+								.describe('TVA rate percentage (e.g. 19 or 0)'),
+							position: z.number().int().optional().describe('Display order index')
+						})
+					)
+					.min(1)
+					.describe('List of itemized invoice lines')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => createInvoice(userId, args))
+	);
+
+	server.registerTool(
+		'update_invoice',
+		{
+			title: 'Update invoice',
+			description:
+				'Update an existing invoice. You can update header fields, status, or replace all line items. Totals are recalculated automatically.',
+			inputSchema: {
+				id: z.string().min(1).describe('Invoice ID'),
+				clientId: z.string().min(1).optional().describe('Client ID'),
+				invoiceNumber: z.string().min(1).optional().describe('Invoice number'),
+				invoiceDate: z.string().optional().describe('Invoice date (ISO string or YYYY-MM-DD)'),
+				dueDate: z.string().optional().describe('Due date (ISO string or YYYY-MM-DD)'),
+				status: z
+					.enum(['draft', 'sent', 'paid', 'cancelled'])
+					.optional()
+					.describe('Invoice status'),
+				paymentMode: z.string().nullable().optional().describe('Payment method; null clears it'),
+				paymentConditions: z
+					.string()
+					.nullable()
+					.optional()
+					.describe('Payment conditions; null clears it'),
+				notes: z.string().nullable().optional().describe('Notes; null clears it'),
+				showTvaStamp: z.boolean().optional().describe('Whether to show TVA stamp'),
+				lines: z
+					.array(
+						z.object({
+							productId: z.string().nullable().optional().describe('Referenced product ID'),
+							description: z.string().min(1).describe('Line description'),
+							quantity: z.number().positive().describe('Quantity'),
+							unitPrice: z.number().nonnegative().describe('Unit price'),
+							unit: z.string().optional().describe('Unit label'),
+							tvaRate: z.number().nonnegative().optional().describe('TVA rate percentage'),
+							position: z.number().int().optional().describe('Display order index')
+						})
+					)
+					.min(1)
+					.optional()
+					.describe('Replacement list of invoice lines')
+			},
+			annotations: WRITE
+		},
+		async (args) => safe(() => updateInvoice(userId, args))
 	);
 
 	return server;

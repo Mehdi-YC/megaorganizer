@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import { ReminderCard } from '$lib/components/reminders';
 	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
-	import StatGroupCard from '$lib/components/ui/StatGroupCard.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -63,10 +62,6 @@
 		}
 	}
 
-	let analytics = $derived(data.analytics);
-	let currency = $derived(data.currency ?? 'DZD');
-	let weeklyTraining = $derived<number[]>(data.weeklyTraining ?? []);
-
 	// Scratch notes: autosaved a moment after typing stops.
 	// svelte-ignore state_referenced_locally
 	let note = $state(data.note ?? '');
@@ -93,35 +88,6 @@
 	}
 
 	onMount(() => () => clearTimeout(noteTimer));
-
-	function formatDuration(seconds: number) {
-		if (seconds < 60) return `${seconds}s`;
-		if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-		return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
-	}
-
-	function getSpendingTrend(): { value: number; positive: boolean } | null {
-		if (!analytics) return null;
-		const thisM = analytics.spending.thisMonthTotal;
-		const lastM = analytics.spending.lastMonthTotal;
-		if (lastM === 0) return null;
-		const diff = ((thisM - lastM) / lastM) * 100;
-		return { value: Math.round(Math.abs(diff)), positive: diff <= 0 };
-	}
-
-	function sparklinePath(values: number[]): string {
-		if (!values || values.length < 2) return '';
-		const max = Math.max(...values, 1);
-		const w = 120;
-		const h = 28;
-		const stepX = w / (values.length - 1);
-		return values
-			.map(
-				(v, i) =>
-					`${i === 0 ? 'M' : 'L'} ${(i * stepX).toFixed(1)} ${(h - (v / max) * h).toFixed(1)}`
-			)
-			.join(' ');
-	}
 
 	function getWeekDays(): Date[] {
 		const today = new Date();
@@ -189,7 +155,6 @@
 	let tabItems = $derived([
 		{ id: 'overview', label: 'All Modules' },
 		{ id: 'tasks', label: 'Today Focus', count: todayTodos.length + dueReminders.length },
-		{ id: 'analytics', label: 'Metrics & Trends' },
 		{ id: 'notes', label: 'Scratchpad' }
 	]);
 </script>
@@ -198,7 +163,7 @@
 	<title>Dashboard - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl space-y-6 px-3.5 py-4 sm:p-6 lg:p-8">
+<div class="mx-auto max-w-7xl space-y-6 px-3.5 py-4 pb-24 sm:p-6 sm:pb-8 lg:p-8">
 	<!-- Page Header with Modern Actions -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
@@ -213,7 +178,7 @@
 				<i class="fas fa-check-square mr-1.5 text-xs"></i> Tasks
 			</Button>
 			<Button href={resolve('/app/category/new')} size="sm">
-				<i class="fas fa-plus mr-1.5 text-xs"></i> New Workspace
+				<i class="fas fa-plus mr-1.5 text-xs"></i> Workspace
 			</Button>
 		</div>
 	</div>
@@ -462,168 +427,213 @@
 		{/if}
 	{/if}
 
-	<!-- TAB: OVERVIEW & ANALYTICS -->
-	{#if (activeTab === 'overview' || activeTab === 'analytics') && analytics}
-		<div>
-			<div class="mb-3">
-				<h2 class="text-base font-semibold tracking-tight text-fg">Metrics & Operating Health</h2>
-				<p class="text-xs text-fg-subdued">
-					Key performance indicators, workout volume, and financial pacing.
-				</p>
-			</div>
-
-			<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-				<StatGroupCard
-					icon="fa-dumbbell"
-					title="Training Volume"
-					stats={[
-						{ label: 'Sessions (30d)', value: analytics.training.totalSessions },
-						{ label: 'Duration', value: formatDuration(analytics.training.totalDuration) },
-						{ label: 'This Week', value: analytics.training.thisWeekSessions },
-						{ label: 'Avg Session', value: formatDuration(analytics.training.avgDuration) }
-					]}
-				>
-					{#snippet footer()}
-						<div class="flex items-center justify-between">
-							<svg
-								viewBox="0 0 120 28"
-								class="h-6 w-full max-w-[140px]"
-								preserveAspectRatio="none"
-								aria-hidden="true"
-							>
-								<path
-									d={sparklinePath(weeklyTraining)}
-									fill="none"
-									stroke="var(--color-primary-text)"
-									stroke-width="1.5"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									vector-effect="non-scaling-stroke"
-								/>
-							</svg>
-							<span class="text-[10px] text-fg-subdued">12w trend</span>
-						</div>
-					{/snippet}
-				</StatGroupCard>
-
-				<StatGroupCard
-					icon="fa-receipt"
-					title="Spending & Outflow"
-					trend={getSpendingTrend()}
-					stats={[
-						{
-							label: 'This Month',
-							value: `${analytics.spending.thisMonthTotal.toLocaleString()} ${currency}`
-						},
-						{
-							label: 'Last Month',
-							value: `${analytics.spending.lastMonthTotal.toLocaleString()} ${currency}`
-						},
-						{
-							label: 'Daily Avg',
-							value: `${analytics.spending.avgDaily.toLocaleString()} ${currency}`
-						},
-						{ label: 'Top Item', value: analytics.spending.topExpenseDescription || 'None' }
-					]}
-				/>
-
-				<StatGroupCard
-					icon="fa-bell"
-					title="Habit Consistency"
-					stats={[
-						{ label: 'Total Tracked', value: analytics.habits.totalReminders },
-						{ label: 'Success Rate', value: `${analytics.habits.completionRate}%` },
-						{ label: 'Current Streak', value: `${analytics.habits.currentStreak}d` },
-						{ label: 'Best Streak', value: `${analytics.habits.bestStreak}d` }
-					]}
-				/>
-
-				<StatGroupCard
-					icon="fa-cubes"
-					title="Workspace & Data"
-					stats={[
-						{ label: 'Indexed Items', value: analytics.products.totalItems },
-						{ label: 'Added This Week', value: analytics.products.itemsThisWeek },
-						{ label: 'Document Pages', value: analytics.products.totalPages },
-						{ label: 'Categories', value: data.categories?.length ?? 0 }
-					]}
-				/>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Quick Navigation Modules (SaaS Card Grid matching user reference screenshot) -->
+	<!-- Workspaces & Knowledge -->
 	{#if activeTab === 'overview'}
 		<div>
-			<div class="mb-3">
-				<h2 class="text-base font-semibold tracking-tight text-fg">
-					Integrated Workspaces & Tools
-				</h2>
-				<p class="text-xs text-fg-subdued">
-					Direct shortcuts to your operational units and records.
-				</p>
+			<div class="mb-3 flex items-center justify-between">
+				<div>
+					<h2 class="text-base font-semibold tracking-tight text-fg">Workspaces</h2>
+					<p class="text-xs text-fg-subdued">
+						Your active knowledge spaces, documentation, and page trees.
+					</p>
+				</div>
+				<Button href={resolve('/app/category/new')} variant="secondary" size="xs">
+					<i class="fas fa-plus mr-1 text-[10px]"></i> Workspace
+				</Button>
 			</div>
 
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				<!-- Workspace Card -->
-				<Card
-					title="Workspaces & Wiki"
-					description="Organize notes, technical specs, research docs, and markdown pages."
-					icon="fas fa-folder-tree"
-				>
-					{#snippet footer()}
-						<div class="flex items-center gap-2">
-							<Button href={resolve('/app/category/new')} variant="secondary" size="xs">
-								New Workspace
-							</Button>
-						</div>
-						<a href={resolve('/app')} class="text-xs font-medium text-primary-text hover:underline">
-							Explore
-						</a>
-					{/snippet}
-				</Card>
-
-				<!-- Financials Card -->
-				<Card
-					title="Expenses & Invoicing"
-					description="Track operating expenses, generate Algerian G12/G12 bis files, and invoice clients."
-					icon="fas fa-file-invoice-dollar"
-				>
-					{#snippet footer()}
-						<div class="flex items-center gap-2">
-							<Button href={resolve('/app/invoicing/new')} variant="secondary" size="xs">
-								New Invoice
-							</Button>
-						</div>
-						<a
-							href={resolve('/app/invoicing')}
-							class="text-xs font-medium text-primary-text hover:underline"
+			{#if data.categories && data.categories.length > 0}
+				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					{#each data.categories as cat (cat.id)}
+						<div
+							class="group relative flex flex-col justify-between rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary/50 hover:shadow-xs"
 						>
-							Overview
-						</a>
-					{/snippet}
-				</Card>
+							<div class="flex items-start justify-between gap-3">
+								<div class="flex min-w-0 items-center gap-2.5">
+									<div
+										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-subdued/80 text-primary-text"
+										style={cat.iconColor
+											? `background-color: ${cat.iconColor}20; color: ${cat.iconColor};`
+											: ''}
+									>
+										<i class="{cat.icon || 'fas fa-folder'} text-sm"></i>
+									</div>
+									<div class="min-w-0">
+										<a
+											href={resolve('/app/category/[id]', { id: cat.id })}
+											class="block truncate text-sm font-semibold text-fg transition-colors group-hover:text-primary-text"
+										>
+											{cat.name}
+										</a>
+										<p class="text-[11px] text-fg-subdued">
+											{cat.pages?.length ?? 0}
+											{cat.pages?.length === 1 ? 'page' : 'pages'}
+										</p>
+									</div>
+								</div>
 
-				<!-- Training Card -->
-				<Card
-					title="Training & Sport"
-					description="Log running sessions with GPX maps, track interval timers, and monitor fitness."
-					icon="fas fa-person-running"
-				>
-					{#snippet footer()}
-						<div class="flex items-center gap-2">
-							<Button href={resolve('/app/training/session/new')} variant="secondary" size="xs">
-								New Session
-							</Button>
+								<!-- Action icons on hover: subtle by default, fully visible on hover -->
+								<div
+									class="flex items-center gap-1 opacity-70 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+								>
+									<a
+										href={resolve('/app/category/[id]', { id: cat.id })}
+										class="flex h-7 w-7 items-center justify-center rounded-md border border-border/60 bg-muted/40 text-fg-subdued transition-colors hover:border-primary hover:bg-surface hover:text-primary-text"
+										title="Open workspace"
+										aria-label="Open workspace"
+									>
+										<i class="fas fa-arrow-right text-[10px]"></i>
+									</a>
+								</div>
+							</div>
+
+							{#if cat.description}
+								<p class="mt-2.5 line-clamp-2 text-xs text-fg-subdued">
+									{cat.description}
+								</p>
+							{/if}
+
+							{#if cat.pages && cat.pages.length > 0}
+								<div class="mt-3 border-t border-border/50 pt-2.5">
+									<div class="space-y-1">
+										{#each cat.pages.slice(0, 2) as p (p.id)}
+											<a
+												href={resolve('/app/category/[id]/page/[pageId]', {
+													id: cat.id,
+													pageId: p.id
+												})}
+												class="flex items-center gap-2 rounded px-1.5 py-1 text-xs text-fg-subdued transition-colors hover:bg-muted/50 hover:text-fg"
+											>
+												<i class="{p.icon || 'far fa-file-lines'} text-[10px] text-fg-subdued/70"
+												></i>
+												<span class="truncate">{p.name}</span>
+											</a>
+										{/each}
+									</div>
+								</div>
+							{/if}
 						</div>
-						<a
-							href={resolve('/app/training')}
-							class="text-xs font-medium text-primary-text hover:underline"
-						>
-							History
-						</a>
-					{/snippet}
-				</Card>
+					{/each}
+				</div>
+			{:else}
+				<div class="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+					<i class="fas fa-folder-open mb-2 block text-2xl text-fg-subdued/40"></i>
+					<p class="text-sm font-medium text-fg">No workspaces yet</p>
+					<p class="mt-0.5 text-xs text-fg-subdued">
+						Create a workspace to group pages, documents, and notes.
+					</p>
+					<Button href={resolve('/app/category/new')} size="xs" class="mt-3">
+						<i class="fas fa-plus mr-1 text-[10px]"></i> Create Workspace
+					</Button>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Tools & Modules Row -->
+		<div>
+			<div class="mb-3">
+				<h2 class="text-base font-semibold tracking-tight text-fg">Integrated Tools</h2>
+				<p class="text-xs text-fg-subdued">Quick shortcuts into dedicated operational modules.</p>
+			</div>
+
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+				<!-- Invoicing -->
+				<a
+					href={resolve('/app/invoicing')}
+					class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2.5">
+							<div
+								class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+							>
+								<i class="fas fa-file-invoice-dollar text-xs"></i>
+							</div>
+							<div>
+								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
+									Invoicing & Taxes
+								</p>
+								<p class="text-[10px] text-fg-subdued">Clients, G12 & bills</p>
+							</div>
+						</div>
+						<i
+							class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+						></i>
+					</div>
+				</a>
+
+				<!-- Training -->
+				<a
+					href={resolve('/app/training')}
+					class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2.5">
+							<div
+								class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400"
+							>
+								<i class="fas fa-person-running text-xs"></i>
+							</div>
+							<div>
+								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
+									Training & Sport
+								</p>
+								<p class="text-[10px] text-fg-subdued">GPX runs, workouts</p>
+							</div>
+						</div>
+						<i
+							class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+						></i>
+					</div>
+				</a>
+
+				<!-- Library -->
+				<a
+					href={resolve('/app/library')}
+					class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2.5">
+							<div
+								class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400"
+							>
+								<i class="fas fa-cube text-xs"></i>
+							</div>
+							<div>
+								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
+									Item Library
+								</p>
+								<p class="text-[10px] text-fg-subdued">Gear & collections</p>
+							</div>
+						</div>
+						<i
+							class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+						></i>
+					</div>
+				</a>
+
+				<!-- Mindmap -->
+				<a
+					href={resolve('/app/mindmap')}
+					class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2.5">
+							<div
+								class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400"
+							>
+								<i class="fas fa-network-wired text-xs"></i>
+							</div>
+							<div>
+								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">Mindmap</p>
+								<p class="text-[10px] text-fg-subdued">Visual concepts & nodes</p>
+							</div>
+						</div>
+						<i
+							class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+						></i>
+					</div>
+				</a>
 			</div>
 		</div>
 	{/if}

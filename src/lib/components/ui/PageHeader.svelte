@@ -40,7 +40,7 @@
 		{/if}
 	</div>
 	{#if children}
-		<div class="flex items-center gap-2.5">
+		<div class="flex max-w-full flex-wrap items-center gap-1.5 sm:gap-2">
 			{@render children()}
 		</div>
 	{/if}

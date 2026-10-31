@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { describe, test, expect, beforeEach, afterEach, afterAll } from 'bun:test';
 import { hashPassword } from 'better-auth/crypto';
 import { db } from '../src/lib/server/db';
 import {
@@ -22,7 +22,16 @@ import {
 	wikilink
 } from '../src/lib/server/db/schema';
 import { authenticateMcpRequest } from '../src/lib/server/mcp/auth';
-import { updateItem, updatePage } from '../src/lib/server/mcp/mutations';
+import {
+	updateItem,
+	updatePage,
+	createClient,
+	updateClient,
+	createProduct,
+	updateProduct,
+	createInvoice,
+	updateInvoice
+} from '../src/lib/server/mcp/mutations';
 import { resetRateLimit } from '../src/lib/server/rate-limit';
 import {
 	financeSummary,
@@ -37,6 +46,10 @@ import {
 	listReminders,
 	listTags,
 	listTrainingSessions,
+	listClients,
+	listProducts,
+	listInvoices,
+	getInvoice,
 	searchAll,
 	timeline
 } from '../src/lib/server/mcp/queries';
@@ -714,5 +727,166 @@ describe('mcp auth', () => {
 
 		expect(result.ok).toBe(true);
 		expect(after.length).toBe(before.length);
+	});
+});
+
+describe('MCP Invoicing (Clients, Products, Invoices)', () => {
+	beforeEach(async () => {
+		await reset();
+		await seed();
+	});
+
+	afterAll(async () => {
+		await reset();
+	});
+
+	test('creates, lists, and updates clients with user scoping', async () => {
+		const created = await createClient(OWNER, {
+			name: 'Acme Corporation',
+			city: 'Algiers',
+			country: 'Algérie',
+			phone: '+213555123456',
+			email: 'contact@acme.com'
+		});
+		expect(created.client.id).toBeDefined();
+		expect(created.client.name).toBe('Acme Corporation');
+		expect(created.client.city).toBe('Algiers');
+
+		// Owner sees the client
+		const ownerClients = await listClients(OWNER);
+		expect(ownerClients.count).toBe(1);
+		expect(ownerClients.clients[0].name).toBe('Acme Corporation');
+
+		// Other user does not see it
+		const otherClients = await listClients(OTHER);
+		expect(otherClients.count).toBe(0);
+
+		// Update client
+		const updated = await updateClient(OWNER, {
+			id: created.client.id,
+			name: 'Acme Corp International',
+			city: 'Oran'
+		});
+		expect(updated.changed).toEqual(['name', 'city']);
+		expect(updated.client?.name).toBe('Acme Corp International');
+		expect(updated.client?.city).toBe('Oran');
+
+		// Other user cannot update owner's client
+		expect(
+			updateClient(OTHER, {
+				id: created.client.id,
+				name: 'Hacked Corp'
+			})
+		).rejects.toThrow('No client found');
+	});
+
+	test('creates, lists, and updates products with user scoping', async () => {
+		const created = await createProduct(OWNER, {
+			name: 'Web Consulting',
+			description: 'Hourly consultation services',
+			unitPrice: 5000,
+			unit: 'Heures',
+			tvaRate: 19
+		});
+		expect(created.product.id).toBeDefined();
+		expect(created.product.name).toBe('Web Consulting');
+		expect(created.product.unitPrice).toBe(5000);
+
+		// Owner sees product
+		const ownerProducts = await listProducts(OWNER);
+		expect(ownerProducts.count).toBe(1);
+		expect(ownerProducts.products[0].name).toBe('Web Consulting');
+
+		// Other user does not see it
+		const otherProducts = await listProducts(OTHER);
+		expect(otherProducts.count).toBe(0);
+
+		// Update product
+		const updated = await updateProduct(OWNER, {
+			id: created.product.id,
+			unitPrice: 6000,
+			tvaRate: 0
+		});
+		expect(updated.changed).toEqual(['unitPrice', 'tvaRate']);
+		expect(updated.product?.unitPrice).toBe(6000);
+		expect(updated.product?.tvaRate).toBe(0);
+
+		// Other user cannot update owner's product
+		expect(
+			updateProduct(OTHER, {
+				id: created.product.id,
+				unitPrice: 1
+			})
+		).rejects.toThrow('No product found');
+	});
+
+	test('creates, lists, gets, and updates invoices with lines and recalculates totals', async () => {
+		const client = await createClient(OWNER, { name: 'Client SARL' });
+		const product = await createProduct(OWNER, { name: 'Development', unitPrice: 10000 });
+
+		const created = await createInvoice(OWNER, {
+			clientId: client.client.id,
+			status: 'draft',
+			lines: [
+				{
+					productId: product.product.id,
+					description: 'Fullstack App Development',
+					quantity: 2,
+					unitPrice: 10000,
+					tvaRate: 19
+				},
+				{
+					description: 'Setup and Deployment',
+					quantity: 1,
+					unitPrice: 5000,
+					tvaRate: 0
+				}
+			]
+		});
+
+		expect(created.invoice).toBeDefined();
+		expect(created.invoice?.clientId).toBe(client.client.id);
+		// 2 * 10000 = 20000; 1 * 5000 = 5000; subtotal = 25000
+		expect(created.invoice?.subtotal).toBe(25000);
+		// 20000 * 0.19 = 3800; 5000 * 0 = 0; tvaAmount = 3800
+		expect(created.invoice?.tvaAmount).toBe(3800);
+		// total = 28800
+		expect(created.invoice?.total).toBe(28800);
+		expect(created.invoice?.lines?.length).toBe(2);
+
+		// List invoices for owner
+		const list = await listInvoices(OWNER);
+		expect(list.count).toBe(1);
+		expect(list.invoices[0].id).toBe(created.invoice!.id);
+		expect(list.invoices[0].client.name).toBe('Client SARL');
+
+		// Get full invoice
+		const fetched = await getInvoice(OWNER, created.invoice!.id);
+		expect(fetched.invoice.id).toBe(created.invoice!.id);
+		expect(fetched.invoice.lines.length).toBe(2);
+
+		// Other user cannot list or get owner's invoice
+		const otherList = await listInvoices(OTHER);
+		expect(otherList.count).toBe(0);
+		expect(getInvoice(OTHER, created.invoice!.id)).rejects.toThrow('No invoice found');
+
+		// Update invoice lines and status
+		const updated = await updateInvoice(OWNER, {
+			id: created.invoice!.id,
+			status: 'sent',
+			lines: [
+				{
+					description: 'Consulting Session',
+					quantity: 3,
+					unitPrice: 4000,
+					tvaRate: 0
+				}
+			]
+		});
+
+		expect(updated.invoice?.status).toBe('sent');
+		expect(updated.invoice?.subtotal).toBe(12000);
+		expect(updated.invoice?.total).toBe(12000);
+		expect(updated.invoice?.lines?.length).toBe(1);
 	});
 });

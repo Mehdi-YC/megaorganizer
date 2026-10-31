@@ -132,7 +132,7 @@
 <div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<PageHeader title="Item Library" subtitle="{items.length} items">
 		<Button size="md" onclick={() => (showNewItem = true)}>
-			<i class="fas fa-plus text-xs"></i> <span class="hidden sm:inline">New Item</span>
+			<i class="fas fa-plus text-xs"></i> <span class="hidden sm:inline">Item</span>
 		</Button>
 	</PageHeader>
 

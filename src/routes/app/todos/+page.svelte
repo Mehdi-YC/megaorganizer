@@ -186,7 +186,7 @@
 	<title>Tasks - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-6 px-3.5 py-4 sm:p-6 lg:p-8">
+<div class="mx-auto max-w-4xl space-y-6 px-3.5 py-4 pb-24 sm:p-6 sm:pb-8 lg:p-8">
 	<PageHeader
 		title="Tasks"
 		subtitle="Fast and modern management of your daily todos and deadlines"
@@ -201,14 +201,14 @@
 			}}
 			class="space-y-3.5"
 		>
-			<div class="flex gap-2.5">
+			<div class="flex gap-2 sm:gap-2.5">
 				<input
 					type="text"
 					bind:value={newTitle}
 					placeholder="Add a task... (e.g. Prepare meeting notes, Review invoice draft)"
-					class="flex-1 rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+					class="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
 				/>
-				<Button type="submit" disabled={!newTitle.trim() || isAdding}>
+				<Button type="submit" class="shrink-0" disabled={!newTitle.trim() || isAdding}>
 					<i class="fas fa-plus mr-1.5 text-xs"></i>
 					<span>Add</span>
 				</Button>
@@ -291,14 +291,14 @@
 			{#each filteredTodos as t (t.id)}
 				{@const dueInfo = formatDueDate(t.dueDate)}
 				<div
-					class="group flex items-center justify-between gap-3 p-3.5 transition-colors hover:bg-muted/30 {t.completed
+					class="group flex flex-col justify-between gap-2.5 p-3.5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:gap-3 {t.completed
 						? 'opacity-60'
 						: ''}"
 				>
-					<div class="flex min-w-0 flex-1 items-center gap-3">
+					<div class="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
 						<button
 							type="button"
-							class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded border transition-all {t.completed
+							class="mt-0.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded border transition-all sm:mt-0 {t.completed
 								? 'border-success bg-success text-white'
 								: 'border-border-strong hover:border-fg-subdued'}"
 							onclick={() => handleToggle(t)}
@@ -311,7 +311,7 @@
 
 						<div class="min-w-0 flex-1">
 							<span
-								class="text-sm font-medium text-fg {t.completed
+								class="text-sm font-medium break-words text-fg {t.completed
 									? 'text-fg-subdued line-through'
 									: ''}"
 							>
@@ -320,7 +320,7 @@
 						</div>
 					</div>
 
-					<div class="flex items-center gap-2">
+					<div class="flex shrink-0 items-center gap-2 pl-8 sm:pl-0">
 						{#if t.priority === 'high'}
 							<Badge variant="danger" size="sm">High</Badge>
 						{:else if t.priority === 'low'}
@@ -341,7 +341,7 @@
 
 						<button
 							type="button"
-							class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-error"
+							class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued opacity-70 transition-opacity hover:bg-muted hover:text-error sm:opacity-0 sm:group-hover:opacity-100"
 							onclick={() => handleDelete(t.id)}
 							title="Delete"
 						>

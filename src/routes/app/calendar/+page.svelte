@@ -353,62 +353,64 @@
 	<title>Calendar - MegaOrganize</title>
 </svelte:head>
 
-<div class="px-3.5 py-4 sm:p-6 lg:p-8">
+<div class="px-3.5 py-4 pb-24 sm:p-6 sm:pb-8 lg:p-8">
 	<PageHeader title="Calendar" subtitle="View all your events in one place">
 		<!-- Filter buttons -->
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors {!filter
-				? 'bg-primary text-white shadow-xs'
-				: 'bg-muted text-fg hover:bg-muted/80'}"
-			onclick={() => setFilter(null)}
-		>
-			All
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors {filter ===
-			'training'
-				? 'bg-primary text-white shadow-xs'
-				: 'bg-muted text-fg hover:bg-muted/80'}"
-			onclick={() => setFilter('training')}
-		>
-			<i class="fas fa-dumbbell text-[10px]"></i>
-			Training
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors {filter ===
-			'reminders'
-				? 'bg-primary text-white shadow-xs'
-				: 'bg-muted text-fg hover:bg-muted/80'}"
-			onclick={() => setFilter('reminders')}
-		>
-			<i class="fas fa-bell text-[10px]"></i>
-			Reminders
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors {filter ===
-			'finance'
-				? 'bg-primary text-white shadow-xs'
-				: 'bg-muted text-fg hover:bg-muted/80'}"
-			onclick={() => setFilter('finance')}
-		>
-			<i class="fas fa-receipt text-[10px]"></i>
-			Finance
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors {filter ===
-			'todos'
-				? 'bg-primary text-white shadow-xs'
-				: 'bg-muted text-fg hover:bg-muted/80'}"
-			onclick={() => setFilter('todos')}
-		>
-			<i class="fas fa-check-square text-[10px]"></i>
-			Tasks
-		</button>
+		<div class="flex max-w-full flex-wrap items-center gap-1.5">
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {!filter
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter(null)}
+			>
+				All
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'training'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('training')}
+			>
+				<i class="fas fa-dumbbell text-[10px]"></i>
+				Training
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'reminders'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('reminders')}
+			>
+				<i class="fas fa-bell text-[10px]"></i>
+				Reminders
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'finance'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('finance')}
+			>
+				<i class="fas fa-receipt text-[10px]"></i>
+				Finance
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'todos'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('todos')}
+			>
+				<i class="fas fa-check-square text-[10px]"></i>
+				Tasks
+			</button>
+		</div>
 	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-3">

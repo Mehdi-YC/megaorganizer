@@ -99,8 +99,8 @@
 				History
 			</Button>
 			<Button variant="primary" size="md" onclick={() => (showCreateForm = true)}>
-				<i class="fas fa-plus mr-2 text-xs"></i>
-				New Template
+				<i class="fas fa-plus mr-1.5 text-xs sm:mr-2"></i>
+				Template
 			</Button>
 		</div>
 	</div>

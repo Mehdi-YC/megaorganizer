@@ -150,7 +150,7 @@
 				<i class="fas fa-cubes-stacked mr-1.5 text-xs"></i> Services & Rates
 			</Button>
 			<Button href={resolve('/app/invoicing/new')} size="sm">
-				<i class="fas fa-plus mr-1.5 text-xs"></i> New Invoice
+				<i class="fas fa-plus mr-1.5 text-xs"></i> Invoice
 			</Button>
 		</div>
 	</PageHeader>
