@@ -6,6 +6,7 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
+	import { formatIconClass, getContrastTextColor } from '$lib/utils';
 
 	let { data } = $props();
 	// svelte-ignore state_referenced_locally
@@ -147,20 +148,14 @@
 		<div class="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
 			<div class="flex min-w-0 items-center gap-3">
 				<div
-					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 shadow-2xs"
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs"
+					style="background-color: {category.iconColor ||
+						category.accentColor ||
+						'#6366f1'}; color: {getContrastTextColor(
+						category.iconColor || category.accentColor || '#6366f1'
+					)};"
 				>
-					{#if category.icon}
-						<i
-							class="{category.icon.startsWith('fas ') || category.icon.startsWith('fa-solid ')
-								? category.icon
-								: `fas ${category.icon.startsWith('fa-') ? category.icon : `fa-${category.icon}`}`} text-lg"
-							style="color: {category.iconColor ||
-								category.accentColor ||
-								'var(--color-primary-text)'}"
-						></i>
-					{:else}
-						<i class="fas fa-folder text-lg text-primary-text"></i>
-					{/if}
+					<i class="{formatIconClass(category.icon)} text-lg"></i>
 				</div>
 				<div class="min-w-0">
 					<h1

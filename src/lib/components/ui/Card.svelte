@@ -6,6 +6,7 @@
 		description = undefined,
 		icon = undefined,
 		iconColor = undefined,
+		iconBg = undefined,
 		headerAction = undefined,
 		footer = undefined,
 		children,
@@ -17,6 +18,7 @@
 		description?: string;
 		icon?: string;
 		iconColor?: string;
+		iconBg?: string;
 		headerAction?: Snippet;
 		footer?: Snippet;
 		children?: Snippet;
@@ -39,8 +41,8 @@
 			<div class="flex min-w-0 items-start gap-3.5">
 				{#if icon}
 					<div
-						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-base {iconColor ??
-							'text-primary-text'}"
+						class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base shadow-xs {iconBg ??
+							(iconColor ? `${iconColor} bg-muted` : 'bg-primary text-white')}"
 					>
 						<i class={icon}></i>
 					</div>

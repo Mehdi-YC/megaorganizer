@@ -9,6 +9,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import type { Reminder, CalendarEvent, Todo } from '$lib/types';
 	import { showToast } from '$lib/utils/toast.svelte';
+	import { formatIconClass, getContrastTextColor } from '$lib/utils';
 
 	let { data } = $props();
 
@@ -213,7 +214,7 @@
 					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 				>
 					<div
-						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
 					>
 						<i class="fas fa-folder-plus text-xs"></i>
 					</div>
@@ -227,7 +228,7 @@
 					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 				>
 					<div
-						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
 					>
 						<i class="fas fa-cube text-xs"></i>
 					</div>
@@ -240,7 +241,7 @@
 						class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 					>
 						<div
-							class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+							class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
 						>
 							<i class="fas fa-dumbbell text-xs"></i>
 						</div>
@@ -274,6 +275,7 @@
 						title="Today's Tasks"
 						description="Fast capture and daily task execution"
 						icon="fas fa-check-square"
+						iconBg="bg-indigo-600 text-white"
 					>
 						{#snippet headerAction()}
 							<a
@@ -351,6 +353,7 @@
 					title="Upcoming This Week"
 					description="Calendar agenda and scheduled deadlines"
 					icon="fas fa-calendar-days"
+					iconBg="bg-violet-600 text-white"
 				>
 					{#snippet headerAction()}
 						<a
@@ -476,12 +479,14 @@
 							<div class="flex items-start justify-between gap-3">
 								<div class="flex min-w-0 items-center gap-2.5">
 									<div
-										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-subdued/80 text-primary-text"
-										style={cat.iconColor
-											? `background-color: ${cat.iconColor}20; color: ${cat.iconColor};`
-											: ''}
+										class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-xs"
+										style="background-color: {cat.iconColor ||
+											cat.accentColor ||
+											'#6366f1'}; color: {getContrastTextColor(
+											cat.iconColor || cat.accentColor || '#6366f1'
+										)};"
 									>
-										<i class="{cat.icon || 'fas fa-folder'} text-sm"></i>
+										<i class="{formatIconClass(cat.icon)} text-sm"></i>
 									</div>
 									<div class="min-w-0">
 										<a
@@ -575,7 +580,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
 								>
 									<i class="fas fa-file-invoice-dollar text-xs"></i>
 								</div>
@@ -602,7 +607,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
 								>
 									<i class="fas fa-wallet text-xs"></i>
 								</div>
@@ -629,7 +634,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
 								>
 									<i class="fas fa-person-running text-xs"></i>
 								</div>
@@ -655,7 +660,7 @@
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2.5">
 							<div
-								class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400"
+								class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-xs"
 							>
 								<i class="fas fa-cube text-xs"></i>
 							</div>
@@ -681,7 +686,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs"
 								>
 									<i class="fas fa-network-wired text-xs"></i>
 								</div>
@@ -706,7 +711,7 @@
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div class="flex items-center gap-2.5">
 					<div
-						class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/50 text-primary-text"
+						class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white shadow-xs"
 					>
 						<i class="fas fa-pencil text-xs"></i>
 					</div>

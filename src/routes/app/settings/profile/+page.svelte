@@ -389,7 +389,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
 						>
 							<i class="fas fa-check-square text-sm"></i>
 						</div>
@@ -419,7 +419,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
 						>
 							<i class="fas fa-bell text-sm"></i>
 						</div>
@@ -449,7 +449,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
 						>
 							<i class="fas fa-receipt text-sm"></i>
 						</div>
@@ -479,7 +479,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-500"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-white shadow-xs"
 						>
 							<i class="fas fa-file-invoice-dollar text-sm"></i>
 						</div>
@@ -509,7 +509,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
 						>
 							<i class="fas fa-person-running text-sm"></i>
 						</div>
@@ -541,7 +541,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs"
 						>
 							<i class="fas fa-network-wired text-sm"></i>
 						</div>
@@ -571,7 +571,7 @@
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500"
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-600 text-white shadow-xs"
 						>
 							<i class="fas fa-layer-group text-sm"></i>
 						</div>
