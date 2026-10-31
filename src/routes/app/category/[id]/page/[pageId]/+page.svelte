@@ -499,139 +499,141 @@
 	</div>
 {:else}
 	<div
-		class="flex h-14 shrink-0 items-center border-b border-border bg-surface/50 px-4 backdrop-blur-xs sm:px-6"
+		class="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface/50 px-4 backdrop-blur-xs sm:px-6"
 	>
-		<div class="flex items-center gap-2 text-xs text-fg-subdued">
+		<div class="flex min-w-0 items-center gap-2 text-xs text-fg-subdued">
 			<a
 				href={resolve('/app/category/[id]', { id: category.id })}
 				class="max-w-[120px] truncate hover:text-primary-text sm:max-w-none">{category.name}</a
 			>
 			<i class="fas fa-chevron-right shrink-0 text-[8px] text-fg-subdued/50"></i>
-			<span class="truncate font-semibold text-fg">{pageData.name}</span>
+			{#if editingPage}
+				<input
+					type="text"
+					bind:value={editPageName}
+					class="rounded-lg border border-border bg-bg px-2.5 py-1 text-sm font-semibold text-fg focus:border-primary focus:outline-none"
+					placeholder="Page name"
+				/>
+			{:else}
+				<span class="truncate font-semibold text-fg sm:text-base">{pageData.name}</span>
+			{/if}
+		</div>
+
+		<div class="flex shrink-0 items-center gap-1.5">
+			{#if !editingPage}
+				<div class="relative">
+					<Button size="sm" variant="secondary" onclick={() => (showAddMenu = !showAddMenu)}>
+						<i class="fas fa-plus text-xs"></i> Add
+					</Button>
+					{#if showAddMenu}
+						<div
+							class="fixed top-16 right-4 left-4 z-50 max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-surface p-3 shadow-xl sm:absolute sm:top-12 sm:right-0 sm:w-80 sm:p-4"
+						>
+							<input
+								type="search"
+								placeholder="Search existing items..."
+								bind:this={addMenuSearchInput}
+								bind:value={searchQuery}
+								oninput={searchItems}
+								class="mb-3 h-9 w-full rounded-lg border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+							/>
+							{#if searchResults.length > 0}
+								<div class="mb-3 max-h-40 overflow-y-auto">
+									{#each searchResults as result (result.id)}
+										<button
+											type="button"
+											class="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-muted"
+											onclick={() => linkToPage(result.id, result.type)}
+										>
+											{#if result.imageUrl}
+												<img
+													src={result.imageUrl}
+													alt={result.name}
+													class="h-8 w-8 shrink-0 rounded-md object-cover"
+												/>
+											{:else}
+												<div
+													class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted"
+												>
+													<i
+														class="fas {result.type === 'node'
+															? 'fa-folder'
+															: 'fa-cube'} text-[10px] text-fg-subdued"
+													></i>
+												</div>
+											{/if}
+											<span class="truncate">{result.name}</span>
+										</button>
+									{/each}
+								</div>
+							{/if}
+							<div class="space-y-2 border-t border-border pt-3">
+								<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+									Create New
+								</p>
+								<div class="flex items-center gap-2">
+									<Input
+										size="sm"
+										class="min-w-0 flex-1"
+										placeholder="Section title"
+										bind:value={newNodeName}
+									/>
+									<Button size="sm" class="shrink-0" onclick={createAndAddNode}>Section</Button>
+								</div>
+								<div class="flex items-center gap-2">
+									<Input
+										size="sm"
+										class="min-w-0 flex-1"
+										placeholder="Item name"
+										bind:value={newItemName}
+									/>
+									<Button size="sm" class="shrink-0" onclick={createAndAddItem}>Item</Button>
+								</div>
+								<Button
+									size="sm"
+									variant="secondary"
+									class="w-full"
+									onclick={() => {
+										showAddMenu = false;
+										searchQuery = '';
+										newItemName = '';
+										newNodeName = '';
+									}}>Cancel</Button
+								>
+							</div>
+						</div>
+					{/if}
+				</div>
+				<Button size="sm" variant="secondary" onclick={startEditPage}>
+					<i class="fas fa-pen text-xs"></i>
+				</Button>
+				<Button size="sm" variant="danger" aria-label="Delete" onclick={deletePage}>
+					<i class="fas fa-trash text-xs"></i>
+				</Button>
+			{:else}
+				<Button size="sm" onclick={savePage}><i class="fas fa-check text-xs"></i> Save</Button>
+				<Button size="sm" variant="secondary" onclick={() => (editingPage = false)}>Cancel</Button>
+			{/if}
 		</div>
 	</div>
 
 	<div class="p-4 sm:p-6">
-		<div class="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-			<div class="min-w-0">
-				{#if editingPage}
-					<input
-						type="text"
-						bind:value={editPageName}
-						class="w-full border-b-2 border-primary-text bg-transparent text-xl font-semibold text-fg-accent focus:outline-none"
-					/>
-					<input
-						type="text"
-						bind:value={editPageDescription}
-						class="mt-1 w-full border-b border-border bg-transparent text-sm text-fg-subdued focus:border-primary-text focus:outline-none"
-						placeholder="Description (optional)"
-					/>
-				{:else}
-					<h1 class="truncate text-xl font-semibold text-fg-accent">{pageData.name}</h1>
-					{#if pageData.description}
-						<p class="mt-1 text-sm text-fg-subdued">{pageData.description}</p>
-					{/if}
-				{/if}
+		{#if editingPage}
+			<div class="mb-4 rounded-xl border border-border bg-surface p-4 shadow-xs">
+				<label for="edit-page-desc" class="mb-1 block text-xs font-semibold text-fg-subdued">
+					Description
+				</label>
+				<input
+					id="edit-page-desc"
+					type="text"
+					bind:value={editPageDescription}
+					class="w-full rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
+					placeholder="Description (optional)"
+				/>
 			</div>
-			<div class="flex shrink-0 gap-1.5">
-				{#if !editingPage}
-					<div class="relative">
-						<Button variant="secondary" onclick={() => (showAddMenu = !showAddMenu)}>
-							<i class="fas fa-plus text-xs"></i> Add
-						</Button>
-						{#if showAddMenu}
-							<div
-								class="fixed top-16 right-4 left-4 z-50 max-h-[70vh] overflow-y-auto rounded-sm border border-border bg-surface p-3 sm:absolute sm:top-12 sm:right-0 sm:w-80 sm:p-4"
-							>
-								<input
-									type="search"
-									placeholder="Search existing items..."
-									bind:this={addMenuSearchInput}
-									bind:value={searchQuery}
-									oninput={searchItems}
-									class="mb-3 h-9 w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
-								/>
-								{#if searchResults.length > 0}
-									<div class="mb-3 max-h-40 overflow-y-auto">
-										{#each searchResults as result (result.id)}
-											<button
-												type="button"
-												class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2.5 py-2 text-left text-sm hover:bg-muted"
-												onclick={() => linkToPage(result.id, result.type)}
-											>
-												{#if result.imageUrl}
-													<img
-														src={result.imageUrl}
-														alt={result.name}
-														class="h-8 w-8 shrink-0 rounded-sm object-cover"
-													/>
-												{:else}
-													<div
-														class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-muted"
-													>
-														<i
-															class="fas {result.type === 'node'
-																? 'fa-folder'
-																: 'fa-cube'} text-[10px] text-fg-subdued"
-														></i>
-													</div>
-												{/if}
-												<span class="truncate">{result.name}</span>
-											</button>
-										{/each}
-									</div>
-								{/if}
-								<div class="space-y-2 border-t border-border pt-3">
-									<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
-										Create New
-									</p>
-									<div class="flex items-center gap-2">
-										<Input
-											size="sm"
-											class="min-w-0 flex-1"
-											placeholder="Section title"
-											bind:value={newNodeName}
-										/>
-										<Button size="sm" class="shrink-0" onclick={createAndAddNode}>Section</Button>
-									</div>
-									<div class="flex items-center gap-2">
-										<Input
-											size="sm"
-											class="min-w-0 flex-1"
-											placeholder="Item name"
-											bind:value={newItemName}
-										/>
-										<Button size="sm" class="shrink-0" onclick={createAndAddItem}>Item</Button>
-									</div>
-									<Button
-										size="sm"
-										variant="secondary"
-										class="w-full"
-										onclick={() => {
-											showAddMenu = false;
-											searchQuery = '';
-											newItemName = '';
-											newNodeName = '';
-										}}>Cancel</Button
-									>
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-				{#if editingPage}
-					<Button onclick={savePage}><i class="fas fa-check text-xs"></i> Save</Button>
-					<Button variant="secondary" onclick={() => (editingPage = false)}>Cancel</Button>
-				{:else}
-					<Button variant="secondary" onclick={startEditPage}
-						><i class="fas fa-pen text-xs"></i> Edit</Button
-					>
-					<Button variant="danger" class="w-[36px] px-0" aria-label="Delete" onclick={deletePage}
-						><i class="fas fa-trash text-xs"></i></Button
-					>
-				{/if}
-			</div>
-		</div>
+		{:else if pageData.description}
+			<p class="mb-4 text-xs text-fg-subdued">{pageData.description}</p>
+		{/if}
 
 		<!--
 			The empty-state hint and the tree are separate blocks, not if/else.

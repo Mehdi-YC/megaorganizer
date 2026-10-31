@@ -361,121 +361,237 @@
 		</div>
 	</div>
 
-	<!-- Modules & Features Toggles -->
+	<!-- Modules & Features Toggles (Modern SaaS Style) -->
 	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border/80 px-6 py-4">
-			<h2 class="text-sm font-semibold tracking-tight text-fg">Features & Modular Capabilities</h2>
-			<p class="mt-0.5 text-xs text-fg-subdued">
-				Enable or hide modular capabilities based on your workflow. Disabled modules are hidden from
-				navigation and associated views.
-			</p>
+			<div class="flex items-center gap-2.5">
+				<div
+					class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary-text"
+				>
+					<i class="fas fa-shapes text-xs"></i>
+				</div>
+				<div>
+					<h2 class="text-sm font-semibold tracking-tight text-fg">
+						Features & Modular Capabilities
+					</h2>
+					<p class="text-xs text-fg-subdued">
+						Enable or disable functional modules. Disabled modules are immediately hidden across all
+						workspaces, navigation, and dashboard.
+					</p>
+				</div>
+			</div>
 		</div>
 		<form method="post" action="?/updateFeatures" class="space-y-4 px-6 py-5">
 			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+				<!-- Tasks -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg p-3.5 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500"
+						>
+							<i class="fas fa-check-square text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Tasks (Todos)</div>
+							<div class="text-[11px] text-fg-subdued">Daily tasks, scheduling, and priorities</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="todos"
 						checked={data.enabledFeatures?.todos ?? true}
-						class="rounded border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Tasks (Todos)</div>
-						<div class="text-[11px] text-fg-subdued">Daily tasks, scheduling, and priorities</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Reminders -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg p-3.5 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500"
+						>
+							<i class="fas fa-bell text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Reminders & Habits</div>
+							<div class="text-[11px] text-fg-subdued">Recurring reminders and alert schedules</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="reminders"
 						checked={data.enabledFeatures?.reminders ?? true}
-						class="rounded border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Reminders & Habits</div>
-						<div class="text-[11px] text-fg-subdued">Recurring reminders and alert schedules</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Finance -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg p-3.5 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500"
+						>
+							<i class="fas fa-receipt text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Finance & Expenses</div>
+							<div class="text-[11px] text-fg-subdued">Spending logs and monthly budget limit</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="finance"
 						checked={data.enabledFeatures?.finance ?? true}
-						class="rounded border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Finance & Expenses</div>
-						<div class="text-[11px] text-fg-subdued">Spending logs and monthly budget limit</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Invoicing -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg p-3.5 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-500"
+						>
+							<i class="fas fa-file-invoice-dollar text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Invoicing & Taxes</div>
+							<div class="text-[11px] text-fg-subdued">Client invoices and annual tax dossiers</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="invoicing"
 						checked={data.enabledFeatures?.invoicing ?? true}
-						class="rounded border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Invoicing</div>
-						<div class="text-[11px] text-fg-subdued">Client invoices and annual tax dossiers</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Training -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg p-3.5 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500"
+						>
+							<i class="fas fa-person-running text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Training & Fitness</div>
+							<div class="text-[11px] text-fg-subdued">
+								Workout logs, intervals, and GPS running
+							</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="training"
 						checked={data.enabledFeatures?.training ?? true}
-						class="rounded border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Training & Fitness</div>
-						<div class="text-[11px] text-fg-subdued">Workout logs, intervals, and GPS running</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Mindmap -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg p-3.5 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500"
+						>
+							<i class="fas fa-network-wired text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Mindmap (Interactive Graph)</div>
+							<div class="text-[11px] text-fg-subdued">Visual network of wiki notes & links</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="mindmap"
 						checked={data.enabledFeatures?.mindmap ?? true}
-						class="rounded border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Mindmap (Interactive Graph)</div>
-						<div class="text-[11px] text-fg-subdued">
-							Visual network of wiki notes & relationships
-						</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- YDK -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-bg p-3.5 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3.5 transition-all hover:border-primary/50 hover:bg-muted/40"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500"
+						>
+							<i class="fas fa-layer-group text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Yu-Gi-Oh (YDK)</div>
+							<div class="text-[11px] text-fg-subdued">Deck builder and card catalog viewer</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="ydk"
 						checked={data.enabledFeatures?.ydk ?? true}
-						class="rounded border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Yu-Gi-Oh (YDK)</div>
-						<div class="text-[11px] text-fg-subdued">Deck builder and card catalog viewer</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 			</div>

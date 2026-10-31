@@ -6,9 +6,12 @@
 	import ExpenseForm from '$lib/components/finance/ExpenseForm.svelte';
 	import { page } from '$app/state';
 	import { goto, replaceState } from '$app/navigation';
+	import type { EnabledFeatures } from '$lib/types';
+
+	let { enabledFeatures }: { enabledFeatures?: EnabledFeatures } = $props();
 
 	let show = $state(false);
-	let activeTab = $state<'finance' | 'reminder' | 'item' | 'training'>('finance');
+	let activeTab = $state<'finance' | 'reminder' | 'item' | 'training'>('item');
 	const TRAINING_TYPES = [
 		'strength',
 		'running',
@@ -44,6 +47,8 @@
 				prefill.name ||
 				(prefill.text ? prefill.text.split('\n')[0].slice(0, 60) : '') ||
 				'Shared item';
+		} else if (!tabs.some((t) => t.id === activeTab)) {
+			activeTab = tabs[0]?.id ?? 'item';
 		}
 	}
 
@@ -188,12 +193,35 @@
 		goto(`/app/training/session/new?type=${trainingType}`);
 	}
 
-	const tabs = [
-		{ id: 'finance' as const, label: 'Finance', icon: 'fa-receipt', color: 'text-warning' },
-		{ id: 'reminder' as const, label: 'Reminder', icon: 'fa-bell', color: 'text-primary-text' },
-		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' },
-		{ id: 'training' as const, label: 'Training', icon: 'fa-dumbbell', color: 'text-fg-accent' }
-	];
+	const tabs = $derived.by(() => {
+		const list: {
+			id: 'finance' | 'reminder' | 'item' | 'training';
+			label: string;
+			icon: string;
+			color: string;
+		}[] = [];
+		if (enabledFeatures?.finance !== false) {
+			list.push({ id: 'finance', label: 'Finance', icon: 'fa-receipt', color: 'text-warning' });
+		}
+		if (enabledFeatures?.reminders !== false) {
+			list.push({
+				id: 'reminder',
+				label: 'Reminder',
+				icon: 'fa-bell',
+				color: 'text-primary-text'
+			});
+		}
+		list.push({ id: 'item', label: 'Item', icon: 'fa-cube', color: 'text-success' });
+		if (enabledFeatures?.training !== false) {
+			list.push({
+				id: 'training',
+				label: 'Training',
+				icon: 'fa-dumbbell',
+				color: 'text-fg-accent'
+			});
+		}
+		return list;
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

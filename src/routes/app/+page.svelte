@@ -161,7 +161,9 @@
 
 	let tabItems = $derived([
 		{ id: 'overview', label: 'All Modules' },
-		{ id: 'tasks', label: 'Today Focus', count: todayTodos.length + dueReminders.length },
+		...(data.enabledFeatures?.todos !== false || data.enabledFeatures?.reminders !== false
+			? [{ id: 'tasks', label: 'Today Focus', count: todayTodos.length + dueReminders.length }]
+			: []),
 		{ id: 'notes', label: 'Scratchpad' }
 	]);
 </script>
@@ -183,9 +185,11 @@
 		</div>
 
 		<div class="flex items-center gap-2">
-			<Button href={resolve('/app/todos')} variant="secondary" size="sm">
-				<i class="fas fa-check-square mr-1.5 text-xs"></i> Tasks
-			</Button>
+			{#if data.enabledFeatures?.todos !== false}
+				<Button href={resolve('/app/todos')} variant="secondary" size="sm">
+					<i class="fas fa-check-square mr-1.5 text-xs"></i> Tasks
+				</Button>
+			{/if}
 			<Button href={resolve('/app/category/new')} size="sm">
 				<i class="fas fa-plus mr-1.5 text-xs"></i> Workspace
 			</Button>
@@ -230,18 +234,20 @@
 					<p class="text-sm font-semibold text-fg group-hover:text-primary-text">Add an item</p>
 					<p class="mt-0.5 text-xs text-fg-subdued">Track gear, books, cards, or collections.</p>
 				</a>
-				<a
-					href={resolve('/app/training/session/new')}
-					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
-				>
-					<div
-						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+				{#if data.enabledFeatures?.training !== false}
+					<a
+						href={resolve('/app/training/session/new')}
+						class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 					>
-						<i class="fas fa-dumbbell text-xs"></i>
-					</div>
-					<p class="text-sm font-semibold text-fg group-hover:text-primary-text">Log a session</p>
-					<p class="mt-0.5 text-xs text-fg-subdued">Track your sports, running, and workouts.</p>
-				</a>
+						<div
+							class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+						>
+							<i class="fas fa-dumbbell text-xs"></i>
+						</div>
+						<p class="text-sm font-semibold text-fg group-hover:text-primary-text">Log a session</p>
+						<p class="mt-0.5 text-xs text-fg-subdued">Track your sports, running, and workouts.</p>
+					</a>
+				{/if}
 			</div>
 		</section>
 	{/if}
@@ -263,80 +269,82 @@
 
 			<div class="grid gap-4 lg:grid-cols-2">
 				<!-- Today's Tasks Card -->
-				<Card
-					title="Today's Tasks"
-					description="Fast capture and daily task execution"
-					icon="fas fa-check-square"
-				>
-					{#snippet headerAction()}
-						<a
-							href={resolve('/app/todos')}
-							class="text-xs font-medium text-primary-text hover:underline"
-						>
-							View all
-						</a>
-					{/snippet}
-
-					<!-- Quick Add Input -->
-					<form
-						onsubmit={(e) => {
-							e.preventDefault();
-							handleAddQuickTodo();
-						}}
-						class="mb-3.5 flex gap-2"
+				{#if data.enabledFeatures?.todos !== false}
+					<Card
+						title="Today's Tasks"
+						description="Fast capture and daily task execution"
+						icon="fas fa-check-square"
 					>
-						<input
-							type="text"
-							bind:value={quickTodoTitle}
-							placeholder="Add a task for today..."
-							class="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
-						/>
-						<Button type="submit" size="xs" disabled={!quickTodoTitle.trim() || isAddingTodo}>
-							<i class="fas fa-plus text-[10px]"></i>
-						</Button>
-					</form>
+						{#snippet headerAction()}
+							<a
+								href={resolve('/app/todos')}
+								class="text-xs font-medium text-primary-text hover:underline"
+							>
+								View all
+							</a>
+						{/snippet}
 
-					<!-- Todo items list -->
-					{#if todayTodos.length > 0}
-						<div class="max-h-56 space-y-1.5 overflow-y-auto pr-1">
-							{#each todayTodos as t (t.id)}
-								<div
-									class="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs transition-colors hover:bg-muted/50 {t.completed
-										? 'opacity-60'
-										: ''}"
-								>
-									<div class="flex min-w-0 flex-1 items-center gap-2.5">
-										<button
-											type="button"
-											class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {t.completed
-												? 'border-success bg-success text-white'
-												: 'border-border-strong hover:border-fg-subdued'}"
-											onclick={() => handleToggleQuickTodo(t)}
-											aria-label="Toggle task"
-										>
-											{#if t.completed}
-												<i class="fas fa-check text-[8px]"></i>
-											{/if}
-										</button>
-										<span
-											class="truncate text-fg {t.completed ? 'text-fg-subdued line-through' : ''}"
-										>
-											{t.title}
-										</span>
+						<!-- Quick Add Input -->
+						<form
+							onsubmit={(e) => {
+								e.preventDefault();
+								handleAddQuickTodo();
+							}}
+							class="mb-3.5 flex gap-2"
+						>
+							<input
+								type="text"
+								bind:value={quickTodoTitle}
+								placeholder="Add a task for today..."
+								class="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+							/>
+							<Button type="submit" size="xs" disabled={!quickTodoTitle.trim() || isAddingTodo}>
+								<i class="fas fa-plus text-[10px]"></i>
+							</Button>
+						</form>
+
+						<!-- Todo items list -->
+						{#if todayTodos.length > 0}
+							<div class="max-h-56 space-y-1.5 overflow-y-auto pr-1">
+								{#each todayTodos as t (t.id)}
+									<div
+										class="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs transition-colors hover:bg-muted/50 {t.completed
+											? 'opacity-60'
+											: ''}"
+									>
+										<div class="flex min-w-0 flex-1 items-center gap-2.5">
+											<button
+												type="button"
+												class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {t.completed
+													? 'border-success bg-success text-white'
+													: 'border-border-strong hover:border-fg-subdued'}"
+												onclick={() => handleToggleQuickTodo(t)}
+												aria-label="Toggle task"
+											>
+												{#if t.completed}
+													<i class="fas fa-check text-[8px]"></i>
+												{/if}
+											</button>
+											<span
+												class="truncate text-fg {t.completed ? 'text-fg-subdued line-through' : ''}"
+											>
+												{t.title}
+											</span>
+										</div>
+										{#if t.priority === 'high'}
+											<Badge variant="danger" size="sm">High</Badge>
+										{/if}
 									</div>
-									{#if t.priority === 'high'}
-										<Badge variant="danger" size="sm">High</Badge>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					{:else}
-						<div class="py-6 text-center text-xs text-fg-subdued">
-							<i class="fas fa-clipboard-check mb-1.5 block text-xl text-fg-subdued/30"></i>
-							No tasks pending for today. You're all caught up!
-						</div>
-					{/if}
-				</Card>
+								{/each}
+							</div>
+						{:else}
+							<div class="py-6 text-center text-xs text-fg-subdued">
+								<i class="fas fa-clipboard-check mb-1.5 block text-xl text-fg-subdued/30"></i>
+								No tasks pending for today. You're all caught up!
+							</div>
+						{/if}
+					</Card>
+				{/if}
 
 				<!-- Upcoming Schedule Strip -->
 				<Card
@@ -410,7 +418,7 @@
 		</div>
 
 		<!-- Due Reminders Section -->
-		{#if dueReminders.length > 0}
+		{#if data.enabledFeatures?.reminders !== false && dueReminders.length > 0}
 			<div>
 				<div class="mb-3 flex items-center justify-between">
 					<div>
@@ -559,54 +567,85 @@
 
 			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 				<!-- Invoicing -->
-				<a
-					href={resolve('/app/invoicing')}
-					class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
-				>
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2.5">
-							<div
-								class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-							>
-								<i class="fas fa-file-invoice-dollar text-xs"></i>
+				{#if data.enabledFeatures?.invoicing !== false}
+					<a
+						href={resolve('/app/invoicing')}
+						class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+					>
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2.5">
+								<div
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+								>
+									<i class="fas fa-file-invoice-dollar text-xs"></i>
+								</div>
+								<div>
+									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
+										Invoicing & Taxes
+									</p>
+									<p class="text-[10px] text-fg-subdued">Clients, G12 & bills</p>
+								</div>
 							</div>
-							<div>
-								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
-									Invoicing & Taxes
-								</p>
-								<p class="text-[10px] text-fg-subdued">Clients, G12 & bills</p>
-							</div>
+							<i
+								class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+							></i>
 						</div>
-						<i
-							class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
-						></i>
-					</div>
-				</a>
+					</a>
+				{/if}
+
+				<!-- Finance / Expenses -->
+				{#if data.enabledFeatures?.finance !== false}
+					<a
+						href={resolve('/app/finance')}
+						class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+					>
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2.5">
+								<div
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400"
+								>
+									<i class="fas fa-wallet text-xs"></i>
+								</div>
+								<div>
+									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
+										Expenses & Finance
+									</p>
+									<p class="text-[10px] text-fg-subdued">Budgets & transactions</p>
+								</div>
+							</div>
+							<i
+								class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+							></i>
+						</div>
+					</a>
+				{/if}
 
 				<!-- Training -->
-				<a
-					href={resolve('/app/training')}
-					class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
-				>
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2.5">
-							<div
-								class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400"
-							>
-								<i class="fas fa-person-running text-xs"></i>
+				{#if data.enabledFeatures?.training !== false}
+					<a
+						href={resolve('/app/training')}
+						class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+					>
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2.5">
+								<div
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400"
+								>
+									<i class="fas fa-person-running text-xs"></i>
+								</div>
+								<div>
+									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
+										Training & Sport
+									</p>
+									<p class="text-[10px] text-fg-subdued">GPX runs, workouts</p>
+								</div>
 							</div>
-							<div>
-								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
-									Training & Sport
-								</p>
-								<p class="text-[10px] text-fg-subdued">GPX runs, workouts</p>
-							</div>
+							<i
+								class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+							></i>
 						</div>
-						<i
-							class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
-						></i>
-					</div>
-				</a>
+					</a>
+				{/if}
 
 				<!-- Library -->
 				<a
@@ -634,27 +673,29 @@
 				</a>
 
 				<!-- Mindmap -->
-				<a
-					href={resolve('/app/mindmap')}
-					class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
-				>
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2.5">
-							<div
-								class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400"
-							>
-								<i class="fas fa-network-wired text-xs"></i>
+				{#if data.enabledFeatures?.mindmap !== false}
+					<a
+						href={resolve('/app/mindmap')}
+						class="group flex flex-col justify-between rounded-xl border border-border bg-surface p-3.5 transition-all hover:border-primary/50 hover:shadow-xs"
+					>
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-2.5">
+								<div
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400"
+								>
+									<i class="fas fa-network-wired text-xs"></i>
+								</div>
+								<div>
+									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">Mindmap</p>
+									<p class="text-[10px] text-fg-subdued">Visual concepts & nodes</p>
+								</div>
 							</div>
-							<div>
-								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">Mindmap</p>
-								<p class="text-[10px] text-fg-subdued">Visual concepts & nodes</p>
-							</div>
+							<i
+								class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
+							></i>
 						</div>
-						<i
-							class="fas fa-chevron-right text-[10px] text-fg-subdued opacity-70 transition-all group-hover:translate-x-0.5 group-hover:text-primary-text sm:opacity-0 sm:group-hover:opacity-100"
-						></i>
-					</div>
-				</a>
+					</a>
+				{/if}
 			</div>
 		</div>
 	{/if}

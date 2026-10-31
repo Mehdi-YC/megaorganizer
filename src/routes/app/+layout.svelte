@@ -104,5 +104,5 @@
 	</main>
 </div>
 
-<QuickCapture />
+<QuickCapture enabledFeatures={data.enabledFeatures} />
 <ConfirmDialog />
