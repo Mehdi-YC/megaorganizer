@@ -186,7 +186,7 @@
 
 	{#if filteredClients.length > 0}
 		<div class="overflow-x-auto rounded-sm border border-border bg-surface">
-			<table class="w-full border-collapse text-left text-xs">
+			<table class="w-full min-w-[650px] border-collapse text-left text-xs">
 				<thead>
 					<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
 						<th class="px-4 py-2.5 font-semibold">Nom / Entreprise</th>
@@ -292,12 +292,12 @@
 
 		<Input label="Adresse" type="text" bind:value={formAddress} placeholder="ex: Mohammadia" />
 
-		<div class="grid grid-cols-2 gap-3">
+		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			<Input label="Ville" type="text" bind:value={formCity} placeholder="ex: Alger" />
 			<Input label="Wilaya" type="text" bind:value={formWilaya} placeholder="ex: Alger (16)" />
 		</div>
 
-		<div class="grid grid-cols-2 gap-3">
+		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			<Input label="Pays" type="text" bind:value={formCountry} placeholder="Algérie" />
 			<Input
 				label="NIF (Identifiant Fiscal)"
@@ -307,13 +307,13 @@
 			/>
 		</div>
 
-		<div class="grid grid-cols-3 gap-3">
+		<div class="grid grid-cols-3 gap-2 sm:gap-3">
 			<Input label="NIS" type="text" bind:value={formNis} placeholder="NIS" />
-			<Input label="RC" type="text" bind:value={formRc} placeholder="Registre Commerce" />
-			<Input label="AI" type="text" bind:value={formAi} placeholder="Article Imposition" />
+			<Input label="RC" type="text" bind:value={formRc} placeholder="RC" />
+			<Input label="AI" type="text" bind:value={formAi} placeholder="AI" />
 		</div>
 
-		<div class="grid grid-cols-2 gap-3">
+		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			<Input label="Téléphone" type="text" bind:value={formPhone} placeholder="+213 ..." />
 			<Input label="Email" type="email" bind:value={formEmail} placeholder="contact@..." />
 		</div>

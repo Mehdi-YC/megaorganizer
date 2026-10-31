@@ -133,30 +133,28 @@
 </svelte:head>
 
 <div class="p-4 sm:p-8">
-	<div class="mb-6">
-		<PageHeader title="Facturation" subtitle="Gestion conforme aux normes fiscales algériennes">
-			<div class="flex flex-wrap items-center gap-2">
-				<a href={resolve('/app/invoicing/clients')}>
-					<Button variant="secondary" size="sm">
-						<i class="fas fa-users mr-1.5 text-xs"></i> Clients
-					</Button>
-				</a>
-				<a href={resolve('/app/invoicing/products')}>
-					<Button variant="secondary" size="sm">
-						<i class="fas fa-box mr-1.5 text-xs"></i> Produits & Services
-					</Button>
-				</a>
-				<a href={resolve('/app/invoicing/new')}>
-					<Button size="sm">
-						<i class="fas fa-plus mr-1.5 text-xs"></i> Nouvelle Facture
-					</Button>
-				</a>
-			</div>
-		</PageHeader>
-	</div>
+	<PageHeader title="Facturation" subtitle="Gestion conforme aux normes fiscales algériennes">
+		<div class="flex flex-wrap items-center gap-2">
+			<a href={resolve('/app/invoicing/clients')}>
+				<Button variant="secondary" size="sm">
+					<i class="fas fa-users mr-1.5 text-xs"></i> Clients
+				</Button>
+			</a>
+			<a href={resolve('/app/invoicing/products')}>
+				<Button variant="secondary" size="sm">
+					<i class="fas fa-box mr-1.5 text-xs"></i> Produits & Services
+				</Button>
+			</a>
+			<a href={resolve('/app/invoicing/new')}>
+				<Button size="sm">
+					<i class="fas fa-plus mr-1.5 text-xs"></i> Nouvelle Facture
+				</Button>
+			</a>
+		</div>
+	</PageHeader>
 
 	<!-- Stats Overview -->
-	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+	<div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
 		<div class="rounded-sm border border-border bg-surface p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
@@ -184,12 +182,10 @@
 		</div>
 	</div>
 
-	<!-- Filters & Actions Bar -->
-	<div
-		class="mb-4 flex flex-col justify-between gap-3 rounded-sm border border-border bg-surface p-3 sm:flex-row sm:items-center"
-	>
-		<div class="flex flex-wrap items-center gap-3">
-			<div class="relative min-w-[220px]">
+	<!-- Filters & Actions Bar (Clean responsive toolbar, optimized for mobile) -->
+	<div class="mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+		<div class="flex flex-col gap-2 sm:flex-1 sm:flex-row sm:items-center">
+			<div class="relative w-full sm:max-w-xs">
 				<i
 					class="fas fa-search pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-fg-subdued"
 				></i>
@@ -197,34 +193,36 @@
 					type="search"
 					bind:value={searchQuery}
 					placeholder="Rechercher numéro, client..."
-					class="h-8 w-full rounded-sm border border-border-strong bg-bg pr-3 pl-8 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
+					class="h-8 w-full rounded-sm border border-border bg-surface pr-3 pl-8 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 				/>
 			</div>
 
-			<select
-				bind:value={selectedYear}
-				class="h-8 rounded-sm border border-border-strong bg-bg px-2.5 text-xs text-fg focus:border-primary-text focus:outline-none"
-			>
-				<option value="all">Toutes les années</option>
-				{#each data.years as y (y)}
-					<option value={String(y)}>{y}</option>
-				{/each}
-			</select>
+			<div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+				<select
+					bind:value={selectedYear}
+					class="h-8 w-full rounded-sm border border-border bg-surface px-2.5 text-xs text-fg focus:border-primary-text focus:outline-none sm:w-auto"
+				>
+					<option value="all">Toutes les années</option>
+					{#each data.years as y (y)}
+						<option value={String(y)}>{y}</option>
+					{/each}
+				</select>
 
-			<select
-				bind:value={selectedStatus}
-				class="h-8 rounded-sm border border-border-strong bg-bg px-2.5 text-xs text-fg focus:border-primary-text focus:outline-none"
-			>
-				<option value="all">Tous les statuts</option>
-				<option value="draft">Brouillons</option>
-				<option value="sent">Envoyées</option>
-				<option value="paid">Payées</option>
-				<option value="cancelled">Annulées</option>
-			</select>
+				<select
+					bind:value={selectedStatus}
+					class="h-8 w-full rounded-sm border border-border bg-surface px-2.5 text-xs text-fg focus:border-primary-text focus:outline-none sm:w-auto"
+				>
+					<option value="all">Tous les statuts</option>
+					<option value="draft">Brouillons</option>
+					<option value="sent">Envoyées</option>
+					<option value="paid">Payées</option>
+					<option value="cancelled">Annulées</option>
+				</select>
+			</div>
 		</div>
 
 		{#if selectedInvoiceIds.length > 0}
-			<div class="flex items-center gap-2">
+			<div class="flex items-center justify-between gap-2 pt-1 sm:justify-end sm:pt-0">
 				<span class="text-xs text-fg-subdued">
 					{selectedInvoiceIds.length} sélectionnée(s)
 				</span>
@@ -238,7 +236,7 @@
 	<!-- Invoices Table -->
 	{#if filteredInvoices.length > 0}
 		<div class="overflow-x-auto rounded-sm border border-border bg-surface">
-			<table class="w-full border-collapse text-left text-xs">
+			<table class="w-full min-w-[700px] border-collapse text-left text-xs">
 				<thead>
 					<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
 						<th class="w-8 px-3 py-2.5 text-center">

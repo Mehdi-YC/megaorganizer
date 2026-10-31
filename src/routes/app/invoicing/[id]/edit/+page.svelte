@@ -296,12 +296,12 @@
 				<div class="space-y-4">
 					{#each lines as line, i (line.id)}
 						<div class="rounded-sm border border-border/80 bg-bg p-3">
-							<div class="mb-2 flex items-center justify-between">
+							<div class="mb-2 flex flex-wrap items-center justify-between gap-1.5">
 								<span class="text-[11px] font-semibold text-fg-subdued">Ligne #{i + 1}</span>
-								<div class="flex items-center gap-2">
+								<div class="flex items-center gap-1.5">
 									{#if products.length > 0}
 										<select
-											class="h-7 rounded-sm border border-border bg-surface px-2 text-[11px] text-fg focus:outline-none"
+											class="h-7 max-w-[200px] rounded-sm border border-border bg-surface px-2 text-[11px] text-fg focus:outline-none"
 											onchange={(e) => onProductSelect(i, (e.target as HTMLSelectElement).value)}
 										>
 											<option value="">Remplir depuis le catalogue...</option>

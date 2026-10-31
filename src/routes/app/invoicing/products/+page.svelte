@@ -155,7 +155,7 @@
 
 	{#if filteredProducts.length > 0}
 		<div class="overflow-x-auto rounded-sm border border-border bg-surface">
-			<table class="w-full border-collapse text-left text-xs">
+			<table class="w-full min-w-[600px] border-collapse text-left text-xs">
 				<thead>
 					<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
 						<th class="px-4 py-2.5 font-semibold">Libellé</th>
@@ -261,7 +261,7 @@
 			></textarea>
 		</div>
 
-		<div class="grid grid-cols-2 gap-3">
+		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 			<div class="flex flex-col gap-1.5">
 				<label for="formUnitPrice" class="text-xs font-semibold text-fg-accent"
 					>Prix Unitaire (DA) *</label

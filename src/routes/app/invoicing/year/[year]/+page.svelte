@@ -184,13 +184,14 @@
 		<div class="flex flex-wrap items-center gap-2">
 			<Button variant="secondary" size="sm" onclick={exportFolder} disabled={isExporting}>
 				<i class="fas fa-folder-arrow-down mr-1.5 text-xs text-primary-text"></i>
-				Exporter le dossier {data.year} (G12 + Factures)
+				<span class="hidden sm:inline">Exporter le dossier {data.year} (G12 + Factures)</span>
+				<span class="sm:hidden">Exporter {data.year}</span>
 			</Button>
 
 			{#if selectedInvoiceIds.length > 0}
 				<Button size="sm" onclick={exportSelectedInvoices} disabled={isExporting}>
 					<i class="fas fa-file-zipper mr-1.5 text-xs"></i>
-					Exporter la sélection ({selectedInvoiceIds.length})
+					Exporter sélection ({selectedInvoiceIds.length})
 				</Button>
 			{/if}
 
@@ -203,7 +204,7 @@
 	</PageHeader>
 
 	<!-- Summary stats -->
-	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+	<div class="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
 		<div class="rounded-sm border border-border bg-surface p-4">
 			<div class="mb-2 flex items-center justify-between">
 				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
@@ -447,7 +448,7 @@
 
 		{#if data.invoices.length > 0}
 			<div class="overflow-x-auto rounded-sm border border-border bg-surface">
-				<table class="w-full border-collapse text-left text-xs">
+				<table class="w-full min-w-[700px] border-collapse text-left text-xs">
 					<thead>
 						<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
 							<th class="w-8 px-3 py-2.5 text-center">

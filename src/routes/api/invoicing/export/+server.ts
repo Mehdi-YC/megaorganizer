@@ -77,7 +77,7 @@ function generateInvoiceHtml(
 		.legal-mention { font-size: 11px; font-style: italic; color: #4b5563; margin: 8px 0 4px; }
 		.divider { border: 0; border-top: 1px solid #e5e7eb; margin: 6px 0 16px; }
 		.bottom-section { display: flex; justify-content: space-between; align-items: flex-start; }
-		.conditions-box { max-width: 340px; border: 1px solid #e5e7eb; background: #f9fafb; border-radius: 4px; padding: 10px; font-size: 11px; line-height: 1.5; color: #374151; }
+		.conditions-box { max-width: 340px; font-size: 11px; line-height: 1.5; color: #374151; }
 		.conditions-title { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #111827; margin-bottom: 4px; }
 		.totals-table { width: 300px; font-size: 12px; }
 		.totals-table div { display: flex; justify-content: space-between; padding: 4px 0; color: #4b5563; }

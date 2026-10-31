@@ -133,7 +133,7 @@
 
 	<!-- Items Table -->
 	<div class="mt-5 overflow-x-auto">
-		<table class="w-full border-collapse text-xs">
+		<table class="w-full min-w-[500px] border-collapse text-xs">
 			<thead>
 				<tr class="border-b border-gray-200 text-gray-700">
 					<th class="py-2 text-left font-semibold">Description</th>
@@ -170,36 +170,34 @@
 
 	<!-- Bottom Section: Conditions & Payment on Left, Totals & Stamp on Right -->
 	<div class="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
-		<!-- Left: Payment Conditions, Mode & Bank details (Red box area) -->
-		<div class="max-w-[340px] space-y-2 text-xs text-gray-700">
-			<div class="rounded-sm border border-gray-200 bg-gray-50/80 p-3 text-xs leading-relaxed">
-				<div class="mb-1 text-[11px] font-bold tracking-wider text-gray-900 uppercase">
-					Conditions & Règlement
-				</div>
-				<div>
-					<span class="font-semibold text-gray-800">Mode de règlement :</span>
-					<span>{invoice.paymentMode || 'Virement bancaire / Chèque'}</span>
-				</div>
-				<div>
-					<span class="font-semibold text-gray-800">Conditions de paiement :</span>
-					<span>{invoice.paymentConditions || '30% au démarrage, le solde à la livraison'}</span>
-				</div>
-				<div>
-					<span class="font-semibold text-gray-800">Communication de paiement :</span>
-					<strong class="font-bold text-gray-900">{invoice.invoiceNumber}</strong>
-				</div>
-				{#if profile?.rib}
-					<div class="mt-1 font-mono text-[11px] text-gray-800">
-						<span class="font-sans font-semibold">RIB / RIP :</span>
-						{profile.rib}
-					</div>
-				{/if}
-				{#if invoice.notes}
-					<div class="mt-2 border-t border-gray-200 pt-1.5 text-[11px] text-gray-500 italic">
-						{invoice.notes}
-					</div>
-				{/if}
+		<!-- Left: Payment Conditions, Mode & Bank details (Clean typography without border/bg) -->
+		<div class="max-w-[340px] space-y-1.5 text-xs leading-relaxed text-gray-700">
+			<div class="text-[11px] font-bold tracking-wider text-gray-900 uppercase">
+				Conditions & Règlement
 			</div>
+			<div>
+				<span class="font-semibold text-gray-800">Mode de règlement :</span>
+				<span>{invoice.paymentMode || 'Virement bancaire / Chèque'}</span>
+			</div>
+			<div>
+				<span class="font-semibold text-gray-800">Conditions de paiement :</span>
+				<span>{invoice.paymentConditions || '30% au démarrage, le solde à la livraison'}</span>
+			</div>
+			<div>
+				<span class="font-semibold text-gray-800">Communication de paiement :</span>
+				<strong class="font-bold text-gray-900">{invoice.invoiceNumber}</strong>
+			</div>
+			{#if profile?.rib}
+				<div class="mt-1 font-mono text-[11px] text-gray-800">
+					<span class="font-sans font-semibold">RIB / RIP :</span>
+					{profile.rib}
+				</div>
+			{/if}
+			{#if invoice.notes}
+				<div class="mt-1 text-[11px] text-gray-500 italic">
+					{invoice.notes}
+				</div>
+			{/if}
 		</div>
 
 		<!-- Right: Totals Box, Amount in Words & Stamp -->
