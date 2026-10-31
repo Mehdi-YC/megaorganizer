@@ -617,7 +617,7 @@
 		</div>
 	</div>
 
-	<div class="p-4 sm:p-6">
+	<div class="p-4 pt-6 sm:p-6 sm:pt-6 lg:p-8 lg:pt-6">
 		{#if editingPage}
 			<div class="mb-4 rounded-xl border border-border bg-surface p-4 shadow-xs">
 				<label for="edit-page-desc" class="mb-1 block text-xs font-semibold text-fg-subdued">

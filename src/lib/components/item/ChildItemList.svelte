@@ -161,7 +161,7 @@
 	}
 </script>
 
-<div class="rounded-sm border border-border bg-surface p-4">
+<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
 	<div class="mb-3 flex items-center justify-between">
 		<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 			Child Items ({children.length})

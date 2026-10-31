@@ -6,7 +6,7 @@
 </script>
 
 {#if backlinks.length > 0}
-	<section class="mt-6 rounded-sm border border-border bg-surface p-4">
+	<section class="mt-6 rounded-xl border border-border bg-surface p-5 shadow-xs">
 		<h3 class="mb-2 text-xs font-semibold tracking-wide text-fg-accent uppercase">
 			Linked from ({backlinks.length})
 		</h3>

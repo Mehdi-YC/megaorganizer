@@ -339,29 +339,26 @@
 			</div>
 		</div>
 
-		<div class="space-y-4 p-4 sm:p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-0 lg:p-0">
-			{#if editing}
-				<div class="px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pt-6">
-					<div class="rounded-xl border border-border bg-surface p-4 shadow-xs">
-						<label for="item-desc-input" class="mb-1 block text-xs font-semibold text-fg-subdued">
-							Description
-						</label>
-						<Input
-							id="item-desc-input"
-							name="description"
-							bind:value={description}
-							placeholder="Description (optional)"
-						/>
-					</div>
-				</div>
-			{/if}
+		<div class="flex-1 overflow-y-auto p-4 pt-6 sm:p-6 sm:pt-6 lg:p-8 lg:pt-6">
+			<div class="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:items-start">
+				<div class="min-w-0 flex-1 space-y-6 {isDeckView ? 'order-1' : 'order-2'} lg:order-1">
+					{#if editing}
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
+							<label
+								for="item-desc-input"
+								class="mb-1.5 block text-xs font-semibold text-fg-subdued"
+							>
+								Description
+							</label>
+							<Input
+								id="item-desc-input"
+								name="description"
+								bind:value={description}
+								placeholder="Description (optional)"
+							/>
+						</div>
+					{/if}
 
-			<div class="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:gap-0 lg:space-y-0">
-				<div
-					class="space-y-4 {isDeckView
-						? 'order-1'
-						: 'order-2'} lg:order-1 lg:min-w-0 lg:flex-1 lg:space-y-6 lg:overflow-y-auto lg:px-8 lg:pb-8"
-				>
 					{#if isDeckView}
 						<YdkDeckViewer
 							{ydkData}
@@ -370,14 +367,12 @@
 							{assignedTags}
 						/>
 					{:else}
-						<div
-							class="rounded-sm border border-border bg-surface p-4 lg:border-0 lg:bg-transparent lg:p-0"
-						>
-							<h3
-								class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase lg:hidden"
-							>
-								Content
-							</h3>
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
+							<div class="mb-3 flex items-center justify-between">
+								<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+									Content
+								</h3>
+							</div>
 							{#if editing}
 								<MarkdownEditor
 									bind:value={content}
@@ -401,7 +396,7 @@
 						</div>
 
 						{#if editing}
-							<div class="space-y-3 rounded-sm border border-border bg-surface p-4">
+							<div class="space-y-3 rounded-xl border border-border bg-surface p-5 shadow-xs">
 								<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Media</h3>
 								<div class="grid gap-3 sm:grid-cols-3">
 									<Input
@@ -465,7 +460,7 @@
 					{/if}
 
 					{#if content && isDeckView}
-						<div class="rounded-sm border border-border bg-surface p-4">
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
 							<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
 								Content
 							</h3>
@@ -476,12 +471,12 @@
 					{/if}
 
 					{#if item.videoUrl && !editing}
-						<div class="rounded-sm border border-border bg-surface p-4">
+						<div class="rounded-xl border border-border bg-surface p-4 shadow-xs">
 							<div class="aspect-video">
 								<iframe
 									src={item.videoUrl}
 									title="Video"
-									class="h-full w-full rounded-sm"
+									class="h-full w-full rounded-lg"
 									allowfullscreen
 								></iframe>
 							</div>
@@ -489,7 +484,7 @@
 					{/if}
 
 					{#if externalHref && !editing}
-						<div class="rounded-sm border border-border bg-surface p-3">
+						<div class="rounded-xl border border-border bg-surface p-3 shadow-xs">
 							<Button
 								href={externalHref}
 								target="_blank"
@@ -514,7 +509,7 @@
 							onReorder={handleChildReorder}
 						/>
 					{:else if children.length > 0}
-						<div class="rounded-sm border border-border bg-surface p-4">
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
 							<div class="mb-3 flex items-center justify-between">
 								<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 									Tree View
@@ -527,7 +522,7 @@
 									><i class="fas fa-list text-[9px]"></i> List</Button
 								>
 							</div>
-							<div class="h-[350px] overflow-hidden rounded-sm border border-border sm:h-[400px]">
+							<div class="h-[350px] overflow-hidden rounded-lg border border-border sm:h-[400px]">
 								<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />
 							</div>
 						</div>
@@ -537,9 +532,9 @@
 				</div>
 
 				<aside
-					class="space-y-5 rounded-sm border border-border bg-surface p-4 {isDeckView
+					class="space-y-5 rounded-xl border border-border bg-surface p-5 shadow-xs {isDeckView
 						? 'order-2'
-						: 'order-1'} lg:order-2 lg:w-72 lg:shrink-0 lg:overflow-y-auto lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l lg:p-5 xl:w-80"
+						: 'order-1'} lg:sticky lg:top-6 lg:order-2 lg:w-72 lg:shrink-0 lg:self-start xl:w-80"
 				>
 					<div>
 						{#if item.imageUrl}
