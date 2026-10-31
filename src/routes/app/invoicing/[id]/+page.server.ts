@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 	const invoice = await getInvoice(locals.user.id, params.id);
 	if (!invoice) {
-		throw error(404, 'Facture non trouvée');
+		throw error(404, 'Invoice not found');
 	}
 
 	const profile = await getUserInvoiceProfile(locals.user.id);

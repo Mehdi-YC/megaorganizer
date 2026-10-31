@@ -10,6 +10,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import ItemImage from '$lib/components/ui/ItemImage.svelte';
@@ -260,83 +261,104 @@
 		</EmptyState>
 	</div>
 {:else}
-	<div class="flex min-h-full flex-col lg:h-full">
-		<div class="shrink-0 border-b border-border bg-bg-subdued px-4 py-2 sm:px-6">
-			<div class="flex items-center gap-1.5 text-[11px] text-fg-subdued">
+	<div class="flex min-h-full flex-col">
+		<div
+			class="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md sm:px-6 lg:px-8"
+		>
+			<div class="flex min-w-0 items-center gap-2.5">
 				<button
 					type="button"
 					aria-label="Go back"
-					class="cursor-pointer hover:text-primary-text"
-					onclick={() => history.back()}><i class="fas fa-arrow-left text-[10px]"></i></button
+					class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+					onclick={() => history.back()}
 				>
-				<i class="fas fa-chevron-right text-[8px]"></i>
-				<span class="truncate text-fg">{item.name}</span>
+					<i class="fas fa-arrow-left text-xs"></i>
+				</button>
+				<i class="fas fa-chevron-right text-[10px] text-fg-subdued/50"></i>
+				{#if editing}
+					<input
+						type="text"
+						bind:value={name}
+						class="rounded-lg border border-border bg-bg px-2.5 py-1 text-sm font-semibold text-fg focus:border-primary focus:outline-none"
+						placeholder="Item name"
+					/>
+				{:else}
+					<span
+						class="cursor-help truncate text-sm font-semibold text-fg sm:text-base"
+						title={item.description || item.name}
+					>
+						{item.name}
+					</span>
+					<span
+						class="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-fg-subdued capitalize"
+					>
+						{item.type}
+					</span>
+				{/if}
+			</div>
+
+			<div class="flex shrink-0 items-center gap-1.5">
+				{#if editing}
+					<Button variant="primary" size="sm" onclick={saveItem}>
+						<i class="fas fa-check mr-1.5 text-xs"></i> Save
+					</Button>
+					<Button variant="secondary" size="sm" onclick={resetForm}>Cancel</Button>
+				{:else}
+					{#if !isDeckView}
+						<button
+							type="button"
+							aria-label="Toggle tree view"
+							title={showTree ? 'Switch to standard view' : 'Switch to tree view'}
+							class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors {showTree
+								? 'bg-primary text-white'
+								: 'border border-border bg-surface text-fg-subdued hover:bg-muted hover:text-fg'}"
+							onclick={toggleTreeView}
+						>
+							<i class="fas fa-project-diagram text-xs"></i>
+						</button>
+					{/if}
+					<Button
+						variant="secondary"
+						size="sm"
+						aria-label="Edit"
+						title="Edit item"
+						onclick={() => (editing = true)}
+					>
+						<i class="fas fa-pen text-xs"></i>
+					</Button>
+					<Button
+						variant="danger"
+						size="sm"
+						aria-label="Delete"
+						title="Delete item"
+						onclick={deleteItem}
+					>
+						<i class="fas fa-trash text-xs"></i>
+					</Button>
+				{/if}
 			</div>
 		</div>
 
-		<div class="space-y-4 p-4 sm:p-8 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-0 lg:p-0">
-			<div class="lg:shrink-0 lg:px-8 lg:pt-8">
-				<div class="flex items-center gap-3">
-					<div class="min-w-0 flex-1">
-						{#if editing}
-							<input
-								type="text"
-								bind:value={name}
-								class="w-full border-b-2 border-primary-text bg-transparent text-lg font-semibold text-fg-accent focus:outline-none lg:text-xl"
-							/>
-							<input
-								type="text"
+		<div class="p-4 pt-6 sm:p-6 sm:pt-6 lg:p-8 lg:pt-6">
+			<div class="mx-auto flex max-w-7xl flex-col gap-6 lg:flex-row lg:items-start">
+				<div class="min-w-0 flex-1 space-y-6 {isDeckView ? 'order-1' : 'order-2'} lg:order-1">
+					{#if editing}
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
+							<label
+								for="item-desc-input"
+								class="mb-1.5 block text-xs font-semibold text-fg-subdued"
+							>
+								Description
+							</label>
+							<Input
+								id="item-desc-input"
+								name="description"
 								bind:value={description}
 								placeholder="Description (optional)"
-								class="mt-1 w-full border-b border-border bg-transparent text-base text-fg-subdued placeholder:text-fg-subdued/50 focus:outline-none sm:text-sm"
 							/>
-						{:else}
-							<h1 class="text-lg font-semibold text-fg-accent lg:text-xl">{item.name}</h1>
-							{#if item.description}<p class="mt-0.5 text-sm text-fg-subdued">
-									{item.description}
-								</p>{/if}
-							<p class="mt-1 text-[10px] text-fg-subdued capitalize lg:hidden">{item.type}</p>
-						{/if}
-					</div>
-					<div class="flex shrink-0 gap-1.5">
-						{#if editing}
-							<Button variant="primary" size="md" onclick={saveItem}
-								><i class="fas fa-check text-xs"></i> Save</Button
-							>
-							<Button variant="secondary" size="md" onclick={resetForm}>Cancel</Button>
-						{:else}
-							{#if !isDeckView}
-								<button
-									type="button"
-									aria-label="Toggle tree view"
-									class="inline-flex h-[36px] cursor-pointer items-center gap-1.5 rounded-sm {showTree
-										? 'bg-primary text-white'
-										: 'bg-muted text-fg'} px-3 text-sm font-medium transition-colors hover:bg-border"
-									onclick={toggleTreeView}
-								>
-									<i class="fas fa-project-diagram text-xs"></i>
-								</button>
-							{/if}
-							<Button
-								variant="secondary"
-								size="md"
-								aria-label="Edit"
-								onclick={() => (editing = true)}><i class="fas fa-pen text-xs"></i></Button
-							>
-							<Button variant="danger" size="md" aria-label="Delete" onclick={deleteItem}
-								><i class="fas fa-trash text-xs"></i></Button
-							>
-						{/if}
-					</div>
-				</div>
-			</div>
+						</div>
+					{/if}
 
-			<div class="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:gap-0 lg:space-y-0">
-				<div
-					class="space-y-4 {isDeckView
-						? 'order-1'
-						: 'order-2'} lg:order-1 lg:min-w-0 lg:flex-1 lg:space-y-6 lg:overflow-y-auto lg:px-8 lg:pb-8"
-				>
 					{#if isDeckView}
 						<YdkDeckViewer
 							{ydkData}
@@ -345,19 +367,20 @@
 							{assignedTags}
 						/>
 					{:else}
-						<div
-							class="rounded-sm border border-border bg-surface p-4 lg:border-0 lg:bg-transparent lg:p-0"
-						>
-							<h3
-								class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase lg:hidden"
-							>
-								Content
-							</h3>
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
+							<div class="mb-3 flex items-center justify-between">
+								<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+									Content
+								</h3>
+							</div>
 							{#if editing}
-								<Textarea
+								<MarkdownEditor
 									bind:value={content}
+									onSave={saveItem}
+									docLinks={data.links}
 									rows={12}
-									placeholder="Write content (markdown supported)..."
+									minHeight="280px"
+									placeholder="Write content (markdown & [[wikilinks]] supported)..."
 								/>
 							{:else if content}
 								<div class="markdown-content text-sm leading-relaxed text-fg">
@@ -373,7 +396,7 @@
 						</div>
 
 						{#if editing}
-							<div class="space-y-3 rounded-sm border border-border bg-surface p-4">
+							<div class="space-y-3 rounded-xl border border-border bg-surface p-5 shadow-xs">
 								<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Media</h3>
 								<div class="grid gap-3 sm:grid-cols-3">
 									<Input
@@ -437,7 +460,7 @@
 					{/if}
 
 					{#if content && isDeckView}
-						<div class="rounded-sm border border-border bg-surface p-4">
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
 							<h3 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
 								Content
 							</h3>
@@ -448,12 +471,12 @@
 					{/if}
 
 					{#if item.videoUrl && !editing}
-						<div class="rounded-sm border border-border bg-surface p-4">
+						<div class="rounded-xl border border-border bg-surface p-4 shadow-xs">
 							<div class="aspect-video">
 								<iframe
 									src={item.videoUrl}
 									title="Video"
-									class="h-full w-full rounded-sm"
+									class="h-full w-full rounded-lg"
 									allowfullscreen
 								></iframe>
 							</div>
@@ -461,7 +484,7 @@
 					{/if}
 
 					{#if externalHref && !editing}
-						<div class="rounded-sm border border-border bg-surface p-3">
+						<div class="rounded-xl border border-border bg-surface p-3 shadow-xs">
 							<Button
 								href={externalHref}
 								target="_blank"
@@ -486,7 +509,7 @@
 							onReorder={handleChildReorder}
 						/>
 					{:else if children.length > 0}
-						<div class="rounded-sm border border-border bg-surface p-4">
+						<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
 							<div class="mb-3 flex items-center justify-between">
 								<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
 									Tree View
@@ -499,7 +522,7 @@
 									><i class="fas fa-list text-[9px]"></i> List</Button
 								>
 							</div>
-							<div class="h-[350px] overflow-hidden rounded-sm border border-border sm:h-[400px]">
+							<div class="h-[350px] overflow-hidden rounded-lg border border-border sm:h-[400px]">
 								<MindMap tree={subtree} onNodeClick={handleMindmapNodeClick} />
 							</div>
 						</div>
@@ -509,15 +532,15 @@
 				</div>
 
 				<aside
-					class="space-y-5 rounded-sm border border-border bg-surface p-4 {isDeckView
+					class="space-y-5 rounded-xl border border-border bg-surface p-5 shadow-xs {isDeckView
 						? 'order-2'
-						: 'order-1'} lg:order-2 lg:w-72 lg:shrink-0 lg:overflow-y-auto lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l lg:p-5 xl:w-80"
+						: 'order-1'} lg:order-2 lg:w-72 lg:shrink-0 xl:w-80"
 				>
-					<div>
+					<div class="overflow-hidden rounded-xl border border-border/50 shadow-2xs">
 						{#if item.imageUrl}
 							<ItemImage src={item.imageUrl} alt={item.name} size="full" />
 						{:else}
-							<div class="flex h-32 items-center justify-center rounded-sm bg-muted">
+							<div class="flex h-32 items-center justify-center rounded-xl bg-muted">
 								<i class="fas fa-cube text-3xl text-fg-subdued"></i>
 							</div>
 						{/if}

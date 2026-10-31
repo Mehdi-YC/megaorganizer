@@ -129,10 +129,10 @@
 
 <svelte:head><title>Item Library - MegaOrganize</title></svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<PageHeader title="Item Library" subtitle="{items.length} items">
 		<Button size="md" onclick={() => (showNewItem = true)}>
-			<i class="fas fa-plus text-xs"></i> <span class="hidden sm:inline">New Item</span>
+			<i class="fas fa-plus text-xs"></i> <span class="hidden sm:inline">Item</span>
 		</Button>
 	</PageHeader>
 
@@ -284,11 +284,11 @@
 				{@const itemTags = getAssignedTags(item, allTags)}
 				<a
 					href={resolve('/app/item/[id]', { id: item.id })}
-					class="group rounded-sm border {item.favorite
+					class="group overflow-hidden rounded-xl border {item.favorite
 						? 'border-yellow-400/40 bg-yellow-500/5'
-						: 'border-border bg-surface'} transition-all hover:border-primary-text/50"
+						: 'border-border bg-surface'} shadow-xs transition-all hover:border-primary-text/50"
 				>
-					<div class="h-24 overflow-hidden rounded-t-sm">
+					<div class="h-24 w-full overflow-hidden rounded-t-xl">
 						<GridItemImage
 							src={item.imageUrl}
 							alt={item.name}

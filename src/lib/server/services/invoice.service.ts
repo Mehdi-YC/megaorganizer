@@ -121,7 +121,7 @@ export async function deleteClient(userId: string, clientId: string) {
 		.where(and(eq(invoice.clientId, clientId), eq(invoice.userId, userId)));
 
 	if ((count[0]?.count ?? 0) > 0) {
-		throw new Error('Impossible de supprimer un client ayant des factures associées');
+		throw new Error('Cannot delete a client with associated invoices');
 	}
 
 	await db
@@ -376,7 +376,7 @@ export async function updateInvoice(
 	}
 ) {
 	const existing = await getInvoice(userId, invoiceId);
-	if (!existing) throw new Error('Facture introuvable');
+	if (!existing) throw new Error('Invoice not found');
 
 	const updateData: Record<string, unknown> = {};
 

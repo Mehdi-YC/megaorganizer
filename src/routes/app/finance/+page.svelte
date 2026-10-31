@@ -162,7 +162,7 @@
 	<title>Finance - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<PageHeader title="Finance" subtitle="Track your expenses and spending">
 		<Button size="sm" onclick={openAdd}>
 			<i class="fas fa-plus mr-2 text-xs"></i>
@@ -178,22 +178,22 @@
 				<button
 					type="button"
 					aria-label="Previous month"
-					class="cursor-pointer rounded-sm border border-border bg-surface px-2.5 py-1.5 text-xs text-fg transition-colors hover:bg-muted"
+					class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-surface text-fg shadow-xs transition-colors hover:bg-muted"
 					onclick={prevMonth}
 				>
-					<i class="fas fa-chevron-left"></i>
+					<i class="fas fa-chevron-left text-xs"></i>
 				</button>
-				<span class="min-w-[110px] text-center text-sm font-semibold text-fg">
+				<span class="min-w-[120px] text-center text-sm font-semibold tracking-tight text-fg">
 					{monthNames[month]}
 					{year}
 				</span>
 				<button
 					type="button"
 					aria-label="Next month"
-					class="cursor-pointer rounded-sm border border-border bg-surface px-2.5 py-1.5 text-xs text-fg transition-colors hover:bg-muted"
+					class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-surface text-fg shadow-xs transition-colors hover:bg-muted"
 					onclick={nextMonth}
 				>
-					<i class="fas fa-chevron-right"></i>
+					<i class="fas fa-chevron-right text-xs"></i>
 				</button>
 				<div class="w-full min-w-[140px] flex-1 sm:w-auto">
 					<Input
@@ -210,10 +210,10 @@
 				<div class="flex flex-wrap gap-1.5">
 					<button
 						type="button"
-						class="cursor-pointer rounded-sm px-2 py-0.5 text-[11px] transition-colors {activeTag ===
+						class="cursor-pointer rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors {activeTag ===
 						null
-							? 'bg-primary text-white'
-							: 'bg-muted text-fg hover:bg-border'}"
+							? 'bg-primary text-white shadow-xs'
+							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => (activeTag = null)}
 					>
 						All
@@ -221,10 +221,10 @@
 					{#each allTags as tag (tag)}
 						<button
 							type="button"
-							class="cursor-pointer rounded-sm px-2 py-0.5 text-[11px] transition-colors {activeTag ===
+							class="cursor-pointer rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors {activeTag ===
 							tag
-								? 'bg-primary text-white'
-								: 'bg-muted text-fg hover:bg-border'}"
+								? 'bg-primary text-white shadow-xs'
+								: 'bg-muted text-fg hover:bg-muted/80'}"
 							onclick={() => (activeTag = activeTag === tag ? null : tag)}
 						>
 							{tag}

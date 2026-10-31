@@ -353,96 +353,102 @@
 	<title>Calendar - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 pb-24 sm:p-6 sm:pb-8 lg:p-8">
 	<PageHeader title="Calendar" subtitle="View all your events in one place">
 		<!-- Filter buttons -->
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {!filter
-				? 'bg-primary text-white'
-				: 'bg-muted text-fg hover:bg-border'}"
-			onclick={() => setFilter(null)}
+		<div
+			class="no-scrollbar flex max-w-full items-center gap-1.5 overflow-x-auto py-0.5 sm:flex-wrap"
 		>
-			All
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
-			'training'
-				? 'bg-primary text-white'
-				: 'bg-muted text-fg hover:bg-border'}"
-			onclick={() => setFilter('training')}
-		>
-			<i class="fas fa-dumbbell text-[10px]"></i>
-			Training
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
-			'reminders'
-				? 'bg-primary text-white'
-				: 'bg-muted text-fg hover:bg-border'}"
-			onclick={() => setFilter('reminders')}
-		>
-			<i class="fas fa-bell text-[10px]"></i>
-			Reminders
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
-			'finance'
-				? 'bg-primary text-white'
-				: 'bg-muted text-fg hover:bg-border'}"
-			onclick={() => setFilter('finance')}
-		>
-			<i class="fas fa-receipt text-[10px]"></i>
-			Finance
-		</button>
-		<button
-			type="button"
-			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
-			'todos'
-				? 'bg-primary text-white'
-				: 'bg-muted text-fg hover:bg-border'}"
-			onclick={() => setFilter('todos')}
-		>
-			<i class="fas fa-check-square text-[10px]"></i>
-			Tâches
-		</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {!filter
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter(null)}
+			>
+				All
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'training'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('training')}
+			>
+				<i class="fas fa-dumbbell text-[10px]"></i>
+				Training
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'reminders'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('reminders')}
+			>
+				<i class="fas fa-bell text-[10px]"></i>
+				Reminders
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'finance'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('finance')}
+			>
+				<i class="fas fa-receipt text-[10px]"></i>
+				Finance
+			</button>
+			<button
+				type="button"
+				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {filter ===
+				'todos'
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-muted text-fg hover:bg-muted/80'}"
+				onclick={() => setFilter('todos')}
+			>
+				<i class="fas fa-check-square text-[10px]"></i>
+				Tasks
+			</button>
+		</div>
 	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-3">
 		<!-- Calendar -->
 		<div class="lg:col-span-2">
-			<div class="rounded-sm border border-border bg-surface p-4">
+			<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
 				<div class="mb-4 flex items-center justify-between sm:mb-6">
 					<button
 						type="button"
 						aria-label="Previous month"
-						class="cursor-pointer rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+						class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 						onclick={prevMonth}
 					>
-						<i class="fas fa-chevron-left"></i>
+						<i class="fas fa-chevron-left text-xs"></i>
 					</button>
-					<h2 class="text-lg font-semibold text-fg">
+					<h2 class="text-base font-bold tracking-tight text-fg sm:text-lg">
 						{monthNames[currentDate.getMonth()]}
 						{currentDate.getFullYear()}
 					</h2>
 					<button
 						type="button"
 						aria-label="Next month"
-						class="cursor-pointer rounded-sm px-3 py-2 text-sm font-medium text-fg hover:bg-muted"
+						class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 						onclick={nextMonth}
 					>
-						<i class="fas fa-chevron-right"></i>
+						<i class="fas fa-chevron-right text-xs"></i>
 					</button>
 				</div>
 
 				<!-- Monthly Overview Header -->
 				<div class="mb-4 flex flex-wrap gap-3 sm:gap-6">
 					<div class="flex items-center gap-2">
-						<div class="flex h-7 w-7 items-center justify-center rounded-sm bg-blue-500/10">
-							<i class="fas fa-dumbbell text-[10px] text-blue-600"></i>
+						<div
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
+						>
+							<i class="fas fa-dumbbell text-[10px]"></i>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
@@ -452,8 +458,10 @@
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
-						<div class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary/10">
-							<i class="fas fa-tasks text-[10px] text-primary-text"></i>
+						<div
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
+						>
+							<i class="fas fa-tasks text-[10px]"></i>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
@@ -469,8 +477,10 @@
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
-						<div class="flex h-7 w-7 items-center justify-center rounded-sm bg-warning/10">
-							<i class="fas fa-receipt text-[10px] text-warning"></i>
+						<div
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
+						>
+							<i class="fas fa-receipt text-[10px]"></i>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
@@ -580,7 +590,7 @@
 					</div>
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-primary-text"></div>
-						<span>Tâches</span>
+						<span>Tasks</span>
 					</div>
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-success"></div>

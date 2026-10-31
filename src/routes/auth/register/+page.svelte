@@ -17,20 +17,23 @@
 	});
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-bg p-4">
+<div
+	class="flex h-full min-h-screen w-full items-center justify-center overflow-y-auto bg-bg p-4 sm:p-6"
+>
 	<div class="w-full max-w-sm">
 		<div class="mb-8 text-center">
 			<div class="mb-4 flex justify-center">
 				<div
-					class="flex h-12 w-12 items-center justify-center rounded-sm bg-primary text-lg font-bold text-white"
+					class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-xl font-bold text-white shadow-md shadow-primary/25"
 				>
-					M
+					<i class="fas fa-layer-group"></i>
 				</div>
 			</div>
-			<h1 class="text-lg font-semibold text-fg-accent">Create your account</h1>
+			<h1 class="text-xl font-bold tracking-tight text-fg">Create your account</h1>
+			<p class="mt-1 text-xs text-fg-subdued">Start organizing your knowledge and work</p>
 		</div>
 
-		<div class="rounded-sm border border-border bg-surface p-6">
+		<div class="rounded-2xl border border-border bg-surface p-7 shadow-xl">
 			<form method="post" action="?/signUpEmail" use:enhance class="space-y-4">
 				<Input
 					label="Name"
@@ -64,19 +67,16 @@
 				/>
 
 				{#if form?.message}
-					<p class="text-xs text-error">{form.message}</p>
+					<p class="text-xs font-medium text-error">{form.message}</p>
 				{/if}
 
 				<Button type="submit" class="w-full">Create Account</Button>
 			</form>
 		</div>
 
-		<p class="mt-4 text-center text-xs text-fg-subdued">
+		<p class="mt-5 text-center text-xs text-fg-subdued">
 			Already have an account?
-			<a
-				href={resolve('/auth/login')}
-				class="font-medium text-primary-text hover:text-primary-text-hover"
-			>
+			<a href={resolve('/auth/login')} class="ml-1 font-semibold text-primary-text hover:underline">
 				Sign in
 			</a>
 		</p>

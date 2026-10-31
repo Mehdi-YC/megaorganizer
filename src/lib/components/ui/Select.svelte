@@ -29,34 +29,41 @@
 	} & Record<string, unknown> = $props();
 
 	const sizes: Record<string, string> = {
-		sm: 'h-8 px-2 text-base sm:text-xs',
-		md: 'h-[36px] px-3 text-base sm:text-sm'
+		sm: 'h-8 px-2.5 text-xs rounded-md',
+		md: 'h-9 px-3 text-sm rounded-lg'
 	};
 </script>
 
 <div class="flex flex-col gap-1.5 {className}">
 	{#if label}
-		<label for={id} class="text-xs font-semibold tracking-wide text-fg-accent">
+		<label for={id} class="text-xs font-medium text-fg">
 			{label}
 		</label>
 	{/if}
-	<select
-		{name}
-		{id}
-		{disabled}
-		{onchange}
-		bind:value
-		{...rest}
-		aria-invalid={error ? 'true' : undefined}
-		aria-describedby={error ? `${id}-error` : undefined}
-		class="{sizes[
-			size
-		]} w-full rounded-sm border border-border-strong bg-bg text-fg transition-colors hover:border-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none {error
-			? 'border-error'
-			: ''} {disabled ? 'cursor-not-allowed opacity-40' : ''}"
-	>
-		{@render children()}
-	</select>
+	<div class="relative">
+		<select
+			{name}
+			{id}
+			{disabled}
+			{onchange}
+			bind:value
+			{...rest}
+			aria-invalid={error ? 'true' : undefined}
+			aria-describedby={error ? `${id}-error` : undefined}
+			class="{sizes[
+				size
+			]} w-full appearance-none border border-border bg-surface pr-8 pl-3 text-fg shadow-xs transition-all hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none {error
+				? 'border-error ring-1 ring-error/30'
+				: ''} {disabled ? 'cursor-not-allowed opacity-50' : ''}"
+		>
+			{@render children()}
+		</select>
+		<div
+			class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-fg-subdued"
+		>
+			<i class="fas fa-chevron-down text-xs"></i>
+		</div>
+	</div>
 	{#if error}
 		<p id="{id}-error" class="text-xs text-error">{error}</p>
 	{/if}

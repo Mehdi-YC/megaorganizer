@@ -18,23 +18,25 @@
 	<title>Training - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title="Training Sessions" subtitle="All your training sessions">
 		<Button href="/app/training/timers" variant="secondary" size="sm">
-			<i class="fas fa-stopwatch mr-2 text-xs"></i>
+			<i class="fas fa-stopwatch mr-1.5 text-xs sm:mr-2"></i>
 			Timers
 		</Button>
 		<Button href="/app/training/running" variant="secondary" size="sm">
-			<i class="fas fa-person-running mr-2 text-xs"></i>
+			<i class="fas fa-person-running mr-1.5 text-xs sm:mr-2"></i>
 			Running
 		</Button>
 		<Button href="/app/training/session/new" variant="primary" size="sm">
-			<i class="fas fa-plus mr-2 text-xs"></i>
-			New Session
+			<i class="fas fa-plus mr-1.5 text-xs sm:mr-2"></i>
+			Session
 		</Button>
 	</PageHeader>
 
-	<div class="mb-6 flex items-center gap-2">
+	<div
+		class="no-scrollbar mb-6 flex max-w-full items-center gap-2 overflow-x-auto py-0.5 sm:flex-wrap"
+	>
 		<button
 			type="button"
 			class="cursor-pointer rounded-sm px-3 py-1.5 text-sm font-medium transition-colors {filterType ===

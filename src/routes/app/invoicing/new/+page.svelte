@@ -82,7 +82,7 @@
 
 	function removeLine(id: string) {
 		if (lines.length <= 1) {
-			showToast('Une facture doit contenir au moins une ligne', 'info');
+			showToast('An invoice must contain at least one line', 'info');
 			return;
 		}
 		lines = lines.filter((l) => l.id !== id);
@@ -116,16 +116,16 @@
 
 	async function handleSave() {
 		if (!clientId) {
-			showToast('Veuillez sélectionner un client', 'error');
+			showToast('Please select a client', 'error');
 			return;
 		}
 		if (!invoiceNumber.trim()) {
-			showToast('Numéro de facture requis', 'error');
+			showToast('Invoice number is required', 'error');
 			return;
 		}
 		const validLines = lines.filter((l) => l.description.trim().length > 0);
 		if (validLines.length === 0) {
-			showToast('Veuillez renseigner au moins une ligne avec une description', 'error');
+			showToast('Please provide at least one line with a description', 'error');
 			return;
 		}
 
@@ -149,7 +149,7 @@
 						description: l.description,
 						quantity: Number(l.quantity) || 1,
 						unitPrice: Number(l.unitPrice) || 0,
-						unit: l.unit || 'Unité(s)',
+						unit: l.unit || 'Unit(s)',
 						tvaRate: Number(l.tvaRate) || 0,
 						position: idx
 					}))
@@ -158,14 +158,14 @@
 
 			if (!res.ok) {
 				const err = await res.json();
-				throw new Error(err.error || 'Erreur lors de la création');
+				throw new Error(err.error || 'Failed to create invoice');
 			}
 
 			const created = await res.json();
-			showToast('Facture créée avec succès', 'success');
+			showToast('Invoice created successfully', 'success');
 			goto(resolve('/app/invoicing/[id]', { id: created.id }));
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Échec de la sauvegarde';
+			const msg = e instanceof Error ? e.message : 'Failed to save';
 			showToast(msg, 'error');
 		} finally {
 			isSubmitting = false;
@@ -174,7 +174,7 @@
 
 	async function handleCreateClient() {
 		if (!newClientName.trim()) {
-			showToast('Nom du client requis', 'error');
+			showToast('Client name is required', 'error');
 			return;
 		}
 		isCreatingClient = true;
@@ -195,12 +195,12 @@
 					phone: newClientPhone
 				})
 			});
-			if (!res.ok) throw new Error('Erreur création client');
+			if (!res.ok) throw new Error('Failed to create client');
 			const newClient = await res.json();
 			clients = [...clients, newClient];
 			clientId = newClient.id;
 			showNewClientModal = false;
-			showToast('Client créé et sélectionné', 'success');
+			showToast('Client created and selected', 'success');
 			// reset fields
 			newClientName = '';
 			newClientAddress = '';
@@ -211,7 +211,7 @@
 			newClientAi = '';
 			newClientPhone = '';
 		} catch {
-			showToast('Échec de la création du client', 'error');
+			showToast('Failed to create client', 'error');
 		} finally {
 			isCreatingClient = false;
 		}
@@ -219,33 +219,33 @@
 </script>
 
 <svelte:head>
-	<title>Nouvelle Facture - MegaOrganize</title>
+	<title>New Invoice - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<div class="mb-6">
 		<a
 			href={resolve('/app/invoicing')}
 			class="text-xs text-fg-subdued transition-colors hover:text-fg"
 		>
-			<i class="fas fa-arrow-left mr-1"></i> Retour aux factures
+			<i class="fas fa-arrow-left mr-1"></i> Back to invoices
 		</a>
 	</div>
 
 	<PageHeader
-		title="Nouvelle Facture"
-		subtitle="Création d'une facture conforme au droit commercial algérien"
+		title="New Invoice"
+		subtitle="Create a new compliant commercial invoice"
 		descriptionOnHover
 	>
 		<div class="flex items-center gap-2">
 			<Button variant="secondary" size="sm" onclick={() => goto(resolve('/app/invoicing'))}
-				>Annuler</Button
+				>Cancel</Button
 			>
 			<Button size="sm" onclick={handleSave} disabled={isSubmitting}>
 				{#if isSubmitting}
-					<i class="fas fa-spinner fa-spin mr-1.5 text-xs"></i> Enregistrement...
+					<i class="fas fa-spinner fa-spin mr-1.5 text-xs"></i> Saving...
 				{:else}
-					<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer
+					<i class="fas fa-check mr-1.5 text-xs"></i> Save
 				{/if}
 			</Button>
 		</div>
@@ -257,7 +257,7 @@
 			<!-- Invoice Meta Card -->
 			<div class="rounded-sm border border-border bg-surface p-5">
 				<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-					Informations Générales
+					General Information
 				</h2>
 
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -265,14 +265,14 @@
 					<div class="flex flex-col gap-1.5">
 						<div class="flex items-center justify-between">
 							<label for="clientSelect" class="text-xs font-semibold text-fg-accent">
-								Client / Entreprise <span class="text-error">*</span>
+								Client / Company <span class="text-error">*</span>
 							</label>
 							<button
 								type="button"
 								class="cursor-pointer text-[11px] text-primary-text hover:underline"
 								onclick={() => (showNewClientModal = true)}
 							>
-								+ Nouveau Client
+								+ Client
 							</button>
 						</div>
 						{#if clients.length > 0}
@@ -289,9 +289,9 @@
 							<div
 								class="flex items-center justify-between rounded border border-border bg-bg p-2 text-xs"
 							>
-								<span class="text-fg-subdued">Aucun client enregistré</span>
+								<span class="text-fg-subdued">No clients registered</span>
 								<Button size="sm" type="button" onclick={() => (showNewClientModal = true)}>
-									Ajouter
+									Add
 								</Button>
 							</div>
 						{/if}
@@ -300,22 +300,20 @@
 					<!-- Invoice Number -->
 					<div class="flex flex-col gap-1.5">
 						<label for="invNumber" class="text-xs font-semibold text-fg-accent">
-							Numéro de Facture <span class="text-error">*</span>
+							Invoice Number <span class="text-error">*</span>
 						</label>
 						<Input
 							id="invNumber"
 							type="text"
 							bind:value={invoiceNumber}
-							placeholder="ex: FAC/2026/00001"
+							placeholder="e.g., INV/2026/00001"
 							required
 						/>
 					</div>
 
 					<!-- Invoice Date -->
 					<div class="flex flex-col gap-1.5">
-						<label for="invDate" class="text-xs font-semibold text-fg-accent">
-							Date de Facturation
-						</label>
+						<label for="invDate" class="text-xs font-semibold text-fg-accent"> Invoice Date </label>
 						<input
 							id="invDate"
 							type="date"
@@ -326,9 +324,7 @@
 
 					<!-- Due Date -->
 					<div class="flex flex-col gap-1.5">
-						<label for="invDue" class="text-xs font-semibold text-fg-accent">
-							Date d'Échéance
-						</label>
+						<label for="invDue" class="text-xs font-semibold text-fg-accent"> Due Date </label>
 						<input
 							id="invDue"
 							type="date"
@@ -340,26 +336,26 @@
 					<!-- Payment Mode -->
 					<div class="flex flex-col gap-1.5">
 						<label for="invPayMode" class="text-xs font-semibold text-fg-accent">
-							Mode de Règlement
+							Payment Mode
 						</label>
 						<Input
 							id="invPayMode"
 							type="text"
 							bind:value={paymentMode}
-							placeholder="ex: Virement bancaire / Chèque"
+							placeholder="e.g., Bank Transfer / Check"
 						/>
 					</div>
 
 					<!-- Payment Conditions -->
 					<div class="flex flex-col gap-1.5">
 						<label for="invPayCond" class="text-xs font-semibold text-fg-accent">
-							Conditions de Paiement
+							Payment Conditions
 						</label>
 						<Input
 							id="invPayCond"
 							type="text"
 							bind:value={paymentConditions}
-							placeholder="ex: 30% au démarrage, le solde à la livraison"
+							placeholder="e.g., 30% upfront, balance on delivery"
 						/>
 					</div>
 
@@ -375,11 +371,11 @@
 								class="h-4 w-4 rounded-sm border-border text-primary focus:ring-0"
 							/>
 							<label for="showTvaStamp" class="cursor-pointer text-xs font-semibold text-fg">
-								Tampon « NON SOUMIS À LA TVA »
+								Stamp "NOT SUBJECT TO VAT"
 							</label>
 						</div>
 						<span class="text-[11px] text-fg-subdued">
-							{showTvaStamp ? 'Affiché sur la facture' : 'Désactivé'}
+							{showTvaStamp ? 'Displayed on invoice' : 'Disabled'}
 						</span>
 					</div>
 				</div>
@@ -389,10 +385,10 @@
 			<div class="rounded-sm border border-border bg-surface p-5">
 				<div class="mb-4 flex items-center justify-between">
 					<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
-						Prestations & Articles
+						Services & Line Items
 					</h2>
 					<Button size="sm" variant="secondary" onclick={addLine}>
-						<i class="fas fa-plus mr-1 text-xs"></i> Ajouter une ligne
+						<i class="fas fa-plus mr-1 text-xs"></i> Add Line
 					</Button>
 				</div>
 
@@ -400,14 +396,14 @@
 					{#each lines as line, i (line.id)}
 						<div class="rounded-sm border border-border/80 bg-bg p-3">
 							<div class="mb-2 flex flex-wrap items-center justify-between gap-1.5">
-								<span class="text-[11px] font-semibold text-fg-subdued">Ligne #{i + 1}</span>
+								<span class="text-[11px] font-semibold text-fg-subdued">Line #{i + 1}</span>
 								<div class="flex items-center gap-1.5">
 									{#if products.length > 0}
 										<select
 											class="h-7 max-w-[200px] rounded-sm border border-border bg-surface px-2 text-[11px] text-fg focus:outline-none"
 											onchange={(e) => onProductSelect(i, (e.target as HTMLSelectElement).value)}
 										>
-											<option value="">Remplir depuis le catalogue...</option>
+											<option value="">Prefill from catalog...</option>
 											{#each products as p (p.id)}
 												<option value={p.id}>{p.name} - {formatDZD(p.unitPrice)}</option>
 											{/each}
@@ -416,7 +412,7 @@
 									<button
 										type="button"
 										class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
-										title="Supprimer la ligne"
+										title="Delete line"
 										onclick={() => removeLine(line.id)}
 									>
 										<i class="fas fa-trash-can text-xs"></i>
@@ -428,7 +424,7 @@
 								<input
 									type="text"
 									bind:value={line.description}
-									placeholder="Description du produit ou service (ex: Développement site web)..."
+									placeholder="Item or service description (e.g., Web Development)..."
 									class="h-8 w-full rounded-sm border border-border bg-surface px-2.5 text-xs text-fg focus:border-primary-text focus:outline-none"
 								/>
 							</div>
@@ -436,7 +432,7 @@
 							<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
 								<div>
 									<label for="line-qty-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
-										>Quantité</label
+										>Quantity</label
 									>
 									<input
 										id="line-qty-{line.id}"
@@ -449,19 +445,19 @@
 								</div>
 								<div>
 									<label for="line-unit-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
-										>Unité</label
+										>Unit</label
 									>
 									<input
 										id="line-unit-{line.id}"
 										type="text"
 										bind:value={line.unit}
-										placeholder="Unité(s)"
+										placeholder="Unit(s)"
 										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:outline-none"
 									/>
 								</div>
 								<div>
 									<label for="line-price-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
-										>Prix Unit. (DA)</label
+										>Unit Price (DA)</label
 									>
 									<input
 										id="line-price-{line.id}"
@@ -474,7 +470,7 @@
 								</div>
 								<div>
 									<label for="line-tva-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
-										>TVA</label
+										>VAT</label
 									>
 									<select
 										id="line-tva-{line.id}"
@@ -489,7 +485,7 @@
 							</div>
 
 							<div class="mt-2 text-right text-xs font-medium text-fg">
-								Total : {formatDZD(line.quantity * line.unitPrice)}
+								Total: {formatDZD(line.quantity * line.unitPrice)}
 							</div>
 						</div>
 					{/each}
@@ -499,12 +495,12 @@
 			<!-- Notes Card -->
 			<div class="rounded-sm border border-border bg-surface p-5">
 				<h2 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-					Notes & Communication
+					Notes & Instructions
 				</h2>
 				<textarea
 					bind:value={notes}
 					rows="3"
-					placeholder="Instructions de virement, communication ou coordonnées bancaires..."
+					placeholder="Bank transfer instructions, communication or payment terms..."
 					class="w-full rounded-sm border border-border bg-bg p-3 text-xs text-fg focus:border-primary-text focus:outline-none"
 				></textarea>
 			</div>
@@ -514,27 +510,27 @@
 		<div class="space-y-6">
 			<div class="rounded-sm border border-border bg-surface p-5">
 				<h2 class="mb-4 text-xs font-semibold tracking-wide text-fg-accent uppercase">
-					Récapitulatif Financier
+					Financial Summary
 				</h2>
 
 				<div class="space-y-3 text-xs">
 					<div class="flex justify-between text-fg-subdued">
-						<span>Montant Hors Taxes</span>
+						<span>Subtotal (excl. VAT)</span>
 						<span class="font-medium text-fg">{formatDZD(subtotal)}</span>
 					</div>
 					<div class="flex justify-between text-fg-subdued">
-						<span>TVA Totale</span>
+						<span>Total VAT</span>
 						<span class="font-medium text-fg">{formatDZD(tvaAmount)}</span>
 					</div>
 					<div class="border-t border-border pt-3">
 						<div class="flex justify-between text-sm font-bold text-fg-accent">
-							<span>Total TTC</span>
+							<span>Total (inc. VAT)</span>
 							<span class="text-[#4fa9b2]">{formatDZD(total)}</span>
 						</div>
 					</div>
 
 					<div class="border-t border-border pt-3">
-						<span class="text-[11px] text-fg-subdued">Montant en toutes lettres :</span>
+						<span class="text-[11px] text-fg-subdued">In words:</span>
 						<div class="mt-1 font-medium text-fg italic">
 							{totalWords}
 						</div>
@@ -543,21 +539,21 @@
 
 				<div class="mt-6 space-y-3">
 					<div class="flex flex-col gap-1.5">
-						<label for="invStatus" class="text-xs font-semibold text-fg-accent">Statut</label>
+						<label for="invStatus" class="text-xs font-semibold text-fg-accent">Status</label>
 						<select
 							id="invStatus"
 							bind:value={status}
 							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:outline-none"
 						>
-							<option value="draft">Brouillon</option>
-							<option value="sent">Envoyée</option>
-							<option value="paid">Payée</option>
-							<option value="cancelled">Annulée</option>
+							<option value="draft">Draft</option>
+							<option value="sent">Sent</option>
+							<option value="paid">Paid</option>
+							<option value="cancelled">Cancelled</option>
 						</select>
 					</div>
 
 					<Button class="w-full" onclick={handleSave} disabled={isSubmitting}>
-						<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer
+						<i class="fas fa-check mr-1.5 text-xs"></i> Save
 					</Button>
 				</div>
 			</div>
@@ -568,7 +564,7 @@
 <!-- Modal Quick Add Client -->
 <Dialog
 	open={showNewClientModal}
-	title="Ajouter un Client / Entreprise"
+	title="Add Client / Company"
 	onclose={() => (showNewClientModal = false)}
 >
 	<form
@@ -579,26 +575,31 @@
 		class="space-y-3"
 	>
 		<Input
-			label="Nom / Raison Sociale *"
+			label="Name / Company Name *"
 			type="text"
 			bind:value={newClientName}
-			placeholder="ex: NORD SUD INTEGRATION"
+			placeholder="e.g., Acme Corporation"
 			required
 		/>
-		<Input label="Adresse" type="text" bind:value={newClientAddress} placeholder="ex: Mohammadia" />
+		<Input
+			label="Address"
+			type="text"
+			bind:value={newClientAddress}
+			placeholder="e.g., 123 Main Street"
+		/>
 		<div class="grid grid-cols-2 gap-3">
-			<Input label="Ville" type="text" bind:value={newClientCity} placeholder="ex: Alger" />
-			<Input label="Pays" type="text" bind:value={newClientCountry} placeholder="Algérie" />
+			<Input label="City" type="text" bind:value={newClientCity} placeholder="e.g., Algiers" />
+			<Input label="Country" type="text" bind:value={newClientCountry} placeholder="Algeria" />
 		</div>
 		<div class="grid grid-cols-2 gap-3">
-			<Input label="NIF" type="text" bind:value={newClientNif} placeholder="NIF client" />
-			<Input label="NIS" type="text" bind:value={newClientNis} placeholder="NIS client" />
+			<Input label="NIF" type="text" bind:value={newClientNif} placeholder="Client NIF" />
+			<Input label="NIS" type="text" bind:value={newClientNis} placeholder="Client NIS" />
 		</div>
 		<div class="grid grid-cols-2 gap-3">
-			<Input label="RC" type="text" bind:value={newClientRc} placeholder="Registre de Commerce" />
-			<Input label="AI" type="text" bind:value={newClientAi} placeholder="Article d'Imposition" />
+			<Input label="RC" type="text" bind:value={newClientRc} placeholder="Commercial Register" />
+			<Input label="AI" type="text" bind:value={newClientAi} placeholder="Tax Article" />
 		</div>
-		<Input label="Téléphone" type="text" bind:value={newClientPhone} placeholder="+213 ..." />
+		<Input label="Phone" type="text" bind:value={newClientPhone} placeholder="+213 ..." />
 
 		<div class="flex justify-end gap-2 pt-2">
 			<Button
@@ -607,10 +608,10 @@
 				type="button"
 				onclick={() => (showNewClientModal = false)}
 			>
-				Annuler
+				Cancel
 			</Button>
 			<Button size="sm" type="submit" disabled={isCreatingClient}>
-				{isCreatingClient ? 'Création...' : 'Créer le client'}
+				{isCreatingClient ? 'Creating...' : 'Create Client'}
 			</Button>
 		</div>
 	</form>

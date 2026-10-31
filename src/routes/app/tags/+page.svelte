@@ -88,7 +88,7 @@
 <div class="p-4 sm:p-8">
 	<PageHeader title="Tags" subtitle="{tags.length} tags">
 		<Button size="md" onclick={() => (showNew = true)}>
-			<i class="fas fa-plus text-xs"></i> New Tag
+			<i class="fas fa-plus text-xs"></i> Tag
 		</Button>
 	</PageHeader>
 

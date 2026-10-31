@@ -14,16 +14,21 @@
 	let saving = $state(false);
 
 	const iconOptions = [
-		{ value: 'fa-dumbbell', label: 'Training' },
+		{ value: 'fa-folder', label: 'Folder' },
+		{ value: 'fa-briefcase', label: 'Work' },
 		{ value: 'fa-code', label: 'Code' },
+		{ value: 'fa-rocket', label: 'Rocket' },
+		{ value: 'fa-dumbbell', label: 'Training' },
 		{ value: 'fa-graduation-cap', label: 'Learning' },
 		{ value: 'fa-bookmark', label: 'Bookmarks' },
+		{ value: 'fa-lightbulb', label: 'Ideas' },
+		{ value: 'fa-bolt', label: 'Energy' },
+		{ value: 'fa-heart', label: 'Health' },
+		{ value: 'fa-book', label: 'Notes' },
 		{ value: 'fa-gamepad', label: 'Gaming' },
 		{ value: 'fa-wrench', label: 'Tools' },
-		{ value: 'fa-folder', label: 'Folder' },
-		{ value: 'fa-lightbulb', label: 'Ideas' },
-		{ value: 'fa-briefcase', label: 'Work' },
-		{ value: 'fa-heart', label: 'Health' }
+		{ value: 'fa-chart-line', label: 'Stats' },
+		{ value: 'fa-shield-halved', label: 'Security' }
 	];
 
 	async function createCategory() {
@@ -92,23 +97,57 @@
 					placeholder="What will you organize here?"
 				/>
 
-				<div class="flex flex-col gap-1.5">
-					<span class="text-xs font-semibold tracking-wide text-fg-accent" id="icon-label"
-						>Icon</span
+				<div class="flex flex-col gap-2.5">
+					<span class="text-xs font-semibold tracking-wide text-fg-accent" id="icon-label">
+						Workspace Icon
+					</span>
+
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-lg shadow-2xs"
+							style="color: {iconColor || 'var(--color-primary)'}"
+						>
+							{#if icon}
+								<i
+									class={icon.startsWith('fas ') || icon.startsWith('fa-solid ')
+										? icon
+										: `fas ${icon.startsWith('fa-') ? icon : `fa-${icon}`}`}
+								></i>
+							{:else}
+								<i class="fas fa-folder text-fg-subdued/50"></i>
+							{/if}
+						</div>
+
+						<div class="flex-1">
+							<Input
+								name="icon"
+								bind:value={icon}
+								placeholder="e.g. fa-folder, fa-briefcase, fa-code, fa-rocket, fa-bolt"
+							/>
+						</div>
+					</div>
+
+					<p class="text-[11px] text-fg-subdued">
+						Type any FontAwesome icon name or pick from suggested presets:
+					</p>
+
+					<div
+						class="grid grid-cols-5 gap-1.5 sm:grid-cols-5 md:grid-cols-5"
+						role="radiogroup"
+						aria-labelledby="icon-label"
 					>
-					<div class="grid grid-cols-5 gap-1.5" role="radiogroup" aria-labelledby="icon-label">
 						{#each iconOptions as opt (opt.value)}
 							<button
 								type="button"
 								aria-pressed={icon === opt.value}
-								class="flex cursor-pointer flex-col items-center gap-1 rounded-sm border p-2.5 transition-all {icon ===
+								class="flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-2 transition-all {icon ===
 								opt.value
-									? 'border-primary-text bg-primary-subdued text-primary-text'
+									? 'border-primary-text bg-primary-subdued text-primary-text shadow-xs'
 									: 'border-border bg-bg text-fg-subdued hover:border-fg-subdued hover:text-fg'}"
 								onclick={() => (icon = opt.value)}
 							>
-								<i class="fas {opt.value} text-sm"></i>
-								<span class="text-[10px] font-medium">{opt.label}</span>
+								<i class="fas {opt.value} text-xs"></i>
+								<span class="truncate text-[9px] font-medium">{opt.label}</span>
 							</button>
 						{/each}
 					</div>

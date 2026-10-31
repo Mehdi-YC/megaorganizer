@@ -41,20 +41,22 @@
 	}
 </script>
 
-<div class="rounded-sm border border-border bg-surface p-4">
-	<div class="mb-3 flex items-center justify-between">
-		<h3 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+<div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
+	<div class="mb-3.5 flex items-center justify-between">
+		<h3 class="text-xs font-semibold tracking-wider text-fg-subdued uppercase">
 			{monthNames[month]}
 			{year}
 		</h3>
-		<span class="text-[10px] text-fg-subdued">{count} expense{count !== 1 ? 's' : ''}</span>
+		<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-fg-subdued"
+			>{count} expense{count !== 1 ? 's' : ''}</span
+		>
 	</div>
 
-	<div class="space-y-3">
+	<div class="space-y-3.5">
 		<!-- Total spent -->
 		<div>
-			<p class="text-2xl font-semibold text-fg">
-				{total.toLocaleString()} <span class="text-sm font-normal text-fg-subdued">{currency}</span>
+			<p class="text-3xl font-bold tracking-tight text-fg">
+				{total.toLocaleString()} <span class="text-sm font-medium text-fg-subdued">{currency}</span>
 			</p>
 		</div>
 

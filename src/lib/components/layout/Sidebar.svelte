@@ -5,9 +5,9 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import ConfirmButton from '$lib/components/ui/ConfirmButton.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
+	import { themeState } from '$lib/utils/theme.svelte';
 
 	let {
 		categories = [],
@@ -18,7 +18,8 @@
 			finance: true,
 			invoicing: true,
 			training: true,
-			ydk: true
+			ydk: true,
+			mindmap: true
 		},
 		user,
 		onNavigate = () => {}
@@ -29,6 +30,19 @@
 		user?: { name: string; email: string; image?: string | null };
 		onNavigate?: () => void;
 	} = $props();
+
+	let collapsed = $state(
+		typeof localStorage !== 'undefined'
+			? localStorage.getItem('sidebar_collapsed') === 'true'
+			: false
+	);
+
+	function toggleCollapse() {
+		collapsed = !collapsed;
+		if (typeof localStorage !== 'undefined') {
+			localStorage.setItem('sidebar_collapsed', String(collapsed));
+		}
+	}
 
 	let invoicingExpanded = $state(
 		typeof sessionStorage !== 'undefined'
@@ -196,8 +210,16 @@
 	function handleKeydown(e: KeyboardEvent) {
 		if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 			e.preventDefault();
-			searchInput?.focus();
-			searchInput?.select();
+			if (collapsed) {
+				collapsed = false;
+				setTimeout(() => {
+					searchInput?.focus();
+					searchInput?.select();
+				}, 100);
+			} else {
+				searchInput?.focus();
+				searchInput?.select();
+			}
 		}
 		if (e.key === 'Escape') {
 			if (document.activeElement === searchInput) {
@@ -255,6 +277,20 @@
 		return '?';
 	}
 
+	function formatIconClass(icon?: string | null): string {
+		if (!icon) return '';
+		if (
+			icon.startsWith('fa-solid ') ||
+			icon.startsWith('fas ') ||
+			icon.startsWith('far ') ||
+			icon.startsWith('fab ')
+		) {
+			return icon;
+		}
+		const clean = icon.startsWith('fa-') ? icon : `fa-${icon}`;
+		return `fas ${clean}`;
+	}
+
 	async function handleLogout() {
 		const form = document.createElement('form');
 		form.method = 'POST';
@@ -266,506 +302,730 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<aside class="flex h-full w-64 shrink-0 flex-col border-r border-border bg-bg-subdued">
-	<div class="flex h-12 items-center gap-2.5 border-b border-border px-4">
-		<div
-			class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary text-xs font-bold text-white"
-		>
-			M
-		</div>
-		<span class="text-sm font-bold tracking-wide text-fg-accent uppercase">MegaOrganize</span>
-	</div>
-
-	<div class="relative px-3 pt-3 pb-1">
-		<SearchInput
-			bind:value={searchQuery}
-			bind:inputEl={searchInput}
-			placeholder="Search..."
-			onsearch={scheduleSearch}
-		/>
-		{#if searchSearched && searchQuery.trim().length >= 2}
-			<div
-				class="absolute top-full right-3 left-3 z-30 mt-1 max-h-[60vh] overflow-y-auto rounded-sm border border-border bg-surface py-1 shadow-xl"
-			>
-				{#if searchResults.length > 0}
-					{#each searchResults as result (result.url)}
-						<button
-							type="button"
-							class="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
-							onclick={() => navigateSearchResult(result)}
-						>
-							{#if result.imageUrl}
-								<img
-									src={result.imageUrl}
-									alt={result.title}
-									class="h-7 w-7 shrink-0 rounded-sm object-cover"
-								/>
-							{:else}
-								<div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-muted">
-									<i class="fas {result.icon} text-[10px] text-fg-subdued"></i>
-								</div>
-							{/if}
-							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm text-fg">{result.title}</p>
-								<p class="truncate text-[10px] text-fg-subdued">{result.subtitle || result.type}</p>
-							</div>
-						</button>
-					{/each}
-				{:else}
-					<div class="px-4 py-6 text-center">
-						<i class="fas fa-search mb-2 text-xl text-fg-subdued/30"></i>
-						<p class="text-xs text-fg-subdued">No results found</p>
-					</div>
-				{/if}
-			</div>
-		{/if}
-	</div>
-
-	<nav class="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
-		<a
-			href={resolve('/app')}
-			onclick={onNavigate}
-			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-				.url.pathname === '/app'
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-home w-4 text-center text-xs"></i>
-			Dashboard
-		</a>
-
-		<a
-			href={resolve('/app/calendar')}
-			onclick={onNavigate}
-			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-				.url.pathname === '/app/calendar'
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-calendar w-4 text-center text-xs"></i>
-			Calendar
-		</a>
-
-		{#if enabledFeatures.todos !== false}
-			<a
-				href={resolve('/app/todos')}
-				onclick={onNavigate}
-				class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
-					'/app/todos'
-				)
-					? 'bg-primary-subdued font-medium text-primary-text'
-					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-			>
-				<i class="fas fa-check-square w-4 text-center text-xs"></i>
-				Tâches
-			</a>
-		{/if}
-
-		{#if enabledFeatures.finance !== false}
-			<a
-				href={resolve('/app/finance')}
-				onclick={onNavigate}
-				class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-					.url.pathname === '/app/finance'
-					? 'bg-primary-subdued font-medium text-primary-text'
-					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-			>
-				<i class="fas fa-receipt w-4 text-center text-xs"></i>
-				Finance
-			</a>
-		{/if}
-
-		<!-- Facturation (Collapsible Block) -->
-		{#if enabledFeatures.invoicing !== false}
-			<div class="mb-2">
+<aside
+	class="flex h-full flex-col border-r border-sidebar-border bg-sidebar-bg transition-all duration-200 select-none {collapsed
+		? 'w-16'
+		: 'w-64'}"
+>
+	<!-- Top Workspace Header -->
+	<div
+		class="flex h-14 items-center border-b border-sidebar-border {collapsed
+			? 'justify-center px-2'
+			: 'justify-between px-3.5'}"
+	>
+		{#if !collapsed}
+			<div class="flex min-w-0 items-center gap-2.5">
 				<div
-					class="group flex min-h-9 items-center rounded-sm transition-colors {page.url.pathname ===
-					'/app/invoicing'
-						? 'bg-primary-subdued font-medium text-primary-text'
-						: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-xs"
 				>
-					<button
-						type="button"
-						aria-label="Toggle facturation"
-						aria-expanded={invoicingExpanded}
-						class="flex h-9 w-7 shrink-0 cursor-pointer items-center justify-center text-inherit opacity-75 hover:opacity-100"
-						onclick={(e) => {
-							e.stopPropagation();
-							e.preventDefault();
-							toggleInvoicing();
-						}}
-					>
-						<i
-							class="fas fa-chevron-right text-[9px] transition-transform duration-150 {invoicingExpanded
-								? 'rotate-90'
-								: ''}"
-						></i>
-					</button>
-					<a
-						href={resolve('/app/invoicing')}
-						onclick={onNavigate}
-						class="flex flex-1 items-center gap-2 py-1.5 pr-3 text-left text-[13px] text-inherit"
-					>
-						<i class="fas fa-file-invoice w-4 text-center text-xs"></i>
-						<span class="flex-1 truncate">Facturation</span>
-					</a>
+					<i class="fas fa-layer-group text-xs"></i>
 				</div>
-
-				{#if invoicingExpanded}
-					<div class="mt-1 ml-4 space-y-0.5 border-l border-border/50 pl-2">
-						<a
-							href={resolve('/app/invoicing/clients')}
-							onclick={onNavigate}
-							class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
-								.url.pathname === '/app/invoicing/clients'
-								? 'bg-primary-subdued font-medium text-primary-text'
-								: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-						>
-							<i class="fas fa-users w-3.5 text-center text-[10px]"></i>
-							<span class="truncate">Clients</span>
-						</a>
-
-						<a
-							href={resolve('/app/invoicing/products')}
-							onclick={onNavigate}
-							class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
-								.url.pathname === '/app/invoicing/products'
-								? 'bg-primary-subdued font-medium text-primary-text'
-								: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-						>
-							<i class="fas fa-box w-3.5 text-center text-[10px]"></i>
-							<span class="truncate">Services</span>
-						</a>
-
-						<!-- Folders for each Year -->
-						<div class="my-1.5 h-px bg-border/40"></div>
-						<div class="px-2 py-0.5 text-[10px] font-semibold text-fg-subdued uppercase">
-							Dossiers Annuels
-						</div>
-
-						{#each invoiceYears.length > 0 ? invoiceYears : [new Date().getFullYear()] as yr (yr)}
-							{@const isYrExpanded = expandedInvoiceYears.has(yr)}
-							{@const isYrActive = page.url.pathname === `/app/invoicing/year/${yr}`}
-
-							<div class="space-y-0.5">
-								<div class="group flex items-center justify-between rounded-sm pr-1">
-									<button
-										type="button"
-										aria-label="Toggle dossier {yr}"
-										class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
-										onclick={(e) => {
-											e.stopPropagation();
-											e.preventDefault();
-											toggleInvoiceYear(yr);
-										}}
-									>
-										<i
-											class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isYrExpanded
-												? 'rotate-90'
-												: ''}"
-										></i>
-									</button>
-
-									<a
-										href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
-										onclick={onNavigate}
-										class="flex flex-1 items-center gap-1.5 py-1 text-xs transition-colors {isYrActive
-											? 'font-medium text-primary-text'
-											: 'text-fg-subdued hover:text-fg'}"
-									>
-										<i
-											class="fas {isYrExpanded
-												? 'fa-folder-open'
-												: 'fa-folder'} text-[10px] text-primary-text"
-										></i>
-										<span class="truncate">{yr}</span>
-									</a>
-
-									<!-- Export Button for Year Folder -->
-									<button
-										type="button"
-										class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued opacity-70 hover:text-primary-text hover:opacity-100"
-										title="Exporter le dossier {yr} (G12, G12 bis & Factures)"
-										onclick={(e) => exportYearFromSidebar(e, yr)}
-									>
-										<i class="fas fa-file-zipper text-[10px]"></i>
-									</button>
-								</div>
-
-								{#if isYrExpanded}
-									<div class="ml-4 space-y-0.5 border-l border-border/40 pl-2">
-										<a
-											href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
-											onclick={onNavigate}
-											class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
-										>
-											<i class="fas fa-file-shield text-[9px]"></i>
-											<span class="truncate">G12 / G12 bis</span>
-										</a>
-										<a
-											href={resolve('/app/invoicing')}
-											onclick={onNavigate}
-											class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
-										>
-											<i class="fas fa-list text-[9px]"></i>
-											<span class="truncate">Factures {yr}</span>
-										</a>
-									</div>
-								{/if}
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</div>
-		{/if}
-
-		{#if enabledFeatures.training !== false}
-			<a
-				href={resolve('/app/training')}
-				onclick={onNavigate}
-				class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
-					'/app/training'
-				)
-					? 'bg-primary-subdued font-medium text-primary-text'
-					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-			>
-				<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
-				Training
-			</a>
-
-			<div class="my-1 h-px bg-border/50"></div>
-		{/if}
-
-		<!-- Reminders (Single link, collapsible not needed) -->
-		{#if enabledFeatures.reminders !== false}
-			<a
-				href={resolve('/app/reminders')}
-				onclick={onNavigate}
-				class="mt-2 mb-1 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
-					'/app/reminders'
-				)
-					? 'bg-primary-subdued font-medium text-primary-text'
-					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-			>
-				<i class="fas fa-bell w-4 text-center text-xs"></i>
-				Reminders
-			</a>
-
-			<div class="my-1 h-px bg-border/50"></div>
-		{/if}
-
-		<a
-			href={resolve('/app/library')}
-			onclick={onNavigate}
-			class="mt-2 mb-1 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-				.url.pathname === '/app/library'
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-cubes w-4 text-center text-xs"></i>
-			Library
-		</a>
-
-		<a
-			href={resolve('/app/tags')}
-			onclick={onNavigate}
-			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-				.url.pathname === '/app/tags'
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-tags w-4 text-center text-xs"></i>
-			Tags
-		</a>
-
-		<div class="my-1 h-px bg-border/50"></div>
-
-		{#each categories as cat (cat.id)}
-			{@const isActive = isCategoryActive(cat)}
-			{@const isExpanded = expandedCategories.has(cat.id)}
-
-			<div class="flex items-center">
-				<button
-					type="button"
-					aria-label="Toggle category"
-					aria-expanded={isExpanded}
-					class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
-					onclick={(e) => {
-						e.stopPropagation();
-						e.preventDefault();
-						toggleCategory(cat.id);
-					}}
-				>
-					<i
-						class="fas fa-chevron-right text-[9px] transition-transform duration-150 {isExpanded
-							? 'rotate-90'
-							: ''}"
-					></i>
-				</button>
-				<a
-					href={resolve('/app/category/[id]', { id: cat.id })}
-					onclick={onNavigate}
-					class="flex flex-1 items-center gap-2 rounded-sm px-1 py-1 text-left transition-colors {isActive
-						? 'text-fg-accent'
-						: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-				>
-					{#if cat.icon}
-						<i
-							class="fas {cat.icon} w-4 text-center text-xs"
-							style="color: {cat.iconColor || 'var(--color-primary-text)'}"
-						></i>
-					{:else}
-						<i class="fas fa-folder w-4 text-center text-xs text-fg-subdued"></i>
-					{/if}
-					<span class="flex-1 truncate text-[11px] font-bold tracking-wide uppercase"
-						>{cat.name}</span
-					>
-				</a>
-				<button
-					type="button"
-					class="mr-0.5 flex h-7 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
-					title="Add Page"
-					aria-label="Add Page"
-					onclick={(e) => {
-						e.stopPropagation();
-						e.preventDefault();
-						creatingPageFor = creatingPageFor === cat.id ? null : cat.id;
-						newPageName = '';
-					}}
-				>
-					<i class="fas fa-plus text-[9px]"></i>
-				</button>
-				<div class="mr-0.5 flex h-7 w-6 shrink-0 items-center justify-center">
-					<ConfirmButton
-						confirmId={confirmDeleteCatId ?? ''}
-						targetId={cat.id}
-						size="sm"
-						onconfirm={() => {
-							if (confirmDeleteCatId === cat.id) {
-								deleteCategory(cat.id);
-							} else {
-								confirmDeleteCatId = cat.id;
-								setTimeout(() => {
-									if (confirmDeleteCatId === cat.id) confirmDeleteCatId = null;
-								}, 3000);
-							}
-						}}
-					/>
+				<div class="flex min-w-0 items-center gap-1.5">
+					<span class="truncate text-sm font-semibold tracking-tight text-fg">MegaOrganize</span>
+					<i class="fas fa-chevron-down text-[10px] text-fg-subdued/80"></i>
 				</div>
 			</div>
 
-			{#if isExpanded}
-				<div class="mb-1 ml-7">
-					{#if cat.pages && cat.pages.length > 0}
-						{#each cat.pages as pg (pg.id)}
-							<a
-								href={resolve('/app/category/[id]/page/[pageId]', {
-									id: cat.id,
-									pageId: pg.id
-								})}
-								onclick={onNavigate}
-								class="flex min-h-8 items-center gap-2 rounded-sm px-2.5 py-1.5 text-[13px] transition-colors {isPageActive(
-									pg.id
-								)
-									? 'bg-primary-subdued font-medium text-primary-text'
-									: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-							>
-								<i class="fas fa-file w-3 text-center text-[10px]"></i>
-								<span class="truncate">{pg.name}</span>
-							</a>
-						{/each}
-					{:else}
-						<p class="px-2.5 py-1 text-[11px] text-fg-subdued italic">No pages</p>
-					{/if}
+			<!-- Collapse toggle button -->
+			<button
+				type="button"
+				aria-label="Collapse sidebar"
+				title="Collapse sidebar"
+				class="hidden h-7 w-7 cursor-pointer items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg lg:flex"
+				onclick={toggleCollapse}
+			>
+				<i class="fas fa-angles-left text-xs"></i>
+			</button>
+		{:else}
+			<button
+				type="button"
+				aria-label="Expand sidebar"
+				title="Expand sidebar"
+				onclick={toggleCollapse}
+				class="group flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-transform hover:scale-105"
+			>
+				<i class="fas fa-layer-group text-base transition-transform group-hover:scale-110"></i>
+			</button>
+		{/if}
+	</div>
 
-					{#if creatingPageFor === cat.id}
-						<form
-							onsubmit={(e) => {
-								e.preventDefault();
-								createPage(cat.id);
-							}}
-							class="flex items-center gap-1 px-1.5 py-1"
-						>
-							<Input size="sm" bind:value={newPageName} placeholder="Page name" class="flex-1" />
-							<button
-								type="submit"
-								aria-label="Create page"
-								class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm bg-primary text-white hover:bg-primary-hover"
-								><i class="fas fa-check text-[9px]"></i></button
-							>
+	<!-- Quick Search Bar -->
+	{#if !collapsed}
+		<div class="relative px-3 pt-3 pb-1">
+			<SearchInput
+				bind:value={searchQuery}
+				bind:inputEl={searchInput}
+				placeholder="Search..."
+				shortcut="⌘K"
+				onsearch={scheduleSearch}
+			/>
+
+			{#if searchSearched && searchQuery.trim().length >= 2}
+				<div
+					class="absolute top-full right-3 left-3 z-30 mt-1 max-h-[60vh] overflow-y-auto rounded-xl border border-border bg-surface p-1 shadow-2xl"
+				>
+					{#if searchResults.length > 0}
+						{#each searchResults as result (result.url)}
 							<button
 								type="button"
-								aria-label="Cancel"
-								class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg hover:bg-border"
-								onclick={() => {
-									creatingPageFor = null;
-									newPageName = '';
-								}}><i class="fas fa-times text-[9px]"></i></button
+								class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+								onclick={() => navigateSearchResult(result)}
 							>
-						</form>
+								{#if result.imageUrl}
+									<img
+										src={result.imageUrl}
+										alt={result.title}
+										class="h-7 w-7 shrink-0 rounded-md object-cover"
+									/>
+								{:else}
+									<div
+										class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-fg-subdued"
+									>
+										<i class="fas {result.icon} text-xs"></i>
+									</div>
+								{/if}
+								<div class="min-w-0 flex-1">
+									<p class="truncate text-sm font-medium text-fg">{result.title}</p>
+									<p class="truncate text-[10px] text-fg-subdued">
+										{result.subtitle || result.type}
+									</p>
+								</div>
+							</button>
+						{/each}
+					{:else}
+						<div class="px-4 py-6 text-center">
+							<i class="fas fa-search mb-2 text-xl text-fg-subdued/30"></i>
+							<p class="text-xs text-fg-subdued">No results found</p>
+						</div>
 					{/if}
 				</div>
 			{/if}
-
-			<div class="my-1 h-px bg-border/50"></div>
-		{/each}
-
-		<div class="mt-2 px-2">
-			<a
-				href={resolve('/app/category/new')}
-				onclick={onNavigate}
-				class="flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
-			>
-				<i class="fas fa-plus w-4 text-center text-xs"></i>
-				Add Category
-			</a>
 		</div>
-	</nav>
-
-	<div class="relative border-t border-border p-3">
-		<button
-			type="button"
-			class="flex w-full cursor-pointer items-center gap-2.5 rounded-sm px-2 py-1.5 transition-colors hover:bg-muted"
-			onclick={() => (showUserMenu = !showUserMenu)}
-		>
-			<div
-				class="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white"
+	{:else}
+		<div class="flex justify-center pt-3 pb-1">
+			<button
+				type="button"
+				aria-label="Search"
+				title="Search (⌘K)"
+				class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+				onclick={() => {
+					collapsed = false;
+					setTimeout(() => {
+						searchInput?.focus();
+					}, 100);
+				}}
 			>
-				{getUserInitial()}
-			</div>
-			<div class="flex-1 truncate text-left text-xs text-fg">{user?.name || 'User'}</div>
-			<i class="fas fa-ellipsis-vertical text-[10px] text-fg-subdued"></i>
-		</button>
+				<i class="fas fa-search text-base"></i>
+			</button>
+		</div>
+	{/if}
 
-		{#if showUserMenu}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div
-				class="absolute right-3 bottom-full left-3 mb-1 rounded-sm border border-border bg-surface shadow-lg"
-				onclick={(e) => e.stopPropagation()}
-			>
-				<div class="border-b border-border px-3 py-2">
-					<p class="truncate text-xs font-medium text-fg">{user?.name}</p>
-					<p class="truncate text-[10px] text-fg-subdued">{user?.email}</p>
+	<!-- Navigation Menu -->
+	<nav class="no-scrollbar flex-1 space-y-4 overflow-y-auto px-2 py-2">
+		<!-- Section: CORE -->
+		<div class="space-y-0.5">
+			{#if !collapsed}
+				<div
+					class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase"
+				>
+					Main
 				</div>
-				<div class="py-1">
+			{/if}
+
+			<a
+				href={resolve('/app')}
+				onclick={onNavigate}
+				title="Dashboard"
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app'
+					? 'bg-muted font-semibold text-fg'
+					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+			>
+				<i class="fas fa-chart-pie {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
+				{#if !collapsed}<span>Dashboard</span>{/if}
+			</a>
+
+			{#if enabledFeatures.todos !== false}
+				<a
+					href={resolve('/app/todos')}
+					onclick={onNavigate}
+					title="Tasks"
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname.startsWith('/app/todos')
+						? 'bg-muted font-semibold text-fg'
+						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+				>
+					<i class="fas fa-check-square {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
+					{#if !collapsed}<span>Tasks</span>{/if}
+				</a>
+			{/if}
+
+			<a
+				href={resolve('/app/calendar')}
+				onclick={onNavigate}
+				title="Calendar"
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/calendar'
+					? 'bg-muted font-semibold text-fg'
+					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+			>
+				<i class="fas fa-calendar-days {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
+				{#if !collapsed}<span>Calendar</span>{/if}
+			</a>
+
+			{#if enabledFeatures.reminders !== false}
+				<a
+					href={resolve('/app/reminders')}
+					onclick={onNavigate}
+					title="Reminders"
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname.startsWith('/app/reminders')
+						? 'bg-muted font-semibold text-fg'
+						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+				>
+					<i class="fas fa-bell {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
+					{#if !collapsed}<span>Reminders</span>{/if}
+				</a>
+			{/if}
+
+			{#if collapsed}
+				{#if enabledFeatures.finance !== false}
 					<a
-						href={resolve('/app/settings/profile')}
-						onclick={() => {
-							showUserMenu = false;
-							onNavigate();
-						}}
-						class="flex items-center gap-2 px-3 py-2 text-xs text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+						href={resolve('/app/finance')}
+						onclick={onNavigate}
+						title="Expenses"
+						class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-xs font-medium transition-colors {page
+							.url.pathname === '/app/finance'
+							? 'bg-muted font-semibold text-fg'
+							: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 					>
-						<i class="fas fa-user-pen w-4 text-center text-[10px]"></i>
-						Edit Profile
+						<i class="fas fa-wallet text-base"></i>
 					</a>
-					<Button variant="ghost" size="sm" class="w-full justify-start" onclick={handleLogout}>
-						<i class="fas fa-right-from-bracket w-4 text-center text-[10px]"></i>
-						Logout
-					</Button>
+				{/if}
+				{#if enabledFeatures.invoicing !== false}
+					<a
+						href={resolve('/app/invoicing')}
+						onclick={onNavigate}
+						title="Invoicing"
+						class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-xs font-medium transition-colors {page.url.pathname.startsWith(
+							'/app/invoicing'
+						)
+							? 'bg-muted font-semibold text-fg'
+							: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+					>
+						<i class="fas fa-file-invoice-dollar text-base"></i>
+					</a>
+				{/if}
+			{/if}
+		</div>
+
+		<!-- Section: FINANCE & FACTURATION -->
+		{#if (enabledFeatures.finance !== false || enabledFeatures.invoicing !== false) && !collapsed}
+			<div class="space-y-0.5">
+				<div
+					class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase"
+				>
+					Finance
 				</div>
+
+				{#if enabledFeatures.finance !== false}
+					<a
+						href={resolve('/app/finance')}
+						onclick={onNavigate}
+						class="flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-xs font-medium transition-colors {page
+							.url.pathname === '/app/finance'
+							? 'bg-muted font-semibold text-fg'
+							: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+					>
+						<i class="fas fa-wallet w-4 text-center text-xs"></i>
+						<span>Expenses</span>
+					</a>
+				{/if}
+
+				{#if enabledFeatures.invoicing !== false}
+					<div class="space-y-0.5">
+						<div
+							class="flex h-8 items-center justify-between rounded-lg px-2.5 text-xs font-medium transition-colors {page
+								.url.pathname === '/app/invoicing'
+								? 'bg-muted font-semibold text-fg'
+								: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+						>
+							<a
+								href={resolve('/app/invoicing')}
+								onclick={onNavigate}
+								class="flex flex-1 items-center gap-2.5"
+							>
+								<i class="fas fa-file-invoice-dollar w-4 text-center text-xs"></i>
+								<span>Invoicing</span>
+							</a>
+							<button
+								type="button"
+								aria-label="Toggle invoicing"
+								class="flex h-6 w-6 items-center justify-center rounded text-fg-subdued hover:text-fg"
+								onclick={(e) => {
+									e.stopPropagation();
+									toggleInvoicing();
+								}}
+							>
+								<i
+									class="fas fa-chevron-right text-[9px] transition-transform duration-150 {invoicingExpanded
+										? 'rotate-90'
+										: ''}"
+								></i>
+							</button>
+						</div>
+
+						{#if invoicingExpanded}
+							<div class="ml-4 space-y-0.5 border-l border-border/60 pl-2">
+								<a
+									href={resolve('/app/invoicing/clients')}
+									onclick={onNavigate}
+									class="flex h-7 items-center gap-2 rounded-md px-2 text-xs transition-colors {page
+										.url.pathname === '/app/invoicing/clients'
+										? 'bg-muted font-medium text-fg'
+										: 'text-fg-subdued hover:text-fg'}"
+								>
+									<i class="fas fa-users w-3.5 text-center text-[10px]"></i>
+									<span>Clients</span>
+								</a>
+
+								<a
+									href={resolve('/app/invoicing/products')}
+									onclick={onNavigate}
+									class="flex h-7 items-center gap-2 rounded-md px-2 text-xs transition-colors {page
+										.url.pathname === '/app/invoicing/products'
+										? 'bg-muted font-medium text-fg'
+										: 'text-fg-subdued hover:text-fg'}"
+								>
+									<i class="fas fa-cubes-stacked w-3.5 text-center text-[10px]"></i>
+									<span>Products & Rates</span>
+								</a>
+
+								{#each invoiceYears.length > 0 ? invoiceYears : [new Date().getFullYear()] as yr (yr)}
+									{@const isYrExpanded = expandedInvoiceYears.has(yr)}
+									{@const isYrActive = page.url.pathname === `/app/invoicing/year/${yr}`}
+
+									<div class="space-y-0.5">
+										<div class="flex items-center justify-between rounded-md pr-1">
+											<button
+												type="button"
+												aria-label="Toggle dossier {yr}"
+												class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
+												onclick={(e) => {
+													e.stopPropagation();
+													toggleInvoiceYear(yr);
+												}}
+											>
+												<i
+													class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isYrExpanded
+														? 'rotate-90'
+														: ''}"
+												></i>
+											</button>
+											<a
+												href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
+												onclick={onNavigate}
+												class="flex flex-1 items-center gap-1.5 py-1 text-xs transition-colors {isYrActive
+													? 'font-semibold text-fg'
+													: 'text-fg-subdued hover:text-fg'}"
+											>
+												<i class="fas fa-folder text-[10px] text-primary-text"></i>
+												<span>{yr}</span>
+											</a>
+											<button
+												type="button"
+												class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued hover:text-primary-text"
+												title="Export year zip"
+												onclick={(e) => exportYearFromSidebar(e, yr)}
+											>
+												<i class="fas fa-file-zipper text-[10px]"></i>
+											</button>
+										</div>
+
+										{#if isYrExpanded}
+											<div class="ml-3 space-y-0.5 border-l border-border/40 pl-2">
+												<a
+													href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
+													onclick={onNavigate}
+													class="flex h-6 items-center gap-1.5 text-[11px] text-fg-subdued hover:text-fg"
+												>
+													<i class="fas fa-file-shield text-[9px]"></i>
+													<span>G12 / G12 bis</span>
+												</a>
+											</div>
+										{/if}
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
 			</div>
 		{/if}
+
+		<!-- Section: CATEGORIES & PAGES (Workspaces) -->
+		{#if !collapsed}
+			<div class="space-y-0.5">
+				<div class="flex items-center justify-between px-2.5 py-1">
+					<span class="text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase">
+						Workspaces
+					</span>
+					<a
+						href={resolve('/app/category/new')}
+						onclick={onNavigate}
+						title="New Category"
+						class="flex h-4 w-4 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
+					>
+						<i class="fas fa-plus text-[9px]"></i>
+					</a>
+				</div>
+
+				{#each categories as cat (cat.id)}
+					{@const isActive = isCategoryActive(cat)}
+					{@const isExpanded = expandedCategories.has(cat.id)}
+
+					<div class="space-y-0.5">
+						<div
+							class="group flex h-8 items-center justify-between rounded-lg px-2 text-xs font-medium transition-colors {isActive
+								? 'bg-muted font-semibold text-fg'
+								: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+						>
+							<button
+								type="button"
+								aria-label="Toggle category"
+								class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
+								onclick={(e) => {
+									e.stopPropagation();
+									toggleCategory(cat.id);
+								}}
+							>
+								<i
+									class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isExpanded
+										? 'rotate-90'
+										: ''}"
+								></i>
+							</button>
+
+							<a
+								href={resolve('/app/category/[id]', { id: cat.id })}
+								onclick={onNavigate}
+								class="flex flex-1 items-center gap-2 truncate py-1 text-inherit"
+							>
+								{#if cat.icon}
+									<i
+										class="{formatIconClass(cat.icon)} w-3.5 shrink-0 text-center text-xs"
+										style="color: {cat.iconColor || cat.accentColor || 'var(--color-primary-text)'}"
+									></i>
+								{:else}
+									<span
+										class="h-2 w-2 shrink-0 rounded-xs"
+										style="background-color: {cat.iconColor ||
+											cat.accentColor ||
+											'var(--color-primary)'}"
+									></span>
+								{/if}
+								<span class="truncate">{cat.name}</span>
+							</a>
+
+							<div
+								class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+							>
+								<button
+									type="button"
+									class="flex h-6 w-6 items-center justify-center rounded text-fg-subdued hover:text-fg"
+									title="Add Page"
+									onclick={(e) => {
+										e.stopPropagation();
+										creatingPageFor = creatingPageFor === cat.id ? null : cat.id;
+										newPageName = '';
+									}}
+								>
+									<i class="fas fa-plus text-[9px]"></i>
+								</button>
+								<ConfirmButton
+									confirmId={confirmDeleteCatId ?? ''}
+									targetId={cat.id}
+									size="sm"
+									onconfirm={() => {
+										if (confirmDeleteCatId === cat.id) {
+											deleteCategory(cat.id);
+										} else {
+											confirmDeleteCatId = cat.id;
+											setTimeout(() => {
+												if (confirmDeleteCatId === cat.id) confirmDeleteCatId = null;
+											}, 3000);
+										}
+									}}
+								/>
+							</div>
+						</div>
+
+						{#if isExpanded}
+							<div class="ml-4 space-y-0.5 border-l border-border/50 pl-2">
+								{#if cat.pages && cat.pages.length > 0}
+									{#each cat.pages as pg (pg.id)}
+										<a
+											href={resolve('/app/category/[id]/page/[pageId]', {
+												id: cat.id,
+												pageId: pg.id
+											})}
+											onclick={onNavigate}
+											class="flex h-7 items-center gap-2 rounded-md px-2 text-xs transition-colors {isPageActive(
+												pg.id
+											)
+												? 'bg-muted font-medium text-fg'
+												: 'text-fg-subdued hover:text-fg'}"
+										>
+											<i class="fas fa-file-lines text-[10px] text-fg-subdued"></i>
+											<span class="truncate">{pg.name}</span>
+										</a>
+									{/each}
+								{:else}
+									<p class="px-2 py-1 text-[11px] text-fg-subdued italic">Empty workspace</p>
+								{/if}
+
+								{#if creatingPageFor === cat.id}
+									<form
+										onsubmit={(e) => {
+											e.preventDefault();
+											createPage(cat.id);
+										}}
+										class="flex items-center gap-1 py-1"
+									>
+										<Input
+											size="sm"
+											bind:value={newPageName}
+											placeholder="Page name"
+											class="flex-1"
+										/>
+										<button
+											type="submit"
+											aria-label="Create page"
+											class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md bg-primary text-white"
+										>
+											<i class="fas fa-check text-[9px]"></i>
+										</button>
+										<button
+											type="button"
+											aria-label="Cancel"
+											class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md bg-muted text-fg"
+											onclick={() => {
+												creatingPageFor = null;
+												newPageName = '';
+											}}
+										>
+											<i class="fas fa-times text-[9px]"></i>
+										</button>
+									</form>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Section: MORE MODULES -->
+		<div class="space-y-0.5">
+			{#if !collapsed}
+				<div
+					class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase"
+				>
+					Modules
+				</div>
+			{/if}
+
+			<a
+				href={resolve('/app/library')}
+				onclick={onNavigate}
+				title="Library"
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/library'
+					? 'bg-muted font-semibold text-fg'
+					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+			>
+				<i class="fas fa-book-open {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
+				{#if !collapsed}<span>Library</span>{/if}
+			</a>
+
+			{#if enabledFeatures.mindmap !== false}
+				<a
+					href={resolve('/app/mindmap')}
+					onclick={onNavigate}
+					title="Mindmap"
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/mindmap'
+						? 'bg-muted font-semibold text-fg'
+						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+				>
+					<i class="fas fa-network-wired {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
+					{#if !collapsed}<span>Mindmap</span>{/if}
+				</a>
+			{/if}
+
+			{#if enabledFeatures.training !== false}
+				<a
+					href={resolve('/app/training')}
+					onclick={onNavigate}
+					title="Training"
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname.startsWith('/app/training')
+						? 'bg-muted font-semibold text-fg'
+						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+				>
+					<i class="fas fa-person-running {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"
+					></i>
+					{#if !collapsed}<span>Training</span>{/if}
+				</a>
+			{/if}
+
+			<a
+				href={resolve('/app/tags')}
+				onclick={onNavigate}
+				title="Tags"
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/tags'
+					? 'bg-muted font-semibold text-fg'
+					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+			>
+				<i class="fas fa-tag {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
+				{#if !collapsed}<span>Tags</span>{/if}
+			</a>
+		</div>
+
+		{#if collapsed && categories.length > 0}
+			<div class="space-y-1.5 border-t border-border/40 pt-2.5">
+				{#each categories as cat (cat.id)}
+					<a
+						href={resolve('/app/category/[id]', { id: cat.id })}
+						onclick={onNavigate}
+						title={cat.name}
+						class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-xs transition-colors {isCategoryActive(
+							cat
+						)
+							? 'bg-muted text-fg'
+							: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+					>
+						{#if cat.icon}
+							<i
+								class="{formatIconClass(cat.icon)} text-sm"
+								style="color: {cat.iconColor || cat.accentColor || 'var(--color-primary-text)'}"
+							></i>
+						{:else}
+							<span
+								class="h-3 w-3 rounded-xs"
+								style="background-color: {cat.iconColor ||
+									cat.accentColor ||
+									cat.color ||
+									'var(--color-primary)'}"
+							></span>
+						{/if}
+					</a>
+				{/each}
+			</div>
+		{/if}
+	</nav>
+
+	<!-- Footer: Theme Switcher & User Profile -->
+	<div class="space-y-1 border-t border-sidebar-border p-2">
+		<!-- Quick theme toggle pill -->
+		{#if !collapsed}
+			<button
+				type="button"
+				class="flex h-8 w-full cursor-pointer items-center justify-between rounded-lg px-2.5 text-xs text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+				onclick={() => themeState.toggle()}
+			>
+				<div class="flex items-center gap-2">
+					<i class="fas {themeState.resolved === 'dark' ? 'fa-moon' : 'fa-sun'} text-xs"></i>
+					<span>{themeState.resolved === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+				</div>
+				<span
+					class="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-fg-subdued capitalize"
+				>
+					{themeState.theme}
+				</span>
+			</button>
+		{:else}
+			<button
+				type="button"
+				title="Toggle Theme"
+				aria-label="Toggle Theme"
+				class="mx-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+				onclick={() => themeState.toggle()}
+			>
+				<i class="fas {themeState.resolved === 'dark' ? 'fa-moon' : 'fa-sun'} text-base"></i>
+			</button>
+		{/if}
+
+		<!-- User row -->
+		<div class="relative">
+			<button
+				type="button"
+				class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg p-1.5 transition-colors hover:bg-muted {collapsed
+					? 'justify-center p-0'
+					: ''}"
+				onclick={() => (showUserMenu = !showUserMenu)}
+			>
+				<div
+					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white shadow-xs"
+				>
+					{getUserInitial()}
+				</div>
+				{#if !collapsed}
+					<div class="min-w-0 flex-1 text-left">
+						<p class="truncate text-xs leading-tight font-semibold text-fg">
+							{user?.name || 'User'}
+						</p>
+						<p class="truncate text-[10px] leading-tight text-fg-subdued">{user?.email || ''}</p>
+					</div>
+					<i class="fas fa-ellipsis text-xs text-fg-subdued"></i>
+				{/if}
+			</button>
+
+			{#if showUserMenu}
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="absolute {collapsed
+						? 'bottom-0 left-full ml-2 w-52'
+						: 'right-0 bottom-full left-0 mb-1'} z-50 rounded-xl border border-border bg-surface p-1 shadow-xl"
+					onclick={(e) => e.stopPropagation()}
+				>
+					<div class="border-b border-border/70 px-3 py-2">
+						<p class="truncate text-xs font-semibold text-fg">{user?.name}</p>
+						<p class="truncate text-[10px] text-fg-subdued">{user?.email}</p>
+					</div>
+					<div class="py-1">
+						<a
+							href={resolve('/app/settings/profile')}
+							onclick={() => {
+								showUserMenu = false;
+								onNavigate();
+							}}
+							class="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-fg transition-colors hover:bg-muted"
+						>
+							<i class="fas fa-gear text-xs text-fg-subdued"></i>
+							Settings & Profile
+						</a>
+						<button
+							type="button"
+							class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-error transition-colors hover:bg-error/10"
+							onclick={handleLogout}
+						>
+							<i class="fas fa-right-from-bracket text-xs"></i>
+							Logout
+						</button>
+					</div>
+				</div>
+			{/if}
+		</div>
 	</div>
 </aside>

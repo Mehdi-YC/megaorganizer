@@ -81,7 +81,7 @@
 
 	async function handleSubmit() {
 		if (!formName.trim()) {
-			showToast('Le nom du client est obligatoire', 'error');
+			showToast('Client name is required', 'error');
 			return;
 		}
 
@@ -110,14 +110,14 @@
 
 			if (!res.ok) {
 				const err = await res.json();
-				throw new Error(err.error || 'Erreur lors de la sauvegarde');
+				throw new Error(err.error || 'Failed to save client');
 			}
 
-			showToast(isEdit ? 'Client mis à jour' : 'Client créé', 'success');
+			showToast(isEdit ? 'Client updated' : 'Client created', 'success');
 			showModal = false;
 			await invalidateAll();
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Échec de la sauvegarde';
+			const msg = e instanceof Error ? e.message : 'Failed to save client';
 			showToast(msg, 'error');
 		} finally {
 			isSaving = false;
@@ -131,35 +131,35 @@
 			});
 			if (!res.ok) {
 				const err = await res.json();
-				throw new Error(err.error || 'Impossible de supprimer');
+				throw new Error(err.error || 'Failed to delete client');
 			}
-			showToast('Client supprimé', 'success');
+			showToast('Client deleted', 'success');
 			confirmDeleteId = null;
 			await invalidateAll();
 		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Échec de suppression';
+			const msg = e instanceof Error ? e.message : 'Failed to delete client';
 			showToast(msg, 'error');
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Clients & Entreprises - MegaOrganize</title>
+	<title>Clients & Companies - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
+<div class="px-3.5 py-4 sm:p-6 lg:p-8">
 	<div class="mb-6">
 		<a
 			href={resolve('/app/invoicing')}
 			class="text-xs text-fg-subdued transition-colors hover:text-fg"
 		>
-			<i class="fas fa-arrow-left mr-1"></i> Retour à la facturation
+			<i class="fas fa-arrow-left mr-1"></i> Back to invoicing
 		</a>
 	</div>
 
 	<PageHeader
-		title="Clients & Entreprises"
-		subtitle="Répertoire de vos clients et informations fiscales réutilisables"
+		title="Clients & Companies"
+		subtitle="Directory of client profiles and tax identifiers for quick invoicing"
 		descriptionOnHover
 	>
 		<Button size="sm" onclick={openCreateModal}>
@@ -176,7 +176,7 @@
 			<input
 				type="search"
 				bind:value={searchQuery}
-				placeholder="Rechercher par nom, ville, NIF..."
+				placeholder="Search by name, city, NIF..."
 				class="h-8 w-full rounded-sm border border-border-strong bg-bg pr-3 pl-8 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 			/>
 		</div>
@@ -190,9 +190,9 @@
 			<table class="w-full min-w-[650px] border-collapse text-left text-xs">
 				<thead>
 					<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
-						<th class="px-4 py-2.5 font-semibold">Nom / Entreprise</th>
-						<th class="px-4 py-2.5 font-semibold">Localisation</th>
-						<th class="px-4 py-2.5 font-semibold">Identifiants Fiscaux</th>
+						<th class="px-4 py-2.5 font-semibold">Name / Company</th>
+						<th class="px-4 py-2.5 font-semibold">Location</th>
+						<th class="px-4 py-2.5 font-semibold">Tax IDs</th>
 						<th class="px-4 py-2.5 font-semibold">Contact</th>
 						<th class="px-4 py-2.5 text-right font-semibold">Actions</th>
 					</tr>
@@ -205,17 +205,17 @@
 							</td>
 							<td class="px-4 py-3 text-fg-subdued">
 								{#if c.city}{c.city},
-								{/if}{c.country || 'Algérie'}
+								{/if}{c.country || 'Algeria'}
 								{#if c.address}
 									<div class="text-[11px] text-fg-subdued/80">{c.address}</div>
 								{/if}
 							</td>
 							<td class="px-4 py-3 text-fg-subdued">
 								{#if c.nif}<div>NIF: <span class="text-fg">{c.nif}</span></div>{/if}
-								{#if c.nTva}<div>N° TVA: <span class="text-fg">{c.nTva}</span></div>{/if}
+								{#if c.nTva}<div>VAT: <span class="text-fg">{c.nTva}</span></div>{/if}
 								{#if c.rc}<div>RC: <span class="text-fg">{c.rc}</span></div>{/if}
 								{#if !c.nif && !c.nTva && !c.rc}
-									<span class="text-[11px] text-fg-subdued/60 italic">Non renseigné</span>
+									<span class="text-[11px] text-fg-subdued/60 italic">Not set</span>
 								{/if}
 							</td>
 							<td class="px-4 py-3 text-fg-subdued">
@@ -230,7 +230,7 @@
 									<button
 										type="button"
 										class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
-										title="Modifier"
+										title="Edit"
 										onclick={() => openEditModal(c)}
 									>
 										<i class="fas fa-pencil text-xs"></i>
@@ -260,11 +260,11 @@
 	{:else}
 		<EmptyState
 			icon="fa-building"
-			message="Aucun client enregistré"
-			submessage="Ajoutez vos clients et entreprises partenaires pour les sélectionner rapidement lors de la facturation."
+			message="No clients registered"
+			submessage="Add your clients and business partners to quickly select them when creating invoices."
 		>
 			<Button size="sm" onclick={openCreateModal}>
-				<i class="fas fa-plus mr-1.5 text-xs"></i> Ajouter un client
+				<i class="fas fa-plus mr-1.5 text-xs"></i> Add Client
 			</Button>
 		</EmptyState>
 	{/if}
@@ -273,7 +273,7 @@
 <!-- Modal Create / Edit Client -->
 <Dialog
 	open={showModal}
-	title={editingClient ? 'Modifier le Client' : 'Nouveau Client'}
+	title={editingClient ? 'Edit Client' : 'New Client'}
 	onclose={() => (showModal = false)}
 >
 	<form
@@ -284,27 +284,37 @@
 		class="space-y-3"
 	>
 		<Input
-			label="Nom / Raison Sociale *"
+			label="Name / Company Name *"
 			type="text"
 			bind:value={formName}
-			placeholder="ex: NORD SUD INTEGRATION"
+			placeholder="e.g., Acme Corporation"
 			required
 		/>
 
-		<Input label="Adresse" type="text" bind:value={formAddress} placeholder="ex: Mohammadia" />
+		<Input
+			label="Address"
+			type="text"
+			bind:value={formAddress}
+			placeholder="e.g., 123 Main Street"
+		/>
 
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-			<Input label="Ville" type="text" bind:value={formCity} placeholder="ex: Alger" />
-			<Input label="Wilaya" type="text" bind:value={formWilaya} placeholder="ex: Alger (16)" />
+			<Input label="City" type="text" bind:value={formCity} placeholder="e.g., Algiers" />
+			<Input
+				label="State / Region"
+				type="text"
+				bind:value={formWilaya}
+				placeholder="e.g., Algiers (16)"
+			/>
 		</div>
 
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-			<Input label="Pays" type="text" bind:value={formCountry} placeholder="Algérie" />
+			<Input label="Country" type="text" bind:value={formCountry} placeholder="Algeria" />
 			<Input
-				label="NIF (Identifiant Fiscal)"
+				label="NIF (Tax ID)"
 				type="text"
 				bind:value={formNif}
-				placeholder="ex: 000616097210737"
+				placeholder="e.g., 000616097210737"
 			/>
 		</div>
 
@@ -315,16 +325,16 @@
 		</div>
 
 		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-			<Input label="Téléphone" type="text" bind:value={formPhone} placeholder="+213 ..." />
+			<Input label="Phone" type="text" bind:value={formPhone} placeholder="+213 ..." />
 			<Input label="Email" type="email" bind:value={formEmail} placeholder="contact@..." />
 		</div>
 
 		<div class="flex justify-end gap-2 pt-3">
 			<Button variant="secondary" size="sm" type="button" onclick={() => (showModal = false)}>
-				Annuler
+				Cancel
 			</Button>
 			<Button size="sm" type="submit" disabled={isSaving}>
-				{isSaving ? 'Enregistrement...' : editingClient ? 'Mettre à jour' : 'Créer'}
+				{isSaving ? 'Saving...' : editingClient ? 'Update' : 'Create'}
 			</Button>
 		</div>
 	</form>

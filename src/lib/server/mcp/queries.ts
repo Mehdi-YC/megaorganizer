@@ -1118,3 +1118,111 @@ export async function timeline(userId: string, args: DateRangeArgs & { limit?: n
 		entries: entries.slice(0, limit)
 	};
 }
+
+// ─── Invoicing Queries (Clients, Products, Invoices) ─────────────────────────
+
+export async function listClients(userId: string) {
+	const clients = await import('$lib/server/services/invoice.service').then((m) =>
+		m.getClients(userId)
+	);
+	return {
+		count: clients.length,
+		clients: clients.map((c) => ({
+			id: c.id,
+			name: c.name,
+			city: c.city ?? undefined,
+			country: c.country ?? undefined,
+			nif: c.nif ?? undefined,
+			nis: c.nis ?? undefined,
+			rc: c.rc ?? undefined,
+			ai: c.ai ?? undefined,
+			phone: c.phone ?? undefined,
+			email: c.email ?? undefined
+		}))
+	};
+}
+
+export async function getClient(userId: string, clientId: string) {
+	const client = await import('$lib/server/services/invoice.service').then((m) =>
+		m.getClient(userId, clientId)
+	);
+	if (!client) throw new ToolInputError(`No client found with id "${clientId}".`);
+	return { client };
+}
+
+export async function listProducts(userId: string) {
+	const products = await import('$lib/server/services/invoice.service').then((m) =>
+		m.getProducts(userId)
+	);
+	return {
+		count: products.length,
+		products: products.map((p) => ({
+			id: p.id,
+			name: p.name,
+			description: p.description ?? undefined,
+			unitPrice: p.unitPrice,
+			unit: p.unit,
+			tvaRate: p.tvaRate
+		}))
+	};
+}
+
+export async function getProduct(userId: string, productId: string) {
+	const product = await import('$lib/server/services/invoice.service').then((m) =>
+		m.getProduct(userId, productId)
+	);
+	if (!product) throw new ToolInputError(`No product found with id "${productId}".`);
+	return { product };
+}
+
+export async function listInvoices(
+	userId: string,
+	args?: {
+		year?: number;
+		status?: 'draft' | 'sent' | 'paid' | 'cancelled';
+		clientId?: string;
+		limit?: number;
+	}
+) {
+	const allInvoices = await import('$lib/server/services/invoice.service').then((m) =>
+		m.getInvoices(userId)
+	);
+	let filtered = allInvoices;
+	if (args?.year !== undefined) {
+		filtered = filtered.filter((inv) => inv.year === args.year);
+	}
+	if (args?.status !== undefined) {
+		filtered = filtered.filter((inv) => inv.status === args.status);
+	}
+	if (args?.clientId !== undefined) {
+		filtered = filtered.filter((inv) => inv.clientId === args.clientId);
+	}
+	const limit = Math.min(Math.max(args?.limit ?? 50, 1), 100);
+	const results = filtered.slice(0, limit);
+
+	return {
+		count: results.length,
+		totalMatched: filtered.length,
+		invoices: results.map((inv) => ({
+			id: inv.id,
+			invoiceNumber: inv.invoiceNumber,
+			client: { id: inv.client.id, name: inv.client.name },
+			date:
+				inv.invoiceDate instanceof Date ? inv.invoiceDate.toISOString() : String(inv.invoiceDate),
+			dueDate: inv.dueDate instanceof Date ? inv.dueDate.toISOString() : String(inv.dueDate),
+			status: inv.status,
+			subtotal: inv.subtotal,
+			tvaAmount: inv.tvaAmount,
+			total: inv.total,
+			lineCount: inv.lines?.length ?? 0
+		}))
+	};
+}
+
+export async function getInvoice(userId: string, invoiceId: string) {
+	const inv = await import('$lib/server/services/invoice.service').then((m) =>
+		m.getInvoice(userId, invoiceId)
+	);
+	if (!inv) throw new ToolInputError(`No invoice found with id "${invoiceId}".`);
+	return { invoice: inv };
+}

@@ -124,7 +124,7 @@
 	});
 </script>
 
-<div class="rounded-sm border border-border bg-surface">
+<div class="rounded-xl border border-border bg-surface shadow-xs">
 	<div class="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5">
 		<div class="flex items-center gap-2">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Deck Viewer</h2>

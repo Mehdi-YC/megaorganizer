@@ -17,7 +17,7 @@
 </script>
 
 {#if src}
-	<div class="{height} w-full overflow-hidden rounded-sm">
+	<div class="{height} w-full overflow-hidden">
 		{#if small}
 			<div class="relative h-full w-full">
 				<img
@@ -32,7 +32,7 @@
 		{/if}
 	</div>
 {:else}
-	<div class="flex {height} w-full items-center justify-center rounded-sm bg-muted">
+	<div class="flex {height} w-full items-center justify-center bg-muted">
 		<i class="fas {icon} text-xs text-fg-subdued"></i>
 	</div>
 {/if}

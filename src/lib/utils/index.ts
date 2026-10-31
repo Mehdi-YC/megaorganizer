@@ -137,3 +137,30 @@ export function formatPace(secondsPerKm: number | null | undefined): string {
 export function toggleArrayItem(arr: string[], id: string): string[] {
 	return arr.includes(id) ? arr.filter((x) => x !== id) : [...arr, id];
 }
+
+export function getContrastTextColor(hexColor?: string | null): string {
+	if (!hexColor || typeof hexColor !== 'string') return '#ffffff';
+	const clean = hexColor.trim().replace(/^#/, '');
+	if (clean.length !== 3 && clean.length !== 6 && clean.length !== 8) return '#ffffff';
+	const r = parseInt(clean.length === 3 ? clean[0] + clean[0] : clean.slice(0, 2), 16);
+	const g = parseInt(clean.length === 3 ? clean[1] + clean[1] : clean.slice(2, 4), 16);
+	const b = parseInt(clean.length === 3 ? clean[2] + clean[2] : clean.slice(4, 6), 16);
+	if (isNaN(r) || isNaN(g) || isNaN(b)) return '#ffffff';
+	const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+	return yiq >= 160 ? '#111827' : '#ffffff';
+}
+
+export function formatIconClass(icon?: string | null): string {
+	if (!icon || !icon.trim()) return 'fas fa-folder';
+	const trimmed = icon.trim();
+	if (
+		trimmed.startsWith('fa-solid ') ||
+		trimmed.startsWith('fas ') ||
+		trimmed.startsWith('far ') ||
+		trimmed.startsWith('fab ')
+	) {
+		return trimmed;
+	}
+	const clean = trimmed.startsWith('fa-') ? trimmed : `fa-${trimmed}`;
+	return `fas ${clean}`;
+}

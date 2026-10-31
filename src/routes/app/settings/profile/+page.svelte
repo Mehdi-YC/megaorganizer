@@ -6,6 +6,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import { enablePush, disablePush } from '$lib/utils/push-client';
+	import { themeState } from '$lib/utils/theme.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
@@ -130,12 +131,12 @@
 		reminders: 'reminders',
 		templateTodos: 'template todos',
 		reminderTodos: 'reminder todos',
-		todos: 'tâches',
+		todos: 'tasks',
 		invoiceClients: 'clients',
 		invoiceProducts: 'services',
-		invoices: 'factures',
-		invoiceLines: 'lignes de factures',
-		invoiceDocs: 'déclarations fiscales (G12/G12 bis)',
+		invoices: 'invoices',
+		invoiceLines: 'invoice lines',
+		invoiceDocs: 'tax returns (G12/G12 bis)',
 		expenses: 'expenses',
 		sessions: 'sessions',
 		activities: 'activities',
@@ -217,7 +218,7 @@
 	<title>Edit Profile - MegaOrganize</title>
 </svelte:head>
 
-<div class="max-w-2xl p-4 sm:p-8">
+<div class="max-w-2xl px-3.5 py-4 sm:p-6 lg:p-8">
 	<div class="mb-6">
 		<a href={resolve('/app')} class="text-sm text-fg-subdued transition-colors hover:text-fg">
 			<i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
@@ -226,7 +227,63 @@
 
 	<PageHeader title="Edit Profile" />
 
-	<div class="rounded-sm border border-border bg-surface">
+	<!-- Appearance & Theme Selector -->
+	<div class="mb-6 rounded-xl border border-border bg-surface p-6 shadow-xs">
+		<div class="mb-4">
+			<h2 class="text-sm font-semibold tracking-tight text-fg">Appearance & Theme</h2>
+			<p class="text-xs text-fg-subdued">Customize how MegaOrganize looks on your device.</p>
+		</div>
+
+		<div class="grid grid-cols-3 gap-3">
+			<button
+				type="button"
+				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
+				'light'
+					? 'border-primary bg-primary/5 font-semibold shadow-xs'
+					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
+				onclick={() => themeState.setTheme('light')}
+			>
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500"
+				>
+					<i class="fas fa-sun text-base"></i>
+				</div>
+				<span class="text-xs">Light Mode</span>
+			</button>
+
+			<button
+				type="button"
+				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
+				'dark'
+					? 'border-primary bg-primary/5 font-semibold shadow-xs'
+					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
+				onclick={() => themeState.setTheme('dark')}
+			>
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400"
+				>
+					<i class="fas fa-moon text-base"></i>
+				</div>
+				<span class="text-xs">Dark Mode</span>
+			</button>
+
+			<button
+				type="button"
+				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
+				'system'
+					? 'border-primary bg-primary/5 font-semibold shadow-xs'
+					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
+				onclick={() => themeState.setTheme('system')}
+			>
+				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-fg-subdued">
+					<i class="fas fa-circle-half-stroke text-base"></i>
+				</div>
+				<span class="text-xs">System Auto</span>
+			</button>
+		</div>
+	</div>
+
+	<div class="rounded-xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Profile</h2>
 		</div>
@@ -258,7 +315,7 @@
 		</div>
 	</div>
 
-	<div class="mt-6 rounded-sm border border-border bg-surface">
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Change Password</h2>
 		</div>
@@ -304,113 +361,243 @@
 		</div>
 	</div>
 
-	<!-- Modules & Features Toggles -->
-	<div class="mt-6 rounded-sm border border-border bg-surface">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
-				Fonctionnalités & Modules
-			</h2>
+	<!-- Modules & Features Toggles (Modern SaaS Style) -->
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
+		<div class="border-b border-border/80 px-6 py-4">
+			<div class="flex items-center gap-2.5">
+				<div
+					class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary-text"
+				>
+					<i class="fas fa-shapes text-xs"></i>
+				</div>
+				<div>
+					<h2 class="text-sm font-semibold tracking-tight text-fg">
+						Features & Modular Capabilities
+					</h2>
+					<p class="text-xs text-fg-subdued">
+						Enable or disable functional modules. Disabled modules are immediately hidden across all
+						workspaces, navigation, and dashboard.
+					</p>
+				</div>
+			</div>
 		</div>
 		<form method="post" action="?/updateFeatures" class="space-y-4 px-6 py-5">
-			<p class="text-xs text-fg-subdued">
-				Activez ou masquez les fonctionnalités de l'application selon vos besoins. Les modules
-				désactivés sont masqués dans la navigation et les pages associées.
-			</p>
-
-			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+			<div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+				<!-- Tasks -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
+						>
+							<i class="fas fa-check-square text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Tasks (Todos)</div>
+							<div class="text-[11px] text-fg-subdued">Daily tasks, scheduling, and priorities</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="todos"
 						checked={data.enabledFeatures?.todos ?? true}
-						class="rounded-sm border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Tâches simples (Todos)</div>
-						<div class="text-[11px] text-fg-subdued">Gestion des tâches du jour et calendrier</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Reminders -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
+						>
+							<i class="fas fa-bell text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Reminders & Habits</div>
+							<div class="text-[11px] text-fg-subdued">Recurring reminders and alert schedules</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="reminders"
 						checked={data.enabledFeatures?.reminders ?? true}
-						class="rounded-sm border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Rappels</div>
-						<div class="text-[11px] text-fg-subdued">Rappels récurrents et notifications</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Finance -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
+						>
+							<i class="fas fa-receipt text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Finance & Expenses</div>
+							<div class="text-[11px] text-fg-subdued">Spending logs and monthly budget limit</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="finance"
 						checked={data.enabledFeatures?.finance ?? true}
-						class="rounded-sm border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Finances & Dépenses</div>
-						<div class="text-[11px] text-fg-subdued">Suivi budgétaire et registre des dépenses</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Invoicing -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-white shadow-xs"
+						>
+							<i class="fas fa-file-invoice-dollar text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Invoicing & Taxes</div>
+							<div class="text-[11px] text-fg-subdued">Client invoices and annual tax dossiers</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="invoicing"
 						checked={data.enabledFeatures?.invoicing ?? true}
-						class="rounded-sm border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Facturation</div>
-						<div class="text-[11px] text-fg-subdued">Factures et déclarations G12 / G12 bis</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Training -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
+						>
+							<i class="fas fa-person-running text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Training & Fitness</div>
+							<div class="text-[11px] text-fg-subdued">
+								Workout logs, intervals, and GPS running
+							</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="training"
 						checked={data.enabledFeatures?.training ?? true}
-						class="rounded-sm border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Entraînement</div>
-						<div class="text-[11px] text-fg-subdued">Séances sportives et courses GPS</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 
+				<!-- Mindmap -->
 				<label
-					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
 				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs"
+						>
+							<i class="fas fa-network-wired text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Mindmap (Interactive Graph)</div>
+							<div class="text-[11px] text-fg-subdued">Visual network of wiki notes & links</div>
+						</div>
+					</div>
+					<input
+						type="checkbox"
+						name="mindmap"
+						checked={data.enabledFeatures?.mindmap ?? true}
+						class="peer sr-only"
+					/>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
+					</div>
+				</label>
+
+				<!-- YDK -->
+				<label
+					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
+				>
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-600 text-white shadow-xs"
+						>
+							<i class="fas fa-layer-group text-sm"></i>
+						</div>
+						<div>
+							<div class="text-xs font-semibold text-fg">Yu-Gi-Oh (YDK)</div>
+							<div class="text-[11px] text-fg-subdued">Deck builder and card catalog viewer</div>
+						</div>
+					</div>
 					<input
 						type="checkbox"
 						name="ydk"
 						checked={data.enabledFeatures?.ydk ?? true}
-						class="rounded-sm border-border text-primary focus:ring-primary"
+						class="peer sr-only"
 					/>
-					<div>
-						<div class="text-xs font-semibold text-fg">Yu-Gi-Oh (YDK)</div>
-						<div class="text-[11px] text-fg-subdued">Gestion des decks de cartes</div>
+					<div
+						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+					>
+						<span
+							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
+						></span>
 					</div>
 				</label>
 			</div>
 
 			<div class="flex items-center justify-between pt-2">
-				<Button type="submit">Enregistrer les modules</Button>
+				<Button type="submit">Save Modules</Button>
 				{#if form?.featuresMessage}
 					<span class="text-xs {form.featuresMessage.ok ? 'text-success' : 'text-error'}">
 						{form.featuresMessage.text}
@@ -420,22 +607,22 @@
 		</form>
 	</div>
 
-	<div class="mt-6 rounded-sm border border-border bg-surface">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Backup & Restore</h2>
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
+		<div class="border-b border-border/80 px-6 py-4">
+			<h2 class="text-sm font-semibold tracking-tight text-fg">Backup & Restore</h2>
 		</div>
 		<div class="space-y-4 px-6 py-5">
 			<p class="text-xs text-fg-subdued">
-				Exportez toutes vos données et fichiers au format ZIP, ou restaurez depuis une sauvegarde
-				précédente (.zip ou .json). Les éléments existants portant le même nom seront conservés.
+				Export all your data and attachments as a ZIP archive, or restore from a previous backup
+				(.zip or .json). Existing items with identical identifiers will be safely preserved.
 			</p>
 
 			<div class="flex flex-col gap-2 sm:flex-row">
 				<Button type="button" onclick={exportBackup}>
-					<i class="fas fa-download text-xs"></i> Exporter la sauvegarde (ZIP)
+					<i class="fas fa-download text-xs"></i> Export Backup (ZIP)
 				</Button>
 				<Button variant="secondary" type="button" onclick={triggerImport}>
-					<i class="fas fa-upload text-xs"></i> Importer une sauvegarde
+					<i class="fas fa-upload text-xs"></i> Import Backup
 				</Button>
 				<input
 					type="file"
@@ -446,9 +633,9 @@
 				/>
 			</div>
 			<p class="text-[10px] text-fg-subdued/60">
-				Comprend l'ensemble des données et pièces jointes : base de connaissances, pièces jointes,
-				tâches, rappels, dépenses, facturation, documents fiscaux G12/G12 bis, entraînements GPS,
-				roadmaps, tier lists, decks YDK et chronomètres.
+				Includes all entities and files: knowledge base, attachments, tasks, reminders, expenses,
+				invoicing, tax documents (G12/G12 bis), GPS workouts, roadmaps, tier lists, YDK decks, and
+				timers.
 			</p>
 
 			{#if importStatus === 'loading'}
@@ -516,7 +703,7 @@
 	</div>
 
 	<!-- Finance Settings -->
-	<div class="mt-6 rounded-sm border border-border bg-surface">
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Finance Settings</h2>
 		</div>
@@ -571,112 +758,109 @@
 		</div>
 	</div>
 
-	<!-- Facturation & Conformité Algérienne -->
-	<div class="mt-6 rounded-sm border border-border bg-surface">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
-				Facturation & Conformité Algérienne
-			</h2>
+	<!-- Invoicing & Business Identity -->
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
+		<div class="border-b border-border/80 px-6 py-4">
+			<h2 class="text-sm font-semibold tracking-tight text-fg">Invoicing & Business Identity</h2>
+			<p class="mt-0.5 text-xs text-fg-subdued">
+				Information displayed on client invoices and fiscal compliance documents (NIF, ANAE, RC,
+				etc.).
+			</p>
 		</div>
 		<div class="space-y-6 px-6 py-5">
-			<p class="text-xs text-fg-subdued">
-				Ces informations apparaissent sur vos factures et permettent la conformité fiscale
-				algérienne (NIF, ANAE, RC, etc.).
-			</p>
-
 			<form method="post" action="?/updateInvoicingProfile" use:enhance class="space-y-4">
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<Input
-						label="Nom de marque / Enseigne"
+						label="Brand / Company Name"
 						type="text"
 						id="brandName"
 						name="brandName"
 						bind:value={brandName}
-						placeholder="ex: Mehdi YC"
+						placeholder="e.g. MegaOrganize Studio"
 					/>
 					<Input
-						label="Slogan / Activité"
+						label="Tagline / Main Activity"
 						type="text"
 						id="brandTagline"
 						name="brandTagline"
 						bind:value={brandTagline}
-						placeholder="ex: Automatisation & Digitalisation"
+						placeholder="e.g. Software & Automation Engineering"
 					/>
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<Input
-						label="Adresse professionnelle"
+						label="Business Address"
 						type="text"
 						id="address"
 						name="address"
 						bind:value={address}
-						placeholder="ex: Cité 5 Juillet, Bab Ezzouar 16042, Alger"
+						placeholder="e.g. Cité 5 Juillet, Bab Ezzouar 16042, Algiers"
 					/>
 					<Input
-						label="Téléphone"
+						label="Phone Number"
 						type="text"
 						id="phone"
 						name="phone"
 						bind:value={phone}
-						placeholder="ex: +213 553 09 12 35"
+						placeholder="e.g. +213 553 09 12 35"
 					/>
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 					<Input
-						label="NIF (Numéro d'Identification Fiscale)"
+						label="Tax ID (NIF)"
 						type="text"
 						id="nif"
 						name="nif"
 						bind:value={nif}
-						placeholder="ex: 19816170319014941680"
+						placeholder="e.g. 19816170319014941680"
 					/>
 					<Input
-						label="ANAE (Auto-entrepreneur)"
+						label="Sole Proprietor ID (ANAE)"
 						type="text"
 						id="anae"
 						name="anae"
 						bind:value={anae}
-						placeholder="ex: 15199589"
+						placeholder="e.g. 15199589"
 					/>
 					<Input
-						label="RC (Registre de Commerce)"
+						label="Trade Register (RC)"
 						type="text"
 						id="rc"
 						name="rc"
 						bind:value={rc}
-						placeholder="Optionnel"
+						placeholder="Optional"
 					/>
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<Input
-						label="NIS (Numéro d'Identification Statistique)"
+						label="Statistical ID (NIS)"
 						type="text"
 						id="nis"
 						name="nis"
 						bind:value={nis}
-						placeholder="Optionnel"
+						placeholder="Optional"
 					/>
 					<Input
-						label="Article d'Imposition (AI)"
+						label="Tax Assessment Article (AI)"
 						type="text"
 						id="ai"
 						name="ai"
 						bind:value={ai}
-						placeholder="Optionnel"
+						placeholder="Optional"
 					/>
 				</div>
 
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<Input
-						label="RIB / RIP Bancaire ou Postal"
+						label="Bank / Postal Account RIB"
 						type="text"
 						id="rib"
 						name="rib"
 						bind:value={rib}
-						placeholder="ex: 007 99999 0001234567 89"
+						placeholder="e.g. 007 99999 0001234567 89"
 					/>
 				</div>
 
@@ -686,22 +870,22 @@
 					</p>
 				{/if}
 
-				<Button type="submit">Enregistrer les informations de facturation</Button>
+				<Button type="submit">Save Invoicing Details</Button>
 			</form>
 
 			<div class="my-4 border-t border-border/50 pt-4">
-				<h3 class="mb-3 text-xs font-semibold text-fg">Signature & Cachet</h3>
+				<h3 class="mb-3 text-xs font-semibold text-fg">Signature & Official Stamp</h3>
 				<p class="mb-4 text-xs text-fg-subdued">
-					Téléversez votre signature numérique et le cachet de votre entreprise/auto-entreprise pour
-					les apposer automatiquement sur vos factures.
+					Upload your digital signature and company stamp to automatically affix them to generated
+					invoices.
 				</p>
 
 				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 					<!-- Signature Upload -->
-					<div class="rounded-sm border border-border bg-bg p-4">
-						<span class="text-xs font-semibold text-fg">Signature</span>
+					<div class="space-y-2">
+						<span class="text-xs font-semibold text-fg">Digital Signature</span>
 						<div
-							class="mt-2 flex h-28 items-center justify-center rounded border border-dashed border-border bg-surface"
+							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20"
 						>
 							{#if data.invoicingProfile?.signatureUrl}
 								<img
@@ -710,14 +894,14 @@
 									class="max-h-24 max-w-full object-contain"
 								/>
 							{:else}
-								<span class="text-xs text-fg-subdued">Aucune signature</span>
+								<span class="text-xs text-fg-subdued">No signature uploaded</span>
 							{/if}
 						</div>
 						<form
 							method="post"
 							action="?/uploadMedia"
 							enctype="multipart/form-data"
-							class="mt-3 flex items-center gap-2"
+							class="flex items-center gap-2"
 						>
 							<input type="hidden" name="type" value="signature" />
 							<input
@@ -725,33 +909,33 @@
 								name="file"
 								accept="image/*"
 								required
-								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-sm file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
 							/>
-							<Button size="sm" type="submit">Uploader</Button>
+							<Button size="sm" type="submit">Upload</Button>
 						</form>
 					</div>
 
 					<!-- Stamp Upload -->
-					<div class="rounded-sm border border-border bg-bg p-4">
-						<span class="text-xs font-semibold text-fg">Cachet / Tampon</span>
+					<div class="space-y-2">
+						<span class="text-xs font-semibold text-fg">Official Stamp</span>
 						<div
-							class="mt-2 flex h-28 items-center justify-center rounded border border-dashed border-border bg-surface"
+							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border/80 bg-muted/20"
 						>
 							{#if data.invoicingProfile?.stampUrl}
 								<img
 									src={data.invoicingProfile.stampUrl}
-									alt="Cachet"
+									alt="Stamp"
 									class="max-h-24 max-w-full object-contain"
 								/>
 							{:else}
-								<span class="text-xs text-fg-subdued">Aucun cachet</span>
+								<span class="text-xs text-fg-subdued">No stamp uploaded</span>
 							{/if}
 						</div>
 						<form
 							method="post"
 							action="?/uploadMedia"
 							enctype="multipart/form-data"
-							class="mt-3 flex items-center gap-2"
+							class="flex items-center gap-2"
 						>
 							<input type="hidden" name="type" value="stamp" />
 							<input
@@ -759,9 +943,9 @@
 								name="file"
 								accept="image/*"
 								required
-								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-sm file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
 							/>
-							<Button size="sm" type="submit">Uploader</Button>
+							<Button size="sm" type="submit">Upload</Button>
 						</form>
 					</div>
 				</div>
@@ -776,9 +960,9 @@
 	</div>
 
 	<!-- AI Access -->
-	<div class="mt-6 rounded-sm border border-border bg-surface">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">AI Access (MCP)</h2>
+	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
+		<div class="border-b border-border/80 px-6 py-4">
+			<h2 class="text-sm font-semibold tracking-tight text-fg">AI Access (MCP)</h2>
 		</div>
 		<div class="space-y-4 px-6 py-5">
 			<p class="text-xs text-fg-subdued">

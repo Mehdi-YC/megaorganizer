@@ -37,14 +37,14 @@
 	} & Record<string, unknown> = $props();
 
 	const sizes: Record<string, string> = {
-		sm: 'h-8 px-2 text-base sm:text-xs',
-		md: 'h-[36px] px-3 text-base sm:text-sm'
+		sm: 'h-8 px-2.5 text-xs rounded-md',
+		md: 'h-9 px-3 text-sm rounded-lg'
 	};
 </script>
 
 <div class="flex flex-col gap-1.5 {className}">
 	{#if label}
-		<label for={id} class="text-xs font-semibold tracking-wide text-fg-accent">
+		<label for={id} class="text-xs font-medium text-fg">
 			{label}
 		</label>
 	{/if}
@@ -65,9 +65,9 @@
 		aria-describedby={error ? `${id}-error` : undefined}
 		class="{sizes[
 			size
-		]} w-full rounded-sm border border-border-strong bg-bg text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary-text {error
-			? 'border-error'
-			: ''} {disabled ? 'cursor-not-allowed opacity-40' : ''}"
+		]} w-full border border-border bg-surface text-fg shadow-xs transition-all placeholder:text-fg-subdued/70 hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none {error
+			? 'border-error ring-1 ring-error/30'
+			: ''} {disabled ? 'cursor-not-allowed opacity-50' : ''}"
 	/>
 	{#if error}
 		<p id="{id}-error" class="text-xs text-error">{error}</p>

@@ -2,13 +2,16 @@
 	import { invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
 	import ExpenseForm from '$lib/components/finance/ExpenseForm.svelte';
 	import { page } from '$app/state';
 	import { goto, replaceState } from '$app/navigation';
+	import type { EnabledFeatures } from '$lib/types';
+
+	let { enabledFeatures }: { enabledFeatures?: EnabledFeatures } = $props();
 
 	let show = $state(false);
-	let activeTab = $state<'finance' | 'reminder' | 'item' | 'training'>('finance');
+	let activeTab = $state<'finance' | 'reminder' | 'item' | 'training'>('item');
 	const TRAINING_TYPES = [
 		'strength',
 		'running',
@@ -44,6 +47,8 @@
 				prefill.name ||
 				(prefill.text ? prefill.text.split('\n')[0].slice(0, 60) : '') ||
 				'Shared item';
+		} else if (!tabs.some((t) => t.id === activeTab)) {
+			activeTab = tabs[0]?.id ?? 'item';
 		}
 	}
 
@@ -188,12 +193,35 @@
 		goto(`/app/training/session/new?type=${trainingType}`);
 	}
 
-	const tabs = [
-		{ id: 'finance' as const, label: 'Finance', icon: 'fa-receipt', color: 'text-warning' },
-		{ id: 'reminder' as const, label: 'Reminder', icon: 'fa-bell', color: 'text-primary-text' },
-		{ id: 'item' as const, label: 'Item', icon: 'fa-cube', color: 'text-success' },
-		{ id: 'training' as const, label: 'Training', icon: 'fa-dumbbell', color: 'text-fg-accent' }
-	];
+	const tabs = $derived.by(() => {
+		const list: {
+			id: 'finance' | 'reminder' | 'item' | 'training';
+			label: string;
+			icon: string;
+			color: string;
+		}[] = [];
+		if (enabledFeatures?.finance !== false) {
+			list.push({ id: 'finance', label: 'Finance', icon: 'fa-receipt', color: 'text-warning' });
+		}
+		if (enabledFeatures?.reminders !== false) {
+			list.push({
+				id: 'reminder',
+				label: 'Reminder',
+				icon: 'fa-bell',
+				color: 'text-primary-text'
+			});
+		}
+		list.push({ id: 'item', label: 'Item', icon: 'fa-cube', color: 'text-success' });
+		if (enabledFeatures?.training !== false) {
+			list.push({
+				id: 'training',
+				label: 'Training',
+				icon: 'fa-dumbbell',
+				color: 'text-fg-accent'
+			});
+		}
+		return list;
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -201,7 +229,7 @@
 <!-- FAB Button -->
 <button
 	type="button"
-	class="no-print fixed right-6 bottom-6 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover active:scale-95"
+	class="no-print fixed right-4 bottom-5 z-40 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 sm:right-6 sm:bottom-6"
 	onclick={() => open()}
 	aria-label="Quick capture"
 >
@@ -213,12 +241,12 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		class="no-print fixed inset-0 z-50 flex items-end justify-center bg-surface-overlay sm:items-center"
+		class="no-print fixed inset-0 z-50 flex items-end justify-center bg-surface-overlay/80 p-0 backdrop-blur-xs sm:items-center sm:p-4"
 		onclick={close}
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="animate-slide-up w-full max-w-md rounded-t-lg border border-border bg-surface shadow-2xl sm:rounded-sm"
+			class="animate-slide-up w-full max-w-md rounded-t-2xl border border-border bg-surface shadow-2xl sm:rounded-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-label="Quick Capture"
@@ -226,26 +254,33 @@
 			onclick={(e) => e.stopPropagation()}
 		>
 			<!-- Header -->
-			<div class="flex items-center justify-between border-b border-border px-6 py-4">
-				<h2 class="text-base font-semibold text-fg-accent">Quick Capture</h2>
+			<div class="flex items-center justify-between border-b border-border/80 px-6 py-4">
+				<div class="flex items-center gap-2.5">
+					<div
+						class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+					>
+						<i class="fas fa-bolt text-xs"></i>
+					</div>
+					<h2 class="text-base font-semibold tracking-tight text-fg">Quick Capture</h2>
+				</div>
 				<button
 					type="button"
-					class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm hover:bg-muted"
+					class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 					onclick={close}
 					aria-label="Close"
 				>
-					<i class="fas fa-times text-xs text-fg-subdued"></i>
+					<i class="fas fa-times text-xs"></i>
 				</button>
 			</div>
 
 			<!-- Tabs -->
-			<div class="flex border-b border-border">
+			<div class="flex border-b border-border/60 bg-muted/20 px-2 pt-2">
 				{#each tabs as tab (tab.id)}
 					<button
 						type="button"
-						class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors {activeTab ===
+						class="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-t-lg px-3 py-2 text-xs font-medium transition-all {activeTab ===
 						tab.id
-							? 'border-b-2 border-primary-text bg-primary/5 text-primary-text'
+							? 'border-x border-t border-border/80 bg-surface font-semibold text-fg shadow-xs'
 							: 'text-fg-subdued hover:text-fg'}"
 						aria-label={tab.label}
 						onclick={() => {
@@ -264,11 +299,11 @@
 				{#if saved}
 					<div class="py-8 text-center">
 						<div
-							class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10"
+							class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success"
 						>
-							<i class="fas fa-check text-xl text-success"></i>
+							<i class="fas fa-check text-xl"></i>
 						</div>
-						<p class="text-sm font-medium text-fg">Saved!</p>
+						<p class="text-sm font-semibold text-fg">Saved successfully!</p>
 					</div>
 				{:else}
 					<!-- Finance Form -->
@@ -277,7 +312,7 @@
 
 						<!-- Reminder Form -->
 					{:else if activeTab === 'reminder'}
-						<div class="space-y-3">
+						<div class="space-y-3.5">
 							<Input
 								type="text"
 								name="qc-title"
@@ -287,29 +322,25 @@
 							/>
 							<div class="grid grid-cols-2 gap-3">
 								<div>
-									<label
-										for="qc-duedate"
-										class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"
-										>DATE</label
+									<label for="qc-duedate" class="mb-1.5 block text-xs font-medium text-fg"
+										>Date</label
 									>
 									<input
 										type="date"
 										id="qc-duedate"
 										bind:value={reminderDueDate}
-										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary-text focus:outline-none sm:text-sm"
+										class="h-9 w-full rounded-lg border border-border bg-surface px-3 text-xs text-fg shadow-xs focus:border-primary focus:outline-none"
 									/>
 								</div>
 								<div>
-									<label
-										for="qc-duetime"
-										class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"
-										>TIME</label
+									<label for="qc-duetime" class="mb-1.5 block text-xs font-medium text-fg"
+										>Time</label
 									>
 									<input
 										type="time"
 										id="qc-duetime"
 										bind:value={reminderDueTime}
-										class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-base text-fg focus:border-primary-text focus:outline-none sm:text-sm"
+										class="h-9 w-full rounded-lg border border-border bg-surface px-3 text-xs text-fg shadow-xs focus:border-primary focus:outline-none"
 									/>
 								</div>
 							</div>
@@ -332,13 +363,15 @@
 								bind:value={itemName}
 								placeholder="Item name"
 							/>
-							<Textarea
-								name="qc-body"
-								label="Body"
-								bind:value={itemBody}
-								rows={4}
-								placeholder="Notes (markdown and [[wikilinks]] supported)"
-							/>
+							<div>
+								<span class="mb-1 block text-xs font-medium text-fg-subdued">Notes</span>
+								<MarkdownEditor
+									bind:value={itemBody}
+									rows={4}
+									minHeight="120px"
+									placeholder="Notes (markdown and [[wikilinks]] supported)"
+								/>
+							</div>
 							<Button class="w-full" onclick={saveItem} disabled={!itemName.trim() || saving}>
 								{saving ? 'Saving...' : 'Add Item'}
 							</Button>
