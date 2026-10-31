@@ -762,7 +762,7 @@
 								<div class="grid grid-cols-4 gap-1.5 sm:grid-cols-6 md:grid-cols-8">
 									{#each childItems as item (item.id)}
 										<div
-											class="group relative rounded-sm border {item.favorite
+											class="group relative rounded-lg border {item.favorite
 												? 'border-yellow-400/40 bg-yellow-500/5'
 												: 'border-border bg-surface'} p-1.5 transition-all hover:border-primary-text/50"
 										>
@@ -785,7 +785,7 @@
 												onmousemove={onItemHoverMove}
 												onmouseleave={onItemHoverLeave}
 											>
-												<div class="mb-1">
+												<div class="mb-1 overflow-hidden rounded-md">
 													<GridItemImage
 														src={item.imageUrl}
 														alt={item.name}
