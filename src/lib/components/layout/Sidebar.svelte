@@ -308,7 +308,11 @@
 		: 'w-64'}"
 >
 	<!-- Top Workspace Header -->
-	<div class="flex h-14 items-center justify-between border-b border-sidebar-border px-3.5">
+	<div
+		class="flex h-14 items-center border-b border-sidebar-border {collapsed
+			? 'justify-center px-2'
+			: 'justify-between px-3.5'}"
+	>
 		{#if !collapsed}
 			<div class="flex min-w-0 items-center gap-2.5">
 				<div
@@ -321,24 +325,28 @@
 					<i class="fas fa-chevron-down text-[10px] text-fg-subdued/80"></i>
 				</div>
 			</div>
-		{:else}
-			<div
-				class="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white shadow-xs"
-			>
-				<i class="fas fa-layer-group text-xs"></i>
-			</div>
-		{/if}
 
-		<!-- Collapse toggle button -->
-		<button
-			type="button"
-			aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-			title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-			class="hidden h-7 w-7 cursor-pointer items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg lg:flex"
-			onclick={toggleCollapse}
-		>
-			<i class="fas {collapsed ? 'fa-angles-right' : 'fa-angles-left'} text-xs"></i>
-		</button>
+			<!-- Collapse toggle button -->
+			<button
+				type="button"
+				aria-label="Collapse sidebar"
+				title="Collapse sidebar"
+				class="hidden h-7 w-7 cursor-pointer items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg lg:flex"
+				onclick={toggleCollapse}
+			>
+				<i class="fas fa-angles-left text-xs"></i>
+			</button>
+		{:else}
+			<button
+				type="button"
+				aria-label="Expand sidebar"
+				title="Expand sidebar"
+				onclick={toggleCollapse}
+				class="group flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl bg-primary text-white shadow-sm transition-transform hover:scale-105"
+			>
+				<i class="fas fa-layer-group text-base transition-transform group-hover:scale-110"></i>
+			</button>
+		{/if}
 	</div>
 
 	<!-- Quick Search Bar -->
@@ -399,7 +407,7 @@
 				type="button"
 				aria-label="Search"
 				title="Search (⌘K)"
-				class="flex h-9 w-9 items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+				class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 				onclick={() => {
 					collapsed = false;
 					setTimeout(() => {
@@ -407,7 +415,7 @@
 					}, 100);
 				}}
 			>
-				<i class="fas fa-search text-xs"></i>
+				<i class="fas fa-search text-base"></i>
 			</button>
 		</div>
 	{/if}
@@ -428,13 +436,13 @@
 				href={resolve('/app')}
 				onclick={onNavigate}
 				title="Dashboard"
-				class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-					? 'justify-center px-0'
-					: 'px-2.5'} {page.url.pathname === '/app'
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app'
 					? 'bg-muted font-semibold text-fg'
 					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 			>
-				<i class="fas fa-chart-pie w-4 text-center text-xs"></i>
+				<i class="fas fa-chart-pie {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
 				{#if !collapsed}<span>Dashboard</span>{/if}
 			</a>
 
@@ -443,13 +451,13 @@
 					href={resolve('/app/todos')}
 					onclick={onNavigate}
 					title="Tasks"
-					class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-						? 'justify-center px-0'
-						: 'px-2.5'} {page.url.pathname.startsWith('/app/todos')
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname.startsWith('/app/todos')
 						? 'bg-muted font-semibold text-fg'
 						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 				>
-					<i class="fas fa-check-square w-4 text-center text-xs"></i>
+					<i class="fas fa-check-square {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
 					{#if !collapsed}<span>Tasks</span>{/if}
 				</a>
 			{/if}
@@ -458,13 +466,13 @@
 				href={resolve('/app/calendar')}
 				onclick={onNavigate}
 				title="Calendar"
-				class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-					? 'justify-center px-0'
-					: 'px-2.5'} {page.url.pathname === '/app/calendar'
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/calendar'
 					? 'bg-muted font-semibold text-fg'
 					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 			>
-				<i class="fas fa-calendar-days w-4 text-center text-xs"></i>
+				<i class="fas fa-calendar-days {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
 				{#if !collapsed}<span>Calendar</span>{/if}
 			</a>
 
@@ -473,15 +481,45 @@
 					href={resolve('/app/reminders')}
 					onclick={onNavigate}
 					title="Reminders"
-					class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-						? 'justify-center px-0'
-						: 'px-2.5'} {page.url.pathname.startsWith('/app/reminders')
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname.startsWith('/app/reminders')
 						? 'bg-muted font-semibold text-fg'
 						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 				>
-					<i class="fas fa-bell w-4 text-center text-xs"></i>
+					<i class="fas fa-bell {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
 					{#if !collapsed}<span>Reminders</span>{/if}
 				</a>
+			{/if}
+
+			{#if collapsed}
+				{#if enabledFeatures.finance !== false}
+					<a
+						href={resolve('/app/finance')}
+						onclick={onNavigate}
+						title="Expenses"
+						class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-xs font-medium transition-colors {page
+							.url.pathname === '/app/finance'
+							? 'bg-muted font-semibold text-fg'
+							: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+					>
+						<i class="fas fa-wallet text-base"></i>
+					</a>
+				{/if}
+				{#if enabledFeatures.invoicing !== false}
+					<a
+						href={resolve('/app/invoicing')}
+						onclick={onNavigate}
+						title="Invoicing"
+						class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-xs font-medium transition-colors {page.url.pathname.startsWith(
+							'/app/invoicing'
+						)
+							? 'bg-muted font-semibold text-fg'
+							: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
+					>
+						<i class="fas fa-file-invoice-dollar text-base"></i>
+					</a>
+				{/if}
 			{/if}
 		</div>
 
@@ -805,13 +843,13 @@
 				href={resolve('/app/library')}
 				onclick={onNavigate}
 				title="Library"
-				class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-					? 'justify-center px-0'
-					: 'px-2.5'} {page.url.pathname === '/app/library'
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/library'
 					? 'bg-muted font-semibold text-fg'
 					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 			>
-				<i class="fas fa-book-open w-4 text-center text-xs"></i>
+				<i class="fas fa-book-open {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
 				{#if !collapsed}<span>Library</span>{/if}
 			</a>
 
@@ -820,13 +858,13 @@
 					href={resolve('/app/mindmap')}
 					onclick={onNavigate}
 					title="Mindmap"
-					class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-						? 'justify-center px-0'
-						: 'px-2.5'} {page.url.pathname === '/app/mindmap'
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/mindmap'
 						? 'bg-muted font-semibold text-fg'
 						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 				>
-					<i class="fas fa-network-wired w-4 text-center text-xs"></i>
+					<i class="fas fa-network-wired {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
 					{#if !collapsed}<span>Mindmap</span>{/if}
 				</a>
 			{/if}
@@ -836,13 +874,14 @@
 					href={resolve('/app/training')}
 					onclick={onNavigate}
 					title="Training"
-					class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-						? 'justify-center px-0'
-						: 'px-2.5'} {page.url.pathname.startsWith('/app/training')
+					class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+						? 'mx-auto h-9 w-9 justify-center rounded-xl'
+						: 'h-8 rounded-lg px-2.5'} {page.url.pathname.startsWith('/app/training')
 						? 'bg-muted font-semibold text-fg'
 						: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 				>
-					<i class="fas fa-person-running w-4 text-center text-xs"></i>
+					<i class="fas fa-person-running {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"
+					></i>
 					{#if !collapsed}<span>Training</span>{/if}
 				</a>
 			{/if}
@@ -851,13 +890,13 @@
 				href={resolve('/app/tags')}
 				onclick={onNavigate}
 				title="Tags"
-				class="flex h-8 items-center gap-2.5 rounded-lg text-xs font-medium transition-colors {collapsed
-					? 'justify-center px-0'
-					: 'px-2.5'} {page.url.pathname === '/app/tags'
+				class="flex items-center gap-2.5 text-xs font-medium transition-colors {collapsed
+					? 'mx-auto h-9 w-9 justify-center rounded-xl'
+					: 'h-8 rounded-lg px-2.5'} {page.url.pathname === '/app/tags'
 					? 'bg-muted font-semibold text-fg'
 					: 'text-fg-subdued hover:bg-muted/60 hover:text-fg'}"
 			>
-				<i class="fas fa-tag w-4 text-center text-xs"></i>
+				<i class="fas fa-tag {collapsed ? 'text-base' : 'w-4 text-center text-xs'}"></i>
 				{#if !collapsed}<span>Tags</span>{/if}
 			</a>
 		</div>
@@ -869,7 +908,7 @@
 						href={resolve('/app/category/[id]', { id: cat.id })}
 						onclick={onNavigate}
 						title={cat.name}
-						class="mx-auto flex h-8 w-8 items-center justify-center rounded-lg text-xs transition-colors {isCategoryActive(
+						class="mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-xs transition-colors {isCategoryActive(
 							cat
 						)
 							? 'bg-muted text-fg'
@@ -877,12 +916,12 @@
 					>
 						{#if cat.icon}
 							<i
-								class="{formatIconClass(cat.icon)} text-xs"
+								class="{formatIconClass(cat.icon)} text-sm"
 								style="color: {cat.iconColor || cat.accentColor || 'var(--color-primary-text)'}"
 							></i>
 						{:else}
 							<span
-								class="h-2.5 w-2.5 rounded-xs"
+								class="h-3 w-3 rounded-xs"
 								style="background-color: {cat.iconColor ||
 									cat.accentColor ||
 									cat.color ||
@@ -919,10 +958,10 @@
 				type="button"
 				title="Toggle Theme"
 				aria-label="Toggle Theme"
-				class="flex h-8 w-full cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+				class="mx-auto flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 				onclick={() => themeState.toggle()}
 			>
-				<i class="fas {themeState.resolved === 'dark' ? 'fa-moon' : 'fa-sun'} text-xs"></i>
+				<i class="fas {themeState.resolved === 'dark' ? 'fa-moon' : 'fa-sun'} text-base"></i>
 			</button>
 		{/if}
 
@@ -930,11 +969,13 @@
 		<div class="relative">
 			<button
 				type="button"
-				class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg p-1.5 transition-colors hover:bg-muted"
+				class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg p-1.5 transition-colors hover:bg-muted {collapsed
+					? 'justify-center p-0'
+					: ''}"
 				onclick={() => (showUserMenu = !showUserMenu)}
 			>
 				<div
-					class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20 text-xs font-bold text-primary-text"
+					class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/20 text-xs font-bold text-primary-text"
 				>
 					{getUserInitial()}
 				</div>

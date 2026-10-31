@@ -18,7 +18,7 @@
 	<title>Training - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 pb-24 sm:p-8 sm:pb-8">
+<div class="px-3.5 py-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title="Training Sessions" subtitle="All your training sessions">
 		<Button href="/app/training/timers" variant="secondary" size="sm">
 			<i class="fas fa-stopwatch mr-1.5 text-xs sm:mr-2"></i>
@@ -34,7 +34,9 @@
 		</Button>
 	</PageHeader>
 
-	<div class="mb-6 flex items-center gap-2">
+	<div
+		class="no-scrollbar mb-6 flex max-w-full items-center gap-2 overflow-x-auto py-0.5 sm:flex-wrap"
+	>
 		<button
 			type="button"
 			class="cursor-pointer rounded-sm px-3 py-1.5 text-sm font-medium transition-colors {filterType ===

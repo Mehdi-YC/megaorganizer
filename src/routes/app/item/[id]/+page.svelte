@@ -275,9 +275,9 @@
 			</div>
 		</div>
 
-		<div class="space-y-4 p-4 sm:p-8 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-0 lg:p-0">
-			<div class="lg:shrink-0 lg:px-8 lg:pt-8">
-				<div class="flex items-center gap-3">
+		<div class="space-y-4 p-4 sm:p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:space-y-0 lg:p-0">
+			<div class="lg:shrink-0 lg:px-6 lg:pt-6 xl:px-8 xl:pt-8">
+				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="min-w-0 flex-1">
 						{#if editing}
 							<input
@@ -292,14 +292,21 @@
 								class="mt-1 w-full border-b border-border bg-transparent text-base text-fg-subdued placeholder:text-fg-subdued/50 focus:outline-none sm:text-sm"
 							/>
 						{:else}
-							<h1 class="text-lg font-semibold text-fg-accent lg:text-xl">{item.name}</h1>
-							{#if item.description}<p class="mt-0.5 text-sm text-fg-subdued">
+							<h1
+								class="cursor-help truncate text-lg font-semibold text-fg-accent lg:text-xl"
+								title={item.description || item.name}
+							>
+								{item.name}
+							</h1>
+							{#if item.description}
+								<p class="mt-0.5 hidden text-sm text-fg-subdued sm:block">
 									{item.description}
-								</p>{/if}
+								</p>
+							{/if}
 							<p class="mt-1 text-[10px] text-fg-subdued capitalize lg:hidden">{item.type}</p>
 						{/if}
 					</div>
-					<div class="flex shrink-0 gap-1.5">
+					<div class="flex shrink-0 items-center gap-1.5 pr-1">
 						{#if editing}
 							<Button variant="primary" size="md" onclick={saveItem}
 								><i class="fas fa-check text-xs"></i> Save</Button

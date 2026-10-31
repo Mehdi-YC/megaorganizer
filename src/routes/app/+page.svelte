@@ -174,10 +174,12 @@
 	<!-- Page Header with Modern Actions -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
-			<h1 class="text-2xl font-bold tracking-tight text-fg sm:text-3xl">Dashboard</h1>
-			<p class="mt-1 text-sm text-fg-subdued">
-				Your personal knowledge, activities, and operational control center.
-			</p>
+			<h1
+				class="cursor-help text-2xl font-bold tracking-tight text-fg sm:text-3xl"
+				title="Your personal knowledge, activities, and operational control center."
+			>
+				Dashboard
+			</h1>
 		</div>
 
 		<div class="flex items-center gap-2">
@@ -251,10 +253,12 @@
 		<!-- Section: Today's Priorities & Action Cards -->
 		<div>
 			<div class="mb-3">
-				<h2 class="text-base font-semibold tracking-tight text-fg">Today's Focus</h2>
-				<p class="text-xs text-fg-subdued">
-					Active reminders, tasks, and scheduled milestones for today.
-				</p>
+				<h2
+					class="cursor-help text-base font-semibold tracking-tight text-fg"
+					title="Active reminders, tasks, and scheduled milestones for today."
+				>
+					Today's Focus
+				</h2>
 			</div>
 
 			<div class="grid gap-4 lg:grid-cols-2">
@@ -349,37 +353,39 @@
 						</a>
 					{/snippet}
 
-					<div class="grid grid-cols-7 gap-1.5 pt-1">
-						{#each getWeekDays() as day, dayIdx (dayIdx)}
-							{@const dayEvents = getEventsForDay(day, data.upcomingEvents ?? [])}
-							{@const isToday = isSameDay(day, new Date())}
-							<div
-								class="flex flex-col items-center rounded-lg border p-2 transition-all {isToday
-									? 'border-primary bg-primary/5 shadow-xs'
-									: 'border-border/60 bg-muted/20'}"
-							>
-								<span
-									class="text-[10px] font-medium {isToday
-										? 'font-semibold text-primary'
-										: 'text-fg-subdued'}"
+					<div class="no-scrollbar max-w-full overflow-x-auto pb-1">
+						<div class="grid min-w-[320px] grid-cols-7 gap-1.5 pt-1 sm:min-w-0">
+							{#each getWeekDays() as day, dayIdx (dayIdx)}
+								{@const dayEvents = getEventsForDay(day, data.upcomingEvents ?? [])}
+								{@const isToday = isSameDay(day, new Date())}
+								<div
+									class="flex flex-col items-center rounded-lg border p-2 transition-all {isToday
+										? 'border-primary bg-primary/5 shadow-xs'
+										: 'border-border/60 bg-muted/20'}"
 								>
-									{day.toLocaleDateString([], { weekday: 'short' })}
-								</span>
-								<span class="mt-0.5 text-sm font-bold {isToday ? 'text-primary' : 'text-fg'}">
-									{day.getDate()}
-								</span>
-								<div class="mt-1 flex min-h-[6px] gap-1">
-									{#each dayEvents.slice(0, 3) as event (`${event.type}:${event.id}`)}
-										<span
-											class="h-1.5 w-1.5 rounded-full {event.type === 'training'
-												? 'bg-blue-500'
-												: 'bg-success'}"
-											title={event.title}
-										></span>
-									{/each}
+									<span
+										class="text-[10px] font-medium {isToday
+											? 'font-semibold text-primary'
+											: 'text-fg-subdued'}"
+									>
+										{day.toLocaleDateString([], { weekday: 'short' })}
+									</span>
+									<span class="mt-0.5 text-sm font-bold {isToday ? 'text-primary' : 'text-fg'}">
+										{day.getDate()}
+									</span>
+									<div class="mt-1 flex min-h-[6px] gap-1">
+										{#each dayEvents.slice(0, 3) as event (`${event.type}:${event.id}`)}
+											<span
+												class="h-1.5 w-1.5 rounded-full {event.type === 'training'
+													? 'bg-blue-500'
+													: 'bg-success'}"
+												title={event.title}
+											></span>
+										{/each}
+									</div>
 								</div>
-							</div>
-						{/each}
+							{/each}
+						</div>
 					</div>
 
 					{#if data.upcomingEvents && data.upcomingEvents.length > 0}
@@ -408,10 +414,12 @@
 			<div>
 				<div class="mb-3 flex items-center justify-between">
 					<div>
-						<h2 class="text-base font-semibold tracking-tight text-fg">Active Reminders</h2>
-						<p class="text-xs text-fg-subdued">
-							Recurring habits and notifications requiring attention.
-						</p>
+						<h2
+							class="cursor-help text-base font-semibold tracking-tight text-fg"
+							title="Recurring habits and notifications requiring attention."
+						>
+							Active Reminders
+						</h2>
 					</div>
 					<a
 						href={resolve('/app/reminders')}
@@ -439,10 +447,12 @@
 		<div>
 			<div class="mb-3 flex items-center justify-between">
 				<div>
-					<h2 class="text-base font-semibold tracking-tight text-fg">Workspaces</h2>
-					<p class="text-xs text-fg-subdued">
-						Your active knowledge spaces, documentation, and page trees.
-					</p>
+					<h2
+						class="cursor-help text-base font-semibold tracking-tight text-fg"
+						title="Your active knowledge spaces, documentation, and page trees."
+					>
+						Workspaces
+					</h2>
 				</div>
 				<Button href={resolve('/app/category/new')} variant="secondary" size="xs">
 					<i class="fas fa-plus mr-1 text-[10px]"></i> Workspace
@@ -539,8 +549,12 @@
 		<!-- Tools & Modules Row -->
 		<div>
 			<div class="mb-3">
-				<h2 class="text-base font-semibold tracking-tight text-fg">Integrated Tools</h2>
-				<p class="text-xs text-fg-subdued">Quick shortcuts into dedicated operational modules.</p>
+				<h2
+					class="cursor-help text-base font-semibold tracking-tight text-fg"
+					title="Quick shortcuts into dedicated operational modules."
+				>
+					Integrated Tools
+				</h2>
 			</div>
 
 			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -647,12 +661,22 @@
 
 	<!-- TAB: SCRATCHPAD / NOTES -->
 	{#if activeTab === 'overview' || activeTab === 'notes'}
-		<Card
-			title="Scratchpad & Daily Notes"
-			description="Personal markdown workspace with live WYSIWYG formatting and preview"
-			icon="fas fa-pencil"
-		>
-			{#snippet headerAction()}
+		<div class="space-y-3">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div class="flex items-center gap-2.5">
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/50 text-primary-text"
+					>
+						<i class="fas fa-pencil text-xs"></i>
+					</div>
+					<h2
+						class="cursor-help text-base font-semibold tracking-tight text-fg"
+						title="Personal markdown workspace with live WYSIWYG formatting and preview"
+					>
+						Scratchpad & Daily Notes
+					</h2>
+				</div>
+
 				<div class="flex items-center gap-2">
 					{#if noteStatus === 'unsaved'}
 						<Badge variant="warning" size="sm">Unsaved</Badge>
@@ -670,7 +694,7 @@
 						<i class="fas fa-floppy-disk mr-1.5 text-[10px]"></i> Save
 					</Button>
 				</div>
-			{/snippet}
+			</div>
 
 			<MarkdownEditor
 				bind:value={note}
@@ -679,6 +703,6 @@
 				minHeight="220px"
 				onSave={saveNote}
 			/>
-		</Card>
+		</div>
 	{/if}
 </div>

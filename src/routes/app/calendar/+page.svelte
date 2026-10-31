@@ -356,7 +356,9 @@
 <div class="px-3.5 py-4 pb-24 sm:p-6 sm:pb-8 lg:p-8">
 	<PageHeader title="Calendar" subtitle="View all your events in one place">
 		<!-- Filter buttons -->
-		<div class="flex max-w-full flex-wrap items-center gap-1.5">
+		<div
+			class="no-scrollbar flex max-w-full items-center gap-1.5 overflow-x-auto py-0.5 sm:flex-wrap"
+		>
 			<button
 				type="button"
 				class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors sm:px-3 {!filter

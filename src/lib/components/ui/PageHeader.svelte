@@ -4,7 +4,7 @@
 	let {
 		title,
 		subtitle,
-		descriptionOnHover = false,
+		descriptionOnHover = true,
 		badge = undefined,
 		children
 	}: {
@@ -16,13 +16,11 @@
 	} = $props();
 </script>
 
-<div class="mb-7 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+<div class="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
 	<div class="min-w-0">
 		<div class="flex items-center gap-3">
 			<h1
-				class="text-2xl font-bold tracking-tight text-fg {descriptionOnHover && subtitle
-					? 'cursor-help'
-					: ''}"
+				class="text-2xl font-bold tracking-tight text-fg {subtitle ? 'cursor-help' : ''}"
 				title={subtitle}
 			>
 				{title}
@@ -36,11 +34,11 @@
 			{/if}
 		</div>
 		{#if subtitle && !descriptionOnHover}
-			<p class="mt-1 text-sm text-fg-subdued">{subtitle}</p>
+			<p class="mt-1 hidden text-sm text-fg-subdued sm:block">{subtitle}</p>
 		{/if}
 	</div>
 	{#if children}
-		<div class="flex max-w-full flex-wrap items-center gap-1.5 sm:gap-2">
+		<div class="no-scrollbar flex max-w-full flex-wrap items-center gap-1.5 sm:gap-2">
 			{@render children()}
 		</div>
 	{/if}

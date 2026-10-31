@@ -47,12 +47,17 @@
 				{/if}
 				<div class="min-w-0">
 					{#if title}
-						<h3 class="truncate text-base font-semibold tracking-tight text-fg">
+						<h3
+							class="truncate text-base font-semibold tracking-tight text-fg {description
+								? 'cursor-help'
+								: ''}"
+							title={description}
+						>
 							{title}
 						</h3>
 					{/if}
 					{#if description}
-						<p class="mt-0.5 line-clamp-2 text-xs text-fg-subdued">
+						<p class="mt-0.5 line-clamp-2 hidden text-xs text-fg-subdued sm:block">
 							{description}
 						</p>
 					{/if}

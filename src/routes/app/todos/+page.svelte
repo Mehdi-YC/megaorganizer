@@ -215,9 +215,9 @@
 			</div>
 
 			<!-- Quick Options: Date & Priority -->
-			<div class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-fg-subdued">
-				<div class="flex flex-wrap items-center gap-1.5">
-					<span class="mr-1 text-xs font-medium text-fg-subdued">Due:</span>
+			<div class="flex flex-wrap items-center justify-between gap-2.5 pt-1 text-xs text-fg-subdued">
+				<div class="flex max-w-full flex-wrap items-center gap-1.5">
+					<span class="mr-0.5 text-xs font-medium text-fg-subdued">Due:</span>
 					<button
 						type="button"
 						class="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors {newDueDate ===
@@ -250,11 +250,11 @@
 					<input
 						type="date"
 						bind:value={newDueDate}
-						class="ml-1 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-fg focus:border-primary focus:outline-none"
+						class="max-w-[130px] rounded-lg border border-border bg-surface px-2 py-1 text-xs text-fg focus:border-primary focus:outline-none"
 					/>
 				</div>
 
-				<div class="flex items-center gap-2">
+				<div class="flex items-center gap-1.5">
 					<span class="text-xs font-medium text-fg-subdued">Priority:</span>
 					<select
 						bind:value={newPriority}
@@ -270,7 +270,9 @@
 	</div>
 
 	<!-- Navigation Tabs & Search -->
-	<div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+	<div
+		class="flex flex-col gap-3 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between"
+	>
 		<Tabs items={tabFilterItems} bind:active={currentFilter} />
 
 		<div class="w-full sm:w-56">
@@ -291,21 +293,21 @@
 			{#each filteredTodos as t (t.id)}
 				{@const dueInfo = formatDueDate(t.dueDate)}
 				<div
-					class="group flex flex-col justify-between gap-2.5 p-3.5 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:gap-3 {t.completed
+					class="group flex flex-col justify-between gap-2 p-3 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:gap-3 {t.completed
 						? 'opacity-60'
 						: ''}"
 				>
-					<div class="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+					<div class="flex min-w-0 flex-1 items-start gap-2.5 sm:items-center">
 						<button
 							type="button"
-							class="mt-0.5 flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded border transition-all sm:mt-0 {t.completed
+							class="mt-0.5 flex h-4.5 w-4.5 shrink-0 cursor-pointer items-center justify-center rounded border transition-all sm:mt-0 {t.completed
 								? 'border-success bg-success text-white'
 								: 'border-border-strong hover:border-fg-subdued'}"
 							onclick={() => handleToggle(t)}
 							aria-label="Toggle task"
 						>
 							{#if t.completed}
-								<i class="fas fa-check text-[10px]"></i>
+								<i class="fas fa-check text-[9px]"></i>
 							{/if}
 						</button>
 
@@ -320,7 +322,7 @@
 						</div>
 					</div>
 
-					<div class="flex shrink-0 items-center gap-2 pl-8 sm:pl-0">
+					<div class="flex shrink-0 flex-wrap items-center gap-1.5 pl-7 sm:pl-0">
 						{#if t.priority === 'high'}
 							<Badge variant="danger" size="sm">High</Badge>
 						{:else if t.priority === 'low'}
@@ -329,12 +331,12 @@
 
 						{#if dueInfo.text}
 							<span
-								class="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs {dueInfo.isOverdue &&
+								class="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] {dueInfo.isOverdue &&
 								!t.completed
 									? 'bg-error/15 font-medium text-error'
 									: 'bg-muted text-fg-subdued'}"
 							>
-								<i class="far fa-calendar text-[10px]"></i>
+								<i class="far fa-calendar text-[9px]"></i>
 								{dueInfo.text}
 							</span>
 						{/if}

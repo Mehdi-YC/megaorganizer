@@ -60,7 +60,7 @@
 		/>
 	</div>
 
-	<main class="flex-1 overflow-x-hidden overflow-y-auto bg-bg">
+	<main class="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-bg">
 		<!-- Modern Mobile Top Bar -->
 		<div
 			class="no-print sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface/80 px-4 backdrop-blur-md lg:hidden"

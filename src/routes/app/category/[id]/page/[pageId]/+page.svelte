@@ -1023,6 +1023,25 @@
 				</div>
 				<div class="mb-4">
 					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Icon</p>
+					<div class="mb-2 flex items-center gap-2">
+						<div
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/30 text-sm"
+							style="color: {editColor || 'var(--color-primary)'}"
+						>
+							<i
+								class={editIcon.startsWith('fas ') || editIcon.startsWith('fa-solid ')
+									? editIcon
+									: `fas ${editIcon.startsWith('fa-') ? editIcon : `fa-${editIcon}`}`}
+							></i>
+						</div>
+						<div class="flex-1">
+							<Input
+								name="editNodeIcon"
+								bind:value={editIcon}
+								placeholder="e.g. fa-folder, fa-briefcase, fa-code, fa-rocket"
+							/>
+						</div>
+					</div>
 					<div class="grid grid-cols-7 gap-1.5 sm:grid-cols-10">
 						{#each NODE_ICONS as icon (icon)}
 							<button
