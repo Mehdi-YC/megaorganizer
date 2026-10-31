@@ -160,20 +160,7 @@
 		</table>
 	</div>
 
-	<!-- Legal Exemption Notice & Rubber Stamp -->
-	<div class="mt-2.5 flex items-center justify-between gap-4">
-		<div class="text-xs text-gray-600 italic">
-			Facture non soumise à la TVA (Régime de l'IFU - Statut Auto-Entrepreneur)
-		</div>
-		{#if invoice.showTvaStamp ?? invoice.tvaAmount === 0}
-			<div
-				class="inline-block -rotate-3 rounded-xs border-[2.5px] border-red-600 px-2.5 py-0.5 text-[11px] font-black tracking-wider text-red-600 uppercase select-none print:border-red-600 print:text-red-600"
-			>
-				NON SOUMIS À LA TVA
-			</div>
-		{/if}
-	</div>
-	<hr class="mt-1.5 mb-4 border-gray-200" />
+	<hr class="mt-3 mb-4 border-gray-200" />
 
 	<!-- Bottom Section: Conditions & Payment on Left, Totals & Stamp on Right -->
 	<div class="flex items-start justify-between gap-6">
@@ -208,7 +195,7 @@
 		</div>
 
 		<!-- Right: Totals Box, Amount in Words & Stamp -->
-		<div class="w-[320px] shrink-0">
+		<div class="w-[340px] shrink-0">
 			<div class="border-t border-gray-900 pt-1 text-xs">
 				<div class="flex justify-between py-0.5 text-gray-700">
 					<span>Montant hors taxes</span>
@@ -235,8 +222,15 @@
 			</div>
 
 			<!-- Stamp & Signature Area -->
-			<div class="mt-3 flex justify-end">
-				<div class="relative flex min-h-[75px] w-52 items-center justify-center">
+			<div class="mt-3 flex items-center justify-end gap-3">
+				{#if invoice.showTvaStamp ?? invoice.tvaAmount === 0}
+					<div
+						class="inline-block shrink-0 -rotate-6 rounded-xs border-[2.5px] border-red-600 px-2.5 py-1 text-[11px] font-black tracking-wider text-red-600 uppercase select-none print:border-red-600 print:text-red-600"
+					>
+						NON SOUMIS À LA TVA
+					</div>
+				{/if}
+				<div class="relative flex min-h-[75px] w-48 items-center justify-center">
 					{#if profile?.stampUrl}
 						<img src={profile.stampUrl} alt="Cachet" class="max-h-20 max-w-full object-contain" />
 					{/if}
@@ -275,15 +269,16 @@
 	@media print {
 		@page {
 			size: A4 portrait;
-			margin: 8mm 10mm;
+			margin: 0;
 		}
 
 		:global(html),
 		:global(body) {
 			width: 100% !important;
-			height: auto !important;
+			height: 100% !important;
 			background: #ffffff !important;
 			color: #1f2937 !important;
+			color-scheme: light !important;
 			margin: 0 !important;
 			padding: 0 !important;
 			-webkit-print-color-adjust: exact !important;
@@ -296,10 +291,12 @@
 
 		.invoice-sheet {
 			position: static !important;
-			width: 100% !important;
-			max-width: 100% !important;
-			margin: 0 !important;
-			padding: 0 !important;
+			box-sizing: border-box !important;
+			width: 210mm !important;
+			max-width: 210mm !important;
+			min-height: 297mm !important;
+			margin: 0 auto !important;
+			padding: 10mm 12mm !important;
 			border: none !important;
 			box-shadow: none !important;
 			background: #ffffff !important;

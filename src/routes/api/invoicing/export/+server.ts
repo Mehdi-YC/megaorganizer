@@ -147,10 +147,6 @@ function generateInvoiceHtml(
 		</tbody>
 	</table>
 
-	<div class="legal-mention">
-		<div>Facture non soumise à la TVA (Régime de l'IFU - Statut Auto-Entrepreneur)</div>
-		${(inv.showTvaStamp ?? inv.tvaAmount === 0) ? '<div class="tva-stamp">NON SOUMIS À LA TVA</div>' : ''}
-	</div>
 	<hr class="divider" />
 
 	<div class="bottom-section">
@@ -181,8 +177,9 @@ function generateInvoiceHtml(
 				<div class="words-val">${totalWords}</div>
 			</div>
 
-			<div class="stamps">
-				<div style="position: relative; width: 200px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+			<div class="stamps" style="margin-top: 15px; display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
+				${(inv.showTvaStamp ?? inv.tvaAmount === 0) ? '<div class="tva-stamp">NON SOUMIS À LA TVA</div>' : ''}
+				<div style="position: relative; width: 190px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
 					${stampBase64 ? `<img src="${stampBase64}" alt="Cachet" style="max-height: 90px; max-width: 100%; object-fit: contain;" />` : ''}
 					${signatureBase64 ? `<img src="${signatureBase64}" alt="Signature" style="position: absolute; inset: 0; margin: auto; max-height: 75px; max-width: 100%; object-fit: contain; opacity: 0.95;" />` : ''}
 					${!stampBase64 && !signatureBase64 ? `<div style="border: 1px dashed #d1d5db; padding: 15px; font-size: 11px; color: #9ca3af; border-radius: 4px;">Cachet et Signature</div>` : ''}

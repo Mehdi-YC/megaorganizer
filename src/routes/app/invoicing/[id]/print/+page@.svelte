@@ -20,10 +20,13 @@
 	<title>{data.invoice.invoiceNumber} - Impression</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[#f3f4f6] py-6 text-gray-900 print:min-h-0 print:bg-white print:p-0">
+<div
+	class="min-h-screen bg-white py-6 text-gray-900 print:min-h-0 print:bg-white print:p-0"
+	style="color-scheme: light;"
+>
 	<!-- Top Bar for Preview & Manual Print Trigger (Hidden during print) -->
 	<div
-		class="no-print mx-auto mb-6 flex max-w-[800px] items-center justify-between rounded-sm border border-border bg-surface px-4 py-3 shadow-xs print:hidden"
+		class="no-print mx-auto mb-6 flex max-w-[800px] items-center justify-between rounded-sm border border-gray-200 bg-gray-50 px-4 py-3 shadow-xs print:hidden"
 	>
 		<a href={resolve('/app/invoicing/[id]', { id: data.invoice.id })}>
 			<Button variant="secondary" size="sm">
@@ -47,20 +50,27 @@
 </div>
 
 <style>
+	:global(html:has(.invoice-sheet)),
+	:global(body:has(.invoice-sheet)) {
+		color-scheme: light !important;
+		background: #ffffff !important;
+	}
+
 	@media print {
 		@page {
 			size: A4 portrait;
-			margin: 8mm 10mm;
+			margin: 0;
 		}
 
 		:global(html),
 		:global(body) {
 			background: #ffffff !important;
 			color: #111827 !important;
+			color-scheme: light !important;
 			margin: 0 !important;
 			padding: 0 !important;
 			width: 100% !important;
-			height: auto !important;
+			height: 100% !important;
 			-webkit-print-color-adjust: exact !important;
 			print-color-adjust: exact !important;
 		}

@@ -238,12 +238,14 @@
 		descriptionOnHover
 	>
 		<div class="flex items-center gap-2">
-			<Button variant="secondary" onclick={() => goto(resolve('/app/invoicing'))}>Annuler</Button>
-			<Button onclick={handleSave} disabled={isSubmitting}>
+			<Button variant="secondary" size="sm" onclick={() => goto(resolve('/app/invoicing'))}
+				>Annuler</Button
+			>
+			<Button size="sm" onclick={handleSave} disabled={isSubmitting}>
 				{#if isSubmitting}
 					<i class="fas fa-spinner fa-spin mr-1.5 text-xs"></i> Enregistrement...
 				{:else}
-					<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer la facture
+					<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer
 				{/if}
 			</Button>
 		</div>
