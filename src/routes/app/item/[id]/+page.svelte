@@ -534,13 +534,13 @@
 				<aside
 					class="space-y-5 rounded-xl border border-border bg-surface p-5 shadow-xs {isDeckView
 						? 'order-2'
-						: 'order-1'} lg:sticky lg:top-6 lg:order-2 lg:w-72 lg:shrink-0 lg:self-start xl:w-80"
+						: 'order-1'} lg:order-2 lg:w-72 lg:shrink-0 xl:w-80"
 				>
-					<div>
+					<div class="overflow-hidden rounded-xl border border-border/50 shadow-2xs">
 						{#if item.imageUrl}
 							<ItemImage src={item.imageUrl} alt={item.name} size="full" />
 						{:else}
-							<div class="flex h-32 items-center justify-center rounded-sm bg-muted">
+							<div class="flex h-32 items-center justify-center rounded-xl bg-muted">
 								<i class="fas fa-cube text-3xl text-fg-subdued"></i>
 							</div>
 						{/if}

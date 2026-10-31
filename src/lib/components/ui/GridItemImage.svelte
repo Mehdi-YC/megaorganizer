@@ -17,7 +17,7 @@
 </script>
 
 {#if src}
-	<div class="{height} w-full overflow-hidden rounded-sm">
+	<div class="{height} w-full overflow-hidden rounded-xl">
 		{#if small}
 			<div class="relative h-full w-full">
 				<img
@@ -25,14 +25,14 @@
 					alt=""
 					class="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-xl"
 				/>
-				<img {src} {alt} class="relative h-full w-full object-contain p-0.5" />
+				<img {src} {alt} class="relative h-full w-full rounded-xl object-contain p-0.5" />
 			</div>
 		{:else}
-			<img {src} {alt} class="h-full w-full object-cover" />
+			<img {src} {alt} class="h-full w-full rounded-xl object-cover" />
 		{/if}
 	</div>
 {:else}
-	<div class="flex {height} w-full items-center justify-center rounded-sm bg-muted">
+	<div class="flex {height} w-full items-center justify-center rounded-xl bg-muted">
 		<i class="fas {icon} text-xs text-fg-subdued"></i>
 	</div>
 {/if}

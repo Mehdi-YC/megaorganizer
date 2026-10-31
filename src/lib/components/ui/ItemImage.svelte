@@ -19,28 +19,28 @@
 
 {#if size === 'full'}
 	{#if small}
-		<div class="relative h-full w-full overflow-hidden">
+		<div class="relative h-full w-full overflow-hidden rounded-xl">
 			<img
 				{src}
 				alt=""
 				class="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-xl"
 			/>
-			<img {src} {alt} class="relative h-full w-full object-contain p-0.5" />
+			<img {src} {alt} class="relative h-full w-full rounded-xl object-contain p-0.5" />
 		</div>
 	{:else}
-		<img {src} {alt} class="h-full w-full object-cover" />
+		<img {src} {alt} class="h-full w-full rounded-xl object-cover" />
 	{/if}
 {:else}
 	{#if small}
-		<div class="relative {sizes[size]} shrink-0 overflow-hidden rounded">
+		<div class="relative {sizes[size]} shrink-0 overflow-hidden rounded-xl">
 			<img
 				{src}
 				alt=""
 				class="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-xl"
 			/>
-			<img {src} {alt} class="relative h-full w-full object-contain" />
+			<img {src} {alt} class="relative h-full w-full rounded-xl object-contain" />
 		</div>
 	{:else}
-		<img {src} {alt} class="{sizes[size]} shrink-0 rounded object-cover" />
+		<img {src} {alt} class="{sizes[size]} shrink-0 rounded-xl object-cover" />
 	{/if}
 {/if}
