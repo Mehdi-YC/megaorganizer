@@ -12,7 +12,7 @@
 	};
 
 	type CalendarEntry = {
-		type: 'training' | 'reminder' | 'scheduled' | 'expense';
+		type: 'training' | 'reminder' | 'scheduled' | 'expense' | 'todo';
 		id: string;
 		templateId?: string | null;
 		title: string;
@@ -178,6 +178,25 @@
 			}
 		}
 
+		// Add simple todos scheduled for this date
+		if (!filter || filter === 'todos') {
+			const y = date.getFullYear();
+			const m = String(date.getMonth() + 1).padStart(2, '0');
+			const d = String(date.getDate()).padStart(2, '0');
+			const dateStr = `${y}-${m}-${d}`;
+
+			const dayTodos = (data.todos ?? []).filter((t) => t.dueDate === dateStr);
+			for (const todoItem of dayTodos) {
+				events.push({
+					type: 'todo',
+					id: todoItem.id,
+					title: todoItem.title,
+					completed: todoItem.completed,
+					time: todoItem.dueTime || undefined
+				});
+			}
+		}
+
 		// Add expenses
 		if (!filter || filter === 'finance') {
 			const dayExpenses = expenses.filter((e) => {
@@ -214,6 +233,7 @@
 
 	/** Target for a calendar event, matching the shape the server sent. */
 	function eventHref(event: CalendarEntry): string {
+		if (event.type === 'todo') return resolve('/app/todos');
 		if (event.type === 'training') return resolve('/app/training/session/[id]', { id: event.id });
 		if (event.type === 'expense') return resolve('/app/finance');
 		if (event.type === 'scheduled') {
@@ -378,6 +398,17 @@
 			<i class="fas fa-receipt text-[10px]"></i>
 			Finance
 		</button>
+		<button
+			type="button"
+			class="inline-flex cursor-pointer items-center gap-2 rounded-sm px-3 py-2 text-xs font-medium transition-colors {filter ===
+			'todos'
+				? 'bg-primary text-white'
+				: 'bg-muted text-fg hover:bg-border'}"
+			onclick={() => setFilter('todos')}
+		>
+			<i class="fas fa-check-square text-[10px]"></i>
+			Tâches
+		</button>
 	</PageHeader>
 
 	<div class="grid gap-6 lg:grid-cols-3">
@@ -514,14 +545,20 @@
 													? 'bg-muted text-fg-subdued italic'
 													: event.type === 'expense'
 														? 'bg-warning/10 text-warning'
-														: event.completed
-															? 'bg-success/10 text-success line-through'
-															: 'bg-error/10 text-error'}"
+														: event.type === 'todo'
+															? event.completed
+																? 'bg-success/10 text-success line-through'
+																: 'bg-primary-subdued text-primary-text'
+															: event.completed
+																? 'bg-success/10 text-success line-through'
+																: 'bg-error/10 text-error'}"
 											title={event.title}
 										>
 											{event.type === 'expense'
 												? `${event.amount?.toLocaleString()} - ${event.title}`
-												: event.title}
+												: event.type === 'todo'
+													? `✓ ${event.title}`
+													: event.title}
 										</div>
 									{/each}
 									{#if events.length > 3}
@@ -540,6 +577,10 @@
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-blue-500"></div>
 						<span>Training</span>
+					</div>
+					<div class="flex items-center gap-1.5">
+						<div class="h-3 w-3 rounded-full bg-primary-text"></div>
+						<span>Tâches</span>
 					</div>
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-success"></div>
@@ -597,9 +638,13 @@
 										? 'border-warning/30 bg-warning/5'
 										: event.type === 'scheduled'
 											? 'border-muted bg-muted/30'
-											: event.completed
-												? 'border-success/30 bg-success/5'
-												: 'border-error/30 bg-error/5'} p-3 transition-all hover:border-primary-text/50"
+											: event.type === 'todo'
+												? event.completed
+													? 'border-success/30 bg-success/5'
+													: 'border-primary/40 bg-primary-subdued'
+												: event.completed
+													? 'border-success/30 bg-success/5'
+													: 'border-error/30 bg-error/5'} p-3 transition-all hover:border-primary-text/50"
 							>
 								<div
 									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm {event.type ===
@@ -609,9 +654,13 @@
 											? 'bg-warning/10'
 											: event.type === 'scheduled'
 												? 'bg-muted'
-												: event.completed
-													? 'bg-success/10'
-													: 'bg-error/10'}"
+												: event.type === 'todo'
+													? event.completed
+														? 'bg-success/10'
+														: 'bg-primary/20'
+													: event.completed
+														? 'bg-success/10'
+														: 'bg-error/10'}"
 								>
 									<i
 										class="fas {event.type === 'training'
@@ -620,9 +669,13 @@
 												? 'fa-receipt text-warning'
 												: event.type === 'scheduled'
 													? 'fa-clock text-fg-subdued'
-													: event.completed
-														? 'fa-check text-success'
-														: 'fa-bell text-error'} text-xs"
+													: event.type === 'todo'
+														? event.completed
+															? 'fa-check-square text-success'
+															: 'fa-check-square text-primary-text'
+														: event.completed
+															? 'fa-check text-success'
+															: 'fa-bell text-error'} text-xs"
 									></i>
 								</div>
 								<div class="min-w-0 flex-1">

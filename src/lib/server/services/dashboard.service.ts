@@ -5,6 +5,7 @@ import { getTrainingSessionsWithActivities } from './training.service';
 import { getDueReminders, generateDueReminders, getUpcomingReminders } from './reminder.service';
 import { getAnalytics } from './analytics.service';
 import { getUserSettings } from './finance.service';
+import { getTodayAndOverdueTodos } from './todo.service';
 
 function getWeeklyTrainingMinutes(
 	sessions: Array<{ startedAt: Date | string; duration: number | null }>
@@ -32,6 +33,8 @@ export async function getDashboardData(userId: string) {
 	// Generate any due reminders first
 	await generateDueReminders(userId);
 
+	const todayStr = new Date().toISOString().slice(0, 10);
+
 	const [
 		recentItems,
 		recentSessions,
@@ -41,7 +44,8 @@ export async function getDashboardData(userId: string) {
 		upcomingEvents,
 		analytics,
 		settings,
-		note
+		note,
+		todayTodos
 	] = await Promise.all([
 		db
 			.select({
@@ -63,7 +67,8 @@ export async function getDashboardData(userId: string) {
 		getUpcomingEvents(userId, 7),
 		getAnalytics(userId),
 		getUserSettings(userId),
-		getDashboardNote(userId)
+		getDashboardNote(userId),
+		getTodayAndOverdueTodos(userId, todayStr)
 	]);
 
 	const totalDuration = allSessions.reduce((acc, s) => acc + (s.duration ?? 0), 0);
@@ -72,6 +77,7 @@ export async function getDashboardData(userId: string) {
 		recentItems,
 		recentSessions,
 		dueReminders,
+		todayTodos,
 		upcomingEvents,
 		analytics,
 		currency: settings?.currency ?? 'DZD',

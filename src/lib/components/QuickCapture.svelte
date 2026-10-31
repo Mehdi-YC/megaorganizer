@@ -201,7 +201,7 @@
 <!-- FAB Button -->
 <button
 	type="button"
-	class="fixed right-6 bottom-6 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover active:scale-95"
+	class="no-print fixed right-6 bottom-6 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover active:scale-95"
 	onclick={() => open()}
 	aria-label="Quick capture"
 >
@@ -213,7 +213,7 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-end justify-center bg-surface-overlay sm:items-center"
+		class="no-print fixed inset-0 z-50 flex items-end justify-center bg-surface-overlay sm:items-center"
 		onclick={close}
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->

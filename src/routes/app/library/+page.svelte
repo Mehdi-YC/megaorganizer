@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { checkSmallImages, getAssignedTags, toggleArrayItem } from '$lib/utils';
 	import {
 		GridItemImage,
@@ -232,15 +233,17 @@
 						>
 							<i class="fas fa-star text-[9px]"></i> Favorites only
 						</button>
-						<button
-							type="button"
-							class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1 text-[10px] font-medium transition-all {filterYdk
-								? 'bg-primary text-white'
-								: 'bg-muted text-fg-subdued hover:text-fg'}"
-							onclick={toggleFilterYdk}
-						>
-							<i class="fas fa-layer-group text-[9px]"></i> Decks only
-						</button>
+						{#if page.data.enabledFeatures?.ydk !== false}
+							<button
+								type="button"
+								class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1 text-[10px] font-medium transition-all {filterYdk
+									? 'bg-primary text-white'
+									: 'bg-muted text-fg-subdued hover:text-fg'}"
+								onclick={toggleFilterYdk}
+							>
+								<i class="fas fa-layer-group text-[9px]"></i> Decks only
+							</button>
+						{/if}
 					</div>
 				</div>
 			</div>

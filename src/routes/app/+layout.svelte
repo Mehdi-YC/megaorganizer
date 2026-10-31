@@ -8,7 +8,7 @@
 	import { page } from '$app/state';
 	import { startReminderPolling } from '$lib/utils/notifications';
 	import { initWikilinkClicks } from '$lib/utils/wikilink-click';
-	import type { CategoryWithPages } from '$lib/types';
+	import type { CategoryWithPages, EnabledFeatures } from '$lib/types';
 
 	let {
 		children,
@@ -17,6 +17,8 @@
 		children: Snippet;
 		data: {
 			categories?: CategoryWithPages[];
+			invoiceYears?: number[];
+			enabledFeatures?: EnabledFeatures;
 			user?: { name: string; email: string; image?: string | null };
 		};
 	} = $props();
@@ -44,12 +46,14 @@
 	{/if}
 
 	<div
-		class="fixed z-50 h-full lg:static lg:z-auto {sidebarOpen
+		class="no-print fixed z-50 h-full lg:static lg:z-auto {sidebarOpen
 			? 'translate-x-0'
 			: '-translate-x-full lg:translate-x-0'} transition-transform duration-200"
 	>
 		<Sidebar
 			categories={data.categories ?? []}
+			invoiceYears={data.invoiceYears ?? []}
+			enabledFeatures={data.enabledFeatures}
 			user={data.user}
 			onNavigate={() => (sidebarOpen = false)}
 		/>
@@ -57,7 +61,7 @@
 
 	<main class="flex-1 overflow-x-hidden overflow-y-auto">
 		<div
-			class="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-bg-subdued px-4 lg:hidden"
+			class="no-print sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-bg-subdued px-4 lg:hidden"
 		>
 			<a
 				href={resolve('/app')}

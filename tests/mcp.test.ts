@@ -53,6 +53,11 @@ const OTHER_HASH = await hashPassword(OTHER_PASSWORD);
 
 // Child tables first so foreign keys stay satisfied while clearing.
 const TABLES = [
+	'invoice_line',
+	'invoice_yearly_doc',
+	'invoice',
+	'invoice_product',
+	'invoice_client',
 	'running_track_point',
 	'running_activity',
 	'training_exercise_record',
@@ -146,7 +151,8 @@ async function seed() {
 				name: 'Plan Page',
 				description: 'Quarterly planning',
 				markdown: '# Plan\n\nShip the thing.',
-				position: 0
+				position: 0,
+				updatedAt: NOW
 			},
 			{ id: 'p2', userId: OTHER, categoryId: 'c2', name: 'Their Page', position: 0 }
 		])
@@ -171,7 +177,8 @@ async function seed() {
 				name: 'Bench Press',
 				description: 'Push day',
 				markdown: 'Three sets of five.',
-				tags: JSON.stringify(['t1'])
+				tags: JSON.stringify(['t1']),
+				updatedAt: NOW
 			},
 			{ id: 'i2', userId: OTHER, type: 'item', name: 'Their Item' }
 		])

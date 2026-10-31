@@ -20,6 +20,28 @@
 	// svelte-ignore state_referenced_locally
 	let monthlySpendingLimit = $state(data.financeSettings?.monthlySpendingLimit ?? '');
 
+	// Invoicing profile settings
+	// svelte-ignore state_referenced_locally
+	let brandName = $state(data.invoicingProfile?.brandName ?? '');
+	// svelte-ignore state_referenced_locally
+	let brandTagline = $state(data.invoicingProfile?.brandTagline ?? '');
+	// svelte-ignore state_referenced_locally
+	let address = $state(data.invoicingProfile?.address ?? '');
+	// svelte-ignore state_referenced_locally
+	let phone = $state(data.invoicingProfile?.phone ?? '');
+	// svelte-ignore state_referenced_locally
+	let nif = $state(data.invoicingProfile?.nif ?? '');
+	// svelte-ignore state_referenced_locally
+	let anae = $state(data.invoicingProfile?.anae ?? '');
+	// svelte-ignore state_referenced_locally
+	let rc = $state(data.invoicingProfile?.rc ?? '');
+	// svelte-ignore state_referenced_locally
+	let nis = $state(data.invoicingProfile?.nis ?? '');
+	// svelte-ignore state_referenced_locally
+	let ai = $state(data.invoicingProfile?.ai ?? '');
+	// svelte-ignore state_referenced_locally
+	let rib = $state(data.invoicingProfile?.rib ?? '');
+
 	// MCP connection snippet, prefilled with this account's email.
 	const mcpSnippet = $derived(
 		JSON.stringify(
@@ -108,6 +130,12 @@
 		reminders: 'reminders',
 		templateTodos: 'template todos',
 		reminderTodos: 'reminder todos',
+		todos: 'tâches',
+		invoiceClients: 'clients',
+		invoiceProducts: 'services',
+		invoices: 'factures',
+		invoiceLines: 'lignes de factures',
+		invoiceDocs: 'déclarations fiscales (G12/G12 bis)',
 		expenses: 'expenses',
 		sessions: 'sessions',
 		activities: 'activities',
@@ -132,17 +160,16 @@
 		try {
 			const res = await fetch('/api/backup');
 			if (!res.ok) throw new Error('Export failed');
-			const data = await res.json();
-			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `megaorganize-backup-${new Date().toISOString().split('T')[0]}.json`;
+			a.download = `megaorganize-backup-${new Date().toISOString().split('T')[0]}.zip`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-		} catch (err) {
+		} catch {
 			importStatus = 'error';
 			importMessage = 'Failed to export data';
 		}
@@ -162,12 +189,11 @@
 		importCounts = null;
 
 		try {
-			const text = await file.text();
-			const jsonData = JSON.parse(text);
+			const formData = new FormData();
+			formData.append('file', file);
 			const res = await fetch('/api/backup', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(jsonData)
+				body: formData
 			});
 			const result = await res.json();
 			if (result.success) {
@@ -178,7 +204,7 @@
 				importStatus = 'error';
 				importMessage = result.message || 'Import failed';
 			}
-		} catch (err) {
+		} catch {
 			importStatus = 'error';
 			importMessage = 'Invalid backup file';
 		}
@@ -278,34 +304,151 @@
 		</div>
 	</div>
 
+	<!-- Modules & Features Toggles -->
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+				Fonctionnalités & Modules
+			</h2>
+		</div>
+		<form method="post" action="?/updateFeatures" class="space-y-4 px-6 py-5">
+			<p class="text-xs text-fg-subdued">
+				Activez ou masquez les fonctionnalités de l'application selon vos besoins. Les modules
+				désactivés sont masqués dans la navigation et les pages associées.
+			</p>
+
+			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="todos"
+						checked={data.enabledFeatures?.todos ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Tâches simples (Todos)</div>
+						<div class="text-[11px] text-fg-subdued">Gestion des tâches du jour et calendrier</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="reminders"
+						checked={data.enabledFeatures?.reminders ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Rappels</div>
+						<div class="text-[11px] text-fg-subdued">Rappels récurrents et notifications</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="finance"
+						checked={data.enabledFeatures?.finance ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Finances & Dépenses</div>
+						<div class="text-[11px] text-fg-subdued">Suivi budgétaire et registre des dépenses</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="invoicing"
+						checked={data.enabledFeatures?.invoicing ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Facturation</div>
+						<div class="text-[11px] text-fg-subdued">Factures et déclarations G12 / G12 bis</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="training"
+						checked={data.enabledFeatures?.training ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Entraînement</div>
+						<div class="text-[11px] text-fg-subdued">Séances sportives et courses GPS</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="ydk"
+						checked={data.enabledFeatures?.ydk ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Yu-Gi-Oh (YDK)</div>
+						<div class="text-[11px] text-fg-subdued">Gestion des decks de cartes</div>
+					</div>
+				</label>
+			</div>
+
+			<div class="flex items-center justify-between pt-2">
+				<Button type="submit">Enregistrer les modules</Button>
+				{#if form?.featuresMessage}
+					<span class="text-xs {form.featuresMessage.ok ? 'text-success' : 'text-error'}">
+						{form.featuresMessage.text}
+					</span>
+				{/if}
+			</div>
+		</form>
+	</div>
+
 	<div class="mt-6 rounded-sm border border-border bg-surface">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Backup & Restore</h2>
 		</div>
 		<div class="space-y-4 px-6 py-5">
 			<p class="text-xs text-fg-subdued">
-				Export all your data as a JSON file, or restore from a previous backup. Existing items with
-				the same name will be skipped.
+				Exportez toutes vos données et fichiers au format ZIP, ou restaurez depuis une sauvegarde
+				précédente (.zip ou .json). Les éléments existants portant le même nom seront conservés.
 			</p>
 
 			<div class="flex flex-col gap-2 sm:flex-row">
 				<Button type="button" onclick={exportBackup}>
-					<i class="fas fa-download text-xs"></i> Export Backup
+					<i class="fas fa-download text-xs"></i> Exporter la sauvegarde (ZIP)
 				</Button>
 				<Button variant="secondary" type="button" onclick={triggerImport}>
-					<i class="fas fa-upload text-xs"></i> Import Backup
+					<i class="fas fa-upload text-xs"></i> Importer une sauvegarde
 				</Button>
 				<input
 					type="file"
-					accept=".json"
+					accept=".zip,.json"
 					class="hidden"
 					bind:this={importInput}
 					onchange={handleImportFile}
 				/>
 			</div>
 			<p class="text-[10px] text-fg-subdued/60">
-				Includes everything: library (categories, pages, items, tags, attachments), reminders,
-				expenses, settings, training runs with GPS, roadmaps, tier lists, YDK decks, and timers.
+				Comprend l'ensemble des données et pièces jointes : base de connaissances, pièces jointes,
+				tâches, rappels, dépenses, facturation, documents fiscaux G12/G12 bis, entraînements GPS,
+				roadmaps, tier lists, decks YDK et chronomètres.
 			</p>
 
 			{#if importStatus === 'loading'}
@@ -425,6 +568,210 @@
 
 				<Button type="submit">Save Finance Settings</Button>
 			</form>
+		</div>
+	</div>
+
+	<!-- Facturation & Conformité Algérienne -->
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+				Facturation & Conformité Algérienne
+			</h2>
+		</div>
+		<div class="space-y-6 px-6 py-5">
+			<p class="text-xs text-fg-subdued">
+				Ces informations apparaissent sur vos factures et permettent la conformité fiscale
+				algérienne (NIF, ANAE, RC, etc.).
+			</p>
+
+			<form method="post" action="?/updateInvoicingProfile" use:enhance class="space-y-4">
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="Nom de marque / Enseigne"
+						type="text"
+						id="brandName"
+						name="brandName"
+						bind:value={brandName}
+						placeholder="ex: Mehdi YC"
+					/>
+					<Input
+						label="Slogan / Activité"
+						type="text"
+						id="brandTagline"
+						name="brandTagline"
+						bind:value={brandTagline}
+						placeholder="ex: Automatisation & Digitalisation"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="Adresse professionnelle"
+						type="text"
+						id="address"
+						name="address"
+						bind:value={address}
+						placeholder="ex: Cité 5 Juillet, Bab Ezzouar 16042, Alger"
+					/>
+					<Input
+						label="Téléphone"
+						type="text"
+						id="phone"
+						name="phone"
+						bind:value={phone}
+						placeholder="ex: +213 553 09 12 35"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+					<Input
+						label="NIF (Numéro d'Identification Fiscale)"
+						type="text"
+						id="nif"
+						name="nif"
+						bind:value={nif}
+						placeholder="ex: 19816170319014941680"
+					/>
+					<Input
+						label="ANAE (Auto-entrepreneur)"
+						type="text"
+						id="anae"
+						name="anae"
+						bind:value={anae}
+						placeholder="ex: 15199589"
+					/>
+					<Input
+						label="RC (Registre de Commerce)"
+						type="text"
+						id="rc"
+						name="rc"
+						bind:value={rc}
+						placeholder="Optionnel"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="NIS (Numéro d'Identification Statistique)"
+						type="text"
+						id="nis"
+						name="nis"
+						bind:value={nis}
+						placeholder="Optionnel"
+					/>
+					<Input
+						label="Article d'Imposition (AI)"
+						type="text"
+						id="ai"
+						name="ai"
+						bind:value={ai}
+						placeholder="Optionnel"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="RIB / RIP Bancaire ou Postal"
+						type="text"
+						id="rib"
+						name="rib"
+						bind:value={rib}
+						placeholder="ex: 007 99999 0001234567 89"
+					/>
+				</div>
+
+				{#if form?.invoicingMessage}
+					<p class="text-xs {form.invoicingMessage.ok ? 'text-success' : 'text-error'}">
+						{form.invoicingMessage.text}
+					</p>
+				{/if}
+
+				<Button type="submit">Enregistrer les informations de facturation</Button>
+			</form>
+
+			<div class="my-4 border-t border-border/50 pt-4">
+				<h3 class="mb-3 text-xs font-semibold text-fg">Signature & Cachet</h3>
+				<p class="mb-4 text-xs text-fg-subdued">
+					Téléversez votre signature numérique et le cachet de votre entreprise/auto-entreprise pour
+					les apposer automatiquement sur vos factures.
+				</p>
+
+				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+					<!-- Signature Upload -->
+					<div class="rounded-sm border border-border bg-bg p-4">
+						<span class="text-xs font-semibold text-fg">Signature</span>
+						<div
+							class="mt-2 flex h-28 items-center justify-center rounded border border-dashed border-border bg-surface"
+						>
+							{#if data.invoicingProfile?.signatureUrl}
+								<img
+									src={data.invoicingProfile.signatureUrl}
+									alt="Signature"
+									class="max-h-24 max-w-full object-contain"
+								/>
+							{:else}
+								<span class="text-xs text-fg-subdued">Aucune signature</span>
+							{/if}
+						</div>
+						<form
+							method="post"
+							action="?/uploadMedia"
+							enctype="multipart/form-data"
+							class="mt-3 flex items-center gap-2"
+						>
+							<input type="hidden" name="type" value="signature" />
+							<input
+								type="file"
+								name="file"
+								accept="image/*"
+								required
+								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-sm file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+							/>
+							<Button size="sm" type="submit">Uploader</Button>
+						</form>
+					</div>
+
+					<!-- Stamp Upload -->
+					<div class="rounded-sm border border-border bg-bg p-4">
+						<span class="text-xs font-semibold text-fg">Cachet / Tampon</span>
+						<div
+							class="mt-2 flex h-28 items-center justify-center rounded border border-dashed border-border bg-surface"
+						>
+							{#if data.invoicingProfile?.stampUrl}
+								<img
+									src={data.invoicingProfile.stampUrl}
+									alt="Cachet"
+									class="max-h-24 max-w-full object-contain"
+								/>
+							{:else}
+								<span class="text-xs text-fg-subdued">Aucun cachet</span>
+							{/if}
+						</div>
+						<form
+							method="post"
+							action="?/uploadMedia"
+							enctype="multipart/form-data"
+							class="mt-3 flex items-center gap-2"
+						>
+							<input type="hidden" name="type" value="stamp" />
+							<input
+								type="file"
+								name="file"
+								accept="image/*"
+								required
+								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-sm file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+							/>
+							<Button size="sm" type="submit">Uploader</Button>
+						</form>
+					</div>
+				</div>
+
+				{#if form?.mediaMessage}
+					<p class="mt-3 text-xs {form.mediaMessage.ok ? 'text-success' : 'text-error'}">
+						{form.mediaMessage.text}
+					</p>
+				{/if}
+			</div>
 		</div>
 	</div>
 

@@ -9,6 +9,7 @@ import {
 	getUserSettings,
 	getMonthlyTotalForDateRange
 } from '$lib/server/services/finance.service';
+import { getTodos } from '$lib/server/services/todo.service';
 import type { PageServerLoad } from './$types';
 
 function parseMonth(param: string | null): { year: number; month: number } {
@@ -41,6 +42,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			expenseSettings: { currency: 'DZD' },
 			monthlyExpenses: [],
 			upcoming: [],
+			todos: [],
 			filter,
 			month: monthParam
 		};
@@ -63,7 +65,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		templates,
 		expenses,
 		expenseSettings,
-		monthlyExpenses
+		monthlyExpenses,
+		rawTodos
 	] = await Promise.all([
 		getTrainingSessionsInRange(locals.user.id, rangeStart, rangeEnd),
 		getReminderHistory(locals.user.id, rangeStart, rangeEnd),
@@ -71,8 +74,20 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		getReminderTemplates(locals.user.id),
 		getExpensesForDateRange(locals.user.id, rangeStart, rangeEnd),
 		getUserSettings(locals.user.id),
-		getMonthlyTotalForDateRange(locals.user.id, rangeStart, rangeEnd)
+		getMonthlyTotalForDateRange(locals.user.id, rangeStart, rangeEnd),
+		getTodos(locals.user.id)
 	]);
+
+	const calendarTodos = rawTodos
+		.filter((t) => !!t.dueDate)
+		.map((t) => ({
+			id: t.id,
+			title: t.title,
+			dueDate: t.dueDate!,
+			dueTime: t.dueTime,
+			completed: t.completed,
+			priority: t.priority
+		}));
 
 	// Upcoming reminders (incomplete instances + scheduled templates), next 7 days
 	const upcomingInstances = reminders
@@ -112,6 +127,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		expenseSettings,
 		monthlyExpenses,
 		upcoming,
+		todos: calendarTodos,
 		filter,
 		month: monthParam
 	};

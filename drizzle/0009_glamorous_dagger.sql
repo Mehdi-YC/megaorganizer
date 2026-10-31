@@ -1,0 +1,1 @@
+ALTER TABLE `invoice` ADD `show_tva_stamp` integer DEFAULT true NOT NULL;

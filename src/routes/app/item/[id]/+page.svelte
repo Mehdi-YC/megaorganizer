@@ -398,38 +398,40 @@
 										placeholder="https://..."
 									/>
 								</div>
-								<div class="flex flex-col gap-1.5">
-									<span class="text-[10px] font-semibold tracking-wide text-fg-subdued"
-										>YDK Deck</span
-									>
-									<div class="flex items-center gap-2">
-										<Checkbox bind:checked={ydkEnabled} label="Enable YDK" />
-										{#if isDeck && !ydkEnabled}
-											<Button variant="danger" size="sm" onclick={clearYdk}>Clear</Button>
+								{#if data.enabledFeatures?.ydk !== false}
+									<div class="flex flex-col gap-1.5">
+										<span class="text-[10px] font-semibold tracking-wide text-fg-subdued"
+											>YDK Deck</span
+										>
+										<div class="flex items-center gap-2">
+											<Checkbox bind:checked={ydkEnabled} label="Enable YDK" />
+											{#if isDeck && !ydkEnabled}
+												<Button variant="danger" size="sm" onclick={clearYdk}>Clear</Button>
+											{/if}
+										</div>
+										{#if ydkEnabled}
+											<Textarea
+												bind:value={ydkInput}
+												rows={5}
+												placeholder="#main&#10;12345678&#10;#extra&#10;87654321&#10;!side&#10;11111111"
+											/>
+											<div class="flex items-center gap-3">
+												<Button variant="primary" size="sm" onclick={applyYdkPaste}
+													><i class="fas fa-paste text-[10px]"></i> Apply</Button
+												>
+												<label
+													class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border"
+													><i class="fas fa-upload text-[10px]"></i> Import .ydk<input
+														type="file"
+														accept=".ydk,.txt"
+														class="hidden"
+														onchange={handleYdkFileImport}
+													/></label
+												>
+											</div>
 										{/if}
 									</div>
-									{#if ydkEnabled}
-										<Textarea
-											bind:value={ydkInput}
-											rows={5}
-											placeholder="#main&#10;12345678&#10;#extra&#10;87654321&#10;!side&#10;11111111"
-										/>
-										<div class="flex items-center gap-3">
-											<Button variant="primary" size="sm" onclick={applyYdkPaste}
-												><i class="fas fa-paste text-[10px]"></i> Apply</Button
-											>
-											<label
-												class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-sm bg-muted px-3 text-xs font-medium text-fg hover:bg-border"
-												><i class="fas fa-upload text-[10px]"></i> Import .ydk<input
-													type="file"
-													accept=".ydk,.txt"
-													class="hidden"
-													onchange={handleYdkFileImport}
-												/></label
-											>
-										</div>
-									{/if}
-								</div>
+								{/if}
 							</div>
 						{/if}
 					{/if}

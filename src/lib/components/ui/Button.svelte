@@ -15,7 +15,7 @@
 		...rest
 	}: {
 		variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-		size?: 'sm' | 'md' | 'lg';
+		size?: 'xs' | 'sm' | 'md' | 'lg';
 		disabled?: boolean;
 		loading?: boolean;
 		type?: 'button' | 'submit' | 'reset';
@@ -37,6 +37,7 @@
 	};
 
 	const sizes: Record<string, string> = {
+		xs: 'h-7 px-2 text-[11px] gap-1 rounded-sm',
 		sm: 'h-8 px-3 text-xs gap-1.5 rounded-sm',
 		md: 'h-[36px] px-4 text-sm gap-2 rounded-sm',
 		lg: 'h-[42px] px-6 text-sm gap-2 rounded-sm'
