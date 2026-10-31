@@ -7,7 +7,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import type { Reminder, CalendarEvent, Todo } from '$lib/types';
+	import type { Reminder, Todo } from '$lib/types';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { formatIconClass, getContrastTextColor } from '$lib/utils';
 
@@ -95,29 +95,6 @@
 			noteStatus = 'error';
 			showToast('Failed to save scratchpad', 'error');
 		}
-	}
-
-	function getWeekDays(): Date[] {
-		const today = new Date();
-		const days: Date[] = [];
-		for (let i = 0; i < 7; i++) {
-			const day = new Date(today);
-			day.setDate(today.getDate() + i);
-			days.push(day);
-		}
-		return days;
-	}
-
-	function isSameDay(d1: Date, d2: Date): boolean {
-		return (
-			d1.getFullYear() === d2.getFullYear() &&
-			d1.getMonth() === d2.getMonth() &&
-			d1.getDate() === d2.getDate()
-		);
-	}
-
-	function getEventsForDay(day: Date, events: CalendarEvent[]): CalendarEvent[] {
-		return events.filter((e) => isSameDay(new Date(e.date), day));
 	}
 
 	async function handleCompleteReminder(id: string) {
@@ -258,167 +235,95 @@
 	<!-- TAB: OVERVIEW & ALL MODULES -->
 	{#if activeTab === 'overview' || activeTab === 'tasks'}
 		<!-- Section: Today's Priorities & Action Cards -->
-		<div>
-			<div class="mb-3">
-				<h2
-					class="cursor-help text-base font-semibold tracking-tight text-fg"
-					title="Active reminders, tasks, and scheduled milestones for today."
-				>
-					Today's Focus
-				</h2>
-			</div>
-
-			<div class="grid gap-4 lg:grid-cols-2">
-				<!-- Today's Tasks Card -->
-				{#if data.enabledFeatures?.todos !== false}
-					<Card
-						title="Today's Tasks"
-						description="Fast capture and daily task execution"
-						icon="fas fa-check-square"
-						iconBg="bg-indigo-600 text-white"
+		{#if data.enabledFeatures?.todos !== false}
+			<div>
+				<div class="mb-3">
+					<h2
+						class="cursor-help text-base font-semibold tracking-tight text-fg"
+						title="Active reminders, tasks, and scheduled milestones for today."
 					>
-						{#snippet headerAction()}
-							<a
-								href={resolve('/app/todos')}
-								class="text-xs font-medium text-primary-text hover:underline"
-							>
-								View all
-							</a>
-						{/snippet}
+						Today's Focus
+					</h2>
+				</div>
 
-						<!-- Quick Add Input -->
-						<form
-							onsubmit={(e) => {
-								e.preventDefault();
-								handleAddQuickTodo();
-							}}
-							class="mb-3.5 flex gap-2"
-						>
-							<input
-								type="text"
-								bind:value={quickTodoTitle}
-								placeholder="Add a task for today..."
-								class="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
-							/>
-							<Button type="submit" size="xs" disabled={!quickTodoTitle.trim() || isAddingTodo}>
-								<i class="fas fa-plus text-[10px]"></i>
-							</Button>
-						</form>
-
-						<!-- Todo items list -->
-						{#if todayTodos.length > 0}
-							<div class="max-h-56 space-y-1.5 overflow-y-auto pr-1">
-								{#each todayTodos as t (t.id)}
-									<div
-										class="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs transition-colors hover:bg-muted/50 {t.completed
-											? 'opacity-60'
-											: ''}"
-									>
-										<div class="flex min-w-0 flex-1 items-center gap-2.5">
-											<button
-												type="button"
-												class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {t.completed
-													? 'border-success bg-success text-white'
-													: 'border-border-strong hover:border-fg-subdued'}"
-												onclick={() => handleToggleQuickTodo(t)}
-												aria-label="Toggle task"
-											>
-												{#if t.completed}
-													<i class="fas fa-check text-[8px]"></i>
-												{/if}
-											</button>
-											<span
-												class="truncate text-fg {t.completed ? 'text-fg-subdued line-through' : ''}"
-											>
-												{t.title}
-											</span>
-										</div>
-										{#if t.priority === 'high'}
-											<Badge variant="danger" size="sm">High</Badge>
-										{/if}
-									</div>
-								{/each}
-							</div>
-						{:else}
-							<div class="py-6 text-center text-xs text-fg-subdued">
-								<i class="fas fa-clipboard-check mb-1.5 block text-xl text-fg-subdued/30"></i>
-								No tasks pending for today. You're all caught up!
-							</div>
-						{/if}
-					</Card>
-				{/if}
-
-				<!-- Upcoming Schedule Strip -->
+				<!-- Today's Tasks Card -->
 				<Card
-					title="Upcoming This Week"
-					description="Calendar agenda and scheduled deadlines"
-					icon="fas fa-calendar-days"
-					iconBg="bg-violet-600 text-white"
+					title="Today's Tasks"
+					description="Fast capture and daily task execution"
+					icon="fas fa-check-square"
+					iconBg="bg-indigo-600 text-white"
 				>
 					{#snippet headerAction()}
 						<a
-							href={resolve('/app/calendar')}
+							href={resolve('/app/todos')}
 							class="text-xs font-medium text-primary-text hover:underline"
 						>
-							Calendar
+							View all
 						</a>
 					{/snippet}
 
-					<div class="no-scrollbar max-w-full overflow-x-auto pb-1">
-						<div class="grid min-w-[320px] grid-cols-7 gap-1.5 pt-1 sm:min-w-0">
-							{#each getWeekDays() as day, dayIdx (dayIdx)}
-								{@const dayEvents = getEventsForDay(day, data.upcomingEvents ?? [])}
-								{@const isToday = isSameDay(day, new Date())}
+					<!-- Quick Add Input -->
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							handleAddQuickTodo();
+						}}
+						class="mb-3.5 flex gap-2"
+					>
+						<input
+							type="text"
+							bind:value={quickTodoTitle}
+							placeholder="Add a task for today..."
+							class="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+						/>
+						<Button type="submit" size="xs" disabled={!quickTodoTitle.trim() || isAddingTodo}>
+							<i class="fas fa-plus text-[10px]"></i>
+						</Button>
+					</form>
+
+					<!-- Todo items list -->
+					{#if todayTodos.length > 0}
+						<div class="max-h-56 space-y-1.5 overflow-y-auto pr-1">
+							{#each todayTodos as t (t.id)}
 								<div
-									class="flex flex-col items-center rounded-lg border p-2 transition-all {isToday
-										? 'border-primary bg-primary/5 shadow-xs'
-										: 'border-border/60 bg-muted/20'}"
+									class="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs transition-colors hover:bg-muted/50 {t.completed
+										? 'opacity-60'
+										: ''}"
 								>
-									<span
-										class="text-[10px] font-medium {isToday
-											? 'font-semibold text-primary'
-											: 'text-fg-subdued'}"
-									>
-										{day.toLocaleDateString([], { weekday: 'short' })}
-									</span>
-									<span class="mt-0.5 text-sm font-bold {isToday ? 'text-primary' : 'text-fg'}">
-										{day.getDate()}
-									</span>
-									<div class="mt-1 flex min-h-[6px] gap-1">
-										{#each dayEvents.slice(0, 3) as event (`${event.type}:${event.id}`)}
-											<span
-												class="h-1.5 w-1.5 rounded-full {event.type === 'training'
-													? 'bg-blue-500'
-													: 'bg-success'}"
-												title={event.title}
-											></span>
-										{/each}
+									<div class="flex min-w-0 flex-1 items-center gap-2.5">
+										<button
+											type="button"
+											class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {t.completed
+												? 'border-success bg-success text-white'
+												: 'border-border-strong hover:border-fg-subdued'}"
+											onclick={() => handleToggleQuickTodo(t)}
+											aria-label="Toggle task"
+										>
+											{#if t.completed}
+												<i class="fas fa-check text-[8px]"></i>
+											{/if}
+										</button>
+										<span
+											class="truncate text-fg {t.completed ? 'text-fg-subdued line-through' : ''}"
+										>
+											{t.title}
+										</span>
 									</div>
+									{#if t.priority === 'high'}
+										<Badge variant="danger" size="sm">High</Badge>
+									{/if}
 								</div>
 							{/each}
 						</div>
-					</div>
-
-					{#if data.upcomingEvents && data.upcomingEvents.length > 0}
-						<div class="mt-3.5 max-h-36 space-y-1.5 overflow-y-auto pr-1">
-							{#each (data.upcomingEvents ?? []).slice(0, 3) as ev (`${ev.type}:${ev.id}`)}
-								<a
-									href={ev.type === 'training'
-										? resolve('/app/training/session/[id]', { id: ev.id })
-										: resolve('/app/reminders/[id]', { id: ev.id })}
-									class="flex items-center justify-between rounded-lg border border-border/40 bg-muted/10 px-2.5 py-1.5 text-xs text-fg transition-colors hover:bg-muted/40"
-								>
-									<span class="truncate font-medium">{ev.title}</span>
-									<span class="ml-2 shrink-0 text-[10px] text-fg-subdued">
-										{new Date(ev.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-									</span>
-								</a>
-							{/each}
+					{:else}
+						<div class="py-6 text-center text-xs text-fg-subdued">
+							<i class="fas fa-clipboard-check mb-1.5 block text-xl text-fg-subdued/30"></i>
+							No tasks pending for today. You're all caught up!
 						</div>
 					{/if}
 				</Card>
 			</div>
-		</div>
+		{/if}
 
 		<!-- Due Reminders Section -->
 		{#if data.enabledFeatures?.reminders !== false && dueReminders.length > 0}
