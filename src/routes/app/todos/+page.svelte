@@ -3,6 +3,8 @@
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import type { Todo } from '$lib/types';
 	import type { PageData } from './$types';
@@ -13,7 +15,7 @@
 	let newDueDate = $state('');
 	let newPriority = $state<'low' | 'medium' | 'high'>('medium');
 	let isAdding = $state(false);
-	let currentFilter = $state<'today' | 'upcoming' | 'nodate' | 'all' | 'completed'>('today');
+	let currentFilter = $state('today');
 	let searchQuery = $state('');
 
 	const todayStr = new Date().toISOString().slice(0, 10);
@@ -81,6 +83,14 @@
 		};
 	});
 
+	let tabFilterItems = $derived([
+		{ id: 'today', label: "Aujourd'hui", count: counts.today },
+		{ id: 'upcoming', label: 'À venir', count: counts.upcoming },
+		{ id: 'nodate', label: 'Sans date', count: counts.nodate },
+		{ id: 'all', label: 'Toutes', count: counts.total },
+		{ id: 'completed', label: 'Terminées', count: counts.completed }
+	]);
+
 	async function handleAdd() {
 		if (!newTitle.trim() || isAdding) return;
 		isAdding = true;
@@ -100,20 +110,19 @@
 				newTitle = '';
 				newDueDate = '';
 				newPriority = 'medium';
-				showToast('Tâche ajoutée', 'success');
+				showToast('Tâche créée', 'success');
 				await invalidateAll();
 			} else {
-				showToast("Erreur lors de l'ajout", 'error');
+				showToast('Erreur lors de la création', 'error');
 			}
 		} catch {
-			showToast("Erreur lors de l'ajout", 'error');
+			showToast('Erreur', 'error');
 		} finally {
 			isAdding = false;
 		}
 	}
 
 	async function handleToggle(t: Todo) {
-		// Optimistic update
 		t.completed = !t.completed;
 		try {
 			const res = await fetch('/api/todos', {
@@ -126,7 +135,7 @@
 			});
 			if (!res.ok) {
 				t.completed = !t.completed;
-				showToast('Erreur', 'error');
+				showToast('Erreur lors de la mise à jour', 'error');
 			} else {
 				await invalidateAll();
 			}
@@ -138,14 +147,19 @@
 
 	async function handleDelete(id: string) {
 		try {
-			const res = await fetch(`/api/todos?id=${id}`, {
-				method: 'DELETE'
+			const res = await fetch('/api/todos', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					action: 'delete',
+					id
+				})
 			});
 			if (res.ok) {
 				showToast('Tâche supprimée', 'success');
 				await invalidateAll();
 			} else {
-				showToast('Erreur lors de la suppression', 'error');
+				showToast('Erreur', 'error');
 			}
 		} catch {
 			showToast('Erreur', 'error');
@@ -172,28 +186,24 @@
 	<title>Tâches - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-4xl p-4 sm:p-8">
-	<PageHeader
-		title="Tâches"
-		subtitle="Gestion rapide et simple de vos to-dos et échéances"
-		descriptionOnHover
-	/>
+<div class="mx-auto max-w-4xl space-y-6 p-4 sm:p-8">
+	<PageHeader title="Tâches" subtitle="Gestion rapide et moderne de vos to-dos et échéances" />
 
 	<!-- Quick Add Form -->
-	<div class="mb-6 rounded-sm border border-border bg-surface p-4 shadow-xs">
+	<div class="rounded-xl border border-border bg-surface p-5 shadow-xs transition-all">
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
 				handleAdd();
 			}}
-			class="space-y-3"
+			class="space-y-3.5"
 		>
-			<div class="flex gap-2">
+			<div class="flex gap-2.5">
 				<input
 					type="text"
 					bind:value={newTitle}
-					placeholder="Ajouter une tâche... (ex: Envoyer devis client, Faire courses)"
-					class="flex-1 rounded-sm border border-border-strong bg-bg px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
+					placeholder="Ajouter une tâche... (ex: Envoyer devis client, Préparer réunion)"
+					class="flex-1 rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
 				/>
 				<Button type="submit" disabled={!newTitle.trim() || isAdding}>
 					<i class="fas fa-plus mr-1.5 text-xs"></i>
@@ -202,33 +212,34 @@
 			</div>
 
 			<!-- Quick Options: Date & Priority -->
-			<div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-fg-subdued">
+			<div class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-fg-subdued">
 				<div class="flex flex-wrap items-center gap-1.5">
-					<span class="mr-1 text-[11px] font-medium text-fg-subdued">Échéance :</span>
+					<span class="mr-1 text-xs font-medium text-fg-subdued">Échéance :</span>
 					<button
 						type="button"
-						class="cursor-pointer rounded-xs px-2 py-0.5 transition-colors {newDueDate === todayStr
-							? 'bg-primary font-medium text-white'
-							: 'bg-muted text-fg hover:bg-border'}"
+						class="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors {newDueDate ===
+						todayStr
+							? 'bg-primary text-white shadow-xs'
+							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => setQuickDate(0)}
 					>
 						Aujourd'hui
 					</button>
 					<button
 						type="button"
-						class="cursor-pointer rounded-xs px-2 py-0.5 transition-colors {newDueDate ===
+						class="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors {newDueDate ===
 						new Date(Date.now() + 86400000).toISOString().slice(0, 10)
-							? 'bg-primary font-medium text-white'
-							: 'bg-muted text-fg hover:bg-border'}"
+							? 'bg-primary text-white shadow-xs'
+							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => setQuickDate(1)}
 					>
 						Demain
 					</button>
 					<button
 						type="button"
-						class="cursor-pointer rounded-xs px-2 py-0.5 transition-colors {!newDueDate
-							? 'bg-primary font-medium text-white'
-							: 'bg-muted text-fg hover:bg-border'}"
+						class="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors {!newDueDate
+							? 'bg-primary text-white shadow-xs'
+							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => setQuickDate(null)}
 					>
 						Sans date
@@ -236,15 +247,15 @@
 					<input
 						type="date"
 						bind:value={newDueDate}
-						class="ml-1 rounded-xs border border-border-strong bg-bg px-2 py-0.5 text-xs text-fg focus:outline-none"
+						class="ml-1 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-fg focus:border-primary focus:outline-none"
 					/>
 				</div>
 
 				<div class="flex items-center gap-2">
-					<span class="text-[11px] font-medium text-fg-subdued">Priorité :</span>
+					<span class="text-xs font-medium text-fg-subdued">Priorité :</span>
 					<select
 						bind:value={newPriority}
-						class="rounded-xs border border-border-strong bg-bg px-2 py-0.5 text-xs text-fg focus:outline-none"
+						class="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-fg focus:border-primary focus:outline-none"
 					>
 						<option value="low">Basse</option>
 						<option value="medium">Moyenne</option>
@@ -255,89 +266,40 @@
 		</form>
 	</div>
 
-	<!-- Navigation Tabs -->
-	<div class="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
-		<div class="flex flex-wrap items-center gap-1.5">
-			<button
-				type="button"
-				class="cursor-pointer rounded-sm px-3 py-1.5 text-xs font-medium transition-colors {currentFilter ===
-				'today'
-					? 'bg-primary text-white'
-					: 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => (currentFilter = 'today')}
-			>
-				Aujourd'hui <span class="ml-1 opacity-75">({counts.today})</span>
-			</button>
-			<button
-				type="button"
-				class="cursor-pointer rounded-sm px-3 py-1.5 text-xs font-medium transition-colors {currentFilter ===
-				'upcoming'
-					? 'bg-primary text-white'
-					: 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => (currentFilter = 'upcoming')}
-			>
-				À venir <span class="ml-1 opacity-75">({counts.upcoming})</span>
-			</button>
-			<button
-				type="button"
-				class="cursor-pointer rounded-sm px-3 py-1.5 text-xs font-medium transition-colors {currentFilter ===
-				'nodate'
-					? 'bg-primary text-white'
-					: 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => (currentFilter = 'nodate')}
-			>
-				Sans date <span class="ml-1 opacity-75">({counts.nodate})</span>
-			</button>
-			<button
-				type="button"
-				class="cursor-pointer rounded-sm px-3 py-1.5 text-xs font-medium transition-colors {currentFilter ===
-				'all'
-					? 'bg-primary text-white'
-					: 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => (currentFilter = 'all')}
-			>
-				Toutes <span class="ml-1 opacity-75">({counts.total})</span>
-			</button>
-			<button
-				type="button"
-				class="cursor-pointer rounded-sm px-3 py-1.5 text-xs font-medium transition-colors {currentFilter ===
-				'completed'
-					? 'bg-primary text-white'
-					: 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => (currentFilter = 'completed')}
-			>
-				Terminées <span class="ml-1 opacity-75">({counts.completed})</span>
-			</button>
-		</div>
+	<!-- Navigation Tabs & Search -->
+	<div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+		<Tabs items={tabFilterItems} bind:active={currentFilter} />
 
 		<div class="w-full sm:w-56">
 			<input
 				type="text"
 				bind:value={searchQuery}
 				placeholder="Filtrer les tâches..."
-				class="w-full rounded-sm border border-border bg-bg px-2.5 py-1 text-xs text-fg placeholder:text-fg-subdued focus:outline-none"
+				class="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
 			/>
 		</div>
 	</div>
 
 	<!-- Todos List -->
 	{#if filteredTodos.length > 0}
-		<div class="divide-y divide-border rounded-sm border border-border bg-surface">
+		<div
+			class="divide-y divide-border/60 overflow-hidden rounded-xl border border-border bg-surface shadow-xs"
+		>
 			{#each filteredTodos as t (t.id)}
 				{@const dueInfo = formatDueDate(t.dueDate)}
 				<div
-					class="group flex items-center justify-between gap-3 p-3 transition-colors hover:bg-muted/40 {t.completed
+					class="group flex items-center justify-between gap-3 p-3.5 transition-colors hover:bg-muted/30 {t.completed
 						? 'opacity-60'
 						: ''}"
 				>
 					<div class="flex min-w-0 flex-1 items-center gap-3">
 						<button
 							type="button"
-							class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-colors {t.completed
+							class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded border transition-all {t.completed
 								? 'border-success bg-success text-white'
 								: 'border-border-strong hover:border-fg-subdued'}"
 							onclick={() => handleToggle(t)}
-							aria-label="Toggle todo"
+							aria-label="Toggle task"
 						>
 							{#if t.completed}
 								<i class="fas fa-check text-[10px]"></i>
@@ -357,20 +319,14 @@
 
 					<div class="flex items-center gap-2">
 						{#if t.priority === 'high'}
-							<span
-								class="rounded-xs bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-500"
-							>
-								Haute
-							</span>
+							<Badge variant="danger" size="sm">Haute</Badge>
 						{:else if t.priority === 'low'}
-							<span class="rounded-xs bg-muted px-1.5 py-0.5 text-[10px] text-fg-subdued">
-								Basse
-							</span>
+							<Badge variant="default" size="sm">Basse</Badge>
 						{/if}
 
 						{#if dueInfo.text}
 							<span
-								class="flex items-center gap-1 rounded-xs px-2 py-0.5 text-[11px] {dueInfo.isOverdue &&
+								class="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs {dueInfo.isOverdue &&
 								!t.completed
 									? 'bg-error/15 font-medium text-error'
 									: 'bg-muted text-fg-subdued'}"
@@ -382,7 +338,7 @@
 
 						<button
 							type="button"
-							class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-xs text-fg-subdued opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-error"
+							class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted hover:text-error"
 							onclick={() => handleDelete(t.id)}
 							title="Supprimer"
 						>

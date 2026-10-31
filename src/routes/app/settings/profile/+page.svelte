@@ -6,6 +6,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import { enablePush, disablePush } from '$lib/utils/push-client';
+	import { themeState } from '$lib/utils/theme.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
@@ -226,7 +227,63 @@
 
 	<PageHeader title="Edit Profile" />
 
-	<div class="rounded-sm border border-border bg-surface">
+	<!-- Appearance & Theme Selector -->
+	<div class="mb-6 rounded-xl border border-border bg-surface p-6 shadow-xs">
+		<div class="mb-4">
+			<h2 class="text-sm font-semibold tracking-tight text-fg">Appearance & Theme</h2>
+			<p class="text-xs text-fg-subdued">Customize how MegaOrganize looks on your device.</p>
+		</div>
+
+		<div class="grid grid-cols-3 gap-3">
+			<button
+				type="button"
+				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
+				'light'
+					? 'border-primary bg-primary/5 font-semibold shadow-xs'
+					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
+				onclick={() => themeState.setTheme('light')}
+			>
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500"
+				>
+					<i class="fas fa-sun text-base"></i>
+				</div>
+				<span class="text-xs">Light Mode</span>
+			</button>
+
+			<button
+				type="button"
+				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
+				'dark'
+					? 'border-primary bg-primary/5 font-semibold shadow-xs'
+					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
+				onclick={() => themeState.setTheme('dark')}
+			>
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400"
+				>
+					<i class="fas fa-moon text-base"></i>
+				</div>
+				<span class="text-xs">Dark Mode</span>
+			</button>
+
+			<button
+				type="button"
+				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
+				'system'
+					? 'border-primary bg-primary/5 font-semibold shadow-xs'
+					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
+				onclick={() => themeState.setTheme('system')}
+			>
+				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-fg-subdued">
+					<i class="fas fa-circle-half-stroke text-base"></i>
+				</div>
+				<span class="text-xs">System Auto</span>
+			</button>
+		</div>
+	</div>
+
+	<div class="rounded-xl border border-border bg-surface shadow-xs">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Profile</h2>
 		</div>

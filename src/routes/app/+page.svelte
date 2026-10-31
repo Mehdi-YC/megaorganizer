@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
-	import { getSessionIcon } from '$lib/utils/training';
 	import { ReminderCard } from '$lib/components/reminders';
 	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
-	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import StatGroupCard from '$lib/components/ui/StatGroupCard.svelte';
-	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import Card from '$lib/components/ui/Card.svelte';
+	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import type { Reminder, CalendarEvent, Todo } from '$lib/types';
 	import { showToast } from '$lib/utils/toast.svelte';
 
@@ -19,6 +20,8 @@
 	let todayTodos = $state<Todo[]>(data.todayTodos ?? []);
 	let quickTodoTitle = $state('');
 	let isAddingTodo = $state(false);
+
+	let activeTab = $state('overview');
 
 	async function handleAddQuickTodo() {
 		if (!quickTodoTitle.trim() || isAddingTodo) return;
@@ -35,10 +38,10 @@
 				const json = await res.json();
 				todayTodos = [json.todo, ...todayTodos];
 				quickTodoTitle = '';
-				showToast('Tâche ajoutée', 'success');
+				showToast('Task added', 'success');
 			}
 		} catch {
-			showToast('Erreur', 'error');
+			showToast('Error adding task', 'error');
 		} finally {
 			isAddingTodo = false;
 		}
@@ -99,20 +102,18 @@
 
 	function getSpendingTrend(): { value: number; positive: boolean } | null {
 		if (!analytics) return null;
-		const { thisMonthTotal, lastMonthTotal } = analytics.spending;
-		if (lastMonthTotal === 0) return null;
-		const change = ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
-		return {
-			value: Math.abs(Math.round(change)),
-			positive: change <= 0
-		};
+		const thisM = analytics.spending.thisMonthTotal;
+		const lastM = analytics.spending.lastMonthTotal;
+		if (lastM === 0) return null;
+		const diff = ((thisM - lastM) / lastM) * 100;
+		return { value: Math.round(Math.abs(diff)), positive: diff <= 0 };
 	}
 
 	function sparklinePath(values: number[]): string {
-		if (values.length < 2) return '';
+		if (!values || values.length < 2) return '';
+		const max = Math.max(...values, 1);
 		const w = 120;
 		const h = 28;
-		const max = Math.max(...values, 1);
 		const stepX = w / (values.length - 1);
 		return values
 			.map(
@@ -184,45 +185,88 @@
 			}));
 		}
 	}
+
+	let tabItems = $derived([
+		{ id: 'overview', label: 'All Modules' },
+		{ id: 'tasks', label: 'Today Focus', count: todayTodos.length + dueReminders.length },
+		{ id: 'analytics', label: 'Metrics & Trends' },
+		{ id: 'notes', label: 'Scratchpad' }
+	]);
 </script>
 
 <svelte:head>
 	<title>Dashboard - MegaOrganize</title>
 </svelte:head>
 
-<div class="p-4 sm:p-8">
-	<PageHeader title="Dashboard" subtitle="Your personal knowledge & activity operating system" />
+<div class="mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
+	<!-- Page Header with Modern Actions -->
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div>
+			<h1 class="text-2xl font-bold tracking-tight text-fg sm:text-3xl">Dashboard</h1>
+			<p class="mt-1 text-sm text-fg-subdued">
+				Your personal knowledge, activities, and operational control center.
+			</p>
+		</div>
+
+		<div class="flex items-center gap-2">
+			<Button href={resolve('/app/todos')} variant="secondary" size="sm">
+				<i class="fas fa-check-square mr-1.5 text-xs"></i> Tasks
+			</Button>
+			<Button href={resolve('/app/category/new')} size="sm">
+				<i class="fas fa-plus mr-1.5 text-xs"></i> New Workspace
+			</Button>
+		</div>
+	</div>
+
+	<!-- Segmented Control Tabs (Modern SaaS Style like reference image) -->
+	<div class="border-b border-border pb-3">
+		<Tabs items={tabItems} bind:active={activeTab} />
+	</div>
 
 	{#if (data.stats?.itemCount ?? 0) === 0 && (data.stats?.sessionCount ?? 0) === 0 && (data.categories?.length ?? 0) === 0}
-		<section class="mb-6 rounded-sm border border-primary-text/30 bg-primary-subdued p-4 sm:p-5">
-			<h2 class="text-sm font-semibold text-fg-accent">Start here</h2>
+		<section class="rounded-xl border border-primary/20 bg-primary-subdued/30 p-5">
+			<h2 class="text-sm font-semibold text-fg">Welcome to MegaOrganize</h2>
 			<p class="mt-1 text-xs text-fg-subdued">
-				Everything lives in categories and pages. Pick a first step — you can change it later.
+				Everything lives in workspaces, items, and scheduled sessions. Pick a starting point:
 			</p>
-			<div class="mt-4 grid gap-2 sm:grid-cols-3">
+			<div class="mt-4 grid gap-3 sm:grid-cols-3">
 				<a
 					href={resolve('/app/category/new')}
-					class="group rounded-sm border border-border-strong bg-surface p-3 transition-colors hover:border-primary-text"
+					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 				>
-					<i class="fas fa-folder-plus mb-2 text-sm text-primary-text"></i>
-					<p class="text-sm font-medium text-fg group-hover:text-primary-text">Create a category</p>
-					<p class="mt-0.5 text-[11px] text-fg-subdued">Give your notes a home.</p>
+					<div
+						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+					>
+						<i class="fas fa-folder-plus text-xs"></i>
+					</div>
+					<p class="text-sm font-semibold text-fg group-hover:text-primary-text">
+						Create a workspace
+					</p>
+					<p class="mt-0.5 text-xs text-fg-subdued">Give your pages and notes a structured home.</p>
 				</a>
 				<a
 					href={resolve('/app/library')}
-					class="group rounded-sm border border-border-strong bg-surface p-3 transition-colors hover:border-primary-text"
+					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 				>
-					<i class="fas fa-cube mb-2 text-sm text-primary-text"></i>
-					<p class="text-sm font-medium text-fg group-hover:text-primary-text">Add an item</p>
-					<p class="mt-0.5 text-[11px] text-fg-subdued">Track something you own or study.</p>
+					<div
+						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+					>
+						<i class="fas fa-cube text-xs"></i>
+					</div>
+					<p class="text-sm font-semibold text-fg group-hover:text-primary-text">Add an item</p>
+					<p class="mt-0.5 text-xs text-fg-subdued">Track gear, books, cards, or collections.</p>
 				</a>
 				<a
 					href={resolve('/app/training/session/new')}
-					class="group rounded-sm border border-border-strong bg-surface p-3 transition-colors hover:border-primary-text"
+					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 				>
-					<i class="fas fa-dumbbell mb-2 text-sm text-primary-text"></i>
-					<p class="text-sm font-medium text-fg group-hover:text-primary-text">Log a session</p>
-					<p class="mt-0.5 text-[11px] text-fg-subdued">Start the activity half of the app.</p>
+					<div
+						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subdued text-primary-text"
+					>
+						<i class="fas fa-dumbbell text-xs"></i>
+					</div>
+					<p class="text-sm font-semibold text-fg group-hover:text-primary-text">Log a session</p>
+					<p class="mt-0.5 text-xs text-fg-subdued">Track your sports, running, and workouts.</p>
 				</a>
 			</div>
 		</section>
@@ -230,448 +274,395 @@
 
 	<NotificationPrompt />
 
-	<!-- Today's Todos Widget -->
-	<div class="mb-6 rounded-sm border border-border bg-surface p-4 shadow-xs">
-		<div class="mb-3 flex items-center justify-between">
-			<h2
-				class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
-			>
-				<i class="fas fa-check-square text-xs text-primary-text"></i>
-				Tâches d'aujourd'hui
-			</h2>
-			<a
-				href={resolve('/app/todos')}
-				class="text-xs text-primary-text hover:text-primary-text-hover"
-			>
-				Toutes les tâches
-			</a>
-		</div>
-
-		<!-- Quick add input -->
-		<form
-			onsubmit={(e) => {
-				e.preventDefault();
-				handleAddQuickTodo();
-			}}
-			class="mb-3 flex gap-2"
-		>
-			<input
-				type="text"
-				bind:value={quickTodoTitle}
-				placeholder="Ajouter une tâche pour aujourd'hui..."
-				class="flex-1 rounded-sm border border-border-strong bg-bg px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
-			/>
-			<button
-				type="submit"
-				aria-label="Ajouter la tâche"
-				disabled={!quickTodoTitle.trim() || isAddingTodo}
-				class="inline-flex cursor-pointer items-center justify-center rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-40"
-			>
-				<i class="fas fa-plus text-[10px]"></i>
-			</button>
-		</form>
-
-		<!-- Items list -->
-		{#if todayTodos.length > 0}
-			<div class="space-y-1.5">
-				{#each todayTodos as t (t.id)}
-					<div
-						class="flex items-center justify-between gap-2.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-muted/40 {t.completed
-							? 'opacity-60'
-							: ''}"
-					>
-						<div class="flex min-w-0 flex-1 items-center gap-2.5">
-							<button
-								type="button"
-								class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-colors {t.completed
-									? 'border-success bg-success text-white'
-									: 'border-border-strong hover:border-fg-subdued'}"
-								onclick={() => handleToggleQuickTodo(t)}
-								aria-label="Toggle todo"
-							>
-								{#if t.completed}
-									<i class="fas fa-check text-[8px]"></i>
-								{/if}
-							</button>
-							<span class="truncate text-fg {t.completed ? 'text-fg-subdued line-through' : ''}">
-								{t.title}
-							</span>
-						</div>
-						{#if t.priority === 'high'}
-							<span class="rounded-xs bg-red-500/10 px-1 text-[9px] font-semibold text-red-500">
-								Haute
-							</span>
-						{/if}
-					</div>
-				{/each}
+	<!-- TAB: OVERVIEW & ALL MODULES -->
+	{#if activeTab === 'overview' || activeTab === 'tasks'}
+		<!-- Section: Today's Priorities & Action Cards -->
+		<div>
+			<div class="mb-3">
+				<h2 class="text-base font-semibold tracking-tight text-fg">Today's Focus</h2>
+				<p class="text-xs text-fg-subdued">
+					Active reminders, tasks, and scheduled milestones for today.
+				</p>
 			</div>
-		{:else}
-			<p class="py-2 text-center text-xs text-fg-subdued italic">
-				Aucune tâche prévue aujourd'hui.
-			</p>
-		{/if}
-	</div>
 
-	<!-- Today's Reminders -->
-	{#if dueReminders.length > 0}
-		<div class="mb-6">
-			<div class="mb-3 flex items-center justify-between">
-				<h2
-					class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
+			<div class="grid gap-4 lg:grid-cols-2">
+				<!-- Today's Tasks Card -->
+				<Card
+					title="Today's Tasks"
+					description="Fast capture and daily task execution"
+					icon="fas fa-check-square"
 				>
-					<i class="fas fa-bell text-xs text-primary-text"></i>
-					Today's Reminders
-				</h2>
-				<a
-					href={resolve('/app/reminders')}
-					class="text-xs text-primary-text hover:text-primary-text-hover">View All</a
-				>
-			</div>
-			<div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-				{#each dueReminders as reminder (reminder.id)}
-					<ReminderCard
-						{reminder}
-						onComplete={handleCompleteReminder}
-						onSnooze={handleSnoozeReminder}
-						onTodoToggle={handleTodoToggle}
-					/>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Upcoming Events -->
-	{#if data.upcomingEvents && data.upcomingEvents.length > 0}
-		<div class="mb-6">
-			<div class="mb-3 flex items-center justify-between">
-				<h2
-					class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
-				>
-					<i class="fas fa-calendar-week text-xs text-primary-text"></i>
-					Upcoming This Week
-				</h2>
-				<a
-					href={resolve('/app/calendar')}
-					class="text-xs text-primary-text hover:text-primary-text-hover">View Calendar</a
-				>
-			</div>
-			<div class="flex gap-1 overflow-x-auto pb-2">
-				{#each getWeekDays() as day, dayIdx (dayIdx)}
-					{@const dayEvents = getEventsForDay(day, data.upcomingEvents ?? [])}
-					{@const isToday = isSameDay(day, new Date())}
-					<div
-						class="flex min-w-[60px] flex-col items-center rounded-sm border {isToday
-							? 'border-primary-text bg-primary/5'
-							: 'border-border bg-surface'} p-2"
-					>
-						<span
-							class="text-[10px] font-medium {isToday ? 'text-primary-text' : 'text-fg-subdued'}"
-							>{day.toLocaleDateString([], { weekday: 'short' })}</span
-						>
-						<span class="text-sm font-semibold {isToday ? 'text-primary-text' : 'text-fg'}"
-							>{day.getDate()}</span
-						>
-						<div class="mt-1 flex gap-0.5">
-							{#each dayEvents.slice(0, 3) as event (`${event.type}:${event.id}`)}
-								<a
-									href={event.type === 'training'
-										? resolve('/app/training/session/[id]', { id: event.id })
-										: resolve('/app/reminders/[id]', { id: event.id })}
-									class="h-2 w-2 rounded-full {event.type === 'training'
-										? 'bg-blue-500'
-										: 'bg-success'}"
-									title={event.title}
-								></a>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Regrouped stats (from Analytics) -->
-	{#if analytics}
-		<div class="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-			<StatGroupCard
-				icon="fa-dumbbell"
-				title="Training"
-				stats={[
-					{ label: 'Total Sessions', value: analytics.training.totalSessions },
-					{ label: 'Total Time', value: formatDuration(analytics.training.totalDuration) },
-					{ label: 'This Week', value: analytics.training.thisWeekSessions },
-					{ label: 'Avg Duration', value: formatDuration(analytics.training.avgDuration) }
-				]}
-			>
-				{#snippet footer()}
-					<div class="flex items-center gap-2">
-						<svg
-							viewBox="0 0 120 28"
-							class="h-7 w-full max-w-[140px]"
-							preserveAspectRatio="none"
-							aria-hidden="true"
-						>
-							<path
-								d={sparklinePath(weeklyTraining)}
-								fill="none"
-								stroke="var(--color-primary-text)"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								vector-effect="non-scaling-stroke"
-							/>
-						</svg>
-						<span class="shrink-0 text-[10px] text-fg-subdued">12w</span>
-					</div>
-				{/snippet}
-			</StatGroupCard>
-
-			<StatGroupCard
-				icon="fa-receipt"
-				title="Spending"
-				stats={[
-					{
-						label: 'This Month',
-						value: `${analytics.spending.thisMonthTotal.toLocaleString()} ${currency}`
-					},
-					{
-						label: 'Last Month',
-						value: `${analytics.spending.lastMonthTotal.toLocaleString()} ${currency}`
-					},
-					{
-						label: 'Daily Avg',
-						value: `${analytics.spending.avgDaily.toLocaleString()} ${currency}`
-					},
-					{ label: 'Top Expense', value: analytics.spending.topExpenseDescription || 'N/A' }
-				]}
-			>
-				{#snippet footer()}
-					{@const trend = getSpendingTrend()}
-					{#if trend}
-						<div class="flex items-center gap-1.5 text-[10px]">
-							<i
-								class="fas {trend.positive
-									? 'fa-arrow-down text-success'
-									: 'fa-arrow-up text-error'}"
-							></i>
-							<span class={trend.positive ? 'text-success' : 'text-error'}>
-								{trend.value}% {trend.positive ? 'less' : 'more'} than last month
-							</span>
-						</div>
-					{/if}
-				{/snippet}
-			</StatGroupCard>
-
-			<StatGroupCard
-				icon="fa-bell"
-				title="Habits"
-				stats={[
-					{ label: 'Total (30d)', value: analytics.habits.totalReminders },
-					{ label: 'Completion Rate', value: `${analytics.habits.completionRate}%` },
-					{ label: 'Current Streak', value: analytics.habits.currentStreak },
-					{ label: 'Best Streak', value: analytics.habits.bestStreak }
-				]}
-			/>
-
-			<StatGroupCard
-				icon="fa-cubes"
-				title="Library"
-				stats={[
-					{ label: 'Total Items', value: analytics.products.totalItems },
-					{ label: 'New This Week', value: analytics.products.itemsThisWeek },
-					{ label: 'Total Pages', value: analytics.products.totalPages },
-					{ label: 'Categories', value: data.categories?.length ?? 0 }
-				]}
-			/>
-		</div>
-	{/if}
-
-	<div class="mt-6 grid gap-6 lg:grid-cols-3">
-		<!-- Recent Items -->
-		<div class="lg:col-span-2">
-			<div class="mb-3 flex items-center justify-between">
-				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Recent Items</h2>
-				<a
-					href={resolve('/app/library')}
-					class="text-xs text-primary-text hover:text-primary-text-hover">View All</a
-				>
-			</div>
-			{#if data.recentItems && data.recentItems.length > 0}
-				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-					{#each data.recentItems as item (item.id)}
+					{#snippet headerAction()}
 						<a
-							href={resolve('/app/item/[id]', { id: item.id })}
-							class="group flex items-center gap-3 rounded-sm border {item.favorite
-								? 'border-yellow-400/40 bg-yellow-500/5'
-								: 'border-border bg-surface'} p-3 transition-all hover:border-primary-text/50"
+							href={resolve('/app/todos')}
+							class="text-xs font-medium text-primary-text hover:underline"
 						>
-							{#if item.imageUrl}
-								<img
-									src={item.imageUrl}
-									alt=""
-									class="h-10 w-10 shrink-0 rounded-sm object-cover"
-								/>
-							{:else}
+							View all
+						</a>
+					{/snippet}
+
+					<!-- Quick Add Input -->
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							handleAddQuickTodo();
+						}}
+						class="mb-3.5 flex gap-2"
+					>
+						<input
+							type="text"
+							bind:value={quickTodoTitle}
+							placeholder="Add a task for today..."
+							class="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+						/>
+						<Button type="submit" size="xs" disabled={!quickTodoTitle.trim() || isAddingTodo}>
+							<i class="fas fa-plus text-[10px]"></i>
+						</Button>
+					</form>
+
+					<!-- Todo items list -->
+					{#if todayTodos.length > 0}
+						<div class="max-h-56 space-y-1.5 overflow-y-auto pr-1">
+							{#each todayTodos as t (t.id)}
 								<div
-									class="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-muted"
+									class="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-muted/20 px-3 py-2 text-xs transition-colors hover:bg-muted/50 {t.completed
+										? 'opacity-60'
+										: ''}"
 								>
-									<i
-										class="fas {item.favorite
-											? 'fa-star text-yellow-400'
-											: 'fa-cube text-fg-subdued'} text-sm"
-									></i>
-								</div>
-							{/if}
-							<div class="min-w-0 flex-1">
-								<div class="flex items-center gap-1">
-									<p
-										class="flex-1 truncate text-sm font-medium text-fg group-hover:text-primary-text"
-									>
-										{item.name}
-									</p>
-									{#if item.favorite}
-										<i class="fas fa-star shrink-0 text-[10px] text-yellow-400"></i>
+									<div class="flex min-w-0 flex-1 items-center gap-2.5">
+										<button
+											type="button"
+											class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {t.completed
+												? 'border-success bg-success text-white'
+												: 'border-border-strong hover:border-fg-subdued'}"
+											onclick={() => handleToggleQuickTodo(t)}
+											aria-label="Toggle task"
+										>
+											{#if t.completed}
+												<i class="fas fa-check text-[8px]"></i>
+											{/if}
+										</button>
+										<span
+											class="truncate text-fg {t.completed ? 'text-fg-subdued line-through' : ''}"
+										>
+											{t.title}
+										</span>
+									</div>
+									{#if t.priority === 'high'}
+										<Badge variant="danger" size="sm">High</Badge>
 									{/if}
 								</div>
-								<p class="text-[10px] text-fg-subdued capitalize">{item.type}</p>
-							</div>
-						</a>
-					{/each}
-				</div>
-			{:else}
-				<EmptyState icon="fa-cube" message="No items yet">
-					<a
-						href={resolve('/app/library')}
-						class="text-xs text-primary-text hover:text-primary-text-hover"
-						>Create your first item</a
-					>
-				</EmptyState>
-			{/if}
-		</div>
-
-		<!-- Categories -->
-		<div>
-			<div class="mb-3 flex items-center justify-between">
-				<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Categories</h2>
-				<a
-					href={resolve('/app/category/new')}
-					class="text-xs text-primary-text hover:text-primary-text-hover">Add New</a
-				>
-			</div>
-			{#if data.categories && data.categories.length > 0}
-				<div class="space-y-1.5">
-					{#each data.categories as cat (cat.id)}
-						<a
-							href={resolve('/app/category/[id]', { id: cat.id })}
-							class="flex items-center gap-2.5 rounded-sm border border-border bg-surface px-3 py-2.5 transition-all hover:border-primary-text/50"
-						>
-							{#if cat.icon}
-								<i
-									class="fas {cat.icon} text-sm"
-									style="color: {cat.iconColor || 'var(--color-primary-text)'}"
-								></i>
-							{:else}
-								<i class="fas fa-folder text-sm text-fg-subdued"></i>
-							{/if}
-							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm text-fg">{cat.name}</p>
-								{#if cat.pages && cat.pages.length > 0}
-									<p class="text-[10px] text-fg-subdued">
-										{cat.pages.length} page{cat.pages.length !== 1 ? 's' : ''}
-									</p>
-								{/if}
-							</div>
-							<i class="fas fa-chevron-right text-[9px] text-fg-subdued/50"></i>
-						</a>
-					{/each}
-				</div>
-			{:else}
-				<EmptyState icon="fa-folder" message="No categories yet">
-					<a
-						href={resolve('/app/category/new')}
-						class="text-xs text-primary-text hover:text-primary-text-hover"
-						>Create your first category</a
-					>
-				</EmptyState>
-			{/if}
-		</div>
-	</div>
-
-	<!-- Recent Training -->
-	<div class="mt-6">
-		<div class="mb-3 flex items-center justify-between">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Recent Training</h2>
-			<div class="flex gap-3">
-				<a
-					href={resolve('/app/training/session/new')}
-					class="text-xs text-primary-text hover:text-primary-text-hover">New Session</a
-				>
-				<a
-					href={resolve('/app/training')}
-					class="text-xs text-primary-text hover:text-primary-text-hover">View All</a
-				>
-			</div>
-		</div>
-		{#if data.recentSessions && data.recentSessions.length > 0}
-			<div class="space-y-1.5">
-				{#each data.recentSessions as session (session.id)}
-					{@const icon = getSessionIcon(session.activityTypes)}
-					<a
-						href={resolve('/app/training/session/[id]', { id: session.id })}
-						class="flex items-center justify-between rounded-sm border border-border bg-surface p-3 transition-all hover:border-primary-text/50"
-					>
-						<div class="flex items-center gap-3">
-							<div class="flex h-9 w-9 items-center justify-center rounded-sm bg-primary/10">
-								<i class="fas {icon.icon} {icon.color} text-sm"></i>
-							</div>
-							<div>
-								<p class="text-sm font-medium text-fg">{session.title || 'Training Session'}</p>
-								<p class="text-[10px] text-fg-subdued">
-									{new Date(session.startedAt).toLocaleDateString()}
-									{#if session.duration}
-										· {formatDuration(session.duration)}{/if}
-								</p>
-							</div>
+							{/each}
 						</div>
-						<i class="fas fa-chevron-right text-[9px] text-fg-subdued/50"></i>
-					</a>
-				{/each}
-			</div>
-		{:else}
-			<EmptyState icon="fa-dumbbell" message="No training sessions yet">
-				<a
-					href={resolve('/app/training/session/new')}
-					class="text-xs text-primary-text hover:text-primary-text-hover"
-					>Start your first session</a
-				>
-			</EmptyState>
-		{/if}
-	</div>
+					{:else}
+						<div class="py-6 text-center text-xs text-fg-subdued">
+							<i class="fas fa-clipboard-check mb-1.5 block text-xl text-fg-subdued/30"></i>
+							No tasks pending for today. You're all caught up!
+						</div>
+					{/if}
+				</Card>
 
-	<!-- Scratch Notes -->
-	<div class="mt-6">
-		<div class="mb-3 flex items-center justify-between">
-			<h2
-				class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
-			>
-				<i class="fas fa-pencil text-xs text-primary-text"></i>
-				Notes
-			</h2>
-			<span class="text-[10px] text-fg-subdued">
-				{noteStatus === 'saving'
-					? 'Saving…'
-					: noteStatus === 'saved'
-						? 'Saved'
-						: noteStatus === 'error'
-							? 'Not saved'
-							: ''}
-			</span>
+				<!-- Upcoming Schedule Strip -->
+				<Card
+					title="Upcoming This Week"
+					description="Calendar agenda and scheduled deadlines"
+					icon="fas fa-calendar-days"
+				>
+					{#snippet headerAction()}
+						<a
+							href={resolve('/app/calendar')}
+							class="text-xs font-medium text-primary-text hover:underline"
+						>
+							Calendar
+						</a>
+					{/snippet}
+
+					<div class="grid grid-cols-7 gap-1.5 pt-1">
+						{#each getWeekDays() as day, dayIdx (dayIdx)}
+							{@const dayEvents = getEventsForDay(day, data.upcomingEvents ?? [])}
+							{@const isToday = isSameDay(day, new Date())}
+							<div
+								class="flex flex-col items-center rounded-lg border p-2 transition-all {isToday
+									? 'border-primary bg-primary/5 shadow-xs'
+									: 'border-border/60 bg-muted/20'}"
+							>
+								<span
+									class="text-[10px] font-medium {isToday
+										? 'font-semibold text-primary'
+										: 'text-fg-subdued'}"
+								>
+									{day.toLocaleDateString([], { weekday: 'short' })}
+								</span>
+								<span class="mt-0.5 text-sm font-bold {isToday ? 'text-primary' : 'text-fg'}">
+									{day.getDate()}
+								</span>
+								<div class="mt-1 flex min-h-[6px] gap-1">
+									{#each dayEvents.slice(0, 3) as event (`${event.type}:${event.id}`)}
+										<span
+											class="h-1.5 w-1.5 rounded-full {event.type === 'training'
+												? 'bg-blue-500'
+												: 'bg-success'}"
+											title={event.title}
+										></span>
+									{/each}
+								</div>
+							</div>
+						{/each}
+					</div>
+
+					{#if data.upcomingEvents && data.upcomingEvents.length > 0}
+						<div class="mt-3.5 max-h-36 space-y-1.5 overflow-y-auto pr-1">
+							{#each (data.upcomingEvents ?? []).slice(0, 3) as ev (`${ev.type}:${ev.id}`)}
+								<a
+									href={ev.type === 'training'
+										? resolve('/app/training/session/[id]', { id: ev.id })
+										: resolve('/app/reminders/[id]', { id: ev.id })}
+									class="flex items-center justify-between rounded-lg border border-border/40 bg-muted/10 px-2.5 py-1.5 text-xs text-fg transition-colors hover:bg-muted/40"
+								>
+									<span class="truncate font-medium">{ev.title}</span>
+									<span class="ml-2 shrink-0 text-[10px] text-fg-subdued">
+										{new Date(ev.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+									</span>
+								</a>
+							{/each}
+						</div>
+					{/if}
+				</Card>
+			</div>
 		</div>
-		<Textarea
-			rows={10}
-			placeholder="Anything worth keeping handy…"
-			bind:value={note}
-			oninput={queueNoteSave}
-		/>
-	</div>
+
+		<!-- Due Reminders Section -->
+		{#if dueReminders.length > 0}
+			<div>
+				<div class="mb-3 flex items-center justify-between">
+					<div>
+						<h2 class="text-base font-semibold tracking-tight text-fg">Active Reminders</h2>
+						<p class="text-xs text-fg-subdued">
+							Recurring habits and notifications requiring attention.
+						</p>
+					</div>
+					<a
+						href={resolve('/app/reminders')}
+						class="text-xs font-medium text-primary-text hover:underline"
+					>
+						View all
+					</a>
+				</div>
+				<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					{#each dueReminders as reminder (reminder.id)}
+						<ReminderCard
+							{reminder}
+							onComplete={handleCompleteReminder}
+							onSnooze={handleSnoozeReminder}
+							onTodoToggle={handleTodoToggle}
+						/>
+					{/each}
+				</div>
+			</div>
+		{/if}
+	{/if}
+
+	<!-- TAB: OVERVIEW & ANALYTICS -->
+	{#if (activeTab === 'overview' || activeTab === 'analytics') && analytics}
+		<div>
+			<div class="mb-3">
+				<h2 class="text-base font-semibold tracking-tight text-fg">Metrics & Operating Health</h2>
+				<p class="text-xs text-fg-subdued">
+					Key performance indicators, workout volume, and financial pacing.
+				</p>
+			</div>
+
+			<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+				<StatGroupCard
+					icon="fa-dumbbell"
+					title="Training Volume"
+					stats={[
+						{ label: 'Sessions (30d)', value: analytics.training.totalSessions },
+						{ label: 'Duration', value: formatDuration(analytics.training.totalDuration) },
+						{ label: 'This Week', value: analytics.training.thisWeekSessions },
+						{ label: 'Avg Session', value: formatDuration(analytics.training.avgDuration) }
+					]}
+				>
+					{#snippet footer()}
+						<div class="flex items-center justify-between">
+							<svg
+								viewBox="0 0 120 28"
+								class="h-6 w-full max-w-[140px]"
+								preserveAspectRatio="none"
+								aria-hidden="true"
+							>
+								<path
+									d={sparklinePath(weeklyTraining)}
+									fill="none"
+									stroke="var(--color-primary-text)"
+									stroke-width="1.5"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									vector-effect="non-scaling-stroke"
+								/>
+							</svg>
+							<span class="text-[10px] text-fg-subdued">12w trend</span>
+						</div>
+					{/snippet}
+				</StatGroupCard>
+
+				<StatGroupCard
+					icon="fa-receipt"
+					title="Spending & Outflow"
+					trend={getSpendingTrend()}
+					stats={[
+						{
+							label: 'This Month',
+							value: `${analytics.spending.thisMonthTotal.toLocaleString()} ${currency}`
+						},
+						{
+							label: 'Last Month',
+							value: `${analytics.spending.lastMonthTotal.toLocaleString()} ${currency}`
+						},
+						{
+							label: 'Daily Avg',
+							value: `${analytics.spending.avgDaily.toLocaleString()} ${currency}`
+						},
+						{ label: 'Top Item', value: analytics.spending.topExpenseDescription || 'None' }
+					]}
+				/>
+
+				<StatGroupCard
+					icon="fa-bell"
+					title="Habit Consistency"
+					stats={[
+						{ label: 'Total Tracked', value: analytics.habits.totalReminders },
+						{ label: 'Success Rate', value: `${analytics.habits.completionRate}%` },
+						{ label: 'Current Streak', value: `${analytics.habits.currentStreak}d` },
+						{ label: 'Best Streak', value: `${analytics.habits.bestStreak}d` }
+					]}
+				/>
+
+				<StatGroupCard
+					icon="fa-cubes"
+					title="Workspace & Data"
+					stats={[
+						{ label: 'Indexed Items', value: analytics.products.totalItems },
+						{ label: 'Added This Week', value: analytics.products.itemsThisWeek },
+						{ label: 'Document Pages', value: analytics.products.totalPages },
+						{ label: 'Categories', value: data.categories?.length ?? 0 }
+					]}
+				/>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Quick Navigation Modules (SaaS Card Grid matching user reference screenshot) -->
+	{#if activeTab === 'overview'}
+		<div>
+			<div class="mb-3">
+				<h2 class="text-base font-semibold tracking-tight text-fg">
+					Integrated Workspaces & Tools
+				</h2>
+				<p class="text-xs text-fg-subdued">
+					Direct shortcuts to your operational units and records.
+				</p>
+			</div>
+
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<!-- Workspace Card -->
+				<Card
+					title="Workspaces & Wiki"
+					description="Organize notes, technical specs, research docs, and markdown pages."
+					icon="fas fa-folder-tree"
+				>
+					{#snippet footer()}
+						<div class="flex items-center gap-2">
+							<Button href={resolve('/app/category/new')} variant="secondary" size="xs">
+								New Workspace
+							</Button>
+						</div>
+						<a href={resolve('/app')} class="text-xs font-medium text-primary-text hover:underline">
+							Explore
+						</a>
+					{/snippet}
+				</Card>
+
+				<!-- Financials Card -->
+				<Card
+					title="Expenses & Invoicing"
+					description="Track operating expenses, generate Algerian G12/G12 bis files, and invoice clients."
+					icon="fas fa-file-invoice-dollar"
+				>
+					{#snippet footer()}
+						<div class="flex items-center gap-2">
+							<Button href={resolve('/app/invoicing/new')} variant="secondary" size="xs">
+								New Invoice
+							</Button>
+						</div>
+						<a
+							href={resolve('/app/invoicing')}
+							class="text-xs font-medium text-primary-text hover:underline"
+						>
+							Overview
+						</a>
+					{/snippet}
+				</Card>
+
+				<!-- Training Card -->
+				<Card
+					title="Training & Sport"
+					description="Log running sessions with GPX maps, track interval timers, and monitor fitness."
+					icon="fas fa-person-running"
+				>
+					{#snippet footer()}
+						<div class="flex items-center gap-2">
+							<Button href={resolve('/app/training/session/new')} variant="secondary" size="xs">
+								New Session
+							</Button>
+						</div>
+						<a
+							href={resolve('/app/training')}
+							class="text-xs font-medium text-primary-text hover:underline"
+						>
+							History
+						</a>
+					{/snippet}
+				</Card>
+			</div>
+		</div>
+	{/if}
+
+	<!-- TAB: SCRATCHPAD / NOTES -->
+	{#if activeTab === 'overview' || activeTab === 'notes'}
+		<Card
+			title="Scratchpad & Daily Notes"
+			description="Autosaved scratch space for quick thoughts, links, and temporary data"
+			icon="fas fa-pencil"
+		>
+			{#snippet headerAction()}
+				<div class="flex items-center gap-2">
+					<Badge
+						variant={noteStatus === 'saving'
+							? 'warning'
+							: noteStatus === 'saved'
+								? 'success'
+								: 'default'}
+						size="sm"
+					>
+						{noteStatus === 'saving'
+							? 'Saving...'
+							: noteStatus === 'saved'
+								? 'Saved'
+								: noteStatus === 'error'
+									? 'Error'
+									: 'Ready'}
+					</Badge>
+				</div>
+			{/snippet}
+
+			<Textarea
+				rows={7}
+				placeholder="Anything worth keeping handy or capturing on the fly..."
+				bind:value={note}
+				oninput={queueNoteSave}
+				class="w-full"
+			/>
+		</Card>
+	{/if}
 </div>

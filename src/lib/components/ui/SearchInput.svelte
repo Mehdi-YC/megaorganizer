@@ -2,6 +2,7 @@
 	let {
 		value = $bindable(''),
 		placeholder = 'Search...',
+		shortcut = '⌘K',
 		onsearch,
 		autofocus = false,
 		class: className = '',
@@ -9,6 +10,7 @@
 	}: {
 		value?: string;
 		placeholder?: string;
+		shortcut?: string;
 		onsearch?: () => void;
 		autofocus?: boolean;
 		class?: string;
@@ -22,10 +24,8 @@
 	});
 </script>
 
-<div class="relative {className}">
-	<i
-		class="fas fa-search pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-xs text-fg-subdued"
-	></i>
+<div class="relative flex items-center {className}">
+	<i class="fas fa-search pointer-events-none absolute left-3 text-xs text-fg-subdued"></i>
 	<input
 		type="search"
 		{placeholder}
@@ -36,6 +36,13 @@
 		onkeydown={(e) => {
 			if (e.key === 'Enter') onsearch?.();
 		}}
-		class="h-9 w-full rounded-sm border border-border-strong bg-bg pr-3 pl-9 text-base text-fg placeholder:text-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none sm:text-sm"
+		class="h-9 w-full rounded-lg border border-border bg-surface pr-10 pl-9 text-sm text-fg shadow-xs transition-all placeholder:text-fg-subdued/70 hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
 	/>
+	{#if shortcut && !value}
+		<kbd
+			class="pointer-events-none absolute right-2.5 flex h-5 items-center gap-0.5 rounded border border-border bg-muted/60 px-1.5 font-mono text-[10px] font-medium text-fg-subdued select-none"
+		>
+			{shortcut}
+		</kbd>
+	{/if}
 </div>
