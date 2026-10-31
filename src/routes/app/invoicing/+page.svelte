@@ -133,21 +133,25 @@
 </svelte:head>
 
 <div class="p-4 sm:p-8">
-	<PageHeader title="Facturation" subtitle="Gestion conforme aux normes fiscales algériennes">
-		<div class="flex flex-wrap items-center gap-2">
+	<PageHeader
+		title="Facturation"
+		subtitle="Gestion conforme aux normes fiscales algériennes"
+		descriptionOnHover
+	>
+		<div class="flex items-center gap-2">
 			<a href={resolve('/app/invoicing/clients')}>
 				<Button variant="secondary" size="sm">
-					<i class="fas fa-users mr-1.5 text-xs"></i> Clients
+					<i class="fas fa-users mr-1 text-xs"></i> Clients
 				</Button>
 			</a>
 			<a href={resolve('/app/invoicing/products')}>
 				<Button variant="secondary" size="sm">
-					<i class="fas fa-box mr-1.5 text-xs"></i> Produits & Services
+					<i class="fas fa-box mr-1 text-xs"></i> Services
 				</Button>
 			</a>
 			<a href={resolve('/app/invoicing/new')}>
 				<Button size="sm">
-					<i class="fas fa-plus mr-1.5 text-xs"></i> Nouvelle Facture
+					<i class="fas fa-plus mr-1 text-xs"></i> Facture
 				</Button>
 			</a>
 		</div>

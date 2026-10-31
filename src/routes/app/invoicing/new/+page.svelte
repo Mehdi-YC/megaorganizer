@@ -235,6 +235,7 @@
 	<PageHeader
 		title="Nouvelle Facture"
 		subtitle="Création d'une facture conforme au droit commercial algérien"
+		descriptionOnHover
 	>
 		<div class="flex items-center gap-2">
 			<Button variant="secondary" onclick={() => goto(resolve('/app/invoicing'))}>Annuler</Button>

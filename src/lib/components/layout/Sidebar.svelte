@@ -407,7 +407,7 @@
 							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 					>
 						<i class="fas fa-box w-3.5 text-center text-[10px]"></i>
-						<span class="truncate">Produits & Services</span>
+						<span class="truncate">Services</span>
 					</a>
 
 					<!-- Folders for each Year -->

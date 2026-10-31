@@ -113,7 +113,7 @@
 </script>
 
 <svelte:head>
-	<title>Produits & Services - MegaOrganize</title>
+	<title>Services - MegaOrganize</title>
 </svelte:head>
 
 <div class="p-4 sm:p-8">
@@ -127,11 +127,12 @@
 	</div>
 
 	<PageHeader
-		title="Produits & Services"
+		title="Services"
 		subtitle="Catalogue de prestations et articles avec tarifs et taux de TVA par défaut"
+		descriptionOnHover
 	>
 		<Button size="sm" onclick={openCreateModal}>
-			<i class="fas fa-plus mr-1.5 text-xs"></i> Nouveau Produit / Service
+			<i class="fas fa-plus mr-1 text-xs"></i> Service
 		</Button>
 	</PageHeader>
 

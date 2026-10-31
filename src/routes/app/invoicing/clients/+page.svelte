@@ -160,9 +160,10 @@
 	<PageHeader
 		title="Clients & Entreprises"
 		subtitle="Répertoire de vos clients et informations fiscales réutilisables"
+		descriptionOnHover
 	>
 		<Button size="sm" onclick={openCreateModal}>
-			<i class="fas fa-plus mr-1.5 text-xs"></i> Nouveau Client
+			<i class="fas fa-plus mr-1 text-xs"></i> Client
 		</Button>
 	</PageHeader>
 

@@ -184,7 +184,11 @@
 		</a>
 	</div>
 
-	<PageHeader title="Modifier la Facture {data.invoice.invoiceNumber}">
+	<PageHeader
+		title="Modifier la Facture {data.invoice.invoiceNumber}"
+		subtitle="Mise à jour des informations et prestations"
+		descriptionOnHover
+	>
 		<div class="flex items-center gap-2">
 			<Button
 				variant="secondary"
