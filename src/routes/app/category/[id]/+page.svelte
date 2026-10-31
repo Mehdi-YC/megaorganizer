@@ -227,7 +227,7 @@
 
 						<div class="flex items-center gap-3">
 							<div
-								class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 text-lg shadow-2xs"
+								class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-lg shadow-2xs"
 								style="color: {editIconColor || 'var(--color-primary)'}"
 							>
 								{#if editIcon}
@@ -384,14 +384,15 @@
 						>
 							<i class="fas fa-grip-vertical text-[10px] text-fg-subdued/40"></i>
 						</div>
-						<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-primary/10">
+						<div
+							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-xs"
+							style="background-color: {pg.iconColor ||
+								'var(--color-primary)'}; color: {getContrastTextColor(pg.iconColor || '#6366f1')};"
+						>
 							{#if pg.icon}
-								<i
-									class="fas {pg.icon} text-sm"
-									style="color: {pg.iconColor || 'var(--color-primary-text)'}"
-								></i>
+								<i class="fas {pg.icon} text-sm"></i>
 							{:else}
-								<i class="fas fa-file text-sm text-primary-text"></i>
+								<i class="fas fa-file text-sm"></i>
 							{/if}
 						</div>
 						<div class="min-w-0 flex-1">

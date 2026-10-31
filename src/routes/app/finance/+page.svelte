@@ -178,7 +178,7 @@
 				<button
 					type="button"
 					aria-label="Previous month"
-					class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-fg shadow-xs transition-colors hover:bg-muted"
+					class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-surface text-fg shadow-xs transition-colors hover:bg-muted"
 					onclick={prevMonth}
 				>
 					<i class="fas fa-chevron-left text-xs"></i>
@@ -190,7 +190,7 @@
 				<button
 					type="button"
 					aria-label="Next month"
-					class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-fg shadow-xs transition-colors hover:bg-muted"
+					class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-surface text-fg shadow-xs transition-colors hover:bg-muted"
 					onclick={nextMonth}
 				>
 					<i class="fas fa-chevron-right text-xs"></i>

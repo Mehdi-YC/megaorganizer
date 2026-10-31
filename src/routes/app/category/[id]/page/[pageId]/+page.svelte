@@ -1029,7 +1029,7 @@
 					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Icon</p>
 					<div class="mb-2 flex items-center gap-2">
 						<div
-							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/30 text-sm"
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-sm shadow-2xs"
 							style="color: {editColor || 'var(--color-primary)'}"
 						>
 							<i

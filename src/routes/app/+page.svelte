@@ -413,7 +413,7 @@
 								>
 									<a
 										href={resolve('/app/category/[id]', { id: cat.id })}
-										class="flex h-7 w-7 items-center justify-center rounded-md border border-border/60 bg-muted/40 text-fg-subdued transition-colors hover:border-primary hover:bg-surface hover:text-primary-text"
+										class="flex h-7 w-7 items-center justify-center rounded-md bg-muted/60 text-fg-subdued transition-colors hover:bg-primary hover:text-white"
 										title="Open workspace"
 										aria-label="Open workspace"
 									>

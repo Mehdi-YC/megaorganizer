@@ -445,8 +445,10 @@
 				<!-- Monthly Overview Header -->
 				<div class="mb-4 flex flex-wrap gap-3 sm:gap-6">
 					<div class="flex items-center gap-2">
-						<div class="flex h-7 w-7 items-center justify-center rounded-sm bg-blue-500/10">
-							<i class="fas fa-dumbbell text-[10px] text-blue-600"></i>
+						<div
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
+						>
+							<i class="fas fa-dumbbell text-[10px]"></i>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
@@ -456,8 +458,10 @@
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
-						<div class="flex h-7 w-7 items-center justify-center rounded-sm bg-primary/10">
-							<i class="fas fa-tasks text-[10px] text-primary-text"></i>
+						<div
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
+						>
+							<i class="fas fa-tasks text-[10px]"></i>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
@@ -473,8 +477,10 @@
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
-						<div class="flex h-7 w-7 items-center justify-center rounded-sm bg-warning/10">
-							<i class="fas fa-receipt text-[10px] text-warning"></i>
+						<div
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
+						>
+							<i class="fas fa-receipt text-[10px]"></i>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">

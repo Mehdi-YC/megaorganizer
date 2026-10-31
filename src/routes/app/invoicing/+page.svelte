@@ -164,7 +164,9 @@
 				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
 					>Total Invoiced</span
 				>
-				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-fg-subdued">
+				<div
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white shadow-xs"
+				>
 					<i class="fas fa-file-invoice text-xs"></i>
 				</div>
 			</div>
@@ -180,7 +182,9 @@
 				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
 					>Paid Amount</span
 				>
-				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-success/10 text-success">
+				<div
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
+				>
 					<i class="fas fa-circle-check text-xs"></i>
 				</div>
 			</div>
@@ -196,7 +200,9 @@
 				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
 					>Pending Balance</span
 				>
-				<div class="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/10 text-warning">
+				<div
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
+				>
 					<i class="fas fa-clock text-xs"></i>
 				</div>
 			</div>

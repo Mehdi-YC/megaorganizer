@@ -259,7 +259,7 @@
 				<div class="flex items-start justify-between">
 					<div class="flex items-center gap-2.5">
 						<div
-							class="flex h-9 w-9 items-center justify-center rounded-sm bg-primary-subdued text-primary-text"
+							class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
 						>
 							<i class="fas fa-file-shield text-sm"></i>
 						</div>
@@ -350,7 +350,7 @@
 				<div class="flex items-start justify-between">
 					<div class="flex items-center gap-2.5">
 						<div
-							class="flex h-9 w-9 items-center justify-center rounded-sm bg-primary-subdued text-primary-text"
+							class="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-600 text-white shadow-xs"
 						>
 							<i class="fas fa-file-invoice text-sm"></i>
 						</div>

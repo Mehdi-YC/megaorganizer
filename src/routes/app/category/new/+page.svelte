@@ -104,7 +104,7 @@
 
 					<div class="flex items-center gap-3">
 						<div
-							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 text-lg shadow-2xs"
+							class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-lg shadow-2xs"
 							style="color: {iconColor || 'var(--color-primary)'}"
 						>
 							{#if icon}

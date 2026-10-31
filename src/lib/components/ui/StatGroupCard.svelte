@@ -24,7 +24,7 @@
 	<div class="mb-4 flex items-center justify-between gap-3">
 		<div class="flex items-center gap-2.5">
 			<div
-				class="flex h-8 w-8 items-center justify-center rounded-lg border border-border/80 bg-muted/60 text-xs text-primary-text"
+				class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-xs text-white shadow-xs"
 			>
 				<i class="fas {icon}"></i>
 			</div>
