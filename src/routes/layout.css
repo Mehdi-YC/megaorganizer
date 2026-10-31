@@ -443,3 +443,38 @@ body {
 .no-scrollbar::-webkit-scrollbar {
 	display: none;
 }
+
+/* Global Print Styles for Clean Document Export */
+@media print {
+	@page {
+		size: A4 portrait;
+		margin: 10mm;
+	}
+
+	html,
+	body {
+		background: #ffffff !important;
+		color: #111827 !important;
+		height: auto !important;
+		min-height: 100% !important;
+		overflow: visible !important;
+	}
+
+	/* Completely hide the application shell during print */
+	.no-print,
+	[data-no-print],
+	header,
+	nav,
+	aside,
+	button {
+		display: none !important;
+	}
+
+	/* Reset scroll/flex layout containers so document flows naturally */
+	div,
+	main {
+		overflow: visible !important;
+		height: auto !important;
+		max-height: none !important;
+	}
+}

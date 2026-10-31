@@ -6,6 +6,7 @@ import {
 	getYearlyDocs,
 	getYearlyDocFilePath,
 	getUserInvoiceProfile,
+	getUserMediaFilePath,
 	formatDZD,
 	formatDateDZ,
 	numberToFrenchWords
@@ -21,7 +22,9 @@ const archiver: any = require('archiver');
 
 function generateInvoiceHtml(
 	inv: InvoiceWithDetails,
-	profile: Partial<InvoiceUserData> | null
+	profile: Partial<InvoiceUserData> | null,
+	stampBase64?: string | null,
+	signatureBase64?: string | null
 ): string {
 	const totalWords = numberToFrenchWords(inv.total);
 	const linesHtml = inv.lines
@@ -150,6 +153,14 @@ function generateInvoiceHtml(
 				Montant total en toutes lettres :
 				<div class="words-val">${totalWords}</div>
 			</div>
+
+			<div class="stamps">
+				<div style="position: relative; width: 220px; min-height: 90px; display: flex; align-items: center; justify-content: center;">
+					${stampBase64 ? `<img src="${stampBase64}" alt="Cachet" style="max-height: 96px; max-width: 100%; object-fit: contain;" />` : ''}
+					${signatureBase64 ? `<img src="${signatureBase64}" alt="Signature" style="position: absolute; inset: 0; margin: auto; max-height: 80px; max-width: 100%; object-fit: contain; opacity: 0.95;" />` : ''}
+					${!stampBase64 && !signatureBase64 ? `<div style="border: 1px dashed #d1d5db; padding: 20px; font-size: 11px; color: #9ca3af; border-radius: 4px;">Cachet et Signature</div>` : ''}
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -168,6 +179,43 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	const { exportType, year, invoiceIds } = body;
 
 	const profile = await getUserInvoiceProfile(locals.user.id);
+
+	// Pre-load stamp and signature if available as base64 for self-contained HTML
+	let stampBase64: string | null = null;
+	let signatureBase64: string | null = null;
+	try {
+		const stampPath = await getUserMediaFilePath(locals.user.id, 'stamp');
+		if (stampPath) {
+			const buf = await readFile(stampPath);
+			stampBase64 = `data:image/png;base64,${buf.toString('base64')}`;
+		}
+	} catch {
+		// continue without stamp
+	}
+
+	try {
+		const sigPath = await getUserMediaFilePath(locals.user.id, 'signature');
+		if (sigPath) {
+			const buf = await readFile(sigPath);
+			signatureBase64 = `data:image/png;base64,${buf.toString('base64')}`;
+		}
+	} catch {
+		// continue without signature
+	}
+
+	// Single invoice clean HTML download (100% isolated, zero UI components)
+	if (exportType === 'single_html' && Array.isArray(invoiceIds) && invoiceIds.length > 0) {
+		const inv = await getInvoice(locals.user.id, invoiceIds[0]);
+		if (!inv) return json({ error: 'Invoice not found' }, { status: 404 });
+		const html = generateInvoiceHtml(inv, profile, stampBase64, signatureBase64);
+		const filename = `${inv.invoiceNumber.replace(/\//g, '_')}.html`;
+		return new Response(html, {
+			headers: {
+				'Content-Type': 'text/html; charset=utf-8',
+				'Content-Disposition': `attachment; filename="${filename}"`
+			}
+		});
+	}
 
 	const archive = archiver('zip', { zlib: { level: 9 } });
 	const passThrough = new PassThrough();
@@ -198,7 +246,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 		for (const inv of invoices) {
 			csvContent += `"${inv.invoiceNumber}";"${inv.client?.name || ''}";"${formatDateDZ(inv.invoiceDate)}";"${formatDateDZ(inv.dueDate)}";"${inv.status}";"${inv.subtotal}";"${inv.tvaAmount}";"${inv.total}"\n`;
-			const html = generateInvoiceHtml(inv, profile);
+			const html = generateInvoiceHtml(inv, profile, stampBase64, signatureBase64);
 			archive.append(html, { name: `factures/${inv.invoiceNumber.replace(/\//g, '_')}.html` });
 		}
 
@@ -210,7 +258,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			const inv = await getInvoice(locals.user.id, id);
 			if (inv) {
 				csvContent += `"${inv.invoiceNumber}";"${inv.client?.name || ''}";"${formatDateDZ(inv.invoiceDate)}";"${formatDateDZ(inv.dueDate)}";"${inv.status}";"${inv.subtotal}";"${inv.tvaAmount}";"${inv.total}"\n`;
-				const html = generateInvoiceHtml(inv, profile);
+				const html = generateInvoiceHtml(inv, profile, stampBase64, signatureBase64);
 				archive.append(html, { name: `${inv.invoiceNumber.replace(/\//g, '_')}.html` });
 			}
 		}

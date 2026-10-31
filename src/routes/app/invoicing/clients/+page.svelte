@@ -141,27 +141,19 @@
 			showToast(msg, 'error');
 		}
 	}
-
-	function getClientInitials(name?: string | null): string {
-		if (!name) return '??';
-		const parts = name.trim().split(/\s+/);
-		if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-		return (parts[0][0] + parts[1][0]).toUpperCase();
-	}
 </script>
 
 <svelte:head>
 	<title>Clients & Entreprises - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-5xl p-4 sm:p-8">
-	<div class="mb-5">
+<div class="p-4 sm:p-8">
+	<div class="mb-6">
 		<a
 			href={resolve('/app/invoicing')}
-			class="inline-flex items-center gap-1.5 text-xs text-fg-subdued transition-colors hover:text-fg"
+			class="text-xs text-fg-subdued transition-colors hover:text-fg"
 		>
-			<i class="fas fa-arrow-left text-[11px]"></i>
-			<span>Retour à la facturation</span>
+			<i class="fas fa-arrow-left mr-1"></i> Retour à la facturation
 		</a>
 	</div>
 
@@ -178,13 +170,13 @@
 	<div class="mb-4 flex items-center justify-between gap-3">
 		<div class="relative w-full max-w-xs">
 			<i
-				class="fas fa-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-xs text-fg-subdued"
+				class="fas fa-search pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-fg-subdued"
 			></i>
 			<input
-				type="text"
+				type="search"
 				bind:value={searchQuery}
 				placeholder="Rechercher par nom, ville, NIF..."
-				class="h-9 w-full rounded-lg border border-border/80 bg-surface pr-3 pl-8 text-xs text-fg transition-colors placeholder:text-fg-subdued focus:border-primary-text focus:outline-hidden"
+				class="h-8 w-full rounded-sm border border-border-strong bg-bg pr-3 pl-8 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 			/>
 		</div>
 		<span class="text-xs text-fg-subdued">
@@ -193,87 +185,76 @@
 	</div>
 
 	{#if filteredClients.length > 0}
-		<div class="overflow-hidden rounded-xl border border-border/80 bg-surface shadow-xs">
-			<div class="overflow-x-auto">
-				<table class="w-full border-collapse text-left text-xs">
-					<thead>
-						<tr class="border-b border-border/70 bg-bg-subdued/70 text-fg-subdued">
-							<th class="px-4 py-3 font-semibold">Nom / Entreprise</th>
-							<th class="px-4 py-3 font-semibold">Localisation</th>
-							<th class="px-4 py-3 font-semibold">Identifiants Fiscaux</th>
-							<th class="px-4 py-3 font-semibold">Contact</th>
-							<th class="px-4 py-3 text-right font-semibold">Actions</th>
+		<div class="overflow-x-auto rounded-sm border border-border bg-surface">
+			<table class="w-full border-collapse text-left text-xs">
+				<thead>
+					<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
+						<th class="px-4 py-2.5 font-semibold">Nom / Entreprise</th>
+						<th class="px-4 py-2.5 font-semibold">Localisation</th>
+						<th class="px-4 py-2.5 font-semibold">Identifiants Fiscaux</th>
+						<th class="px-4 py-2.5 font-semibold">Contact</th>
+						<th class="px-4 py-2.5 text-right font-semibold">Actions</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-border">
+					{#each filteredClients as c (c.id)}
+						<tr class="transition-colors hover:bg-muted/50">
+							<td class="px-4 py-3 font-semibold text-fg">
+								{c.name}
+							</td>
+							<td class="px-4 py-3 text-fg-subdued">
+								{#if c.city}{c.city},
+								{/if}{c.country || 'Algérie'}
+								{#if c.address}
+									<div class="text-[11px] text-fg-subdued/80">{c.address}</div>
+								{/if}
+							</td>
+							<td class="px-4 py-3 text-fg-subdued">
+								{#if c.nif}<div>NIF: <span class="text-fg">{c.nif}</span></div>{/if}
+								{#if c.nTva}<div>N° TVA: <span class="text-fg">{c.nTva}</span></div>{/if}
+								{#if c.rc}<div>RC: <span class="text-fg">{c.rc}</span></div>{/if}
+								{#if !c.nif && !c.nTva && !c.rc}
+									<span class="text-[11px] text-fg-subdued/60 italic">Non renseigné</span>
+								{/if}
+							</td>
+							<td class="px-4 py-3 text-fg-subdued">
+								{#if c.phone}<div>{c.phone}</div>{/if}
+								{#if c.email}<div>{c.email}</div>{/if}
+								{#if !c.phone && !c.email}
+									<span class="text-[11px] text-fg-subdued/60 italic">-</span>
+								{/if}
+							</td>
+							<td class="px-4 py-3 text-right">
+								<div class="flex items-center justify-end gap-1">
+									<button
+										type="button"
+										class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
+										title="Modifier"
+										onclick={() => openEditModal(c)}
+									>
+										<i class="fas fa-pencil text-xs"></i>
+									</button>
+									<ConfirmButton
+										confirmId={confirmDeleteId ?? ''}
+										targetId={c.id}
+										size="sm"
+										onconfirm={() => {
+											if (confirmDeleteId === c.id) {
+												handleDelete(c.id);
+											} else {
+												confirmDeleteId = c.id;
+												setTimeout(() => {
+													if (confirmDeleteId === c.id) confirmDeleteId = null;
+												}, 3000);
+											}
+										}}
+									/>
+								</div>
+							</td>
 						</tr>
-					</thead>
-					<tbody class="divide-y divide-border/60">
-						{#each filteredClients as c (c.id)}
-							<tr class="transition-colors hover:bg-muted/40">
-								<td class="px-4 py-3.5">
-									<div class="flex items-center gap-2.5">
-										<div
-											class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-subdued text-[11px] font-bold text-primary-text"
-										>
-											{getClientInitials(c.name)}
-										</div>
-										<span class="font-semibold text-fg">{c.name}</span>
-									</div>
-								</td>
-								<td class="px-4 py-3.5 text-fg-subdued">
-									{#if c.city}{c.city},
-									{/if}{c.country || 'Algérie'}
-									{#if c.address}
-										<div class="text-[11px] text-fg-subdued/80">{c.address}</div>
-									{/if}
-								</td>
-								<td class="px-4 py-3.5 text-fg-subdued">
-									{#if c.nif}<div>NIF: <span class="font-mono text-fg">{c.nif}</span></div>{/if}
-									{#if c.nTva}<div>
-											N° TVA: <span class="font-mono text-fg">{c.nTva}</span>
-										</div>{/if}
-									{#if c.rc}<div>RC: <span class="font-mono text-fg">{c.rc}</span></div>{/if}
-									{#if !c.nif && !c.nTva && !c.rc}
-										<span class="text-[11px] text-fg-subdued/60 italic">Non renseigné</span>
-									{/if}
-								</td>
-								<td class="px-4 py-3.5 text-fg-subdued">
-									{#if c.phone}<div>{c.phone}</div>{/if}
-									{#if c.email}<div>{c.email}</div>{/if}
-									{#if !c.phone && !c.email}
-										<span class="text-[11px] text-fg-subdued/60 italic">-</span>
-									{/if}
-								</td>
-								<td class="px-4 py-3.5 text-right">
-									<div class="flex items-center justify-end gap-1.5">
-										<button
-											type="button"
-											class="flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
-											title="Modifier"
-											onclick={() => openEditModal(c)}
-										>
-											<i class="fas fa-pencil text-xs"></i>
-										</button>
-										<ConfirmButton
-											confirmId={confirmDeleteId ?? ''}
-											targetId={c.id}
-											size="sm"
-											onconfirm={() => {
-												if (confirmDeleteId === c.id) {
-													handleDelete(c.id);
-												} else {
-													confirmDeleteId = c.id;
-													setTimeout(() => {
-														if (confirmDeleteId === c.id) confirmDeleteId = null;
-													}, 3000);
-												}
-											}}
-										/>
-									</div>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	{:else}
 		<EmptyState

@@ -196,19 +196,39 @@
 <style>
 	@media print {
 		:global(body) {
-			background: white !important;
+			background: #ffffff !important;
 			color: #1f2937 !important;
+			margin: 0 !important;
+			padding: 0 !important;
 		}
-		:global(aside),
-		:global(header),
+
+		/* Isolate print strictly to the invoice sheet: absolutely nothing else in the UI will print */
+		:global(body *) {
+			visibility: hidden !important;
+		}
+
+		.invoice-sheet,
+		.invoice-sheet * {
+			visibility: visible !important;
+		}
+
+		.invoice-sheet {
+			position: absolute !important;
+			left: 0 !important;
+			top: 0 !important;
+			width: 100% !important;
+			max-width: 100% !important;
+			margin: 0 !important;
+			padding: 10mm 15mm !important;
+			border: none !important;
+			box-shadow: none !important;
+			background: #ffffff !important;
+			color: #1f2937 !important;
+			z-index: 999999 !important;
+		}
+
 		:global(.no-print) {
 			display: none !important;
-		}
-		.invoice-sheet {
-			max-width: 100% !important;
-			box-shadow: none !important;
-			padding: 0 !important;
-			margin: 0 !important;
 		}
 	}
 </style>

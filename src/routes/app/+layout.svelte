@@ -45,7 +45,7 @@
 	{/if}
 
 	<div
-		class="fixed z-50 h-full lg:static lg:z-auto {sidebarOpen
+		class="no-print fixed z-50 h-full lg:static lg:z-auto {sidebarOpen
 			? 'translate-x-0'
 			: '-translate-x-full lg:translate-x-0'} transition-transform duration-200"
 	>
@@ -59,7 +59,7 @@
 
 	<main class="flex-1 overflow-x-hidden overflow-y-auto">
 		<div
-			class="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-bg-subdued px-4 lg:hidden"
+			class="no-print sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-bg-subdued px-4 lg:hidden"
 		>
 			<a
 				href={resolve('/app')}

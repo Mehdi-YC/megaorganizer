@@ -3,6 +3,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { formatDZD, formatDateDZ } from '$lib/utils/invoice';
 	import type { InvoiceWithDetails } from '$lib/types';
@@ -18,15 +19,11 @@
 	const stats = $derived(() => {
 		let total = 0;
 		let totalPaid = 0;
-		let paidCount = 0;
 		for (const inv of data.invoices) {
 			if (inv.status !== 'cancelled') total += inv.total;
-			if (inv.status === 'paid') {
-				totalPaid += inv.total;
-				paidCount++;
-			}
+			if (inv.status === 'paid') totalPaid += inv.total;
 		}
-		return { total, totalPaid, paidCount, count: data.invoices.length };
+		return { total, totalPaid };
 	});
 
 	function toggleSelectAll() {
@@ -152,165 +149,121 @@
 		}
 	}
 
-	function getClientInitials(name?: string | null): string {
-		if (!name) return '??';
-		const parts = name.trim().split(/\s+/);
-		if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-		return (parts[0][0] + parts[1][0]).toUpperCase();
+	function getStatusBadge(status: string) {
+		switch (status) {
+			case 'paid':
+				return { label: 'Payée', variant: 'success' as const };
+			case 'sent':
+				return { label: 'Envoyée', variant: 'warning' as const };
+			case 'cancelled':
+				return { label: 'Annulée', variant: 'danger' as const };
+			default:
+				return { label: 'Brouillon', variant: 'default' as const };
+		}
 	}
 </script>
 
 <svelte:head>
-	<title>Dossier {data.year} - Facturation</title>
+	<title>Exercice {data.year} - Facturation</title>
 </svelte:head>
 
-<div class="mx-auto max-w-6xl p-4 sm:p-8">
-	<!-- Back navigation -->
-	<div class="mb-5">
+<div class="p-4 sm:p-8">
+	<div class="mb-6">
 		<a
 			href={resolve('/app/invoicing')}
-			class="inline-flex items-center gap-1.5 text-xs text-fg-subdued transition-colors hover:text-fg"
+			class="text-xs text-fg-subdued transition-colors hover:text-fg"
 		>
-			<i class="fas fa-arrow-left text-[11px]"></i>
-			<span>Retour à la facturation</span>
+			<i class="fas fa-arrow-left mr-1"></i> Retour à la facturation
 		</a>
 	</div>
 
-	<!-- Page Header -->
-	<div class="mb-6">
-		<PageHeader
-			title="Dossier Fiscal : Exercice {data.year}"
-			subtitle="Factures, déclarations annuelles G12 / G12 bis et exportations"
-		>
-			<div class="flex flex-wrap items-center gap-2.5">
-				<Button variant="secondary" size="sm" onclick={exportFolder} disabled={isExporting}>
-					<i class="fas fa-folder-arrow-down mr-1.5 text-xs text-primary-text"></i>
-					Exporter le dossier {data.year} (ZIP)
+	<PageHeader
+		title="Dossier Fiscal : Exercice {data.year}"
+		subtitle="Factures, déclarations annuelles G12 / G12 bis et exportations"
+	>
+		<div class="flex flex-wrap items-center gap-2">
+			<Button variant="secondary" size="sm" onclick={exportFolder} disabled={isExporting}>
+				<i class="fas fa-folder-arrow-down mr-1.5 text-xs text-primary-text"></i>
+				Exporter le dossier {data.year} (G12 + Factures)
+			</Button>
+
+			{#if selectedInvoiceIds.length > 0}
+				<Button size="sm" onclick={exportSelectedInvoices} disabled={isExporting}>
+					<i class="fas fa-file-zipper mr-1.5 text-xs"></i>
+					Exporter la sélection ({selectedInvoiceIds.length})
 				</Button>
+			{/if}
 
-				{#if selectedInvoiceIds.length > 0}
-					<Button size="sm" onclick={exportSelectedInvoices} disabled={isExporting}>
-						<i class="fas fa-file-zipper mr-1.5 text-xs"></i>
-						Exporter ({selectedInvoiceIds.length})
-					</Button>
-				{/if}
-
-				<a href={resolve('/app/invoicing/new')}>
-					<Button size="sm">
-						<i class="fas fa-plus mr-1.5 text-xs"></i> Nouvelle Facture
-					</Button>
-				</a>
-			</div>
-		</PageHeader>
-	</div>
+			<a href={resolve('/app/invoicing/new')}>
+				<Button size="sm">
+					<i class="fas fa-plus mr-1.5 text-xs"></i> Nouvelle Facture
+				</Button>
+			</a>
+		</div>
+	</PageHeader>
 
 	<!-- Summary stats -->
 	<div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-		<div
-			class="relative overflow-hidden rounded-xl border border-border/70 bg-surface/80 p-5 shadow-xs transition-all hover:border-primary-text/40"
-		>
-			<div class="flex items-center justify-between">
-				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
-					>Factures {data.year}</span
+		<div class="rounded-sm border border-border bg-surface p-4">
+			<div class="mb-2 flex items-center justify-between">
+				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
+					>Nombre de factures</span
 				>
-				<div
-					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-subdued/80 text-primary-text"
-				>
-					<i class="fas fa-receipt text-sm"></i>
-				</div>
+				<i class="fas fa-file-invoice text-xs text-fg-subdued"></i>
 			</div>
-			<div class="mt-2 text-2xl font-bold tracking-tight text-fg">
-				{stats().count}
-			</div>
-			<div class="mt-2 text-xs text-fg-subdued">
-				{stats().paidCount} soldée(s) sur l'exercice
-			</div>
+			<div class="text-2xl font-semibold text-fg">{data.invoices.length}</div>
 		</div>
-
-		<div
-			class="relative overflow-hidden rounded-xl border border-border/70 bg-surface/80 p-5 shadow-xs transition-all hover:border-primary-text/40"
-		>
-			<div class="flex items-center justify-between">
-				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
+		<div class="rounded-sm border border-border bg-surface p-4">
+			<div class="mb-2 flex items-center justify-between">
+				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
 					>Total Exercice {data.year}</span
 				>
-				<div
-					class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-subdued/80 text-primary-text"
-				>
-					<i class="fas fa-file-invoice-dollar text-sm"></i>
-				</div>
+				<i class="fas fa-coins text-xs text-fg-subdued"></i>
 			</div>
-			<div class="mt-2 text-2xl font-bold tracking-tight text-fg">
-				{formatDZD(stats().total)}
-			</div>
-			<div class="mt-2 text-xs text-fg-subdued">Chiffre d'affaires facturé</div>
+			<div class="text-2xl font-semibold text-fg">{formatDZD(stats().total)}</div>
 		</div>
-
-		<div
-			class="relative overflow-hidden rounded-xl border border-border/70 bg-surface/80 p-5 shadow-xs transition-all hover:border-emerald-500/40"
-		>
-			<div class="flex items-center justify-between">
-				<span class="text-xs font-semibold tracking-wider text-fg-subdued uppercase"
+		<div class="rounded-sm border border-border bg-surface p-4">
+			<div class="mb-2 flex items-center justify-between">
+				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
 					>Total Encaissé</span
 				>
-				<div
-					class="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400"
-				>
-					<i class="fas fa-circle-check text-sm"></i>
-				</div>
+				<i class="fas fa-circle-check text-xs text-success"></i>
 			</div>
-			<div class="mt-2 text-2xl font-bold tracking-tight text-emerald-400">
-				{formatDZD(stats().totalPaid)}
-			</div>
-			<div class="mt-2 text-xs text-fg-subdued">Règlements perçus</div>
+			<div class="text-2xl font-semibold text-success">{formatDZD(stats().totalPaid)}</div>
 		</div>
 	</div>
 
 	<!-- Declarations G12 & G12 Bis Cards -->
 	<div class="mb-8">
-		<div class="mb-3 flex items-center justify-between">
-			<h2 class="text-xs font-bold tracking-wider text-fg-subdued uppercase">
-				Déclarations Fiscales ({data.year})
-			</h2>
-			<span class="text-[11px] text-fg-subdued">Obligations fiscales annuelles algériennes</span>
-		</div>
+		<h2 class="mb-3 text-xs font-semibold tracking-wide text-fg-accent uppercase">
+			Déclarations Fiscales de l'Exercice {data.year}
+		</h2>
 
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<!-- G12 Card -->
-			<div
-				class="relative rounded-xl border border-border/80 bg-surface/90 p-5 shadow-xs transition-all hover:border-primary-text/30"
-			>
+			<div class="rounded-sm border border-border bg-surface p-5">
 				<div class="flex items-start justify-between">
-					<div class="flex items-center gap-3">
+					<div class="flex items-center gap-2.5">
 						<div
-							class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400"
+							class="flex h-9 w-9 items-center justify-center rounded-sm bg-primary-subdued text-primary-text"
 						>
-							<i class="fas fa-file-shield text-base"></i>
+							<i class="fas fa-file-shield text-sm"></i>
 						</div>
 						<div>
 							<h3 class="text-sm font-bold text-fg">Déclaration G12</h3>
 							<p class="text-[11px] text-fg-subdued">
-								Déclaration prévisionnelle / existence annuelle
+								Déclaration annuelle de l'impôt forfaitaire unique (IFU)
 							</p>
 						</div>
 					</div>
 					{#if data.g12Doc}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400"
-						>
-							<span class="h-1 w-1 rounded-full bg-emerald-400"></span>
-							Déposé
-						</span>
+						<Badge variant="success">Téléversé</Badge>
 					{:else}
-						<span
-							class="inline-flex items-center rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-fg-subdued"
-						>
-							Non renseigné
-						</span>
+						<Badge variant="default">Non renseigné</Badge>
 					{/if}
 				</div>
 
-				<div class="mt-4 rounded-lg border border-border/70 bg-bg/80 p-3">
+				<div class="mt-4 rounded-sm border border-border/80 bg-bg p-3">
 					{#if data.g12Doc}
 						{@const doc = data.g12Doc}
 						<!-- eslint-disable svelte/no-navigation-without-resolve -->
@@ -319,27 +272,27 @@
 								<a
 									href="/api/invoicing/yearly-docs?id={doc.id}"
 									target="_blank"
-									class="flex items-center gap-1.5 truncate text-xs font-semibold text-primary-text hover:underline"
+									class="truncate text-xs font-medium text-primary-text hover:underline"
 								>
-									<i class="fas fa-file-pdf text-xs"></i>
-									<span class="truncate">{doc.originalName}</span>
+									<i class="fas fa-file-pdf mr-1 text-xs"></i>
+									{doc.originalName}
 								</a>
-								<div class="mt-0.5 text-[10px] text-fg-subdued">
+								<div class="text-[10px] text-fg-subdued">
 									{(doc.size / 1024).toFixed(1)} Ko • Ajouté le {formatDateDZ(doc.createdAt || '')}
 								</div>
 							</div>
-							<div class="flex items-center gap-1">
+							<div class="flex items-center gap-1.5">
 								<a
 									href="/api/invoicing/yearly-docs?id={doc.id}"
 									download={doc.originalName}
-									class="flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
 									title="Télécharger"
 								>
 									<i class="fas fa-download text-xs"></i>
 								</a>
 								<button
 									type="button"
-									class="flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-rose-400"
+									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
 									title="Supprimer"
 									onclick={() => handleDeleteDoc(doc.id, 'Déclaration G12')}
 								>
@@ -349,19 +302,18 @@
 						</div>
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{:else}
-						<div class="py-2 text-center text-xs text-fg-subdued">
-							<i class="fas fa-cloud-arrow-up mb-1 text-sm text-fg-subdued/60"></i>
-							<div>Aucun document G12 pour l'exercice {data.year}</div>
+						<div class="py-2 text-center">
+							<p class="text-xs text-fg-subdued">Aucun document G12 pour {data.year}</p>
 						</div>
 					{/if}
 				</div>
 
-				<div class="mt-4 flex items-center justify-between">
+				<div class="mt-3 flex items-center justify-between">
 					<label class="cursor-pointer">
 						<span
-							class="inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-bg px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:border-primary-text/40 hover:bg-muted"
+							class="inline-flex items-center gap-1.5 rounded-sm border border-border bg-bg px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:bg-muted"
 						>
-							<i class="fas fa-upload text-xs text-primary-text"></i>
+							<i class="fas fa-upload text-xs"></i>
 							{data.g12Doc ? 'Remplacer le document G12' : 'Téléverser le G12'}
 						</span>
 						<input
@@ -372,23 +324,21 @@
 						/>
 					</label>
 					{#if isUploadingG12}
-						<span class="text-xs text-primary-text"
-							><i class="fas fa-spinner fa-spin mr-1"></i> Téléversement...</span
+						<span class="text-xs text-fg-subdued"
+							><i class="fas fa-spinner fa-spin mr-1"></i> Envoi...</span
 						>
 					{/if}
 				</div>
 			</div>
 
 			<!-- G12 Bis Card -->
-			<div
-				class="relative rounded-xl border border-border/80 bg-surface/90 p-5 shadow-xs transition-all hover:border-primary-text/30"
-			>
+			<div class="rounded-sm border border-border bg-surface p-5">
 				<div class="flex items-start justify-between">
-					<div class="flex items-center gap-3">
+					<div class="flex items-center gap-2.5">
 						<div
-							class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400"
+							class="flex h-9 w-9 items-center justify-center rounded-sm bg-primary-subdued text-primary-text"
 						>
-							<i class="fas fa-file-invoice text-base"></i>
+							<i class="fas fa-file-invoice text-sm"></i>
 						</div>
 						<div>
 							<h3 class="text-sm font-bold text-fg">Déclaration G12 Bis</h3>
@@ -398,22 +348,13 @@
 						</div>
 					</div>
 					{#if data.g12BisDoc}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400"
-						>
-							<span class="h-1 w-1 rounded-full bg-emerald-400"></span>
-							Déposé
-						</span>
+						<Badge variant="success">Téléversé</Badge>
 					{:else}
-						<span
-							class="inline-flex items-center rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-fg-subdued"
-						>
-							Non renseigné
-						</span>
+						<Badge variant="default">Non renseigné</Badge>
 					{/if}
 				</div>
 
-				<div class="mt-4 rounded-lg border border-border/70 bg-bg/80 p-3">
+				<div class="mt-4 rounded-sm border border-border/80 bg-bg p-3">
 					{#if data.g12BisDoc}
 						{@const doc = data.g12BisDoc}
 						<!-- eslint-disable svelte/no-navigation-without-resolve -->
@@ -422,27 +363,27 @@
 								<a
 									href="/api/invoicing/yearly-docs?id={doc.id}"
 									target="_blank"
-									class="flex items-center gap-1.5 truncate text-xs font-semibold text-primary-text hover:underline"
+									class="truncate text-xs font-medium text-primary-text hover:underline"
 								>
-									<i class="fas fa-file-pdf text-xs"></i>
-									<span class="truncate">{doc.originalName}</span>
+									<i class="fas fa-file-pdf mr-1 text-xs"></i>
+									{doc.originalName}
 								</a>
-								<div class="mt-0.5 text-[10px] text-fg-subdued">
+								<div class="text-[10px] text-fg-subdued">
 									{(doc.size / 1024).toFixed(1)} Ko • Ajouté le {formatDateDZ(doc.createdAt || '')}
 								</div>
 							</div>
-							<div class="flex items-center gap-1">
+							<div class="flex items-center gap-1.5">
 								<a
 									href="/api/invoicing/yearly-docs?id={doc.id}"
 									download={doc.originalName}
-									class="flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
 									title="Télécharger"
 								>
 									<i class="fas fa-download text-xs"></i>
 								</a>
 								<button
 									type="button"
-									class="flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-rose-400"
+									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
 									title="Supprimer"
 									onclick={() => handleDeleteDoc(doc.id, 'Déclaration G12 Bis')}
 								>
@@ -452,19 +393,18 @@
 						</div>
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{:else}
-						<div class="py-2 text-center text-xs text-fg-subdued">
-							<i class="fas fa-cloud-arrow-up mb-1 text-sm text-fg-subdued/60"></i>
-							<div>Aucun document G12 Bis pour l'exercice {data.year}</div>
+						<div class="py-2 text-center">
+							<p class="text-xs text-fg-subdued">Aucun document G12 Bis pour {data.year}</p>
 						</div>
 					{/if}
 				</div>
 
-				<div class="mt-4 flex items-center justify-between">
+				<div class="mt-3 flex items-center justify-between">
 					<label class="cursor-pointer">
 						<span
-							class="inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-bg px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:border-primary-text/40 hover:bg-muted"
+							class="inline-flex items-center gap-1.5 rounded-sm border border-border bg-bg px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:bg-muted"
 						>
-							<i class="fas fa-upload text-xs text-primary-text"></i>
+							<i class="fas fa-upload text-xs"></i>
 							{data.g12BisDoc ? 'Remplacer le document G12 Bis' : 'Téléverser le G12 Bis'}
 						</span>
 						<input
@@ -475,8 +415,8 @@
 						/>
 					</label>
 					{#if isUploadingG12Bis}
-						<span class="text-xs text-primary-text"
-							><i class="fas fa-spinner fa-spin mr-1"></i> Téléversement...</span
+						<span class="text-xs text-fg-subdued"
+							><i class="fas fa-spinner fa-spin mr-1"></i> Envoi...</span
 						>
 					{/if}
 				</div>
@@ -484,129 +424,111 @@
 		</div>
 	</div>
 
-	<!-- Invoices in this Folder -->
-	<div class="mb-4 flex items-center justify-between">
-		<h2 class="text-xs font-bold tracking-wider text-fg-subdued uppercase">
-			Factures de l'Exercice {data.year} ({data.invoices.length})
-		</h2>
+	<!-- Invoices list for this year -->
+	<div class="space-y-3">
+		<div class="flex items-center justify-between">
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+				Factures de l'Exercice {data.year} ({data.invoices.length})
+			</h2>
+			{#if selectedInvoiceIds.length > 0}
+				<div class="flex items-center gap-2">
+					<span class="text-xs text-fg-subdued">{selectedInvoiceIds.length} sélectionnée(s)</span>
+					<Button
+						size="sm"
+						variant="secondary"
+						onclick={exportSelectedInvoices}
+						disabled={isExporting}
+					>
+						<i class="fas fa-download mr-1.5 text-xs"></i> Exporter la sélection
+					</Button>
+				</div>
+			{/if}
+		</div>
 
-		{#if selectedInvoiceIds.length > 0}
-			<Button size="sm" variant="secondary" onclick={exportSelectedInvoices}>
-				<i class="fas fa-file-zipper mr-1.5 text-xs text-primary-text"></i>
-				Exporter la sélection ({selectedInvoiceIds.length})
-			</Button>
-		{/if}
-	</div>
-
-	{#if data.invoices.length > 0}
-		<div class="overflow-hidden rounded-xl border border-border/80 bg-surface shadow-xs">
-			<div class="overflow-x-auto">
+		{#if data.invoices.length > 0}
+			<div class="overflow-x-auto rounded-sm border border-border bg-surface">
 				<table class="w-full border-collapse text-left text-xs">
 					<thead>
-						<tr class="border-b border-border/70 bg-bg-subdued/70 text-fg-subdued">
-							<th class="w-10 px-3.5 py-3 text-center">
+						<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
+							<th class="w-8 px-3 py-2.5 text-center">
 								<input
 									type="checkbox"
 									checked={selectedInvoiceIds.length > 0 &&
 										selectedInvoiceIds.length === data.invoices.length}
 									onchange={toggleSelectAll}
-									class="rounded border-border"
+									class="rounded-sm border-border"
 								/>
 							</th>
-							<th class="px-4 py-3 font-semibold">Numéro</th>
-							<th class="px-4 py-3 font-semibold">Client</th>
-							<th class="px-4 py-3 font-semibold">Date</th>
-							<th class="px-4 py-3 font-semibold">Échéance</th>
-							<th class="px-4 py-3 text-right font-semibold">Montant TTC</th>
-							<th class="px-4 py-3 text-center font-semibold">Statut</th>
-							<th class="px-4 py-3 text-right font-semibold">Action</th>
+							<th class="px-3 py-2.5 font-semibold">Numéro</th>
+							<th class="px-3 py-2.5 font-semibold">Client</th>
+							<th class="px-3 py-2.5 font-semibold">Date</th>
+							<th class="px-3 py-2.5 font-semibold">Échéance</th>
+							<th class="px-3 py-2.5 text-right font-semibold">Montant TTC</th>
+							<th class="px-3 py-2.5 text-center font-semibold">Statut</th>
+							<th class="px-3 py-2.5 text-right font-semibold">Actions</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-border/60">
+					<tbody class="divide-y divide-border">
 						{#each data.invoices as inv (inv.id)}
-							<tr class="transition-colors hover:bg-muted/40">
-								<td class="w-10 px-3.5 py-3.5 text-center">
+							{@const badge = getStatusBadge(inv.status)}
+							<tr class="transition-colors hover:bg-muted/50">
+								<td class="w-8 px-3 py-3 text-center">
 									<input
 										type="checkbox"
 										checked={selectedInvoiceIds.includes(inv.id)}
 										onchange={() => toggleSelect(inv.id)}
-										class="rounded border-border"
+										class="rounded-sm border-border"
 									/>
 								</td>
-								<td class="px-4 py-3.5">
-									<a
-										href={resolve('/app/invoicing/[id]', { id: inv.id })}
-										class="font-mono text-xs font-semibold text-primary-text hover:underline"
-									>
+								<td class="px-3 py-3 font-semibold text-fg-accent">
+									<a href={resolve('/app/invoicing/[id]', { id: inv.id })} class="hover:underline">
 										{inv.invoiceNumber}
 									</a>
 								</td>
-								<td class="px-4 py-3.5">
-									<div class="flex items-center gap-2.5">
-										<div
-											class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-subdued text-[11px] font-bold text-primary-text"
+								<td class="px-3 py-3 font-medium text-fg">
+									{inv.client?.name || 'Inconnu'}
+								</td>
+								<td class="px-3 py-3 text-fg-subdued">
+									{formatDateDZ(inv.invoiceDate)}
+								</td>
+								<td class="px-3 py-3 text-fg-subdued">
+									{formatDateDZ(inv.dueDate)}
+								</td>
+								<td class="px-3 py-3 text-right font-semibold text-fg">
+									{formatDZD(inv.total)}
+								</td>
+								<td class="px-3 py-3 text-center">
+									<Badge variant={badge.variant}>{badge.label}</Badge>
+								</td>
+								<td class="px-3 py-3 text-right">
+									<div class="flex items-center justify-end gap-1">
+										<a
+											href={resolve('/app/invoicing/[id]', { id: inv.id })}
+											title="Consulter"
+											class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
 										>
-											{getClientInitials(inv.client?.name)}
-										</div>
-										<span class="truncate font-medium text-fg">{inv.client?.name}</span>
+											<i class="fas fa-eye text-xs"></i>
+										</a>
+										<a
+											href={resolve('/app/invoicing/[id]/edit', { id: inv.id })}
+											title="Modifier"
+											class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
+										>
+											<i class="fas fa-pencil text-xs"></i>
+										</a>
 									</div>
-								</td>
-								<td class="px-4 py-3.5 text-fg-subdued">{formatDateDZ(inv.invoiceDate)}</td>
-								<td class="px-4 py-3.5 text-fg-subdued">{formatDateDZ(inv.dueDate)}</td>
-								<td class="px-4 py-3.5 text-right font-bold text-fg">{formatDZD(inv.total)}</td>
-								<td class="px-4 py-3.5 text-center">
-									{#if inv.status === 'paid'}
-										<span
-											class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-400"
-										>
-											<span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-											Payée
-										</span>
-									{:else if inv.status === 'sent'}
-										<span
-											class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-400"
-										>
-											<span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
-											Envoyée
-										</span>
-									{:else}
-										<span
-											class="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-fg-subdued"
-										>
-											<span class="h-1.5 w-1.5 rounded-full bg-fg-subdued"></span>
-											Brouillon
-										</span>
-									{/if}
-								</td>
-								<td class="px-4 py-3.5 text-right">
-									<a
-										href={resolve('/app/invoicing/[id]', { id: inv.id })}
-										class="inline-flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
-										title="Consulter"
-									>
-										<i class="fas fa-eye text-xs"></i>
-									</a>
 								</td>
 							</tr>
 						{/each}
 					</tbody>
 				</table>
 			</div>
-		</div>
-	{:else}
-		<div class="rounded-xl border border-border/80 bg-surface/80 p-8 text-center">
-			<i class="fas fa-folder-open mb-2 text-2xl text-fg-subdued/50"></i>
-			<p class="text-sm font-medium text-fg">Aucune facture émise en {data.year}</p>
-			<p class="mt-1 text-xs text-fg-subdued">
-				Créez une facture datée de l'année {data.year} pour qu'elle s'affiche dans ce dossier.
-			</p>
-			<div class="mt-4">
-				<a href={resolve('/app/invoicing/new')}>
-					<Button size="sm">
-						<i class="fas fa-plus mr-1.5 text-xs"></i> Créer une facture
-					</Button>
-				</a>
+		{:else}
+			<div
+				class="rounded-sm border border-border bg-surface p-8 text-center text-xs text-fg-subdued"
+			>
+				Aucune facture enregistrée pour l'exercice {data.year}.
 			</div>
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>

@@ -116,14 +116,13 @@
 	<title>Produits & Services - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-5xl p-4 sm:p-8">
-	<div class="mb-5">
+<div class="p-4 sm:p-8">
+	<div class="mb-6">
 		<a
 			href={resolve('/app/invoicing')}
-			class="inline-flex items-center gap-1.5 text-xs text-fg-subdued transition-colors hover:text-fg"
+			class="text-xs text-fg-subdued transition-colors hover:text-fg"
 		>
-			<i class="fas fa-arrow-left text-[11px]"></i>
-			<span>Retour à la facturation</span>
+			<i class="fas fa-arrow-left mr-1"></i> Retour à la facturation
 		</a>
 	</div>
 
@@ -140,13 +139,13 @@
 	<div class="mb-4 flex items-center justify-between gap-3">
 		<div class="relative w-full max-w-xs">
 			<i
-				class="fas fa-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-xs text-fg-subdued"
+				class="fas fa-search pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-xs text-fg-subdued"
 			></i>
 			<input
-				type="text"
+				type="search"
 				bind:value={searchQuery}
 				placeholder="Rechercher par libellé..."
-				class="h-9 w-full rounded-lg border border-border/80 bg-surface pr-3 pl-8 text-xs text-fg transition-colors placeholder:text-fg-subdued focus:border-primary-text focus:outline-hidden"
+				class="h-8 w-full rounded-sm border border-border-strong bg-bg pr-3 pl-8 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 			/>
 		</div>
 		<span class="text-xs text-fg-subdued">
@@ -155,69 +154,67 @@
 	</div>
 
 	{#if filteredProducts.length > 0}
-		<div class="overflow-hidden rounded-xl border border-border/80 bg-surface shadow-xs">
-			<div class="overflow-x-auto">
-				<table class="w-full border-collapse text-left text-xs">
-					<thead>
-						<tr class="border-b border-border/70 bg-bg-subdued/70 text-fg-subdued">
-							<th class="px-4 py-3 font-semibold">Libellé</th>
-							<th class="px-4 py-3 font-semibold">Description</th>
-							<th class="px-4 py-3 text-right font-semibold">Prix Unitaire</th>
-							<th class="px-4 py-3 font-semibold">Unité</th>
-							<th class="px-4 py-3 text-center font-semibold">Taux TVA</th>
-							<th class="px-4 py-3 text-right font-semibold">Actions</th>
+		<div class="overflow-x-auto rounded-sm border border-border bg-surface">
+			<table class="w-full border-collapse text-left text-xs">
+				<thead>
+					<tr class="border-b border-border bg-bg-subdued text-fg-subdued">
+						<th class="px-4 py-2.5 font-semibold">Libellé</th>
+						<th class="px-4 py-2.5 font-semibold">Description</th>
+						<th class="px-4 py-2.5 text-right font-semibold">Prix Unitaire</th>
+						<th class="px-4 py-2.5 font-semibold">Unité</th>
+						<th class="px-4 py-2.5 text-center font-semibold">Taux TVA</th>
+						<th class="px-4 py-2.5 text-right font-semibold">Actions</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-border">
+					{#each filteredProducts as p (p.id)}
+						<tr class="transition-colors hover:bg-muted/50">
+							<td class="px-4 py-3 font-semibold text-fg">
+								{p.name}
+							</td>
+							<td class="px-4 py-3 text-fg-subdued">
+								{p.description || '-'}
+							</td>
+							<td class="px-4 py-3 text-right font-medium text-fg">
+								{formatDZD(p.unitPrice)}
+							</td>
+							<td class="px-4 py-3 text-fg-subdued">
+								{p.unit}
+							</td>
+							<td class="px-4 py-3 text-center text-fg-subdued">
+								{p.tvaRate}%
+							</td>
+							<td class="px-4 py-3 text-right">
+								<div class="flex items-center justify-end gap-1">
+									<button
+										type="button"
+										class="flex h-7 w-7 items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
+										title="Modifier"
+										onclick={() => openEditModal(p)}
+									>
+										<i class="fas fa-pencil text-xs"></i>
+									</button>
+									<ConfirmButton
+										confirmId={confirmDeleteId ?? ''}
+										targetId={p.id}
+										size="sm"
+										onconfirm={() => {
+											if (confirmDeleteId === p.id) {
+												handleDelete(p.id);
+											} else {
+												confirmDeleteId = p.id;
+												setTimeout(() => {
+													if (confirmDeleteId === p.id) confirmDeleteId = null;
+												}, 3000);
+											}
+										}}
+									/>
+								</div>
+							</td>
 						</tr>
-					</thead>
-					<tbody class="divide-y divide-border/60">
-						{#each filteredProducts as p (p.id)}
-							<tr class="transition-colors hover:bg-muted/40">
-								<td class="px-4 py-3.5 font-semibold text-fg">
-									{p.name}
-								</td>
-								<td class="px-4 py-3.5 text-fg-subdued">
-									{p.description || '-'}
-								</td>
-								<td class="px-4 py-3.5 text-right font-semibold text-fg">
-									{formatDZD(p.unitPrice)}
-								</td>
-								<td class="px-4 py-3.5 text-fg-subdued">
-									{p.unit}
-								</td>
-								<td class="px-4 py-3.5 text-center text-fg-subdued">
-									{p.tvaRate}%
-								</td>
-								<td class="px-4 py-3.5 text-right">
-									<div class="flex items-center justify-end gap-1.5">
-										<button
-											type="button"
-											class="flex h-7 w-7 items-center justify-center rounded-md text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
-											title="Modifier"
-											onclick={() => openEditModal(p)}
-										>
-											<i class="fas fa-pencil text-xs"></i>
-										</button>
-										<ConfirmButton
-											confirmId={confirmDeleteId ?? ''}
-											targetId={p.id}
-											size="sm"
-											onconfirm={() => {
-												if (confirmDeleteId === p.id) {
-													handleDelete(p.id);
-												} else {
-													confirmDeleteId = p.id;
-													setTimeout(() => {
-														if (confirmDeleteId === p.id) confirmDeleteId = null;
-													}, 3000);
-												}
-											}}
-										/>
-									</div>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
+					{/each}
+				</tbody>
+			</table>
 		</div>
 	{:else}
 		<EmptyState

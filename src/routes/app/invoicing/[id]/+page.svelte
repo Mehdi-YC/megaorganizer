@@ -44,8 +44,36 @@
 		}
 	}
 
-	function handlePrint() {
-		window.print();
+	let isExportingHtml = $state(false);
+
+	async function downloadSingleHtml() {
+		if (isExportingHtml) return;
+		isExportingHtml = true;
+		try {
+			const res = await fetch('/api/invoicing/export', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					exportType: 'single_html',
+					invoiceIds: [data.invoice.id]
+				})
+			});
+			if (!res.ok) throw new Error('Erreur export');
+			const blob = await res.blob();
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `facture-${data.invoice.invoiceNumber.replace(/\//g, '_')}.html`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+			showToast('Facture HTML exportée', 'success');
+		} catch {
+			showToast("Échec de l'exportation", 'error');
+		} finally {
+			isExportingHtml = false;
+		}
 	}
 </script>
 
@@ -53,55 +81,22 @@
 	<title>{data.invoice.invoiceNumber} - MegaOrganize</title>
 </svelte:head>
 
-<div class="mx-auto max-w-5xl p-4 sm:p-8">
+<div class="mx-auto max-w-4xl p-4 sm:p-8">
 	<!-- Actions Bar (hidden on print) -->
 	<div
-		class="no-print mb-6 flex flex-col justify-between gap-4 rounded-xl border border-border/80 bg-surface/90 p-4 shadow-xs sm:flex-row sm:items-center"
+		class="no-print mb-6 flex flex-col justify-between gap-4 rounded-sm border border-border bg-surface p-3.5 sm:flex-row sm:items-center"
 	>
-		<div class="flex items-center gap-3.5">
+		<div class="flex items-center gap-3">
 			<a
 				href={resolve('/app/invoicing')}
-				class="flex h-9 w-9 items-center justify-center rounded-lg border border-border/70 text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
+				class="flex h-8 w-8 items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-muted hover:text-fg"
 				title="Retour aux factures"
 			>
-				<i class="fas fa-arrow-left text-xs"></i>
+				<i class="fas fa-arrow-left text-sm"></i>
 			</a>
 			<div>
-				<div class="flex items-center gap-2">
-					<h1 class="font-mono text-sm font-bold text-fg">{data.invoice.invoiceNumber}</h1>
-					{#if currentStatus === 'paid'}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400"
-						>
-							<span class="h-1 w-1 rounded-full bg-emerald-400"></span>
-							Payée
-						</span>
-					{:else if currentStatus === 'sent'}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400"
-						>
-							<span class="h-1 w-1 rounded-full bg-amber-400"></span>
-							Envoyée
-						</span>
-					{:else if currentStatus === 'cancelled'}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-[10px] font-medium text-rose-400"
-						>
-							<span class="h-1 w-1 rounded-full bg-rose-400"></span>
-							Annulée
-						</span>
-					{:else}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[10px] font-medium text-fg-subdued"
-						>
-							<span class="h-1 w-1 rounded-full bg-fg-subdued"></span>
-							Brouillon
-						</span>
-					{/if}
-				</div>
-				<span class="text-xs text-fg-subdued"
-					>Client : <strong class="font-medium text-fg">{data.invoice.client.name}</strong></span
-				>
+				<h1 class="text-sm font-bold text-fg-accent">{data.invoice.invoiceNumber}</h1>
+				<span class="text-xs text-fg-subdued">Client : {data.invoice.client.name}</span>
 			</div>
 		</div>
 
@@ -113,7 +108,7 @@
 					updateStatus(
 						(e.target as HTMLSelectElement).value as 'draft' | 'sent' | 'paid' | 'cancelled'
 					)}
-				class="h-8 rounded-lg border border-border/80 bg-bg px-2.5 text-xs font-medium text-fg transition-colors focus:border-primary-text focus:outline-hidden"
+				class="h-8 rounded-sm border border-border-strong bg-bg px-2.5 text-xs font-medium text-fg focus:outline-none"
 			>
 				<option value="draft">Brouillon</option>
 				<option value="sent">Envoyée</option>
@@ -121,13 +116,23 @@
 				<option value="cancelled">Annulée</option>
 			</select>
 
-			<Button variant="secondary" size="sm" onclick={handlePrint}>
-				<i class="fas fa-print mr-1.5 text-xs text-primary-text"></i> Imprimer / PDF
+			<a
+				href={resolve('/app/invoicing/[id]/print', { id: data.invoice.id })}
+				target="_blank"
+				rel="noreferrer"
+			>
+				<Button variant="secondary" size="sm">
+					<i class="fas fa-print mr-1.5 text-xs"></i> Imprimer / PDF
+				</Button>
+			</a>
+
+			<Button variant="secondary" size="sm" onclick={downloadSingleHtml} disabled={isExportingHtml}>
+				<i class="fas fa-download mr-1.5 text-xs"></i> Exporter HTML
 			</Button>
 
 			<a href={resolve('/app/invoicing/[id]/edit', { id: data.invoice.id })}>
 				<Button variant="secondary" size="sm">
-					<i class="fas fa-pen mr-1.5 text-xs"></i> Modifier
+					<i class="fas fa-pencil mr-1.5 text-xs"></i> Modifier
 				</Button>
 			</a>
 
@@ -149,8 +154,8 @@
 		</div>
 	</div>
 
-	<!-- Printable Invoice Document Sheet Container -->
-	<div class="overflow-hidden rounded-xl border border-border/70 bg-[#0f1117] p-2 shadow-xl sm:p-6">
+	<!-- Printable Invoice Document -->
+	<div class="my-4 flex justify-center overflow-x-auto print:m-0 print:overflow-visible print:p-0">
 		<InvoiceDocument invoice={data.invoice} profile={data.profile} />
 	</div>
 </div>
