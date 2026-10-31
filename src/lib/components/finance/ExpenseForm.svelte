@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
 
 	export interface ExpenseDraft {
 		amount: number;
@@ -159,10 +159,11 @@
 		</button>
 
 		{#if showContent}
-			<Textarea
+			<MarkdownEditor
 				bind:value={markdown}
 				placeholder="Additional notes (markdown supported)..."
 				rows={3}
+				minHeight="120px"
 			/>
 		{/if}
 

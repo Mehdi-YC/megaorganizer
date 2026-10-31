@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
 	import { ReminderCard } from '$lib/components/reminders';
 	import NotificationPrompt from '$lib/components/NotificationPrompt.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
@@ -62,32 +61,40 @@
 		}
 	}
 
-	// Scratch notes: autosaved a moment after typing stops.
+	// Scratch notes
 	// svelte-ignore state_referenced_locally
 	let note = $state(data.note ?? '');
-	let noteStatus = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
-	let noteTimer: ReturnType<typeof setTimeout> | undefined;
+	// svelte-ignore state_referenced_locally
+	let lastSavedNote = $state(data.note ?? '');
+	let noteStatus = $state<'idle' | 'unsaved' | 'saving' | 'saved' | 'error'>('idle');
 
-	function queueNoteSave() {
-		noteStatus = 'saving';
-		clearTimeout(noteTimer);
-		noteTimer = setTimeout(saveNote, 600);
-	}
+	$effect(() => {
+		if (note !== lastSavedNote && noteStatus !== 'saving') {
+			noteStatus = 'unsaved';
+		}
+	});
 
 	async function saveNote() {
+		noteStatus = 'saving';
 		try {
 			const res = await fetch('/api/dashboard-note', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ action: 'save', content: note })
 			});
-			noteStatus = res.ok ? 'saved' : 'error';
+			if (res.ok) {
+				lastSavedNote = note;
+				noteStatus = 'saved';
+				showToast('Scratchpad saved', 'success');
+			} else {
+				noteStatus = 'error';
+				showToast('Failed to save scratchpad', 'error');
+			}
 		} catch {
 			noteStatus = 'error';
+			showToast('Failed to save scratchpad', 'error');
 		}
 	}
-
-	onMount(() => () => clearTimeout(noteTimer));
 
 	function getWeekDays(): Date[] {
 		const today = new Date();
@@ -642,36 +649,35 @@
 	{#if activeTab === 'overview' || activeTab === 'notes'}
 		<Card
 			title="Scratchpad & Daily Notes"
-			description="Autosaved scratch space for quick thoughts, links, and temporary data"
+			description="Personal markdown workspace with live WYSIWYG formatting and preview"
 			icon="fas fa-pencil"
 		>
 			{#snippet headerAction()}
 				<div class="flex items-center gap-2">
-					<Badge
-						variant={noteStatus === 'saving'
-							? 'warning'
-							: noteStatus === 'saved'
-								? 'success'
-								: 'default'}
-						size="sm"
-					>
-						{noteStatus === 'saving'
-							? 'Saving...'
-							: noteStatus === 'saved'
-								? 'Saved'
-								: noteStatus === 'error'
-									? 'Error'
-									: 'Ready'}
-					</Badge>
+					{#if noteStatus === 'unsaved'}
+						<Badge variant="warning" size="sm">Unsaved</Badge>
+					{:else if noteStatus === 'saving'}
+						<Badge variant="default" size="sm">Saving...</Badge>
+					{:else if noteStatus === 'saved'}
+						<Badge variant="success" size="sm">
+							<i class="fas fa-check mr-1 text-[9px]"></i> Saved
+						</Badge>
+					{:else if noteStatus === 'error'}
+						<Badge variant="danger" size="sm">Error saving</Badge>
+					{/if}
+
+					<Button onclick={saveNote} size="xs" disabled={noteStatus === 'saving'}>
+						<i class="fas fa-floppy-disk mr-1.5 text-[10px]"></i> Save
+					</Button>
 				</div>
 			{/snippet}
 
-			<Textarea
-				rows={7}
-				placeholder="Anything worth keeping handy or capturing on the fly..."
+			<MarkdownEditor
 				bind:value={note}
-				oninput={queueNoteSave}
-				class="w-full"
+				placeholder="Anything worth keeping handy or capturing on the fly... (Markdown, formatting & [[wikilinks]] supported)"
+				rows={8}
+				minHeight="220px"
+				onSave={saveNote}
 			/>
 		</Card>
 	{/if}

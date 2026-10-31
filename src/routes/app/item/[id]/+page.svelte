@@ -10,6 +10,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import ItemImage from '$lib/components/ui/ItemImage.svelte';
@@ -354,10 +355,13 @@
 								Content
 							</h3>
 							{#if editing}
-								<Textarea
+								<MarkdownEditor
 									bind:value={content}
+									onSave={saveItem}
+									docLinks={data.links}
 									rows={12}
-									placeholder="Write content (markdown supported)..."
+									minHeight="280px"
+									placeholder="Write content (markdown & [[wikilinks]] supported)..."
 								/>
 							{:else if content}
 								<div class="markdown-content text-sm leading-relaxed text-fg">

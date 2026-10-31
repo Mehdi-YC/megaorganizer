@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Input, Select, Textarea, Dialog } from '$lib/components/ui';
+	import { Button, Input, Select, MarkdownEditor, Dialog } from '$lib/components/ui';
 	import type {
 		ReminderTemplateView,
 		ReminderTemplateFormData,
@@ -408,11 +408,14 @@
 
 		<!-- Markdown Content -->
 		<div>
-			<Textarea
-				label="CONTENT (MARKDOWN)"
+			<span class="mb-1.5 block text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+				Content (Markdown)
+			</span>
+			<MarkdownEditor
 				bind:value={markdown}
 				placeholder="Write detailed content here... (supports markdown)"
 				rows={6}
+				minHeight="160px"
 			/>
 		</div>
 	</div>

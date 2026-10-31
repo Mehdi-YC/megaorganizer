@@ -2,7 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
 	import ExpenseForm from '$lib/components/finance/ExpenseForm.svelte';
 	import { page } from '$app/state';
 	import { goto, replaceState } from '$app/navigation';
@@ -335,13 +335,15 @@
 								bind:value={itemName}
 								placeholder="Item name"
 							/>
-							<Textarea
-								name="qc-body"
-								label="Body"
-								bind:value={itemBody}
-								rows={4}
-								placeholder="Notes (markdown and [[wikilinks]] supported)"
-							/>
+							<div>
+								<span class="mb-1 block text-xs font-medium text-fg-subdued">Notes</span>
+								<MarkdownEditor
+									bind:value={itemBody}
+									rows={4}
+									minHeight="120px"
+									placeholder="Notes (markdown and [[wikilinks]] supported)"
+								/>
+							</div>
 							<Button class="w-full" onclick={saveItem} disabled={!itemName.trim() || saving}>
 								{saving ? 'Saving...' : 'Add Item'}
 							</Button>

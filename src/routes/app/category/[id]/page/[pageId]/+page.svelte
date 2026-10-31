@@ -19,7 +19,7 @@
 		GridItemImage,
 		Button,
 		Input,
-		Textarea,
+		MarkdownEditor,
 		EmptyState,
 		ConfirmButton,
 		Dialog
@@ -940,24 +940,29 @@
 		<!-- Page content (markdown) below tree elements -->
 		<div class="mt-6">
 			{#if editingPageContent}
-				<div class="rounded-sm border border-border bg-surface p-4">
-					<Textarea
-						class="font-mono"
-						bind:value={pageContent}
-						rows={30}
-						placeholder="Write page content (markdown supported)..."
-					/>
-					<div class="mt-2 flex gap-2">
-						<Button size="sm" onclick={savePageContent}>Save</Button>
-						<Button
-							size="sm"
-							variant="secondary"
-							onclick={() => {
-								editingPageContent = false;
-								pageContent = pageData?.markdown ?? '';
-							}}>Cancel</Button
-						>
+				<div class="rounded-xl border border-border bg-surface p-4 shadow-xs">
+					<div class="mb-3 flex items-center justify-between">
+						<span class="text-xs font-semibold text-fg">Edit Page Markdown</span>
+						<div class="flex gap-2">
+							<Button
+								size="sm"
+								variant="secondary"
+								onclick={() => {
+									editingPageContent = false;
+									pageContent = pageData?.markdown ?? '';
+								}}>Cancel</Button
+							>
+							<Button size="sm" onclick={savePageContent}>Save</Button>
+						</div>
 					</div>
+					<MarkdownEditor
+						bind:value={pageContent}
+						onSave={savePageContent}
+						docLinks={data.links}
+						rows={20}
+						minHeight="380px"
+						placeholder="Write page content (markdown & [[wikilinks]] supported)..."
+					/>
 				</div>
 			{:else if pageContent}
 				<div class="rounded-sm border border-border bg-surface p-4">
@@ -1047,10 +1052,10 @@
 					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
 						Content (Markdown)
 					</p>
-					<Textarea
-						class="font-mono"
+					<MarkdownEditor
 						bind:value={editNodeMarkdown}
 						rows={6}
+						minHeight="180px"
 						placeholder="Optional markdown content..."
 					/>
 				</div>
