@@ -102,7 +102,7 @@
 					nis: formNis,
 					rc: formRc,
 					ai: formAi,
-					nTva: formNTva,
+					nTva: formNif || formNTva,
 					phone: formPhone,
 					email: formEmail
 				})
@@ -299,21 +299,24 @@
 
 		<div class="grid grid-cols-2 gap-3">
 			<Input label="Pays" type="text" bind:value={formCountry} placeholder="Algérie" />
-			<Input label="N° TVA" type="text" bind:value={formNTva} placeholder="ex: 000616097210737" />
+			<Input
+				label="NIF (Identifiant Fiscal)"
+				type="text"
+				bind:value={formNif}
+				placeholder="ex: 000616097210737"
+			/>
 		</div>
 
 		<div class="grid grid-cols-3 gap-3">
-			<Input label="NIF" type="text" bind:value={formNif} placeholder="NIF" />
 			<Input label="NIS" type="text" bind:value={formNis} placeholder="NIS" />
-			<Input label="RC" type="text" bind:value={formRc} placeholder="RC" />
+			<Input label="RC" type="text" bind:value={formRc} placeholder="Registre Commerce" />
+			<Input label="AI" type="text" bind:value={formAi} placeholder="Article Imposition" />
 		</div>
 
 		<div class="grid grid-cols-2 gap-3">
-			<Input label="Article d'Imposition (AI)" type="text" bind:value={formAi} placeholder="AI" />
 			<Input label="Téléphone" type="text" bind:value={formPhone} placeholder="+213 ..." />
+			<Input label="Email" type="email" bind:value={formEmail} placeholder="contact@..." />
 		</div>
-
-		<Input label="Email" type="email" bind:value={formEmail} placeholder="contact@..." />
 
 		<div class="flex justify-end gap-2 pt-3">
 			<Button variant="secondary" size="sm" type="button" onclick={() => (showModal = false)}>

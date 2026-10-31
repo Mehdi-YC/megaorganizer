@@ -23,6 +23,8 @@
 	let invoiceDate = $state(new Date().toISOString().slice(0, 10));
 	let dueDate = $state(new Date().toISOString().slice(0, 10));
 	let status = $state<'draft' | 'sent' | 'paid' | 'cancelled'>('draft');
+	let paymentMode = $state('Virement bancaire / Chèque');
+	let paymentConditions = $state('30% au démarrage, le solde à la livraison');
 	let notes = $state('');
 
 	interface FormLine {
@@ -56,7 +58,9 @@
 	let newClientCity = $state('');
 	let newClientCountry = $state('Algérie');
 	let newClientNif = $state('');
-	let newClientNTva = $state('');
+	let newClientNis = $state('');
+	let newClientRc = $state('');
+	let newClientAi = $state('');
 	let newClientPhone = $state('');
 	let isCreatingClient = $state(false);
 
@@ -135,6 +139,8 @@
 					invoiceDate,
 					dueDate,
 					status,
+					paymentMode,
+					paymentConditions,
 					notes,
 					lines: validLines.map((l, idx) => ({
 						productId: l.productId || null,
@@ -180,7 +186,10 @@
 					city: newClientCity,
 					country: newClientCountry,
 					nif: newClientNif,
-					nTva: newClientNTva,
+					nis: newClientNis,
+					rc: newClientRc,
+					ai: newClientAi,
+					nTva: newClientNif,
 					phone: newClientPhone
 				})
 			});
@@ -195,7 +204,9 @@
 			newClientAddress = '';
 			newClientCity = '';
 			newClientNif = '';
-			newClientNTva = '';
+			newClientNis = '';
+			newClientRc = '';
+			newClientAi = '';
 			newClientPhone = '';
 		} catch {
 			showToast('Échec de la création du client', 'error');
@@ -318,6 +329,32 @@
 							type="date"
 							bind:value={dueDate}
 							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:border-primary-text focus:outline-none"
+						/>
+					</div>
+
+					<!-- Payment Mode -->
+					<div class="flex flex-col gap-1.5">
+						<label for="invPayMode" class="text-xs font-semibold text-fg-accent">
+							Mode de Règlement
+						</label>
+						<Input
+							id="invPayMode"
+							type="text"
+							bind:value={paymentMode}
+							placeholder="ex: Virement bancaire / Chèque"
+						/>
+					</div>
+
+					<!-- Payment Conditions -->
+					<div class="flex flex-col gap-1.5">
+						<label for="invPayCond" class="text-xs font-semibold text-fg-accent">
+							Conditions de Paiement
+						</label>
+						<Input
+							id="invPayCond"
+							type="text"
+							bind:value={paymentConditions}
+							placeholder="ex: 30% au démarrage, le solde à la livraison"
 						/>
 					</div>
 				</div>
@@ -530,12 +567,11 @@
 		</div>
 		<div class="grid grid-cols-2 gap-3">
 			<Input label="NIF" type="text" bind:value={newClientNif} placeholder="NIF client" />
-			<Input
-				label="N° TVA"
-				type="text"
-				bind:value={newClientNTva}
-				placeholder="ex: 000616097210737"
-			/>
+			<Input label="NIS" type="text" bind:value={newClientNis} placeholder="NIS client" />
+		</div>
+		<div class="grid grid-cols-2 gap-3">
+			<Input label="RC" type="text" bind:value={newClientRc} placeholder="Registre de Commerce" />
+			<Input label="AI" type="text" bind:value={newClientAi} placeholder="Article d'Imposition" />
 		</div>
 		<Input label="Téléphone" type="text" bind:value={newClientPhone} placeholder="+213 ..." />
 

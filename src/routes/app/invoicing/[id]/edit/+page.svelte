@@ -27,6 +27,12 @@
 	// svelte-ignore state_referenced_locally
 	let status = $state(data.invoice.status);
 	// svelte-ignore state_referenced_locally
+	let paymentMode = $state(data.invoice.paymentMode || 'Virement bancaire / Chèque');
+	// svelte-ignore state_referenced_locally
+	let paymentConditions = $state(
+		data.invoice.paymentConditions || '30% au démarrage, le solde à la livraison'
+	);
+	// svelte-ignore state_referenced_locally
 	let notes = $state(data.invoice.notes || '');
 
 	interface FormLine {
@@ -130,6 +136,8 @@
 					invoiceDate,
 					dueDate,
 					status,
+					paymentMode,
+					paymentConditions,
 					notes,
 					lines: validLines.map((l, idx) => ({
 						productId: l.productId || null,
@@ -243,6 +251,32 @@
 							type="date"
 							bind:value={dueDate}
 							class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-xs text-fg focus:outline-none"
+						/>
+					</div>
+
+					<!-- Payment Mode -->
+					<div class="flex flex-col gap-1.5">
+						<label for="invPayMode" class="text-xs font-semibold text-fg-accent">
+							Mode de Règlement
+						</label>
+						<Input
+							id="invPayMode"
+							type="text"
+							bind:value={paymentMode}
+							placeholder="ex: Virement bancaire / Chèque"
+						/>
+					</div>
+
+					<!-- Payment Conditions -->
+					<div class="flex flex-col gap-1.5">
+						<label for="invPayCond" class="text-xs font-semibold text-fg-accent">
+							Conditions de Paiement
+						</label>
+						<Input
+							id="invPayCond"
+							type="text"
+							bind:value={paymentConditions}
+							placeholder="ex: 30% au démarrage, le solde à la livraison"
 						/>
 					</div>
 				</div>

@@ -55,6 +55,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			invoiceDate: body.invoiceDate,
 			dueDate: body.dueDate || body.invoiceDate,
 			status: body.status || 'draft',
+			paymentMode: body.paymentMode,
+			paymentConditions: body.paymentConditions,
 			notes: body.notes || null,
 			lines: body.lines
 		});
@@ -81,6 +83,8 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 			invoiceDate: body.invoiceDate,
 			dueDate: body.dueDate,
 			status: body.status,
+			paymentMode: body.paymentMode,
+			paymentConditions: body.paymentConditions,
 			notes: body.notes,
 			lines: body.lines
 		});

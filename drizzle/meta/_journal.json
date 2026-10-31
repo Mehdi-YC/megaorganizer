@@ -57,6 +57,13 @@
       "when": 1793399383355,
       "tag": "0007_left_jetstream",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793440832952,
+      "tag": "0008_cynical_madripoor",
+      "breakpoints": true
     }
   ]
 }

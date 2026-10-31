@@ -39,6 +39,8 @@
 	let nis = $state(data.invoicingProfile?.nis ?? '');
 	// svelte-ignore state_referenced_locally
 	let ai = $state(data.invoicingProfile?.ai ?? '');
+	// svelte-ignore state_referenced_locally
+	let rib = $state(data.invoicingProfile?.rib ?? '');
 
 	// MCP connection snippet, prefilled with this account's email.
 	const mcpSnippet = $derived(
@@ -543,6 +545,17 @@
 						name="ai"
 						bind:value={ai}
 						placeholder="Optionnel"
+					/>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<Input
+						label="RIB / RIP Bancaire ou Postal"
+						type="text"
+						id="rib"
+						name="rib"
+						bind:value={rib}
+						placeholder="ex: 007 99999 0001234567 89"
 					/>
 				</div>
 

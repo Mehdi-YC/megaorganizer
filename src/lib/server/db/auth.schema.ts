@@ -18,6 +18,7 @@ export const user = sqliteTable('user', {
 	rc: text('rc'),
 	nis: text('nis'),
 	ai: text('ai'),
+	rib: text('rib'),
 	createdAt: integer('created_at', { mode: 'timestamp_ms' })
 		.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 		.notNull(),

@@ -47,37 +47,45 @@ function generateInvoiceHtml(
 	<meta charset="UTF-8">
 	<title>${inv.invoiceNumber}</title>
 	<style>
-		@page { size: A4; margin: 15mm; }
+		@page { size: A4 portrait; margin: 10mm 12mm; }
+		* { box-sizing: border-box; }
 		body {
 			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 			color: #1f2937;
 			background: #fff;
 			margin: 0;
-			padding: 20px;
-			font-size: 13px;
+			padding: 10px;
+			font-size: 12px;
 			line-height: 1.4;
 		}
-		.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
-		.brand-name { font-size: 26px; font-weight: bold; color: #111827; }
-		.brand-name span { color: #38bdf8; }
-		.brand-tagline { color: #0284c7; font-size: 13px; margin-top: 4px; }
-		.seller-info { text-align: right; font-size: 12px; color: #4b5563; }
-		.client-box { margin-left: auto; width: 300px; text-align: left; margin-bottom: 30px; font-size: 13px; }
-		.title { font-size: 24px; font-weight: 500; color: #38bdf8; margin: 25px 0 15px; }
-		.dates { display: flex; gap: 60px; margin-bottom: 25px; }
-		.dates div { font-size: 12px; }
-		.dates strong { display: block; margin-bottom: 3px; font-weight: 600; color: #111827; }
-		table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-		th { padding: 10px 8px; border-bottom: 2px solid #e5e7eb; font-weight: 600; font-size: 12px; color: #374151; }
-		.totals-area { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 15px; }
-		.payment-comm { font-size: 12px; color: #374151; }
-		.totals-table { width: 320px; font-size: 13px; }
-		.totals-table div { display: flex; justify-content: space-between; padding: 6px 0; }
-		.totals-table .total-row { border-top: 2px solid #111827; color: #0284c7; font-size: 15px; font-weight: bold; padding-top: 10px; }
-		.words { margin-top: 15px; text-align: right; font-size: 12px; color: #4b5563; }
-		.words-val { font-style: italic; color: #111827; margin-top: 3px; }
-		.stamps { margin-top: 30px; display: flex; justify-content: flex-end; gap: 20px; }
-		.footer { position: fixed; bottom: 15mm; left: 15mm; right: 15mm; border-top: 1px solid #9ca3af; padding-top: 8px; display: flex; justify-content: space-between; font-size: 12px; color: #4b5563; }
+		.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+		.brand-name { font-size: 24px; font-weight: 800; color: #111827; }
+		.brand-name span { color: #4fa9b2; }
+		.brand-tagline { color: #4fa9b2; font-size: 12px; font-weight: 500; margin-top: 2px; }
+		.seller-info { text-align: right; font-size: 11px; color: #4b5563; line-height: 1.4; }
+		.client-box { margin-top: 15px; max-width: 340px; text-align: left; font-size: 12px; color: #374151; }
+		.client-label { font-size: 9px; font-weight: bold; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+		.client-name { font-size: 13px; font-weight: bold; color: #111827; margin: 2px 0; }
+		.client-ids { font-size: 11px; color: #4b5563; margin-top: 4px; }
+		.title-bar { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin: 20px 0 15px; }
+		.title { font-size: 22px; font-weight: 600; color: #4fa9b2; margin: 0; }
+		.dates { display: flex; gap: 30px; font-size: 11px; }
+		.dates div { text-align: right; }
+		.dates strong { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 2px; }
+		table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+		th { padding: 8px 6px; border-bottom: 2px solid #e5e7eb; font-weight: 600; font-size: 11px; color: #374151; }
+		.legal-mention { font-size: 11px; font-style: italic; color: #4b5563; margin: 8px 0 4px; }
+		.divider { border: 0; border-top: 1px solid #e5e7eb; margin: 6px 0 16px; }
+		.bottom-section { display: flex; justify-content: space-between; align-items: flex-start; }
+		.conditions-box { max-width: 340px; border: 1px solid #e5e7eb; background: #f9fafb; border-radius: 4px; padding: 10px; font-size: 11px; line-height: 1.5; color: #374151; }
+		.conditions-title { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; color: #111827; margin-bottom: 4px; }
+		.totals-table { width: 300px; font-size: 12px; }
+		.totals-table div { display: flex; justify-content: space-between; padding: 4px 0; color: #4b5563; }
+		.totals-table .total-row { border-top: 2px solid #111827; color: #4fa9b2; font-size: 14px; font-weight: bold; padding-top: 6px; margin-top: 4px; }
+		.words { margin-top: 10px; text-align: right; font-size: 11px; color: #4b5563; }
+		.words-val { font-style: italic; color: #111827; margin-top: 2px; font-weight: 500; }
+		.stamps { margin-top: 15px; display: flex; justify-content: flex-end; }
+		.footer { margin-top: 25px; border-top: 1px solid #d1d5db; padding-top: 6px; display: flex; justify-content: space-between; font-size: 11px; color: #6b7280; }
 	</style>
 </head>
 <body>
@@ -85,33 +93,41 @@ function generateInvoiceHtml(
 		<div>
 			<div class="brand-name">${profile?.brandName || profile?.name || 'Facture'}</div>
 			${profile?.brandTagline ? `<div class="brand-tagline">${profile.brandTagline}</div>` : ''}
+
+			<div class="client-box">
+				<div class="client-label">Facturé à :</div>
+				<div class="client-name">${inv.client.name}</div>
+				${inv.client.address ? `<div>${inv.client.address}</div>` : ''}
+				<div>${inv.client.city ? inv.client.city : ''}${inv.client.city && inv.client.country ? ', ' : ''}${inv.client.country || ''}</div>
+				<div class="client-ids">
+					${inv.client.nif || inv.client.nTva ? `<div><strong>NIF :</strong> ${inv.client.nif || inv.client.nTva}</div>` : ''}
+					${inv.client.nis ? `<div><strong>NIS :</strong> ${inv.client.nis}</div>` : ''}
+					${inv.client.rc ? `<div><strong>RC :</strong> ${inv.client.rc}</div>` : ''}
+					${inv.client.ai ? `<div><strong>AI :</strong> ${inv.client.ai}</div>` : ''}
+				</div>
+			</div>
 		</div>
+
 		<div class="seller-info">
 			<div>NIF : ${profile?.nif || ''} ${profile?.anae ? `/ ANAE : ${profile.anae}` : ''}</div>
-			<div style="font-weight: 600; margin-top: 2px;">${profile?.name || ''}</div>
+			<div style="font-weight: bold; color: #111827; font-size: 12px; margin-top: 2px;">${profile?.name || ''}</div>
 			<div>${profile?.address || ''}</div>
+			<div>${profile?.phone || ''} ${profile?.email ? `• ${profile.email}` : ''}</div>
+			${profile?.rib ? `<div style="font-family: monospace; margin-top: 2px;"><strong>RIB :</strong> ${profile.rib}</div>` : ''}
 		</div>
 	</div>
 
-	<div class="client-box">
-		<div style="font-weight: 700; font-size: 14px;">${inv.client.name}</div>
-		${inv.client.address ? `<div>${inv.client.address}</div>` : ''}
-		${inv.client.city ? `<div>${inv.client.city}</div>` : ''}
-		${inv.client.country ? `<div>${inv.client.country}</div>` : ''}
-		${inv.client.nTva ? `<div style="margin-top: 4px;">N° TVA: ${inv.client.nTva}</div>` : ''}
-		${inv.client.nif ? `<div>NIF: ${inv.client.nif}</div>` : ''}
-	</div>
-
-	<div class="title">Facture ${inv.invoiceNumber}</div>
-
-	<div class="dates">
-		<div>
-			<strong>Date de facturation</strong>
-			${formatDateDZ(inv.invoiceDate)}
-		</div>
-		<div>
-			<strong>Échéance</strong>
-			${formatDateDZ(inv.dueDate)}
+	<div class="title-bar">
+		<div class="title">Facture ${inv.invoiceNumber}</div>
+		<div class="dates">
+			<div>
+				<strong>Date de facturation</strong>
+				${formatDateDZ(inv.invoiceDate)}
+			</div>
+			<div>
+				<strong>Échéance</strong>
+				${formatDateDZ(inv.dueDate)}
+			</div>
 		</div>
 	</div>
 
@@ -130,10 +146,19 @@ function generateInvoiceHtml(
 		</tbody>
 	</table>
 
-	<div class="totals-area">
-		<div class="payment-comm">
-			Communication de paiement : <strong>${inv.invoiceNumber}</strong>
-			${inv.notes ? `<div style="margin-top: 8px; color: #6b7280;">${inv.notes}</div>` : ''}
+	<div class="legal-mention">
+		Facture non soumise à la TVA (Régime de l'IFU - Statut Auto-Entrepreneur)
+	</div>
+	<hr class="divider" />
+
+	<div class="bottom-section">
+		<div class="conditions-box">
+			<div class="conditions-title">Conditions & Règlement</div>
+			<div><strong>Mode de règlement :</strong> ${inv.paymentMode || 'Virement bancaire / Chèque'}</div>
+			<div><strong>Conditions de paiement :</strong> ${inv.paymentConditions || '30% au démarrage, le solde à la livraison'}</div>
+			<div><strong>Communication :</strong> ${inv.invoiceNumber}</div>
+			${profile?.rib ? `<div style="font-family: monospace; margin-top: 4px;"><strong>RIB / RIP :</strong> ${profile.rib}</div>` : ''}
+			${inv.notes ? `<div style="margin-top: 4px; color: #6b7280; font-style: italic;">${inv.notes}</div>` : ''}
 		</div>
 
 		<div class="totals-table">
@@ -142,11 +167,11 @@ function generateInvoiceHtml(
 				<span>${formatDZD(inv.subtotal)}</span>
 			</div>
 			<div>
-				<span>TVA</span>
-				<span>${formatDZD(inv.tvaAmount)}</span>
+				<span>TVA (0% - Exonéré IFU)</span>
+				<span>0,00 DA</span>
 			</div>
 			<div class="total-row">
-				<span>Total</span>
+				<span>Total Net à Payer</span>
 				<span>${formatDZD(inv.total)}</span>
 			</div>
 			<div class="words">
@@ -155,17 +180,17 @@ function generateInvoiceHtml(
 			</div>
 
 			<div class="stamps">
-				<div style="position: relative; width: 220px; min-height: 90px; display: flex; align-items: center; justify-content: center;">
-					${stampBase64 ? `<img src="${stampBase64}" alt="Cachet" style="max-height: 96px; max-width: 100%; object-fit: contain;" />` : ''}
-					${signatureBase64 ? `<img src="${signatureBase64}" alt="Signature" style="position: absolute; inset: 0; margin: auto; max-height: 80px; max-width: 100%; object-fit: contain; opacity: 0.95;" />` : ''}
-					${!stampBase64 && !signatureBase64 ? `<div style="border: 1px dashed #d1d5db; padding: 20px; font-size: 11px; color: #9ca3af; border-radius: 4px;">Cachet et Signature</div>` : ''}
+				<div style="position: relative; width: 200px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
+					${stampBase64 ? `<img src="${stampBase64}" alt="Cachet" style="max-height: 90px; max-width: 100%; object-fit: contain;" />` : ''}
+					${signatureBase64 ? `<img src="${signatureBase64}" alt="Signature" style="position: absolute; inset: 0; margin: auto; max-height: 75px; max-width: 100%; object-fit: contain; opacity: 0.95;" />` : ''}
+					${!stampBase64 && !signatureBase64 ? `<div style="border: 1px dashed #d1d5db; padding: 15px; font-size: 11px; color: #9ca3af; border-radius: 4px;">Cachet et Signature</div>` : ''}
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<div class="footer">
-		<div>${profile?.phone || ''} ${profile?.email ? `${profile.email}` : ''}</div>
+		<div>${profile?.phone || ''} ${profile?.email ? `• ${profile.email}` : ''}</div>
 		<div>Page 1 / 1</div>
 	</div>
 </body>

@@ -14,142 +14,215 @@
 </script>
 
 <div
-	class="invoice-sheet mx-auto max-w-[800px] rounded-sm bg-white p-8 text-[#1f2937] shadow-lg sm:p-12"
+	class="invoice-sheet mx-auto max-w-[800px] rounded-sm bg-white p-6 text-[#1f2937] shadow-lg sm:p-10"
 	id="printable-invoice"
 >
-	<!-- Header -->
+	<!-- Header Grid (Brand & Client on Left, Seller Legal on Right) -->
 	<div class="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
-		<div>
-			<div class="text-3xl font-extrabold tracking-tight text-gray-900">
-				{#if profile?.brandName}
-					{@const words = profile.brandName.split(' ')}
-					{words[0]} <span class="text-[#4fa9b2]">{words.slice(1).join(' ')}</span>
-				{:else}
-					{profile?.name || 'Facture'}
+		<!-- Left: Brand + Client Box -->
+		<div class="max-w-[340px]">
+			<div>
+				<div class="text-3xl font-extrabold tracking-tight text-gray-900">
+					{#if profile?.brandName}
+						{@const words = profile.brandName.split(' ')}
+						{words[0]} <span class="text-[#4fa9b2]">{words.slice(1).join(' ')}</span>
+					{:else}
+						{profile?.name || 'Facture'}
+					{/if}
+				</div>
+				{#if profile?.brandTagline}
+					<div class="mt-0.5 text-xs font-medium text-[#4fa9b2]">
+						{profile.brandTagline}
+					</div>
 				{/if}
 			</div>
-			{#if profile?.brandTagline}
-				<div class="mt-1 text-sm font-medium text-[#4fa9b2]">
-					{profile.brandTagline}
+
+			<!-- Client Box (Positioned on the Left for Single-Page Layout) -->
+			<div class="mt-5 text-xs leading-relaxed text-gray-700">
+				<div class="text-[10px] font-bold tracking-wider text-gray-400 uppercase">Facturé à :</div>
+				<div class="mt-0.5 text-sm font-bold text-gray-900">
+					{invoice.client.name}
 				</div>
-			{/if}
+				{#if invoice.client.address}<div>{invoice.client.address}</div>{/if}
+				<div>
+					{#if invoice.client.city}{invoice.client.city}{/if}
+					{#if invoice.client.city && invoice.client.country},
+					{/if}
+					{#if invoice.client.country}{invoice.client.country}{/if}
+				</div>
+				<div class="mt-1 space-y-0.5 text-[11px] text-gray-600">
+					{#if invoice.client.nif || invoice.client.nTva}
+						<div>
+							<span class="font-semibold text-gray-900">NIF :</span>
+							{invoice.client.nif || invoice.client.nTva}
+						</div>
+					{/if}
+					{#if invoice.client.nis}
+						<div>
+							<span class="font-semibold text-gray-900">NIS :</span>
+							{invoice.client.nis}
+						</div>
+					{/if}
+					{#if invoice.client.rc}
+						<div>
+							<span class="font-semibold text-gray-900">RC :</span>
+							{invoice.client.rc}
+						</div>
+					{/if}
+					{#if invoice.client.ai}
+						<div>
+							<span class="font-semibold text-gray-900">AI :</span>
+							{invoice.client.ai}
+						</div>
+					{/if}
+				</div>
+			</div>
 		</div>
 
-		<div class="space-y-0.5 text-right text-xs text-gray-500">
-			<div>
+		<!-- Right: Seller Legal Info -->
+		<div class="space-y-1 text-left text-xs leading-relaxed text-gray-600 sm:text-right">
+			<div class="font-semibold text-gray-800">
 				{#if profile?.nif}<span>NIF : {profile.nif}</span>{/if}
 				{#if profile?.nif && profile?.anae}
 					/
 				{/if}
 				{#if profile?.anae}<span>ANAE : {profile.anae}</span>{/if}
 			</div>
-			<div class="font-bold text-gray-800">{profile?.name || ''}</div>
+			<div class="text-sm font-bold text-gray-900">{profile?.name || ''}</div>
 			<div>{profile?.address || ''}</div>
+			{#if profile?.phone || profile?.email}
+				<div class="text-[11px] text-gray-500">
+					{profile?.phone || ''}
+					{#if profile?.phone && profile?.email}
+						•
+					{/if}
+					{profile?.email || ''}
+				</div>
+			{/if}
+			{#if profile?.rib}
+				<div class="font-mono text-[11px] text-gray-700">
+					<span class="font-sans font-semibold text-gray-900">RIB :</span>
+					{profile.rib}
+				</div>
+			{/if}
 		</div>
 	</div>
 
-	<!-- Client Box -->
-	<div class="mt-10 ml-auto max-w-[280px] text-left text-xs leading-relaxed text-gray-700">
-		<div class="text-sm font-bold tracking-wide text-gray-900 uppercase">
-			{invoice.client.name}
+	<!-- Invoice Title & Dates -->
+	<div
+		class="mt-6 flex flex-wrap items-baseline justify-between gap-4 border-b border-gray-200 pb-3"
+	>
+		<div class="text-2xl font-semibold text-[#4fa9b2]">
+			Facture {invoice.invoiceNumber}
 		</div>
-		{#if invoice.client.address}<div>{invoice.client.address}</div>{/if}
-		{#if invoice.client.city}<div>{invoice.client.city}</div>{/if}
-		{#if invoice.client.country}<div>{invoice.client.country}</div>{/if}
-		{#if invoice.client.nTva}
-			<div class="mt-1 font-medium text-gray-900">N° TVA: {invoice.client.nTva}</div>
-		{/if}
-		{#if invoice.client.nif}
-			<div>NIF: {invoice.client.nif}</div>
-		{/if}
-		{#if invoice.client.rc}
-			<div>RC: {invoice.client.rc}</div>
-		{/if}
-		{#if invoice.client.ai}
-			<div>AI: {invoice.client.ai}</div>
-		{/if}
-	</div>
-
-	<!-- Invoice Title & Number -->
-	<div class="mt-8 text-2xl font-medium text-[#4fa9b2]">
-		Facture {invoice.invoiceNumber}
-	</div>
-
-	<!-- Dates -->
-	<div class="mt-4 flex gap-12 text-xs">
-		<div>
-			<span class="block font-semibold text-gray-900">Date de facturation</span>
-			<span class="text-gray-600">{formatDateDZ(invoice.invoiceDate)}</span>
-		</div>
-		<div>
-			<span class="block font-semibold text-gray-900">Échéance</span>
-			<span class="text-gray-600">{formatDateDZ(invoice.dueDate)}</span>
+		<div class="flex gap-8 text-xs">
+			<div>
+				<span class="block text-[10px] font-semibold tracking-wider text-gray-400 uppercase"
+					>Date de facturation</span
+				>
+				<span class="font-medium text-gray-900">{formatDateDZ(invoice.invoiceDate)}</span>
+			</div>
+			<div>
+				<span class="block text-[10px] font-semibold tracking-wider text-gray-400 uppercase"
+					>Échéance</span
+				>
+				<span class="font-medium text-gray-900">{formatDateDZ(invoice.dueDate)}</span>
+			</div>
 		</div>
 	</div>
 
-	<!-- Table -->
-	<div class="mt-6 overflow-x-auto">
+	<!-- Items Table -->
+	<div class="mt-5 overflow-x-auto">
 		<table class="w-full border-collapse text-xs">
 			<thead>
 				<tr class="border-b border-gray-200 text-gray-700">
-					<th class="py-2.5 text-left font-semibold">Description</th>
-					<th class="py-2.5 text-right font-semibold">Quantité</th>
-					<th class="py-2.5 text-right font-semibold">Prix unitaire</th>
-					<th class="py-2.5 text-right font-semibold">Taxes</th>
-					<th class="py-2.5 text-right font-semibold">Montant</th>
+					<th class="py-2 text-left font-semibold">Description</th>
+					<th class="py-2 text-right font-semibold">Quantité</th>
+					<th class="py-2 text-right font-semibold">Prix unitaire</th>
+					<th class="py-2 text-right font-semibold">Taxes</th>
+					<th class="py-2 text-right font-semibold">Montant</th>
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-gray-100">
 				{#each invoice.lines as line (line.id || line.position)}
 					<tr>
-						<td class="py-3 text-left font-normal text-gray-900">{line.description}</td>
-						<td class="py-3 text-right text-gray-700">
+						<td class="py-2.5 text-left font-normal text-gray-900">{line.description}</td>
+						<td class="py-2.5 text-right text-gray-700">
 							{line.quantity.toFixed(2).replace('.', ',')}
 							{line.unit}
 						</td>
-						<td class="py-3 text-right text-gray-700">
+						<td class="py-2.5 text-right text-gray-700">
 							{formatDZD(line.unitPrice).replace(' DA', '')}
 						</td>
-						<td class="py-3 text-right text-gray-700">{line.tvaRate}%</td>
-						<td class="py-3 text-right font-medium text-gray-900">{formatDZD(line.total)}</td>
+						<td class="py-2.5 text-right text-gray-700">{line.tvaRate}%</td>
+						<td class="py-2.5 text-right font-medium text-gray-900">{formatDZD(line.total)}</td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
 	</div>
 
-	<!-- Totals and Payment Communication -->
-	<div class="mt-8 flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
-		<div class="text-xs text-gray-700">
-			<div>
-				Communication de paiement :
-				<strong class="font-bold text-gray-900">{invoice.invoiceNumber}</strong>
+	<!-- Legal Exemption Notice & Divider -->
+	<div class="mt-3 text-xs text-gray-600 italic">
+		Facture non soumise à la TVA (Régime de l'IFU - Statut Auto-Entrepreneur)
+	</div>
+	<hr class="mt-2 mb-5 border-gray-200" />
+
+	<!-- Bottom Section: Conditions & Payment on Left, Totals & Stamp on Right -->
+	<div class="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
+		<!-- Left: Payment Conditions, Mode & Bank details (Red box area) -->
+		<div class="max-w-[340px] space-y-2 text-xs text-gray-700">
+			<div class="rounded-sm border border-gray-200 bg-gray-50/80 p-3 text-xs leading-relaxed">
+				<div class="mb-1 text-[11px] font-bold tracking-wider text-gray-900 uppercase">
+					Conditions & Règlement
+				</div>
+				<div>
+					<span class="font-semibold text-gray-800">Mode de règlement :</span>
+					<span>{invoice.paymentMode || 'Virement bancaire / Chèque'}</span>
+				</div>
+				<div>
+					<span class="font-semibold text-gray-800">Conditions de paiement :</span>
+					<span>{invoice.paymentConditions || '30% au démarrage, le solde à la livraison'}</span>
+				</div>
+				<div>
+					<span class="font-semibold text-gray-800">Communication de paiement :</span>
+					<strong class="font-bold text-gray-900">{invoice.invoiceNumber}</strong>
+				</div>
+				{#if profile?.rib}
+					<div class="mt-1 font-mono text-[11px] text-gray-800">
+						<span class="font-sans font-semibold">RIB / RIP :</span>
+						{profile.rib}
+					</div>
+				{/if}
+				{#if invoice.notes}
+					<div class="mt-2 border-t border-gray-200 pt-1.5 text-[11px] text-gray-500 italic">
+						{invoice.notes}
+					</div>
+				{/if}
 			</div>
-			{#if invoice.notes}
-				<div class="mt-2 text-xs whitespace-pre-wrap text-gray-500">{invoice.notes}</div>
-			{/if}
 		</div>
 
+		<!-- Right: Totals Box, Amount in Words & Stamp -->
 		<div class="w-full sm:w-[320px]">
-			<div class="border-t border-gray-700 pt-2 text-xs">
+			<div class="border-t border-gray-900 pt-1 text-xs">
 				<div class="flex justify-between py-1 text-gray-700">
 					<span>Montant hors taxes</span>
 					<span class="font-medium text-gray-900">{formatDZD(invoice.subtotal)}</span>
 				</div>
 				<div class="flex justify-between py-1 text-gray-700">
-					<span>TVA</span>
-					<span class="font-medium text-gray-900">{formatDZD(invoice.tvaAmount)}</span>
+					<span>TVA (0% - Exonéré IFU)</span>
+					<span class="font-medium text-gray-900">0,00 DA</span>
 				</div>
 				<div
 					class="mt-1 flex justify-between border-t border-[#4fa9b2] pt-2 text-sm font-bold text-[#4fa9b2]"
 				>
-					<span>Total</span>
+					<span>Total Net à Payer</span>
 					<span>{formatDZD(invoice.total)}</span>
 				</div>
 			</div>
 
 			<!-- Amount in Words -->
-			<div class="mt-4 text-right text-xs">
+			<div class="mt-3 text-right text-xs">
 				<span class="text-gray-500">Montant total en toutes lettres :</span>
 				<div class="mt-0.5 font-medium text-gray-800 italic">
 					{formattedTotalWords}
@@ -157,8 +230,8 @@
 			</div>
 
 			<!-- Stamp & Signature Area -->
-			<div class="mt-6 flex justify-end">
-				<div class="relative flex min-h-[90px] w-52 items-center justify-center">
+			<div class="mt-4 flex justify-end">
+				<div class="relative flex min-h-[85px] w-52 items-center justify-center">
 					{#if profile?.stampUrl}
 						<img src={profile.stampUrl} alt="Cachet" class="max-h-24 max-w-full object-contain" />
 					{/if}
@@ -182,7 +255,7 @@
 	</div>
 
 	<!-- Footer -->
-	<div class="mt-16 border-t border-gray-300 pt-3 text-xs text-gray-500">
+	<div class="mt-8 border-t border-gray-300 pt-2 text-xs text-gray-500">
 		<div class="flex justify-between">
 			<div>
 				{#if profile?.phone}<span>{profile.phone}</span>{/if}
@@ -219,7 +292,7 @@
 			width: 100% !important;
 			max-width: 100% !important;
 			margin: 0 !important;
-			padding: 10mm 15mm !important;
+			padding: 8mm 12mm !important;
 			border: none !important;
 			box-shadow: none !important;
 			background: #ffffff !important;

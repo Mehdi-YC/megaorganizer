@@ -283,6 +283,8 @@ export async function createInvoice(
 		invoiceDate: Date | string | number;
 		dueDate: Date | string | number;
 		status?: 'draft' | 'sent' | 'paid' | 'cancelled';
+		paymentMode?: string | null;
+		paymentConditions?: string | null;
 		notes?: string | null;
 		lines: InvoiceLineInput[];
 	}
@@ -328,6 +330,9 @@ export async function createInvoice(
 			invoiceDate: invDate,
 			dueDate,
 			status: data.status || 'draft',
+			paymentMode: data.paymentMode?.trim() || 'Virement bancaire / Chèque',
+			paymentConditions:
+				data.paymentConditions?.trim() || '30% au démarrage, le solde à la livraison',
 			notes: data.notes?.trim() || null,
 			subtotal,
 			tvaAmount,
@@ -357,6 +362,8 @@ export async function updateInvoice(
 		invoiceDate?: Date | string | number;
 		dueDate?: Date | string | number;
 		status?: 'draft' | 'sent' | 'paid' | 'cancelled';
+		paymentMode?: string | null;
+		paymentConditions?: string | null;
 		notes?: string | null;
 		lines?: InvoiceLineInput[];
 	}
@@ -375,6 +382,9 @@ export async function updateInvoice(
 	}
 	if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
 	if (data.status) updateData.status = data.status;
+	if (data.paymentMode !== undefined) updateData.paymentMode = data.paymentMode?.trim() || null;
+	if (data.paymentConditions !== undefined)
+		updateData.paymentConditions = data.paymentConditions?.trim() || null;
 	if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null;
 
 	if (data.lines) {
@@ -559,7 +569,8 @@ export async function getUserInvoiceProfile(userId: string) {
 		anae: u.anae || '',
 		rc: u.rc || '',
 		nis: u.nis || '',
-		ai: u.ai || ''
+		ai: u.ai || '',
+		rib: u.rib || ''
 	};
 }
 
@@ -575,6 +586,7 @@ export async function updateUserInvoiceProfile(
 		rc?: string | null;
 		nis?: string | null;
 		ai?: string | null;
+		rib?: string | null;
 	}
 ) {
 	const [updated] = await db.update(user).set(data).where(eq(user.id, userId)).returning();

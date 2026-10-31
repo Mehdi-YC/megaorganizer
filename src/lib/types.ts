@@ -292,6 +292,7 @@ export interface InvoiceClient {
 	nis?: string | null;
 	rc?: string | null;
 	ai?: string | null;
+	rib?: string | null;
 	nTva?: string | null;
 	phone?: string | null;
 	email?: string | null;
@@ -334,6 +335,8 @@ export interface Invoice {
 	invoiceDate: Date | string;
 	dueDate: Date | string;
 	status: InvoiceStatus;
+	paymentMode?: string | null;
+	paymentConditions?: string | null;
 	notes?: string | null;
 	subtotal: number;
 	tvaAmount: number;
@@ -377,4 +380,5 @@ export interface InvoiceUserData {
 	rc?: string | null;
 	nis?: string | null;
 	ai?: string | null;
+	rib?: string | null;
 }

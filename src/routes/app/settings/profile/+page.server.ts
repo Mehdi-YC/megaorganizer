@@ -134,6 +134,7 @@ export const actions: Actions = {
 		const rc = formData.get('rc')?.toString() || null;
 		const nis = formData.get('nis')?.toString() || null;
 		const ai = formData.get('ai')?.toString() || null;
+		const rib = formData.get('rib')?.toString() || null;
 
 		try {
 			await updateUserInvoiceProfile(event.locals.user.id, {
@@ -145,7 +146,8 @@ export const actions: Actions = {
 				anae,
 				rc,
 				nis,
-				ai
+				ai,
+				rib
 			});
 		} catch (error) {
 			return fail(500, {
