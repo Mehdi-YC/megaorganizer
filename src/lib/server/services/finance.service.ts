@@ -18,7 +18,10 @@ export async function getUserSettings(userId: string) {
 			userId,
 			currency: 'DZD',
 			currencyRate: 1,
-			monthlySpendingLimit: null
+			monthlySpendingLimit: null,
+			enabledFeatures: null,
+			createdAt: new Date(),
+			updatedAt: new Date()
 		};
 	}
 
@@ -31,6 +34,7 @@ export async function updateUserSettings(
 		currency?: string;
 		currencyRate?: number;
 		monthlySpendingLimit?: number | null;
+		enabledFeatures?: string | null;
 	}
 ) {
 	// Check if settings exist

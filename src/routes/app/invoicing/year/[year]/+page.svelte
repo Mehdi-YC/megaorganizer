@@ -182,24 +182,35 @@
 		subtitle="Factures, déclarations annuelles G12 / G12 bis et exportations"
 		descriptionOnHover
 	>
-		<div class="flex items-center gap-2">
-			<Button variant="secondary" size="sm" onclick={exportFolder} disabled={isExporting}>
-				<i class="fas fa-folder-arrow-down mr-1 text-xs text-primary-text"></i>
+		<div class="flex flex-nowrap items-center gap-1.5 sm:gap-2">
+			<Button
+				variant="secondary"
+				size="xs"
+				onclick={exportFolder}
+				disabled={isExporting}
+				class="whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
+			>
+				<i class="fas fa-folder-arrow-down mr-1 text-[10px] text-primary-text sm:text-xs"></i>
 				<span class="hidden sm:inline">Exporter dossier {data.year}</span>
 				<span class="sm:hidden">Exporter {data.year}</span>
 			</Button>
 
 			{#if selectedInvoiceIds.length > 0}
-				<Button size="sm" onclick={exportSelectedInvoices} disabled={isExporting}>
-					<i class="fas fa-file-zipper mr-1 text-xs"></i>
+				<Button
+					size="xs"
+					onclick={exportSelectedInvoices}
+					disabled={isExporting}
+					class="whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
+				>
+					<i class="fas fa-file-zipper mr-1 text-[10px] sm:text-xs"></i>
 					<span class="hidden sm:inline">Exporter sélection ({selectedInvoiceIds.length})</span>
 					<span class="sm:hidden">Sélection ({selectedInvoiceIds.length})</span>
 				</Button>
 			{/if}
 
 			<a href={resolve('/app/invoicing/new')}>
-				<Button size="sm">
-					<i class="fas fa-plus mr-1 text-xs"></i> Facture
+				<Button size="xs" class="whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs">
+					<i class="fas fa-plus mr-1 text-[10px] sm:text-xs"></i> Facture
 				</Button>
 			</a>
 		</div>

@@ -200,7 +200,7 @@
 				{#if isSubmitting}
 					<i class="fas fa-spinner fa-spin mr-1.5 text-xs"></i> Enregistrement...
 				{:else}
-					<i class="fas fa-check mr-1.5 text-xs"></i> Mettre à jour
+					<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer
 				{/if}
 			</Button>
 		</div>
@@ -480,7 +480,7 @@
 					</div>
 
 					<Button class="w-full" onclick={handleSave} disabled={isSubmitting}>
-						<i class="fas fa-check mr-1.5 text-xs"></i> Mettre à jour
+						<i class="fas fa-check mr-1.5 text-xs"></i> Enregistrer
 					</Button>
 				</div>
 			</div>

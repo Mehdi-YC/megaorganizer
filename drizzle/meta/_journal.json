@@ -71,6 +71,13 @@
       "when": 1793442017865,
       "tag": "0009_glamorous_dagger",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793444342515,
+      "tag": "0010_glorious_impossible_man",
+      "breakpoints": true
     }
   ]
 }

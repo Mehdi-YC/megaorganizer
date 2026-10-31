@@ -8,6 +8,7 @@ import {
 	updateUserInvoiceProfile,
 	saveUserMediaFile
 } from '$lib/server/services/invoice.service';
+import type { EnabledFeatures } from '$lib/types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
@@ -17,12 +18,30 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const settings = await getUserSettings(locals.user.id);
 	const invoicingProfile = await getUserInvoiceProfile(locals.user.id);
 
+	let enabledFeatures: EnabledFeatures = {
+		todos: true,
+		reminders: true,
+		finance: true,
+		invoicing: true,
+		training: true,
+		ydk: true
+	};
+
+	if (settings?.enabledFeatures) {
+		try {
+			enabledFeatures = { ...enabledFeatures, ...JSON.parse(settings.enabledFeatures) };
+		} catch {
+			// ignore
+		}
+	}
+
 	return {
 		user: {
 			name: locals.user.name,
 			email: locals.user.email
 		},
 		financeSettings: settings,
+		enabledFeatures,
 		invoicingProfile,
 		mcpUrl: `${url.origin}/api/mcp`
 	};
@@ -191,6 +210,37 @@ export const actions: Actions = {
 				text: `${type === 'signature' ? 'Signature' : 'Cachet'} téléversé avec succès`,
 				ok: true
 			}
+		};
+	},
+
+	updateFeatures: async (event) => {
+		if (!event.locals.user) {
+			throw redirect(302, '/auth/login');
+		}
+
+		const formData = await event.request.formData();
+		const features: EnabledFeatures = {
+			todos: formData.get('todos') === 'on',
+			reminders: formData.get('reminders') === 'on',
+			finance: formData.get('finance') === 'on',
+			invoicing: formData.get('invoicing') === 'on',
+			training: formData.get('training') === 'on',
+			ydk: formData.get('ydk') === 'on'
+		};
+
+		try {
+			const { updateUserSettings } = await import('$lib/server/services/finance.service');
+			await updateUserSettings(event.locals.user.id, {
+				enabledFeatures: JSON.stringify(features)
+			});
+		} catch {
+			return fail(500, {
+				featuresMessage: { text: 'Erreur lors de la mise à jour des fonctionnalités', ok: false }
+			});
+		}
+
+		return {
+			featuresMessage: { text: 'Fonctionnalités mises à jour avec succès', ok: true }
 		};
 	}
 };

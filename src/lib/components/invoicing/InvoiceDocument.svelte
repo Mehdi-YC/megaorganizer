@@ -225,9 +225,14 @@
 			<div class="mt-3 flex items-center justify-end gap-3">
 				{#if invoice.showTvaStamp ?? invoice.tvaAmount === 0}
 					<div
-						class="inline-block shrink-0 -rotate-6 rounded-xs border-[2.5px] border-red-600 px-2.5 py-1 text-[11px] font-black tracking-wider text-red-600 uppercase select-none print:border-red-600 print:text-red-600"
+						class="inline-block shrink-0 -rotate-6 rounded-xs border-2 border-red-600 p-0.5 select-none print:border-red-600"
+						title="Exonération TVA IFU"
 					>
-						NON SOUMIS À LA TVA
+						<div
+							class="rounded-2xs border border-red-600 px-2 py-0.5 text-[10px] font-black tracking-wider text-red-600 uppercase print:border-red-600 print:text-red-600"
+						>
+							NON SOUMIS À LA TVA
+						</div>
 					</div>
 				{/if}
 				<div class="relative flex min-h-[75px] w-48 items-center justify-center">
@@ -269,14 +274,15 @@
 	@media print {
 		@page {
 			size: A4 portrait;
-			margin: 0;
+			margin: 10mm 12mm;
 		}
 
 		:global(html),
 		:global(body) {
 			width: 100% !important;
-			height: 100% !important;
+			height: auto !important;
 			background: #ffffff !important;
+			background-color: #ffffff !important;
 			color: #1f2937 !important;
 			color-scheme: light !important;
 			margin: 0 !important;
@@ -292,11 +298,12 @@
 		.invoice-sheet {
 			position: static !important;
 			box-sizing: border-box !important;
-			width: 210mm !important;
-			max-width: 210mm !important;
-			min-height: 297mm !important;
-			margin: 0 auto !important;
-			padding: 10mm 12mm !important;
+			width: 100% !important;
+			max-width: 100% !important;
+			min-height: 0 !important;
+			height: auto !important;
+			margin: 0 !important;
+			padding: 0 !important;
 			border: none !important;
 			box-shadow: none !important;
 			background: #ffffff !important;

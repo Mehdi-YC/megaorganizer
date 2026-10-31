@@ -8,13 +8,57 @@
 	import StatGroupCard from '$lib/components/ui/StatGroupCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import type { Reminder, CalendarEvent } from '$lib/types';
+	import type { Reminder, CalendarEvent, Todo } from '$lib/types';
 	import { showToast } from '$lib/utils/toast.svelte';
 
 	let { data } = $props();
 
 	// svelte-ignore state_referenced_locally
 	let dueReminders = $state<Reminder[]>(data.dueReminders ?? []);
+	// svelte-ignore state_referenced_locally
+	let todayTodos = $state<Todo[]>(data.todayTodos ?? []);
+	let quickTodoTitle = $state('');
+	let isAddingTodo = $state(false);
+
+	async function handleAddQuickTodo() {
+		if (!quickTodoTitle.trim() || isAddingTodo) return;
+		isAddingTodo = true;
+		const title = quickTodoTitle.trim();
+		const todayStr = new Date().toISOString().slice(0, 10);
+		try {
+			const res = await fetch('/api/todos', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title, dueDate: todayStr })
+			});
+			if (res.ok) {
+				const json = await res.json();
+				todayTodos = [json.todo, ...todayTodos];
+				quickTodoTitle = '';
+				showToast('Tâche ajoutée', 'success');
+			}
+		} catch {
+			showToast('Erreur', 'error');
+		} finally {
+			isAddingTodo = false;
+		}
+	}
+
+	async function handleToggleQuickTodo(t: Todo) {
+		t.completed = !t.completed;
+		try {
+			const res = await fetch('/api/todos', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'toggle', id: t.id })
+			});
+			if (!res.ok) {
+				t.completed = !t.completed;
+			}
+		} catch {
+			t.completed = !t.completed;
+		}
+	}
 
 	let analytics = $derived(data.analytics);
 	let currency = $derived(data.currency ?? 'DZD');
@@ -185,6 +229,88 @@
 	{/if}
 
 	<NotificationPrompt />
+
+	<!-- Today's Todos Widget -->
+	<div class="mb-6 rounded-sm border border-border bg-surface p-4 shadow-xs">
+		<div class="mb-3 flex items-center justify-between">
+			<h2
+				class="flex items-center gap-2 text-xs font-semibold tracking-wide text-fg-accent uppercase"
+			>
+				<i class="fas fa-check-square text-xs text-primary-text"></i>
+				Tâches d'aujourd'hui
+			</h2>
+			<a
+				href={resolve('/app/todos')}
+				class="text-xs text-primary-text hover:text-primary-text-hover"
+			>
+				Toutes les tâches
+			</a>
+		</div>
+
+		<!-- Quick add input -->
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				handleAddQuickTodo();
+			}}
+			class="mb-3 flex gap-2"
+		>
+			<input
+				type="text"
+				bind:value={quickTodoTitle}
+				placeholder="Ajouter une tâche pour aujourd'hui..."
+				class="flex-1 rounded-sm border border-border-strong bg-bg px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
+			/>
+			<button
+				type="submit"
+				aria-label="Ajouter la tâche"
+				disabled={!quickTodoTitle.trim() || isAddingTodo}
+				class="inline-flex cursor-pointer items-center justify-center rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-40"
+			>
+				<i class="fas fa-plus text-[10px]"></i>
+			</button>
+		</form>
+
+		<!-- Items list -->
+		{#if todayTodos.length > 0}
+			<div class="space-y-1.5">
+				{#each todayTodos as t (t.id)}
+					<div
+						class="flex items-center justify-between gap-2.5 rounded-sm px-2.5 py-1.5 text-xs transition-colors hover:bg-muted/40 {t.completed
+							? 'opacity-60'
+							: ''}"
+					>
+						<div class="flex min-w-0 flex-1 items-center gap-2.5">
+							<button
+								type="button"
+								class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-xs border transition-colors {t.completed
+									? 'border-success bg-success text-white'
+									: 'border-border-strong hover:border-fg-subdued'}"
+								onclick={() => handleToggleQuickTodo(t)}
+								aria-label="Toggle todo"
+							>
+								{#if t.completed}
+									<i class="fas fa-check text-[8px]"></i>
+								{/if}
+							</button>
+							<span class="truncate text-fg {t.completed ? 'text-fg-subdued line-through' : ''}">
+								{t.title}
+							</span>
+						</div>
+						{#if t.priority === 'high'}
+							<span class="rounded-xs bg-red-500/10 px-1 text-[9px] font-semibold text-red-500">
+								Haute
+							</span>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="py-2 text-center text-xs text-fg-subdued italic">
+				Aucune tâche prévue aujourd'hui.
+			</p>
+		{/if}
+	</div>
 
 	<!-- Today's Reminders -->
 	{#if dueReminders.length > 0}

@@ -28,15 +28,25 @@ import {
 	ydkDeck,
 	ydkEntry,
 	timerTemplate,
-	timerStep
+	timerStep,
+	todo,
+	invoiceClient,
+	invoiceProduct,
+	invoice,
+	invoiceLine,
+	invoiceYearlyDoc
 } from '$lib/server/db/schema';
+import { user } from '$lib/server/db/auth.schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import type { AnySQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
+import path from 'path';
+import AdmZip from 'adm-zip';
 import { getCategories, getCategoryPages } from './category.service';
 import { getTagsByUser } from './tag.service';
 import { saveAttachmentFile, getAttachmentFilePath } from './attachment.service';
+import { getUserInvoiceProfile } from './invoice.service';
 
 type Db = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -358,6 +368,50 @@ async function exportTimers(userId: string) {
 	});
 }
 
+async function exportTodos(userId: string) {
+	return db
+		.select()
+		.from(todo)
+		.where(eq(todo.userId, userId))
+		.orderBy(todo.dueDate, todo.position)
+		.all();
+}
+
+async function exportInvoicing(userId: string) {
+	const clients = await db
+		.select()
+		.from(invoiceClient)
+		.where(eq(invoiceClient.userId, userId))
+		.all();
+	const products = await db
+		.select()
+		.from(invoiceProduct)
+		.where(eq(invoiceProduct.userId, userId))
+		.all();
+	const invoices = await db.select().from(invoice).where(eq(invoice.userId, userId)).all();
+	const invoiceIds = invoices.map((i) => i.id);
+	const lines = invoiceIds.length
+		? await db.select().from(invoiceLine).where(inArray(invoiceLine.invoiceId, invoiceIds)).all()
+		: [];
+	const yearlyDocs = await db
+		.select()
+		.from(invoiceYearlyDoc)
+		.where(eq(invoiceYearlyDoc.userId, userId))
+		.all();
+	const profile = await getUserInvoiceProfile(userId);
+
+	return {
+		clients,
+		products,
+		invoices: invoices.map((inv) => ({
+			...inv,
+			lines: lines.filter((l) => l.invoiceId === inv.id)
+		})),
+		yearlyDocs,
+		profile
+	};
+}
+
 export async function exportUserData(userId: string) {
 	const cats = await getCategories(userId);
 	const tags = await getTagsByUser(userId);
@@ -435,9 +489,11 @@ export async function exportUserData(userId: string) {
 		.get();
 
 	const expenses = await db.select().from(expense).where(eq(expense.userId, userId)).all();
+	const todosData = await exportTodos(userId);
+	const invoicingData = await exportInvoicing(userId);
 
 	return {
-		version: 3 as const,
+		version: 4 as const,
 		exportedAt: new Date().toISOString(),
 		categories: categoriesWithPages,
 		treeElements: allTreeElements.map((el) => ({
@@ -471,11 +527,14 @@ export async function exportUserData(userId: string) {
 			? {
 					currency: settings.currency,
 					currencyRate: settings.currencyRate,
-					monthlySpendingLimit: settings.monthlySpendingLimit
+					monthlySpendingLimit: settings.monthlySpendingLimit,
+					enabledFeatures: settings.enabledFeatures
 				}
 			: null,
 		reminders: remindersData.reminders,
 		reminderTemplates: remindersData.reminderTemplates,
+		todos: todosData,
+		invoicing: invoicingData,
 		expenses: expenses.map((e) => ({
 			id: e.id,
 			amount: e.amount,
@@ -491,6 +550,84 @@ export async function exportUserData(userId: string) {
 		ydkDecks: ydkDecksData,
 		timers: timersData
 	};
+}
+
+export async function exportUserDataZip(userId: string): Promise<Buffer> {
+	const data = await exportUserData(userId);
+	const zip = new AdmZip();
+	zip.addFile('data.json', Buffer.from(JSON.stringify(data, null, 2), 'utf-8'));
+
+	// Add user upload directory recursively under files/
+	const uploadDir = path.resolve(process.env.UPLOAD_DIR || 'data/uploads');
+	const userUploadDir = path.join(uploadDir, userId);
+
+	async function addDirToZip(currentDir: string, zipPrefix: string) {
+		try {
+			const entries = await readdir(currentDir, { withFileTypes: true });
+			for (const entry of entries) {
+				const fullPath = path.join(currentDir, entry.name);
+				const zipPath = path.posix.join(zipPrefix, entry.name);
+				if (entry.isDirectory()) {
+					await addDirToZip(fullPath, zipPath);
+				} else if (entry.isFile()) {
+					const content = await readFile(fullPath);
+					zip.addFile(zipPath, content);
+				}
+			}
+		} catch {
+			// Directory might not exist if user hasn't uploaded any files
+		}
+	}
+
+	await addDirToZip(userUploadDir, 'files');
+	return zip.toBuffer();
+}
+
+export async function importUserDataFromZip(userId: string, zipBuffer: Buffer) {
+	const zip = new AdmZip(zipBuffer);
+	const zipEntries = zip.getEntries();
+
+	// 1. Unpack files under files/ to user uploads directory
+	const uploadDir = path.resolve(process.env.UPLOAD_DIR || 'data/uploads');
+	const userUploadDir = path.join(uploadDir, userId);
+	await mkdir(userUploadDir, { recursive: true });
+
+	for (const entry of zipEntries) {
+		if (entry.isDirectory) continue;
+		const entryName = entry.entryName.replace(/\\/g, '/');
+		if (entryName.startsWith('files/')) {
+			const relativePath = entryName.slice('files/'.length);
+			// Prevent path traversal
+			const targetPath = path.resolve(userUploadDir, relativePath);
+			if (!targetPath.startsWith(path.resolve(userUploadDir))) {
+				continue;
+			}
+			await mkdir(path.dirname(targetPath), { recursive: true });
+			await writeFile(targetPath, entry.getData());
+		}
+	}
+
+	// 2. Find data.json
+	let jsonEntry = zip.getEntry('data.json') || zip.getEntry('megaorganize-data.json');
+	if (!jsonEntry) {
+		for (const entry of zipEntries) {
+			if (
+				!entry.isDirectory &&
+				entry.entryName.endsWith('.json') &&
+				!entry.entryName.includes('/')
+			) {
+				jsonEntry = entry;
+				break;
+			}
+		}
+	}
+	if (!jsonEntry) {
+		throw new Error('data.json introuvable dans le fichier zip');
+	}
+
+	const jsonText = jsonEntry.getData().toString('utf-8');
+	const data = JSON.parse(jsonText);
+	return importUserData(userId, data);
 }
 
 // ─── Import (non-destructive) ────────────────────────────────────────────────
@@ -518,7 +655,10 @@ async function findExisting(
 // type here would claim more than the file format guarantees.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function importUserData(userId: string, data: any) {
-	if (!data || (data.version !== 1 && data.version !== 2 && data.version !== 3)) {
+	if (
+		!data ||
+		(data.version !== 1 && data.version !== 2 && data.version !== 3 && data.version !== 4)
+	) {
 		return { success: false, message: 'Invalid backup format', counts: {} };
 	}
 
@@ -534,6 +674,12 @@ export async function importUserData(userId: string, data: any) {
 		reminders: 0,
 		templateTodos: 0,
 		reminderTodos: 0,
+		todos: 0,
+		invoiceClients: 0,
+		invoiceProducts: 0,
+		invoices: 0,
+		invoiceLines: 0,
+		invoiceDocs: 0,
 		expenses: 0,
 		sessions: 0,
 		activities: 0,
@@ -1408,6 +1554,246 @@ export async function importUserData(userId: string, data: any) {
 				}
 			}
 		}
+
+		// Todos
+		if (Array.isArray(data.todos)) {
+			for (const td of data.todos) {
+				if (!td || typeof td.title !== 'string') continue;
+				const existing = td.id
+					? await findExisting(tx, todo, and(eq(todo.id, td.id), eq(todo.userId, userId)))
+					: null;
+				if (existing) {
+					counts.skipped++;
+				} else {
+					const newId = td.id || crypto.randomUUID();
+					await tx
+						.insert(todo)
+						.values({
+							id: newId,
+							userId,
+							title: td.title,
+							completed: !!td.completed,
+							completedAt: toDate(td.completedAt),
+							dueDate: td.dueDate || null,
+							dueTime: td.dueTime || null,
+							priority: td.priority || 'medium',
+							position: typeof td.position === 'number' ? td.position : 0
+						})
+						.run();
+					counts.todos++;
+				}
+			}
+		}
+
+		// Invoicing
+		if (data.invoicing) {
+			const invData = data.invoicing;
+
+			// Clients
+			for (const c of invData.clients ?? []) {
+				const existing = await findExisting(
+					tx,
+					invoiceClient,
+					and(eq(invoiceClient.userId, userId), eq(invoiceClient.name, c.name))
+				);
+				if (existing) {
+					idMap.set(c.id, existing.id);
+					counts.skipped++;
+				} else {
+					const newId = c.id || crypto.randomUUID();
+					idMap.set(c.id, newId);
+					await tx
+						.insert(invoiceClient)
+						.values({
+							id: newId,
+							userId,
+							name: c.name,
+							address: c.address ?? null,
+							city: c.city ?? null,
+							wilaya: c.wilaya ?? null,
+							country: c.country ?? 'Algérie',
+							nif: c.nif ?? null,
+							nis: c.nis ?? null,
+							rc: c.rc ?? null,
+							ai: c.ai ?? null,
+							nTva: c.nTva ?? null,
+							phone: c.phone ?? null,
+							email: c.email ?? null
+						})
+						.run();
+					counts.invoiceClients++;
+				}
+			}
+
+			// Products / Services
+			for (const p of invData.products ?? []) {
+				const existing = await findExisting(
+					tx,
+					invoiceProduct,
+					and(eq(invoiceProduct.userId, userId), eq(invoiceProduct.name, p.name))
+				);
+				if (existing) {
+					idMap.set(p.id, existing.id);
+					counts.skipped++;
+				} else {
+					const newId = p.id || crypto.randomUUID();
+					idMap.set(p.id, newId);
+					await tx
+						.insert(invoiceProduct)
+						.values({
+							id: newId,
+							userId,
+							name: p.name,
+							description: p.description ?? null,
+							unitPrice: p.unitPrice ?? p.price ?? 0,
+							unit: p.unit ?? 'Unité(s)',
+							tvaRate: p.tvaRate ?? 0
+						})
+						.run();
+					counts.invoiceProducts++;
+				}
+			}
+
+			// Invoices & Lines
+			for (const inv of invData.invoices ?? []) {
+				const existing = await findExisting(
+					tx,
+					invoice,
+					and(eq(invoice.userId, userId), eq(invoice.invoiceNumber, inv.invoiceNumber))
+				);
+				if (existing) {
+					idMap.set(inv.id, existing.id);
+					counts.skipped++;
+				} else {
+					const mappedClientId = idMap.get(inv.clientId) || inv.clientId;
+					const newId = inv.id || crypto.randomUUID();
+					idMap.set(inv.id, newId);
+					await tx
+						.insert(invoice)
+						.values({
+							id: newId,
+							userId,
+							clientId: mappedClientId,
+							invoiceNumber: inv.invoiceNumber,
+							year: inv.year || new Date(inv.invoiceDate).getFullYear(),
+							invoiceDate: toDate(inv.invoiceDate) || new Date(),
+							dueDate: toDate(inv.dueDate) || new Date(),
+							status: inv.status || 'draft',
+							subtotal: inv.subtotal ?? 0,
+							tvaAmount: inv.tvaAmount ?? 0,
+							total: inv.total ?? 0,
+							paymentMode: inv.paymentMode ?? null,
+							paymentConditions: inv.paymentConditions ?? null,
+							notes: inv.notes ?? null,
+							showTvaStamp: inv.showTvaStamp ?? inv.tvaAmount === 0
+						})
+						.run();
+					counts.invoices++;
+
+					for (const l of inv.lines ?? []) {
+						const mappedProductId = l.productId ? idMap.get(l.productId) || l.productId : null;
+						await tx
+							.insert(invoiceLine)
+							.values({
+								id: l.id || crypto.randomUUID(),
+								invoiceId: newId,
+								productId: mappedProductId,
+								description: l.description,
+								quantity: l.quantity,
+								unitPrice: l.unitPrice,
+								unit: l.unit || 'Unité(s)',
+								tvaRate: l.tvaRate ?? 0,
+								total: l.total,
+								position: l.position ?? 0
+							})
+							.run();
+						counts.invoiceLines++;
+					}
+				}
+			}
+
+			// Yearly docs (G12 / G12 bis)
+			for (const d of invData.yearlyDocs ?? []) {
+				const existing = await findExisting(
+					tx,
+					invoiceYearlyDoc,
+					and(
+						eq(invoiceYearlyDoc.userId, userId),
+						eq(invoiceYearlyDoc.year, d.year),
+						eq(invoiceYearlyDoc.docType, d.docType)
+					)
+				);
+				if (existing) {
+					counts.skipped++;
+				} else {
+					await tx
+						.insert(invoiceYearlyDoc)
+						.values({
+							id: d.id || crypto.randomUUID(),
+							userId,
+							year: d.year,
+							docType: d.docType,
+							originalName: d.originalName,
+							storedName: d.storedName,
+							mimeType: d.mimeType || 'application/pdf',
+							size: d.size || 0
+						})
+						.run();
+					counts.invoiceDocs++;
+				}
+			}
+
+			// Profile (brandName, etc.)
+			if (invData.profile) {
+				const p = invData.profile;
+				await tx
+					.update(user)
+					.set({
+						brandName: p.brandName,
+						brandTagline: p.brandTagline,
+						address: p.address,
+						phone: p.phone,
+						nif: p.nif,
+						anae: p.anae,
+						rc: p.rc,
+						nis: p.nis,
+						ai: p.ai,
+						rib: p.rib,
+						signatureUrl: p.signatureUrl,
+						stampUrl: p.stampUrl
+					})
+					.where(eq(user.id, userId))
+					.run();
+			}
+		}
+
+		// Update enabledFeatures in userSettings if provided
+		if (data.userSettings?.enabledFeatures) {
+			const existingSettings = await tx
+				.select({ id: userSettings.id })
+				.from(userSettings)
+				.where(eq(userSettings.userId, userId))
+				.get();
+			if (existingSettings) {
+				await tx
+					.update(userSettings)
+					.set({ enabledFeatures: data.userSettings.enabledFeatures })
+					.where(eq(userSettings.userId, userId))
+					.run();
+			} else {
+				await tx
+					.insert(userSettings)
+					.values({
+						id: crypto.randomUUID(),
+						userId,
+						currency: data.userSettings.currency || 'DZD',
+						currencyRate: data.userSettings.currencyRate || 1,
+						monthlySpendingLimit: data.userSettings.monthlySpendingLimit ?? null,
+						enabledFeatures: data.userSettings.enabledFeatures
+					})
+					.run();
+			}
+		}
 	});
 
 	// Wikilinks are derived data: rebuild every document's edges from the
@@ -1425,6 +1811,12 @@ export async function importUserData(userId: string, data: any) {
 		counts.reminders +
 		counts.templateTodos +
 		counts.reminderTodos +
+		counts.todos +
+		counts.invoiceClients +
+		counts.invoiceProducts +
+		counts.invoices +
+		counts.invoiceLines +
+		counts.invoiceDocs +
 		counts.expenses +
 		counts.sessions +
 		counts.activities +

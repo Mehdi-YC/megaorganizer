@@ -50,27 +50,31 @@
 </div>
 
 <style>
-	:global(html:has(.invoice-sheet)),
-	:global(body:has(.invoice-sheet)) {
+	:global(html),
+	:global(body) {
 		color-scheme: light !important;
 		background: #ffffff !important;
+		background-color: #ffffff !important;
+		color: #111827 !important;
 	}
 
 	@media print {
 		@page {
 			size: A4 portrait;
-			margin: 0;
+			margin: 10mm 12mm;
 		}
 
 		:global(html),
 		:global(body) {
 			background: #ffffff !important;
+			background-color: #ffffff !important;
 			color: #111827 !important;
 			color-scheme: light !important;
 			margin: 0 !important;
 			padding: 0 !important;
 			width: 100% !important;
-			height: 100% !important;
+			height: auto !important;
+			box-shadow: none !important;
 			-webkit-print-color-adjust: exact !important;
 			print-color-adjust: exact !important;
 		}

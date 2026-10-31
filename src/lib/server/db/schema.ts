@@ -834,6 +834,7 @@ export const userSettings = sqliteTable(
 		currency: text('currency').default('DZD').notNull(),
 		currencyRate: real('currency_rate').default(1).notNull(),
 		monthlySpendingLimit: real('monthly_spending_limit'),
+		enabledFeatures: text('enabled_features'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
 			.notNull(),
@@ -1131,4 +1132,42 @@ export const timerStepRelations = relations(timerStep, ({ one, many }) => ({
 		relationName: 'timerStepHierarchy'
 	}),
 	children: many(timerStep, { relationName: 'timerStepHierarchy' })
+}));
+
+// ─── Simple Todos ───────────────────────────────────────────────────────────
+export const todo = sqliteTable(
+	'todo',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
+		completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+		dueDate: text('due_date'), // YYYY-MM-DD for a specific day or null
+		dueTime: text('due_time'), // HH:mm optional
+		priority: text('priority', { enum: ['low', 'medium', 'high'] })
+			.notNull()
+			.default('medium'),
+		position: integer('position').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('todo_userId_idx').on(table.userId),
+		index('todo_dueDate_idx').on(table.dueDate),
+		index('todo_completed_idx').on(table.completed)
+	]
+);
+
+export const todoRelations = relations(todo, ({ one }) => ({
+	user: one(user, { fields: [todo.userId], references: [user.id] })
 }));

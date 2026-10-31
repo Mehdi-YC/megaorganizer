@@ -8,7 +8,7 @@
 	import { page } from '$app/state';
 	import { startReminderPolling } from '$lib/utils/notifications';
 	import { initWikilinkClicks } from '$lib/utils/wikilink-click';
-	import type { CategoryWithPages } from '$lib/types';
+	import type { CategoryWithPages, EnabledFeatures } from '$lib/types';
 
 	let {
 		children,
@@ -18,6 +18,7 @@
 		data: {
 			categories?: CategoryWithPages[];
 			invoiceYears?: number[];
+			enabledFeatures?: EnabledFeatures;
 			user?: { name: string; email: string; image?: string | null };
 		};
 	} = $props();
@@ -52,6 +53,7 @@
 		<Sidebar
 			categories={data.categories ?? []}
 			invoiceYears={data.invoiceYears ?? []}
+			enabledFeatures={data.enabledFeatures}
 			user={data.user}
 			onNavigate={() => (sidebarOpen = false)}
 		/>

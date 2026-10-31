@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CategoryWithPages, PageSummary } from '$lib/types';
+	import type { CategoryWithPages, PageSummary, EnabledFeatures } from '$lib/types';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -12,11 +12,20 @@
 	let {
 		categories = [],
 		invoiceYears = [],
+		enabledFeatures = {
+			todos: true,
+			reminders: true,
+			finance: true,
+			invoicing: true,
+			training: true,
+			ydk: true
+		},
 		user,
 		onNavigate = () => {}
 	}: {
 		categories?: CategoryWithPages[];
 		invoiceYears?: number[];
+		enabledFeatures?: EnabledFeatures;
 		user?: { name: string; email: string; image?: string | null };
 		onNavigate?: () => void;
 	} = $props();
@@ -337,190 +346,213 @@
 			Calendar
 		</a>
 
-		<a
-			href={resolve('/app/finance')}
-			onclick={onNavigate}
-			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
-				.url.pathname === '/app/finance'
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-receipt w-4 text-center text-xs"></i>
-			Finance
-		</a>
-
-		<!-- Facturation (Collapsible Block) -->
-		<div class="mb-2">
-			<div
-				class="group flex min-h-9 items-center rounded-sm transition-colors {page.url.pathname ===
-				'/app/invoicing'
+		{#if enabledFeatures.todos !== false}
+			<a
+				href={resolve('/app/todos')}
+				onclick={onNavigate}
+				class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
+					'/app/todos'
+				)
 					? 'bg-primary-subdued font-medium text-primary-text'
 					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 			>
-				<button
-					type="button"
-					aria-label="Toggle facturation"
-					aria-expanded={invoicingExpanded}
-					class="flex h-9 w-7 shrink-0 cursor-pointer items-center justify-center text-inherit opacity-75 hover:opacity-100"
-					onclick={(e) => {
-						e.stopPropagation();
-						e.preventDefault();
-						toggleInvoicing();
-					}}
+				<i class="fas fa-check-square w-4 text-center text-xs"></i>
+				Tâches
+			</a>
+		{/if}
+
+		{#if enabledFeatures.finance !== false}
+			<a
+				href={resolve('/app/finance')}
+				onclick={onNavigate}
+				class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page
+					.url.pathname === '/app/finance'
+					? 'bg-primary-subdued font-medium text-primary-text'
+					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+			>
+				<i class="fas fa-receipt w-4 text-center text-xs"></i>
+				Finance
+			</a>
+		{/if}
+
+		<!-- Facturation (Collapsible Block) -->
+		{#if enabledFeatures.invoicing !== false}
+			<div class="mb-2">
+				<div
+					class="group flex min-h-9 items-center rounded-sm transition-colors {page.url.pathname ===
+					'/app/invoicing'
+						? 'bg-primary-subdued font-medium text-primary-text'
+						: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
 				>
-					<i
-						class="fas fa-chevron-right text-[9px] transition-transform duration-150 {invoicingExpanded
-							? 'rotate-90'
-							: ''}"
-					></i>
-				</button>
-				<a
-					href={resolve('/app/invoicing')}
-					onclick={onNavigate}
-					class="flex flex-1 items-center gap-2 py-1.5 pr-3 text-left text-[13px] text-inherit"
-				>
-					<i class="fas fa-file-invoice w-4 text-center text-xs"></i>
-					<span class="flex-1 truncate">Facturation</span>
-				</a>
-			</div>
-
-			{#if invoicingExpanded}
-				<div class="mt-1 ml-4 space-y-0.5 border-l border-border/50 pl-2">
-					<a
-						href={resolve('/app/invoicing/clients')}
-						onclick={onNavigate}
-						class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
-							.url.pathname === '/app/invoicing/clients'
-							? 'bg-primary-subdued font-medium text-primary-text'
-							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+					<button
+						type="button"
+						aria-label="Toggle facturation"
+						aria-expanded={invoicingExpanded}
+						class="flex h-9 w-7 shrink-0 cursor-pointer items-center justify-center text-inherit opacity-75 hover:opacity-100"
+						onclick={(e) => {
+							e.stopPropagation();
+							e.preventDefault();
+							toggleInvoicing();
+						}}
 					>
-						<i class="fas fa-users w-3.5 text-center text-[10px]"></i>
-						<span class="truncate">Clients</span>
-					</a>
-
+						<i
+							class="fas fa-chevron-right text-[9px] transition-transform duration-150 {invoicingExpanded
+								? 'rotate-90'
+								: ''}"
+						></i>
+					</button>
 					<a
-						href={resolve('/app/invoicing/products')}
+						href={resolve('/app/invoicing')}
 						onclick={onNavigate}
-						class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
-							.url.pathname === '/app/invoicing/products'
-							? 'bg-primary-subdued font-medium text-primary-text'
-							: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+						class="flex flex-1 items-center gap-2 py-1.5 pr-3 text-left text-[13px] text-inherit"
 					>
-						<i class="fas fa-box w-3.5 text-center text-[10px]"></i>
-						<span class="truncate">Services</span>
+						<i class="fas fa-file-invoice w-4 text-center text-xs"></i>
+						<span class="flex-1 truncate">Facturation</span>
 					</a>
+				</div>
 
-					<!-- Folders for each Year -->
-					<div class="my-1.5 h-px bg-border/40"></div>
-					<div class="px-2 py-0.5 text-[10px] font-semibold text-fg-subdued uppercase">
-						Dossiers Annuels
-					</div>
+				{#if invoicingExpanded}
+					<div class="mt-1 ml-4 space-y-0.5 border-l border-border/50 pl-2">
+						<a
+							href={resolve('/app/invoicing/clients')}
+							onclick={onNavigate}
+							class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
+								.url.pathname === '/app/invoicing/clients'
+								? 'bg-primary-subdued font-medium text-primary-text'
+								: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+						>
+							<i class="fas fa-users w-3.5 text-center text-[10px]"></i>
+							<span class="truncate">Clients</span>
+						</a>
 
-					{#each invoiceYears.length > 0 ? invoiceYears : [new Date().getFullYear()] as yr (yr)}
-						{@const isYrExpanded = expandedInvoiceYears.has(yr)}
-						{@const isYrActive = page.url.pathname === `/app/invoicing/year/${yr}`}
+						<a
+							href={resolve('/app/invoicing/products')}
+							onclick={onNavigate}
+							class="flex min-h-7 items-center gap-2 rounded-sm px-2 py-1 text-xs transition-colors {page
+								.url.pathname === '/app/invoicing/products'
+								? 'bg-primary-subdued font-medium text-primary-text'
+								: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+						>
+							<i class="fas fa-box w-3.5 text-center text-[10px]"></i>
+							<span class="truncate">Services</span>
+						</a>
 
-						<div class="space-y-0.5">
-							<div class="group flex items-center justify-between rounded-sm pr-1">
-								<button
-									type="button"
-									aria-label="Toggle dossier {yr}"
-									class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
-									onclick={(e) => {
-										e.stopPropagation();
-										e.preventDefault();
-										toggleInvoiceYear(yr);
-									}}
-								>
-									<i
-										class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isYrExpanded
-											? 'rotate-90'
-											: ''}"
-									></i>
-								</button>
+						<!-- Folders for each Year -->
+						<div class="my-1.5 h-px bg-border/40"></div>
+						<div class="px-2 py-0.5 text-[10px] font-semibold text-fg-subdued uppercase">
+							Dossiers Annuels
+						</div>
 
-								<a
-									href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
-									onclick={onNavigate}
-									class="flex flex-1 items-center gap-1.5 py-1 text-xs transition-colors {isYrActive
-										? 'font-medium text-primary-text'
-										: 'text-fg-subdued hover:text-fg'}"
-								>
-									<i
-										class="fas {isYrExpanded
-											? 'fa-folder-open'
-											: 'fa-folder'} text-[10px] text-primary-text"
-									></i>
-									<span class="truncate">{yr}</span>
-								</a>
+						{#each invoiceYears.length > 0 ? invoiceYears : [new Date().getFullYear()] as yr (yr)}
+							{@const isYrExpanded = expandedInvoiceYears.has(yr)}
+							{@const isYrActive = page.url.pathname === `/app/invoicing/year/${yr}`}
 
-								<!-- Export Button for Year Folder -->
-								<button
-									type="button"
-									class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued opacity-70 hover:text-primary-text hover:opacity-100"
-									title="Exporter le dossier {yr} (G12, G12 bis & Factures)"
-									onclick={(e) => exportYearFromSidebar(e, yr)}
-								>
-									<i class="fas fa-file-zipper text-[10px]"></i>
-								</button>
-							</div>
+							<div class="space-y-0.5">
+								<div class="group flex items-center justify-between rounded-sm pr-1">
+									<button
+										type="button"
+										aria-label="Toggle dossier {yr}"
+										class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
+										onclick={(e) => {
+											e.stopPropagation();
+											e.preventDefault();
+											toggleInvoiceYear(yr);
+										}}
+									>
+										<i
+											class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isYrExpanded
+												? 'rotate-90'
+												: ''}"
+										></i>
+									</button>
 
-							{#if isYrExpanded}
-								<div class="ml-4 space-y-0.5 border-l border-border/40 pl-2">
 									<a
 										href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
 										onclick={onNavigate}
-										class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
+										class="flex flex-1 items-center gap-1.5 py-1 text-xs transition-colors {isYrActive
+											? 'font-medium text-primary-text'
+											: 'text-fg-subdued hover:text-fg'}"
 									>
-										<i class="fas fa-file-shield text-[9px]"></i>
-										<span class="truncate">G12 / G12 bis</span>
+										<i
+											class="fas {isYrExpanded
+												? 'fa-folder-open'
+												: 'fa-folder'} text-[10px] text-primary-text"
+										></i>
+										<span class="truncate">{yr}</span>
 									</a>
-									<a
-										href={resolve('/app/invoicing')}
-										onclick={onNavigate}
-										class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
+
+									<!-- Export Button for Year Folder -->
+									<button
+										type="button"
+										class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued opacity-70 hover:text-primary-text hover:opacity-100"
+										title="Exporter le dossier {yr} (G12, G12 bis & Factures)"
+										onclick={(e) => exportYearFromSidebar(e, yr)}
 									>
-										<i class="fas fa-list text-[9px]"></i>
-										<span class="truncate">Factures {yr}</span>
-									</a>
+										<i class="fas fa-file-zipper text-[10px]"></i>
+									</button>
 								</div>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
 
-		<a
-			href={resolve('/app/training')}
-			onclick={onNavigate}
-			class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
-				'/app/training'
-			)
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
-			Training
-		</a>
+								{#if isYrExpanded}
+									<div class="ml-4 space-y-0.5 border-l border-border/40 pl-2">
+										<a
+											href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
+											onclick={onNavigate}
+											class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
+										>
+											<i class="fas fa-file-shield text-[9px]"></i>
+											<span class="truncate">G12 / G12 bis</span>
+										</a>
+										<a
+											href={resolve('/app/invoicing')}
+											onclick={onNavigate}
+											class="flex min-h-6 items-center gap-1.5 py-0.5 text-[11px] text-fg-subdued hover:text-fg"
+										>
+											<i class="fas fa-list text-[9px]"></i>
+											<span class="truncate">Factures {yr}</span>
+										</a>
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		{/if}
 
-		<div class="my-1 h-px bg-border/50"></div>
+		{#if enabledFeatures.training !== false}
+			<a
+				href={resolve('/app/training')}
+				onclick={onNavigate}
+				class="mb-2 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
+					'/app/training'
+				)
+					? 'bg-primary-subdued font-medium text-primary-text'
+					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+			>
+				<i class="fas fa-dumbbell w-4 text-center text-xs"></i>
+				Training
+			</a>
+
+			<div class="my-1 h-px bg-border/50"></div>
+		{/if}
 
 		<!-- Reminders (Single link, collapsible not needed) -->
-		<a
-			href={resolve('/app/reminders')}
-			onclick={onNavigate}
-			class="mt-2 mb-1 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
-				'/app/reminders'
-			)
-				? 'bg-primary-subdued font-medium text-primary-text'
-				: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
-		>
-			<i class="fas fa-bell w-4 text-center text-xs"></i>
-			Reminders
-		</a>
+		{#if enabledFeatures.reminders !== false}
+			<a
+				href={resolve('/app/reminders')}
+				onclick={onNavigate}
+				class="mt-2 mb-1 flex min-h-9 items-center gap-2.5 rounded-sm px-3 py-1.5 text-[13px] transition-colors {page.url.pathname.startsWith(
+					'/app/reminders'
+				)
+					? 'bg-primary-subdued font-medium text-primary-text'
+					: 'text-fg-subdued hover:bg-muted hover:text-fg'}"
+			>
+				<i class="fas fa-bell w-4 text-center text-xs"></i>
+				Reminders
+			</a>
 
-		<div class="my-1 h-px bg-border/50"></div>
+			<div class="my-1 h-px bg-border/50"></div>
+		{/if}
 
 		<a
 			href={resolve('/app/library')}

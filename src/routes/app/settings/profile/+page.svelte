@@ -130,6 +130,12 @@
 		reminders: 'reminders',
 		templateTodos: 'template todos',
 		reminderTodos: 'reminder todos',
+		todos: 'tâches',
+		invoiceClients: 'clients',
+		invoiceProducts: 'services',
+		invoices: 'factures',
+		invoiceLines: 'lignes de factures',
+		invoiceDocs: 'déclarations fiscales (G12/G12 bis)',
 		expenses: 'expenses',
 		sessions: 'sessions',
 		activities: 'activities',
@@ -154,17 +160,16 @@
 		try {
 			const res = await fetch('/api/backup');
 			if (!res.ok) throw new Error('Export failed');
-			const data = await res.json();
-			const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `megaorganize-backup-${new Date().toISOString().split('T')[0]}.json`;
+			a.download = `megaorganize-backup-${new Date().toISOString().split('T')[0]}.zip`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-		} catch (err) {
+		} catch {
 			importStatus = 'error';
 			importMessage = 'Failed to export data';
 		}
@@ -184,12 +189,11 @@
 		importCounts = null;
 
 		try {
-			const text = await file.text();
-			const jsonData = JSON.parse(text);
+			const formData = new FormData();
+			formData.append('file', file);
 			const res = await fetch('/api/backup', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(jsonData)
+				body: formData
 			});
 			const result = await res.json();
 			if (result.success) {
@@ -200,7 +204,7 @@
 				importStatus = 'error';
 				importMessage = result.message || 'Import failed';
 			}
-		} catch (err) {
+		} catch {
 			importStatus = 'error';
 			importMessage = 'Invalid backup file';
 		}
@@ -300,34 +304,151 @@
 		</div>
 	</div>
 
+	<!-- Modules & Features Toggles -->
+	<div class="mt-6 rounded-sm border border-border bg-surface">
+		<div class="border-b border-border px-6 py-3">
+			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
+				Fonctionnalités & Modules
+			</h2>
+		</div>
+		<form method="post" action="?/updateFeatures" class="space-y-4 px-6 py-5">
+			<p class="text-xs text-fg-subdued">
+				Activez ou masquez les fonctionnalités de l'application selon vos besoins. Les modules
+				désactivés sont masqués dans la navigation et les pages associées.
+			</p>
+
+			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="todos"
+						checked={data.enabledFeatures?.todos ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Tâches simples (Todos)</div>
+						<div class="text-[11px] text-fg-subdued">Gestion des tâches du jour et calendrier</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="reminders"
+						checked={data.enabledFeatures?.reminders ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Rappels</div>
+						<div class="text-[11px] text-fg-subdued">Rappels récurrents et notifications</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="finance"
+						checked={data.enabledFeatures?.finance ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Finances & Dépenses</div>
+						<div class="text-[11px] text-fg-subdued">Suivi budgétaire et registre des dépenses</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="invoicing"
+						checked={data.enabledFeatures?.invoicing ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Facturation</div>
+						<div class="text-[11px] text-fg-subdued">Factures et déclarations G12 / G12 bis</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="training"
+						checked={data.enabledFeatures?.training ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Entraînement</div>
+						<div class="text-[11px] text-fg-subdued">Séances sportives et courses GPS</div>
+					</div>
+				</label>
+
+				<label
+					class="flex cursor-pointer items-center gap-3 rounded-sm border border-border bg-bg p-3 transition-colors hover:bg-muted/50"
+				>
+					<input
+						type="checkbox"
+						name="ydk"
+						checked={data.enabledFeatures?.ydk ?? true}
+						class="rounded-sm border-border text-primary focus:ring-primary"
+					/>
+					<div>
+						<div class="text-xs font-semibold text-fg">Yu-Gi-Oh (YDK)</div>
+						<div class="text-[11px] text-fg-subdued">Gestion des decks de cartes</div>
+					</div>
+				</label>
+			</div>
+
+			<div class="flex items-center justify-between pt-2">
+				<Button type="submit">Enregistrer les modules</Button>
+				{#if form?.featuresMessage}
+					<span class="text-xs {form.featuresMessage.ok ? 'text-success' : 'text-error'}">
+						{form.featuresMessage.text}
+					</span>
+				{/if}
+			</div>
+		</form>
+	</div>
+
 	<div class="mt-6 rounded-sm border border-border bg-surface">
 		<div class="border-b border-border px-6 py-3">
 			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Backup & Restore</h2>
 		</div>
 		<div class="space-y-4 px-6 py-5">
 			<p class="text-xs text-fg-subdued">
-				Export all your data as a JSON file, or restore from a previous backup. Existing items with
-				the same name will be skipped.
+				Exportez toutes vos données et fichiers au format ZIP, ou restaurez depuis une sauvegarde
+				précédente (.zip ou .json). Les éléments existants portant le même nom seront conservés.
 			</p>
 
 			<div class="flex flex-col gap-2 sm:flex-row">
 				<Button type="button" onclick={exportBackup}>
-					<i class="fas fa-download text-xs"></i> Export Backup
+					<i class="fas fa-download text-xs"></i> Exporter la sauvegarde (ZIP)
 				</Button>
 				<Button variant="secondary" type="button" onclick={triggerImport}>
-					<i class="fas fa-upload text-xs"></i> Import Backup
+					<i class="fas fa-upload text-xs"></i> Importer une sauvegarde
 				</Button>
 				<input
 					type="file"
-					accept=".json"
+					accept=".zip,.json"
 					class="hidden"
 					bind:this={importInput}
 					onchange={handleImportFile}
 				/>
 			</div>
 			<p class="text-[10px] text-fg-subdued/60">
-				Includes everything: library (categories, pages, items, tags, attachments), reminders,
-				expenses, settings, training runs with GPS, roadmaps, tier lists, YDK decks, and timers.
+				Comprend l'ensemble des données et pièces jointes : base de connaissances, pièces jointes,
+				tâches, rappels, dépenses, facturation, documents fiscaux G12/G12 bis, entraînements GPS,
+				roadmaps, tier lists, decks YDK et chronomètres.
 			</p>
 
 			{#if importStatus === 'loading'}

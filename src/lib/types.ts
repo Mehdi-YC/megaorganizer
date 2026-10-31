@@ -383,3 +383,26 @@ export interface InvoiceUserData {
 	ai?: string | null;
 	rib?: string | null;
 }
+
+export interface EnabledFeatures {
+	todos?: boolean;
+	reminders?: boolean;
+	finance?: boolean;
+	invoicing?: boolean;
+	training?: boolean;
+	ydk?: boolean;
+}
+
+export interface Todo {
+	id: string;
+	userId?: string;
+	title: string;
+	completed: boolean;
+	completedAt?: Date | string | null;
+	dueDate?: string | null;
+	dueTime?: string | null;
+	priority: 'low' | 'medium' | 'high';
+	position: number;
+	createdAt?: Date | string | null;
+	updatedAt?: Date | string | null;
+}

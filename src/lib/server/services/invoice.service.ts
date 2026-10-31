@@ -17,6 +17,10 @@ function getInvoicingDir(userId: string) {
 	return path.join(UPLOAD_DIR, userId, 'invoicing');
 }
 
+function getTaxesDir(userId: string) {
+	return path.join(getInvoicingDir(userId), 'taxes');
+}
+
 // ─── Clients ────────────────────────────────────────────────────────────────
 
 export async function getClients(userId: string) {
@@ -464,7 +468,7 @@ export async function saveYearlyDocFile(
 	docType: 'g12' | 'g12_bis',
 	file: File
 ) {
-	const dir = getInvoicingDir(userId);
+	const dir = getTaxesDir(userId);
 	await mkdir(dir, { recursive: true });
 
 	const ext = path.extname(file.name).toLowerCase() || '.pdf';
@@ -485,12 +489,14 @@ export async function saveYearlyDocFile(
 	});
 
 	if (existing) {
-		// Remove old file
-		const oldPath = path.resolve(dir, existing.storedName);
-		try {
-			await unlink(oldPath);
-		} catch {
-			// ignore if already gone
+		// Remove old file from taxes or invoicing dir
+		for (const d of [dir, getInvoicingDir(userId)]) {
+			const oldPath = path.resolve(d, existing.storedName);
+			try {
+				await unlink(oldPath);
+			} catch {
+				// ignore if already gone
+			}
 		}
 		const [updated] = await db
 			.update(invoiceYearlyDoc)
@@ -522,27 +528,31 @@ export async function saveYearlyDocFile(
 }
 
 export async function getYearlyDocFilePath(userId: string, storedName: string) {
-	const dir = getInvoicingDir(userId);
-	const filePath = path.resolve(dir, storedName);
-	if (!filePath.startsWith(path.resolve(dir))) return null;
-	try {
-		await stat(filePath);
-		return filePath;
-	} catch {
-		return null;
+	for (const dir of [getTaxesDir(userId), getInvoicingDir(userId)]) {
+		const filePath = path.resolve(dir, storedName);
+		if (filePath.startsWith(path.resolve(dir))) {
+			try {
+				await stat(filePath);
+				return filePath;
+			} catch {
+				// continue
+			}
+		}
 	}
+	return null;
 }
 
 export async function deleteYearlyDoc(userId: string, docId: string) {
 	const doc = await getYearlyDocById(userId, docId);
 	if (!doc) return false;
 
-	const dir = getInvoicingDir(userId);
-	const filePath = path.resolve(dir, doc.storedName);
-	try {
-		await unlink(filePath);
-	} catch {
-		// ignore
+	for (const dir of [getTaxesDir(userId), getInvoicingDir(userId)]) {
+		const filePath = path.resolve(dir, doc.storedName);
+		try {
+			await unlink(filePath);
+		} catch {
+			// ignore
+		}
 	}
 
 	await db
