@@ -7,9 +7,76 @@
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import { enablePush, disablePush } from '$lib/utils/push-client';
 	import { themeState } from '$lib/utils/theme.svelte';
+	import type { EnabledFeatures } from '$lib/types';
 	import type { ActionData, PageData } from './$types';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
+
+	const THEME_OPTIONS = [
+		{ id: 'light', icon: 'fa-sun', label: 'Light' },
+		{ id: 'dark', icon: 'fa-moon', label: 'Dark' },
+		{ id: 'system', icon: 'fa-circle-half-stroke', label: 'Auto' }
+	] as const;
+
+	// One row per module: the rail is narrow, so the titles carry the meaning
+	// and the longer descriptions live in the tooltip.
+	const MODULES: readonly {
+		name: keyof EnabledFeatures;
+		label: string;
+		icon: string;
+		color: string;
+		hint: string;
+	}[] = [
+		{
+			name: 'todos',
+			label: 'Tasks',
+			icon: 'fa-check-square',
+			color: 'bg-indigo-600',
+			hint: 'Daily tasks, scheduling and priorities'
+		},
+		{
+			name: 'reminders',
+			label: 'Reminders',
+			icon: 'fa-bell',
+			color: 'bg-amber-600',
+			hint: 'Recurring reminders and alert schedules'
+		},
+		{
+			name: 'finance',
+			label: 'Finance',
+			icon: 'fa-receipt',
+			color: 'bg-emerald-600',
+			hint: 'Spending logs and monthly budget limit'
+		},
+		{
+			name: 'invoicing',
+			label: 'Invoicing',
+			icon: 'fa-file-invoice-dollar',
+			color: 'bg-teal-600',
+			hint: 'Client invoices and annual tax dossiers'
+		},
+		{
+			name: 'training',
+			label: 'Training',
+			icon: 'fa-person-running',
+			color: 'bg-blue-600',
+			hint: 'Workout logs, intervals and GPS running'
+		},
+		{
+			name: 'mindmap',
+			label: 'Mindmap',
+			icon: 'fa-network-wired',
+			color: 'bg-purple-600',
+			hint: 'Visual network of wiki notes and links'
+		},
+		{
+			name: 'ydk',
+			label: 'Yu-Gi-Oh (YDK)',
+			icon: 'fa-layer-group',
+			color: 'bg-rose-600',
+			hint: 'Deck builder and card catalog viewer'
+		}
+	];
 	// svelte-ignore state_referenced_locally
 	let name = $state(data.user?.name ?? '');
 
@@ -218,799 +285,584 @@
 	<title>Edit Profile - MegaOrganize</title>
 </svelte:head>
 
-<div class="max-w-2xl px-3.5 py-4 sm:p-6 lg:p-8">
-	<div class="mb-6">
+<div class="max-w-6xl px-3.5 py-4 sm:p-6 lg:p-8">
+	<div class="mb-4">
 		<a href={resolve('/app')} class="text-sm text-fg-subdued transition-colors hover:text-fg">
 			<i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
 		</a>
 	</div>
 
-	<PageHeader title="Edit Profile" />
+	<PageHeader
+		title="Edit Profile"
+		subtitle="Account, appearance and workspace preferences."
+		descriptionOnHover={false}
+	/>
 
-	<!-- Appearance & Theme Selector -->
-	<div class="mb-6 rounded-xl border border-border bg-surface p-6 shadow-xs">
-		<div class="mb-4">
-			<h2 class="text-sm font-semibold tracking-tight text-fg">Appearance & Theme</h2>
-			<p class="text-xs text-fg-subdued">Customize how MegaOrganize looks on your device.</p>
+	<!-- Appearance: a compact segmented control instead of three large cards. -->
+	<section
+		id="appearance"
+		class="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-xl border border-border bg-surface px-4 py-3 shadow-xs"
+	>
+		<div class="min-w-0">
+			<h2 class="text-sm font-semibold tracking-tight text-fg">Appearance</h2>
+			<p class="text-xs text-fg-subdued">Theme preference for this device.</p>
 		</div>
-
-		<div class="grid grid-cols-3 gap-3">
-			<button
-				type="button"
-				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
-				'light'
-					? 'border-primary bg-primary/5 font-semibold shadow-xs'
-					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
-				onclick={() => themeState.setTheme('light')}
-			>
-				<div
-					class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500"
+		<div class="inline-flex shrink-0 rounded-lg border border-border bg-muted/40 p-0.5">
+			{#each THEME_OPTIONS as opt (opt.id)}
+				<button
+					type="button"
+					aria-pressed={themeState.theme === opt.id}
+					class="flex cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs transition-colors {themeState.theme ===
+					opt.id
+						? 'bg-surface font-semibold text-fg shadow-xs'
+						: 'text-fg-subdued hover:text-fg'}"
+					onclick={() => themeState.setTheme(opt.id)}
 				>
-					<i class="fas fa-sun text-base"></i>
-				</div>
-				<span class="text-xs">Light Mode</span>
-			</button>
-
-			<button
-				type="button"
-				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
-				'dark'
-					? 'border-primary bg-primary/5 font-semibold shadow-xs'
-					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
-				onclick={() => themeState.setTheme('dark')}
-			>
-				<div
-					class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400"
-				>
-					<i class="fas fa-moon text-base"></i>
-				</div>
-				<span class="text-xs">Dark Mode</span>
-			</button>
-
-			<button
-				type="button"
-				class="flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 p-3 text-center transition-all {themeState.theme ===
-				'system'
-					? 'border-primary bg-primary/5 font-semibold shadow-xs'
-					: 'border-border bg-muted/30 text-fg-subdued hover:border-border-strong hover:text-fg'}"
-				onclick={() => themeState.setTheme('system')}
-			>
-				<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-fg-subdued">
-					<i class="fas fa-circle-half-stroke text-base"></i>
-				</div>
-				<span class="text-xs">System Auto</span>
-			</button>
+					<i class="fas {opt.icon} text-[11px]"></i>
+					<span>{opt.label}</span>
+				</button>
+			{/each}
 		</div>
-	</div>
+	</section>
 
-	<div class="rounded-xl border border-border bg-surface shadow-xs">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Profile</h2>
-		</div>
-		<div class="px-6 py-5">
-			<form method="post" action="?/updateProfile" use:enhance class="space-y-4">
-				<Input label="Name" type="text" id="name" name="name" bind:value={name} required />
-
-				<div class="flex flex-col gap-1.5">
-					<label for="email" class="text-xs font-semibold tracking-wide text-fg-accent">Email</label
-					>
-					<input
-						type="email"
-						id="email"
-						value={data.user?.email}
-						disabled
-						class="h-[36px] w-full cursor-not-allowed rounded-sm border border-border bg-muted px-3 text-sm text-fg-subdued"
-					/>
-					<p class="text-[10px] text-fg-subdued">Email cannot be changed</p>
+	<div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+		<!-- Main column -->
+		<div class="space-y-5">
+			<section id="profile" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-5 py-3.5">
+					<h2 class="text-sm font-semibold tracking-tight text-fg">Profile</h2>
 				</div>
+				<div class="px-5 py-4">
+					<form method="post" action="?/updateProfile" use:enhance class="space-y-4">
+						<Input label="Name" type="text" id="name" name="name" bind:value={name} required />
 
-				{#if form?.profileMessage}
-					<p class="text-xs {form.profileMessage.ok ? 'text-success' : 'text-error'}">
-						{form.profileMessage.text}
-					</p>
-				{/if}
+						<div class="flex flex-col gap-1.5">
+							<label for="email" class="text-xs font-semibold tracking-wide text-fg-accent"
+								>Email</label
+							>
+							<input
+								type="email"
+								id="email"
+								value={data.user?.email}
+								disabled
+								class="h-[36px] w-full cursor-not-allowed rounded-sm border border-border bg-muted px-3 text-sm text-fg-subdued"
+							/>
+							<p class="text-[10px] text-fg-subdued">Email cannot be changed</p>
+						</div>
 
-				<Button type="submit">Save Changes</Button>
-			</form>
-		</div>
-	</div>
+						{#if form?.profileMessage}
+							<p class="text-xs {form.profileMessage.ok ? 'text-success' : 'text-error'}">
+								{form.profileMessage.text}
+							</p>
+						{/if}
 
-	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Change Password</h2>
-		</div>
-		<div class="px-6 py-5">
-			<form method="post" action="?/changePassword" use:enhance class="space-y-4">
-				<Input
-					label="Current Password"
-					type="password"
-					id="currentPassword"
-					name="currentPassword"
-					required
-					placeholder="••••••••"
-				/>
-
-				<Input
-					label="New Password"
-					type="password"
-					id="newPassword"
-					name="newPassword"
-					required
-					minlength={8}
-					placeholder="••••••••"
-				/>
-
-				<Input
-					label="Confirm New Password"
-					type="password"
-					id="confirmPassword"
-					name="confirmPassword"
-					required
-					minlength={8}
-					placeholder="••••••••"
-				/>
-
-				{#if form?.passwordMessage}
-					<p class="text-xs {form.passwordMessage.ok ? 'text-success' : 'text-error'}">
-						{form.passwordMessage.text}
-					</p>
-				{/if}
-
-				<Button type="submit">Change Password</Button>
-			</form>
-		</div>
-	</div>
-
-	<!-- Modules & Features Toggles (Modern SaaS Style) -->
-	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
-		<div class="border-b border-border/80 px-6 py-4">
-			<div class="flex items-center gap-2.5">
-				<div
-					class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary-text"
-				>
-					<i class="fas fa-shapes text-xs"></i>
+						<Button type="submit">Save Changes</Button>
+					</form>
 				</div>
-				<div>
+			</section>
+
+			<section id="password" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-5 py-3.5">
+					<h2 class="text-sm font-semibold tracking-tight text-fg">Change Password</h2>
+				</div>
+				<div class="px-5 py-4">
+					<form method="post" action="?/changePassword" use:enhance class="space-y-4">
+						<Input
+							label="Current Password"
+							type="password"
+							id="currentPassword"
+							name="currentPassword"
+							required
+							placeholder="••••••••"
+						/>
+
+						<Input
+							label="New Password"
+							type="password"
+							id="newPassword"
+							name="newPassword"
+							required
+							minlength={8}
+							placeholder="••••••••"
+						/>
+
+						<Input
+							label="Confirm New Password"
+							type="password"
+							id="confirmPassword"
+							name="confirmPassword"
+							required
+							minlength={8}
+							placeholder="••••••••"
+						/>
+
+						{#if form?.passwordMessage}
+							<p class="text-xs {form.passwordMessage.ok ? 'text-success' : 'text-error'}">
+								{form.passwordMessage.text}
+							</p>
+						{/if}
+
+						<Button type="submit">Change Password</Button>
+					</form>
+				</div>
+			</section>
+
+			<section id="finance" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-5 py-3.5">
+					<h2 class="text-sm font-semibold tracking-tight text-fg">Finance Settings</h2>
+				</div>
+				<div class="px-5 py-4">
+					<form method="post" action="?/updateFinanceSettings" use:enhance class="space-y-4">
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<Input
+								label="Currency"
+								type="text"
+								id="currency"
+								name="currency"
+								bind:value={currency}
+								placeholder="DZD"
+							/>
+							<Input
+								label="Currency Rate (to USD)"
+								type="number"
+								id="currencyRate"
+								name="currencyRate"
+								bind:value={currencyRate}
+								step={0.0001}
+								min={0}
+							/>
+						</div>
+						<div class="flex flex-col gap-1.5">
+							<label
+								for="monthlySpendingLimit"
+								class="text-xs font-semibold tracking-wide text-fg-accent"
+								>Monthly Spending Limit ({currency})</label
+							>
+							<input
+								type="number"
+								id="monthlySpendingLimit"
+								name="monthlySpendingLimit"
+								bind:value={monthlySpendingLimit}
+								step="0.01"
+								min="0"
+								placeholder="No limit"
+								class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
+							/>
+							<p class="text-[10px] text-fg-subdued">Leave empty for no limit</p>
+						</div>
+
+						{#if form?.financeMessage}
+							<p class="text-xs {form.financeMessage.ok ? 'text-success' : 'text-error'}">
+								{form.financeMessage.text}
+							</p>
+						{/if}
+
+						<Button type="submit">Save Finance Settings</Button>
+					</form>
+				</div>
+			</section>
+
+			<section id="invoicing" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-5 py-3.5">
 					<h2 class="text-sm font-semibold tracking-tight text-fg">
-						Features & Modular Capabilities
+						Invoicing & Business Identity
 					</h2>
-					<p class="text-xs text-fg-subdued">
-						Enable or disable functional modules. Disabled modules are immediately hidden across all
-						workspaces, navigation, and dashboard.
+					<p class="mt-0.5 text-xs text-fg-subdued">
+						Information displayed on client invoices and fiscal compliance documents (NIF, ANAE, RC,
+						etc.).
 					</p>
 				</div>
-			</div>
-		</div>
-		<form
-			method="post"
-			action="?/updateFeatures"
-			use:enhance={() =>
-				async ({ update }) => {
-					// Enhanced submit keeps the URL clean (no ?/updateFeatures) and
-					// avoids a full document reload. update() refreshes all data on
-					// success, so the sidebar and dashboard drop the modules that
-					// were just disabled.
-					await update();
-				}}
-			class="space-y-4 px-6 py-5"
-		>
-			<div class="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-				<!-- Tasks -->
-				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
-				>
-					<div class="flex items-center gap-3">
-						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
-						>
-							<i class="fas fa-check-square text-sm"></i>
+				<div class="space-y-5 px-5 py-4">
+					<form method="post" action="?/updateInvoicingProfile" use:enhance class="space-y-4">
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<Input
+								label="Brand / Company Name"
+								type="text"
+								id="brandName"
+								name="brandName"
+								bind:value={brandName}
+								placeholder="e.g. MegaOrganize Studio"
+							/>
+							<Input
+								label="Tagline / Main Activity"
+								type="text"
+								id="brandTagline"
+								name="brandTagline"
+								bind:value={brandTagline}
+								placeholder="e.g. Software & Automation Engineering"
+							/>
 						</div>
-						<div>
-							<div class="text-xs font-semibold text-fg">Tasks (Todos)</div>
-							<div class="text-[11px] text-fg-subdued">Daily tasks, scheduling, and priorities</div>
-						</div>
-					</div>
-					<input
-						type="checkbox"
-						name="todos"
-						checked={data.enabledFeatures?.todos ?? true}
-						class="peer sr-only"
-					/>
-					<div
-						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
-					>
-						<span
-							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
-						></span>
-					</div>
-				</label>
 
-				<!-- Reminders -->
-				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
-				>
-					<div class="flex items-center gap-3">
-						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
-						>
-							<i class="fas fa-bell text-sm"></i>
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<Input
+								label="Business Address"
+								type="text"
+								id="address"
+								name="address"
+								bind:value={address}
+								placeholder="e.g. Cité 5 Juillet, Bab Ezzouar 16042, Algiers"
+							/>
+							<Input
+								label="Phone Number"
+								type="text"
+								id="phone"
+								name="phone"
+								bind:value={phone}
+								placeholder="e.g. +213 553 09 12 35"
+							/>
 						</div>
-						<div>
-							<div class="text-xs font-semibold text-fg">Reminders & Habits</div>
-							<div class="text-[11px] text-fg-subdued">Recurring reminders and alert schedules</div>
-						</div>
-					</div>
-					<input
-						type="checkbox"
-						name="reminders"
-						checked={data.enabledFeatures?.reminders ?? true}
-						class="peer sr-only"
-					/>
-					<div
-						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
-					>
-						<span
-							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
-						></span>
-					</div>
-				</label>
 
-				<!-- Finance -->
-				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
-				>
-					<div class="flex items-center gap-3">
-						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
-						>
-							<i class="fas fa-receipt text-sm"></i>
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+							<Input
+								label="Tax ID (NIF)"
+								type="text"
+								id="nif"
+								name="nif"
+								bind:value={nif}
+								placeholder="e.g. 19816170319014941680"
+							/>
+							<Input
+								label="Sole Proprietor ID (ANAE)"
+								type="text"
+								id="anae"
+								name="anae"
+								bind:value={anae}
+								placeholder="e.g. 15199589"
+							/>
+							<Input
+								label="Trade Register (RC)"
+								type="text"
+								id="rc"
+								name="rc"
+								bind:value={rc}
+								placeholder="Optional"
+							/>
 						</div>
-						<div>
-							<div class="text-xs font-semibold text-fg">Finance & Expenses</div>
-							<div class="text-[11px] text-fg-subdued">Spending logs and monthly budget limit</div>
-						</div>
-					</div>
-					<input
-						type="checkbox"
-						name="finance"
-						checked={data.enabledFeatures?.finance ?? true}
-						class="peer sr-only"
-					/>
-					<div
-						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
-					>
-						<span
-							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
-						></span>
-					</div>
-				</label>
 
-				<!-- Invoicing -->
-				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
-				>
-					<div class="flex items-center gap-3">
-						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600 text-white shadow-xs"
-						>
-							<i class="fas fa-file-invoice-dollar text-sm"></i>
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<Input
+								label="Statistical ID (NIS)"
+								type="text"
+								id="nis"
+								name="nis"
+								bind:value={nis}
+								placeholder="Optional"
+							/>
+							<Input
+								label="Tax Assessment Article (AI)"
+								type="text"
+								id="ai"
+								name="ai"
+								bind:value={ai}
+								placeholder="Optional"
+							/>
 						</div>
-						<div>
-							<div class="text-xs font-semibold text-fg">Invoicing & Taxes</div>
-							<div class="text-[11px] text-fg-subdued">Client invoices and annual tax dossiers</div>
-						</div>
-					</div>
-					<input
-						type="checkbox"
-						name="invoicing"
-						checked={data.enabledFeatures?.invoicing ?? true}
-						class="peer sr-only"
-					/>
-					<div
-						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
-					>
-						<span
-							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
-						></span>
-					</div>
-				</label>
 
-				<!-- Training -->
-				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
-				>
-					<div class="flex items-center gap-3">
-						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
-						>
-							<i class="fas fa-person-running text-sm"></i>
+						<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+							<Input
+								label="Bank / Postal Account RIB"
+								type="text"
+								id="rib"
+								name="rib"
+								bind:value={rib}
+								placeholder="e.g. 007 99999 0001234567 89"
+							/>
 						</div>
-						<div>
-							<div class="text-xs font-semibold text-fg">Training & Fitness</div>
-							<div class="text-[11px] text-fg-subdued">
-								Workout logs, intervals, and GPS running
+
+						{#if form?.invoicingMessage}
+							<p class="text-xs {form.invoicingMessage.ok ? 'text-success' : 'text-error'}">
+								{form.invoicingMessage.text}
+							</p>
+						{/if}
+
+						<Button type="submit">Save Invoicing Details</Button>
+					</form>
+
+					<div class="border-t border-border/60 pt-4">
+						<h3 class="text-xs font-semibold text-fg">Signature & Official Stamp</h3>
+						<p class="mt-1 text-xs text-fg-subdued">Affixed automatically to generated invoices.</p>
+
+						<div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+							<!-- Signature Upload -->
+							<div>
+								<span class="mb-2.5 block text-xs font-semibold text-fg">Digital Signature</span>
+								<div
+									class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20"
+								>
+									{#if data.invoicingProfile?.signatureUrl}
+										<img
+											src={data.invoicingProfile.signatureUrl}
+											alt="Signature"
+											class="max-h-24 max-w-full object-contain"
+										/>
+									{:else}
+										<span class="text-xs text-fg-subdued">No signature uploaded</span>
+									{/if}
+								</div>
+								<form
+									method="post"
+									action="?/uploadMedia"
+									enctype="multipart/form-data"
+									use:enhance
+									class="mt-3 flex items-center gap-2"
+								>
+									<input type="hidden" name="type" value="signature" />
+									<input
+										type="file"
+										name="file"
+										accept="image/png,image/jpeg,image/webp"
+										required
+										class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+									/>
+									<Button size="sm" type="submit">Upload</Button>
+								</form>
+								<p class="mt-1.5 text-[11px] text-fg-subdued">PNG, JPEG or WebP, max 2 MB.</p>
+							</div>
+
+							<!-- Stamp Upload -->
+							<div>
+								<span class="mb-2.5 block text-xs font-semibold text-fg">Official Stamp</span>
+								<div
+									class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20"
+								>
+									{#if data.invoicingProfile?.stampUrl}
+										<img
+											src={data.invoicingProfile.stampUrl}
+											alt="Stamp"
+											class="max-h-24 max-w-full object-contain"
+										/>
+									{:else}
+										<span class="text-xs text-fg-subdued">No stamp uploaded</span>
+									{/if}
+								</div>
+								<form
+									method="post"
+									action="?/uploadMedia"
+									enctype="multipart/form-data"
+									use:enhance
+									class="mt-3 flex items-center gap-2"
+								>
+									<input type="hidden" name="type" value="stamp" />
+									<input
+										type="file"
+										name="file"
+										accept="image/png,image/jpeg,image/webp"
+										required
+										class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
+									/>
+									<Button size="sm" type="submit">Upload</Button>
+								</form>
+								<p class="mt-1.5 text-[11px] text-fg-subdued">PNG, JPEG or WebP, max 2 MB.</p>
 							</div>
 						</div>
-					</div>
-					<input
-						type="checkbox"
-						name="training"
-						checked={data.enabledFeatures?.training ?? true}
-						class="peer sr-only"
-					/>
-					<div
-						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
-					>
-						<span
-							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
-						></span>
-					</div>
-				</label>
 
-				<!-- Mindmap -->
-				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
-				>
-					<div class="flex items-center gap-3">
-						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs"
-						>
-							<i class="fas fa-network-wired text-sm"></i>
-						</div>
-						<div>
-							<div class="text-xs font-semibold text-fg">Mindmap (Interactive Graph)</div>
-							<div class="text-[11px] text-fg-subdued">Visual network of wiki notes & links</div>
-						</div>
+						{#if form?.mediaMessage}
+							<p class="mt-3 text-xs {form.mediaMessage.ok ? 'text-success' : 'text-error'}">
+								{form.mediaMessage.text}
+							</p>
+						{/if}
 					</div>
-					<input
-						type="checkbox"
-						name="mindmap"
-						checked={data.enabledFeatures?.mindmap ?? true}
-						class="peer sr-only"
-					/>
-					<div
-						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
-					>
-						<span
-							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
-						></span>
-					</div>
-				</label>
-
-				<!-- YDK -->
-				<label
-					class="group flex cursor-pointer items-center justify-between gap-3 rounded-xl p-3.5 transition-colors hover:bg-muted/60"
-				>
-					<div class="flex items-center gap-3">
-						<div
-							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-600 text-white shadow-xs"
-						>
-							<i class="fas fa-layer-group text-sm"></i>
-						</div>
-						<div>
-							<div class="text-xs font-semibold text-fg">Yu-Gi-Oh (YDK)</div>
-							<div class="text-[11px] text-fg-subdued">Deck builder and card catalog viewer</div>
-						</div>
-					</div>
-					<input
-						type="checkbox"
-						name="ydk"
-						checked={data.enabledFeatures?.ydk ?? true}
-						class="peer sr-only"
-					/>
-					<div
-						class="relative h-6 w-11 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
-					>
-						<span
-							class="absolute top-1 left-1 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-5"
-						></span>
-					</div>
-				</label>
-			</div>
-
-			<div class="flex items-center justify-between pt-2">
-				<Button type="submit">Save Modules</Button>
-				{#if form?.featuresMessage}
-					<span class="text-xs {form.featuresMessage.ok ? 'text-success' : 'text-error'}">
-						{form.featuresMessage.text}
-					</span>
-				{/if}
-			</div>
-		</form>
-	</div>
-
-	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
-		<div class="border-b border-border/80 px-6 py-4">
-			<h2 class="text-sm font-semibold tracking-tight text-fg">Backup & Restore</h2>
-		</div>
-		<div class="space-y-4 px-6 py-5">
-			<p class="text-xs text-fg-subdued">
-				Export all your data and attachments as a ZIP archive, or restore from a previous backup
-				(.zip or .json). Existing items with identical identifiers will be safely preserved.
-			</p>
-
-			<div class="flex flex-col gap-2 sm:flex-row">
-				<Button type="button" onclick={exportBackup}>
-					<i class="fas fa-download text-xs"></i> Export Backup (ZIP)
-				</Button>
-				<Button variant="secondary" type="button" onclick={triggerImport}>
-					<i class="fas fa-upload text-xs"></i> Import Backup
-				</Button>
-				<input
-					type="file"
-					accept=".zip,.json"
-					class="hidden"
-					bind:this={importInput}
-					onchange={handleImportFile}
-				/>
-			</div>
-			<p class="text-[10px] text-fg-subdued/60">
-				Includes all entities and files: knowledge base, attachments, tasks, reminders, expenses,
-				invoicing, tax documents (G12/G12 bis), GPS workouts, roadmaps, tier lists, YDK decks, and
-				timers.
-			</p>
-
-			{#if importStatus === 'loading'}
-				<div class="flex items-center gap-2 text-xs text-fg-subdued">
-					<i class="fas fa-spinner fa-spin text-xs"></i> Importing...
 				</div>
-			{:else if importStatus === 'success'}
-				<div class="rounded-sm border border-success/30 bg-success/10 px-4 py-3">
-					<p class="text-xs font-medium text-success">{importMessage}</p>
-					{#if importCounts}
-						<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-fg-subdued">
-							{#each Object.entries(importCounts).filter(([key, n]) => key !== 'skipped' && n > 0) as [key, n] (key)}
-								<span>{n} {COUNT_LABELS[key] ?? key}</span>
-							{/each}
-							{#if importCounts.skipped}<span class="text-fg-subdued/60"
-									>({importCounts.skipped} skipped)</span
-								>{/if}
+			</section>
+
+			<section id="backup" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-5 py-3.5">
+					<h2 class="text-sm font-semibold tracking-tight text-fg">Backup & Restore</h2>
+				</div>
+				<div class="space-y-4 px-5 py-4">
+					<p class="text-xs text-fg-subdued">
+						Export all your data and attachments as a ZIP archive, or restore from a previous backup
+						(.zip or .json). Existing items with identical identifiers will be safely preserved.
+					</p>
+
+					<div class="flex flex-col gap-2 sm:flex-row">
+						<Button type="button" onclick={exportBackup}>
+							<i class="fas fa-download text-xs"></i> Export Backup (ZIP)
+						</Button>
+						<Button variant="secondary" type="button" onclick={triggerImport}>
+							<i class="fas fa-upload text-xs"></i> Import Backup
+						</Button>
+						<input
+							type="file"
+							accept=".zip,.json"
+							class="hidden"
+							bind:this={importInput}
+							onchange={handleImportFile}
+						/>
+					</div>
+					<p class="text-[10px] text-fg-subdued/60">
+						Includes all entities and files: knowledge base, attachments, tasks, reminders,
+						expenses, invoicing, tax documents (G12/G12 bis), GPS workouts, roadmaps, tier lists,
+						YDK decks, and timers.
+					</p>
+
+					{#if importStatus === 'loading'}
+						<div class="flex items-center gap-2 text-xs text-fg-subdued">
+							<i class="fas fa-spinner fa-spin text-xs"></i> Importing...
+						</div>
+					{:else if importStatus === 'success'}
+						<div class="rounded-sm border border-success/30 bg-success/10 px-4 py-3">
+							<p class="text-xs font-medium text-success">{importMessage}</p>
+							{#if importCounts}
+								<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-fg-subdued">
+									{#each Object.entries(importCounts).filter(([key, n]) => key !== 'skipped' && n > 0) as [key, n] (key)}
+										<span>{n} {COUNT_LABELS[key] ?? key}</span>
+									{/each}
+									{#if importCounts.skipped}<span class="text-fg-subdued/60"
+											>({importCounts.skipped} skipped)</span
+										>{/if}
+								</div>
+							{/if}
+						</div>
+					{:else if importStatus === 'error'}
+						<div class="rounded-sm border border-error/30 bg-error/10 px-4 py-3">
+							<p class="text-xs font-medium text-error">{importMessage}</p>
 						</div>
 					{/if}
 				</div>
-			{:else if importStatus === 'error'}
-				<div class="rounded-sm border border-error/30 bg-error/10 px-4 py-3">
-					<p class="text-xs font-medium text-error">{importMessage}</p>
-				</div>
-			{/if}
-		</div>
-	</div>
+			</section>
 
-	<!-- Push Notifications -->
-	<div class="mt-6 rounded-sm border border-border bg-surface">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">
-				Push Notifications
-			</h2>
+			<section id="ai-access" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-5 py-3.5">
+					<h2 class="text-sm font-semibold tracking-tight text-fg">AI Access (MCP)</h2>
+				</div>
+				<div class="space-y-4 px-5 py-4">
+					<p class="text-xs text-fg-subdued">
+						Connect an AI client to your account with the Model Context Protocol. Access is limited
+						to your own data: the client can read your content and edit existing items and pages.
+					</p>
+
+					<div class="flex flex-col gap-1.5">
+						<span class="text-xs font-semibold tracking-wide text-fg-accent">Endpoint</span>
+						<code class="rounded-sm border border-border bg-bg px-3 py-2 text-xs text-fg"
+							>{data.mcpUrl}</code
+						>
+					</div>
+
+					<div class="flex flex-col gap-1.5">
+						<div class="flex items-center justify-between gap-2">
+							<span class="text-xs font-semibold tracking-wide text-fg-accent">opencode config</span
+							>
+							<Button variant="ghost" size="sm" type="button" onclick={copySnippet}>
+								<i class="fas {copied ? 'fa-check' : 'fa-copy'} text-xs"></i>
+								{copied ? 'Copied' : 'Copy'}
+							</Button>
+						</div>
+						<pre
+							class="overflow-x-auto rounded-sm border border-border bg-bg px-3 py-2 text-[11px] leading-relaxed text-fg-subdued"><code
+								>{mcpSnippet}</code
+							></pre>
+					</div>
+
+					<p class="text-[10px] text-fg-subdued">
+						The client sends your account email and password on every request, so it stores them in
+						its config file. Changing your password revokes access everywhere.
+					</p>
+				</div>
+			</section>
 		</div>
-		<div class="space-y-3 px-6 py-5">
-			<p class="text-xs text-fg-subdued">
-				Get reminder notifications on this device even when the app is closed.
-			</p>
-			{#if !pushSupported}
-				<p class="text-xs text-fg-subdued">This browser does not support push notifications.</p>
-			{:else if !pushConfigured}
-				<p class="text-xs text-fg-subdued">
-					Push is not configured on the server (missing VAPID keys).
-				</p>
-			{:else}
-				<div class="flex items-center gap-3">
-					<Button
-						type="button"
-						variant={pushSubscribed ? 'secondary' : 'primary'}
-						disabled={pushBusy}
-						onclick={togglePush}
+
+		<!-- Right rail: workspace-level preferences, kept in view while scrolling -->
+		<div class="space-y-5 lg:sticky lg:top-4">
+			<section id="modules" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-4 py-3">
+					<h2 class="text-sm font-semibold tracking-tight text-fg">Modules</h2>
+					<p class="mt-0.5 text-[11px] text-fg-subdued">
+						Disabled modules disappear from navigation and the dashboard.
+					</p>
+				</div>
+				<form
+					method="post"
+					action="?/updateFeatures"
+					use:enhance={() =>
+						async ({ update }) => {
+							// Enhanced submit keeps the URL clean (no ?/updateFeatures) and
+							// avoids a full document reload. update() refreshes all data on
+							// success, so the sidebar and dashboard drop the modules that
+							// were just disabled.
+							await update();
+						}}
+					class="px-2 py-2"
+				>
+					<div class="space-y-0.5">
+						{#each MODULES as mod (mod.name)}
+							<label
+								class="group flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-muted/60"
+								title={mod.hint}
+							>
+								<div class="flex min-w-0 items-center gap-2.5">
+									<div
+										class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md {mod.color} text-white"
+									>
+										<i class="fas {mod.icon} text-[11px]"></i>
+									</div>
+									<span class="truncate text-xs font-medium text-fg">{mod.label}</span>
+								</div>
+								<input
+									type="checkbox"
+									name={mod.name}
+									checked={data.enabledFeatures?.[mod.name] ?? true}
+									class="peer sr-only"
+								/>
+								<div
+									class="relative h-5 w-9 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-primary"
+								>
+									<span
+										class="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-xs transition-transform peer-checked:translate-x-4"
+									></span>
+								</div>
+							</label>
+						{/each}
+					</div>
+
+					<div
+						class="mt-2 flex items-center justify-between gap-2 border-t border-border/60 px-2 pt-2"
 					>
-						{pushSubscribed ? 'Disable on this device' : 'Enable on this device'}
-					</Button>
-					{#if pushSubscribed}
-						<span class="text-xs text-success">Enabled</span>
+						<Button size="sm" type="submit">Save</Button>
+						{#if form?.featuresMessage}
+							<span class="text-[11px] {form.featuresMessage.ok ? 'text-success' : 'text-error'}">
+								{form.featuresMessage.text}
+							</span>
+						{/if}
+					</div>
+				</form>
+			</section>
+
+			<section id="push" class="rounded-xl border border-border bg-surface shadow-xs">
+				<div class="border-b border-border px-4 py-3">
+					<h2 class="text-sm font-semibold tracking-tight text-fg">Push Notifications</h2>
+				</div>
+				<div class="space-y-3 px-4 py-3.5">
+					<p class="text-xs text-fg-subdued">
+						Reminder notifications on this device, even when the app is closed.
+					</p>
+					{#if !pushSupported}
+						<p class="text-xs text-fg-subdued">This browser does not support push notifications.</p>
+					{:else if !pushConfigured}
+						<p class="text-xs text-fg-subdued">
+							Push is not configured on the server (missing VAPID keys).
+						</p>
+					{:else}
+						<div class="flex flex-wrap items-center gap-3">
+							<Button
+								type="button"
+								size="sm"
+								variant={pushSubscribed ? 'secondary' : 'primary'}
+								disabled={pushBusy}
+								onclick={togglePush}
+							>
+								{pushSubscribed ? 'Disable on this device' : 'Enable on this device'}
+							</Button>
+							{#if pushSubscribed}
+								<span class="text-xs text-success">Enabled</span>
+							{/if}
+						</div>
+						{#if pushError}
+							<p class="text-xs text-error">{pushError}</p>
+						{/if}
 					{/if}
 				</div>
-				{#if pushError}
-					<p class="text-xs text-error">{pushError}</p>
-				{/if}
-			{/if}
-		</div>
-	</div>
-
-	<!-- Finance Settings -->
-	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
-		<div class="border-b border-border px-6 py-3">
-			<h2 class="text-xs font-semibold tracking-wide text-fg-accent uppercase">Finance Settings</h2>
-		</div>
-		<div class="px-6 py-5">
-			<form method="post" action="?/updateFinanceSettings" use:enhance class="space-y-4">
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<Input
-						label="Currency"
-						type="text"
-						id="currency"
-						name="currency"
-						bind:value={currency}
-						placeholder="DZD"
-					/>
-					<Input
-						label="Currency Rate (to USD)"
-						type="number"
-						id="currencyRate"
-						name="currencyRate"
-						bind:value={currencyRate}
-						step={0.0001}
-						min={0}
-					/>
-				</div>
-				<div class="flex flex-col gap-1.5">
-					<label
-						for="monthlySpendingLimit"
-						class="text-xs font-semibold tracking-wide text-fg-accent"
-						>Monthly Spending Limit ({currency})</label
-					>
-					<input
-						type="number"
-						id="monthlySpendingLimit"
-						name="monthlySpendingLimit"
-						bind:value={monthlySpendingLimit}
-						step="0.01"
-						min="0"
-						placeholder="No limit"
-						class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
-					/>
-					<p class="text-[10px] text-fg-subdued">Leave empty for no limit</p>
-				</div>
-
-				{#if form?.financeMessage}
-					<p class="text-xs {form.financeMessage.ok ? 'text-success' : 'text-error'}">
-						{form.financeMessage.text}
-					</p>
-				{/if}
-
-				<Button type="submit">Save Finance Settings</Button>
-			</form>
-		</div>
-	</div>
-
-	<!-- Invoicing & Business Identity -->
-	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
-		<div class="border-b border-border/80 px-6 py-4">
-			<h2 class="text-sm font-semibold tracking-tight text-fg">Invoicing & Business Identity</h2>
-			<p class="mt-0.5 text-xs text-fg-subdued">
-				Information displayed on client invoices and fiscal compliance documents (NIF, ANAE, RC,
-				etc.).
-			</p>
-		</div>
-		<div class="space-y-6 px-6 py-5">
-			<form method="post" action="?/updateInvoicingProfile" use:enhance class="space-y-4">
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<Input
-						label="Brand / Company Name"
-						type="text"
-						id="brandName"
-						name="brandName"
-						bind:value={brandName}
-						placeholder="e.g. MegaOrganize Studio"
-					/>
-					<Input
-						label="Tagline / Main Activity"
-						type="text"
-						id="brandTagline"
-						name="brandTagline"
-						bind:value={brandTagline}
-						placeholder="e.g. Software & Automation Engineering"
-					/>
-				</div>
-
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<Input
-						label="Business Address"
-						type="text"
-						id="address"
-						name="address"
-						bind:value={address}
-						placeholder="e.g. Cité 5 Juillet, Bab Ezzouar 16042, Algiers"
-					/>
-					<Input
-						label="Phone Number"
-						type="text"
-						id="phone"
-						name="phone"
-						bind:value={phone}
-						placeholder="e.g. +213 553 09 12 35"
-					/>
-				</div>
-
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-					<Input
-						label="Tax ID (NIF)"
-						type="text"
-						id="nif"
-						name="nif"
-						bind:value={nif}
-						placeholder="e.g. 19816170319014941680"
-					/>
-					<Input
-						label="Sole Proprietor ID (ANAE)"
-						type="text"
-						id="anae"
-						name="anae"
-						bind:value={anae}
-						placeholder="e.g. 15199589"
-					/>
-					<Input
-						label="Trade Register (RC)"
-						type="text"
-						id="rc"
-						name="rc"
-						bind:value={rc}
-						placeholder="Optional"
-					/>
-				</div>
-
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<Input
-						label="Statistical ID (NIS)"
-						type="text"
-						id="nis"
-						name="nis"
-						bind:value={nis}
-						placeholder="Optional"
-					/>
-					<Input
-						label="Tax Assessment Article (AI)"
-						type="text"
-						id="ai"
-						name="ai"
-						bind:value={ai}
-						placeholder="Optional"
-					/>
-				</div>
-
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-					<Input
-						label="Bank / Postal Account RIB"
-						type="text"
-						id="rib"
-						name="rib"
-						bind:value={rib}
-						placeholder="e.g. 007 99999 0001234567 89"
-					/>
-				</div>
-
-				{#if form?.invoicingMessage}
-					<p class="text-xs {form.invoicingMessage.ok ? 'text-success' : 'text-error'}">
-						{form.invoicingMessage.text}
-					</p>
-				{/if}
-
-				<Button type="submit">Save Invoicing Details</Button>
-			</form>
-
-			<div class="my-4 border-t border-border/50 pt-4">
-				<h3 class="mb-3 text-xs font-semibold text-fg">Signature & Official Stamp</h3>
-				<p class="mb-4 text-xs text-fg-subdued">
-					Upload your digital signature and company stamp to automatically affix them to generated
-					invoices.
-				</p>
-
-				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-					<!-- Signature Upload -->
-					<div class="space-y-2">
-						<span class="text-xs font-semibold text-fg">Digital Signature</span>
-						<div
-							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20"
-						>
-							{#if data.invoicingProfile?.signatureUrl}
-								<img
-									src={data.invoicingProfile.signatureUrl}
-									alt="Signature"
-									class="max-h-24 max-w-full object-contain"
-								/>
-							{:else}
-								<span class="text-xs text-fg-subdued">No signature uploaded</span>
-							{/if}
-						</div>
-						<form
-							method="post"
-							action="?/uploadMedia"
-							enctype="multipart/form-data"
-							use:enhance
-							class="flex items-center gap-2"
-						>
-							<input type="hidden" name="type" value="signature" />
-							<input
-								type="file"
-								name="file"
-								accept="image/png,image/jpeg,image/webp"
-								required
-								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
-							/>
-							<Button size="sm" type="submit">Upload</Button>
-						</form>
-						<p class="text-[11px] text-fg-subdued">PNG, JPEG or WebP, max 2 MB.</p>
-					</div>
-
-					<!-- Stamp Upload -->
-					<div class="space-y-2">
-						<span class="text-xs font-semibold text-fg">Official Stamp</span>
-						<div
-							class="flex h-28 items-center justify-center rounded-xl border border-dashed border-border bg-muted/20"
-						>
-							{#if data.invoicingProfile?.stampUrl}
-								<img
-									src={data.invoicingProfile.stampUrl}
-									alt="Stamp"
-									class="max-h-24 max-w-full object-contain"
-								/>
-							{:else}
-								<span class="text-xs text-fg-subdued">No stamp uploaded</span>
-							{/if}
-						</div>
-						<form
-							method="post"
-							action="?/uploadMedia"
-							enctype="multipart/form-data"
-							use:enhance
-							class="flex items-center gap-2"
-						>
-							<input type="hidden" name="type" value="stamp" />
-							<input
-								type="file"
-								name="file"
-								accept="image/png,image/jpeg,image/webp"
-								required
-								class="block w-full text-xs text-fg-subdued file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-white hover:file:bg-primary-hover"
-							/>
-							<Button size="sm" type="submit">Upload</Button>
-						</form>
-						<p class="text-[11px] text-fg-subdued">PNG, JPEG or WebP, max 2 MB.</p>
-					</div>
-				</div>
-
-				{#if form?.mediaMessage}
-					<p class="mt-3 text-xs {form.mediaMessage.ok ? 'text-success' : 'text-error'}">
-						{form.mediaMessage.text}
-					</p>
-				{/if}
-			</div>
-		</div>
-	</div>
-
-	<!-- AI Access -->
-	<div class="mt-6 rounded-xl border border-border bg-surface shadow-xs">
-		<div class="border-b border-border/80 px-6 py-4">
-			<h2 class="text-sm font-semibold tracking-tight text-fg">AI Access (MCP)</h2>
-		</div>
-		<div class="space-y-4 px-6 py-5">
-			<p class="text-xs text-fg-subdued">
-				Connect an AI client to your account with the Model Context Protocol. Access is limited to
-				your own data: the client can read your content and edit existing items and pages.
-			</p>
-
-			<div class="flex flex-col gap-1.5">
-				<span class="text-xs font-semibold tracking-wide text-fg-accent">Endpoint</span>
-				<code class="rounded-sm border border-border bg-bg px-3 py-2 text-xs text-fg"
-					>{data.mcpUrl}</code
-				>
-			</div>
-
-			<div class="flex flex-col gap-1.5">
-				<div class="flex items-center justify-between gap-2">
-					<span class="text-xs font-semibold tracking-wide text-fg-accent">opencode config</span>
-					<Button variant="ghost" size="sm" type="button" onclick={copySnippet}>
-						<i class="fas {copied ? 'fa-check' : 'fa-copy'} text-xs"></i>
-						{copied ? 'Copied' : 'Copy'}
-					</Button>
-				</div>
-				<pre
-					class="overflow-x-auto rounded-sm border border-border bg-bg px-3 py-2 text-[11px] leading-relaxed text-fg-subdued"><code
-						>{mcpSnippet}</code
-					></pre>
-			</div>
-
-			<p class="text-[10px] text-fg-subdued">
-				The client sends your account email and password on every request, so it stores them in its
-				config file. Changing your password revokes access everywhere.
-			</p>
+			</section>
 		</div>
 	</div>
 </div>
