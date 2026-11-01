@@ -60,6 +60,33 @@
 		)
 	);
 
+	// Years get their own collapsible group under Invoicing: a long-running
+	// account accumulates a folder per fiscal year and pushing them all into
+	// the sidebar would bury everything below. Five is the preview; the rest
+	// hide behind "Show more".
+	const YEARS_PREVIEW = 5;
+	let yearsExpanded = $state(
+		typeof sessionStorage !== 'undefined'
+			? sessionStorage.getItem('sidebar_years_expanded') !== 'false'
+			: true
+	);
+	let showAllYears = $state(false);
+
+	function toggleYears() {
+		yearsExpanded = !yearsExpanded;
+		if (typeof sessionStorage !== 'undefined') {
+			sessionStorage.setItem('sidebar_years_expanded', String(yearsExpanded));
+		}
+	}
+
+	const allInvoiceYears = $derived(
+		invoiceYears.length > 0 ? invoiceYears : [new Date().getFullYear()]
+	);
+	const visibleInvoiceYears = $derived(
+		showAllYears ? allInvoiceYears : allInvoiceYears.slice(0, YEARS_PREVIEW)
+	);
+	const hiddenYearCount = $derived(Math.max(0, allInvoiceYears.length - YEARS_PREVIEW));
+
 	function toggleInvoicing() {
 		invoicingExpanded = !invoicingExpanded;
 		if (typeof sessionStorage !== 'undefined') {
@@ -605,61 +632,105 @@
 									<span>Products & Rates</span>
 								</a>
 
-								{#each invoiceYears.length > 0 ? invoiceYears : [new Date().getFullYear()] as yr (yr)}
-									{@const isYrExpanded = expandedInvoiceYears.has(yr)}
-									{@const isYrActive = page.url.pathname === `/app/invoicing/year/${yr}`}
+								<!-- A single fiscal year is not worth a collapsible group: render
+								the year on its own, exactly as before. -->
+								{#if allInvoiceYears.length > 1}
+									<div class="mt-1 border-t border-border/50 pt-1">
+										<button
+											type="button"
+											aria-expanded={yearsExpanded}
+											class="flex h-7 w-full cursor-pointer items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-fg-subdued transition-colors hover:bg-muted/60 hover:text-fg"
+											onclick={toggleYears}
+										>
+											<i
+												class="fas fa-chevron-right text-[8px] transition-transform duration-150 {yearsExpanded
+													? 'rotate-90'
+													: ''}"
+											></i>
+											<span>Fiscal years</span>
+											<span class="ml-auto text-[10px] text-fg-subdued/70 tabular-nums">
+												{allInvoiceYears.length}
+											</span>
+										</button>
+									</div>
+								{/if}
 
+								{#if yearsExpanded || allInvoiceYears.length <= 1}
 									<div class="space-y-0.5">
-										<div class="flex items-center justify-between rounded-md pr-1">
+										{#each visibleInvoiceYears as yr (yr)}
+											{@const isYrExpanded = expandedInvoiceYears.has(yr)}
+											{@const isYrActive = page.url.pathname === `/app/invoicing/year/${yr}`}
+
+											<div class="space-y-0.5">
+												<div class="flex items-center justify-between rounded-md pr-1">
+													<button
+														type="button"
+														aria-label="Toggle dossier {yr}"
+														class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
+														onclick={(e) => {
+															e.stopPropagation();
+															toggleInvoiceYear(yr);
+														}}
+													>
+														<i
+															class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isYrExpanded
+																? 'rotate-90'
+																: ''}"
+														></i>
+													</button>
+													<a
+														href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
+														onclick={onNavigate}
+														class="flex flex-1 items-center gap-1.5 py-1 text-xs transition-colors {isYrActive
+															? 'font-semibold text-fg'
+															: 'text-fg-subdued hover:text-fg'}"
+													>
+														<i class="fas fa-folder text-[10px] text-primary-text"></i>
+														<span>{yr}</span>
+													</a>
+													<button
+														type="button"
+														class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued hover:text-primary-text"
+														title="Export year zip"
+														onclick={(e) => exportYearFromSidebar(e, yr)}
+													>
+														<i class="fas fa-file-zipper text-[10px]"></i>
+													</button>
+												</div>
+
+												{#if isYrExpanded}
+													<div class="ml-3 space-y-0.5 border-l border-border/40 pl-2">
+														<a
+															href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
+															onclick={onNavigate}
+															class="flex h-6 items-center gap-1.5 text-[11px] text-fg-subdued hover:text-fg"
+														>
+															<i class="fas fa-file-shield text-[9px]"></i>
+															<span>G12 / G12 bis</span>
+														</a>
+													</div>
+												{/if}
+											</div>
+										{/each}
+
+										{#if hiddenYearCount > 0}
 											<button
 												type="button"
-												aria-label="Toggle dossier {yr}"
-												class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
-												onclick={(e) => {
-													e.stopPropagation();
-													toggleInvoiceYear(yr);
-												}}
+												class="flex h-6 w-full cursor-pointer items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-fg-subdued transition-colors hover:bg-muted/60 hover:text-fg"
+												onclick={() => (showAllYears = !showAllYears)}
 											>
 												<i
-													class="fas fa-chevron-right text-[8px] transition-transform duration-150 {isYrExpanded
-														? 'rotate-90'
-														: ''}"
+													class="fas {showAllYears
+														? 'fa-chevron-up'
+														: 'fa-ellipsis'} w-3 text-center text-[9px]"
 												></i>
+												<span>
+													{showAllYears ? 'Show less' : `Show ${hiddenYearCount} more`}
+												</span>
 											</button>
-											<a
-												href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
-												onclick={onNavigate}
-												class="flex flex-1 items-center gap-1.5 py-1 text-xs transition-colors {isYrActive
-													? 'font-semibold text-fg'
-													: 'text-fg-subdued hover:text-fg'}"
-											>
-												<i class="fas fa-folder text-[10px] text-primary-text"></i>
-												<span>{yr}</span>
-											</a>
-											<button
-												type="button"
-												class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued hover:text-primary-text"
-												title="Export year zip"
-												onclick={(e) => exportYearFromSidebar(e, yr)}
-											>
-												<i class="fas fa-file-zipper text-[10px]"></i>
-											</button>
-										</div>
-
-										{#if isYrExpanded}
-											<div class="ml-3 space-y-0.5 border-l border-border/40 pl-2">
-												<a
-													href={resolve('/app/invoicing/year/[year]', { year: String(yr) })}
-													onclick={onNavigate}
-													class="flex h-6 items-center gap-1.5 text-[11px] text-fg-subdued hover:text-fg"
-												>
-													<i class="fas fa-file-shield text-[9px]"></i>
-													<span>G12 / G12 bis</span>
-												</a>
-											</div>
 										{/if}
 									</div>
-								{/each}
+								{/if}
 							</div>
 						{/if}
 					</div>
