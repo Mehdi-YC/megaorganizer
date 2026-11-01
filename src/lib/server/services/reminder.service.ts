@@ -454,6 +454,12 @@ export async function generateDueReminders(userId: string): Promise<number> {
 	const now = new Date();
 	let generated = 0;
 
+	// Instances older than this are not worth surfacing: after a long
+	// downtime (or a fresh deployment) the user does not want a month of
+	// backlogged "drink water" cards.
+	const CATCHUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+	const MAX_INSTANCES_PER_TEMPLATE = 50;
+
 	// Find all active templates where nextDueAt <= now
 	const dueTemplates = await db
 		.select()
@@ -476,45 +482,53 @@ export async function generateDueReminders(userId: string): Promise<number> {
 			.orderBy(asc(reminderTemplateTodo.position))
 			.all();
 
-		// Create reminder instance
-		const [reminderInstance] = await db
-			.insert(reminder)
-			.values({
-				userId,
-				templateId: template.id,
-				title: template.title,
-				description: template.description,
-				markdown: template.markdown,
-				dueAt: template.nextDueAt!,
-				completed: false
-			})
-			.returning();
+		// Catch up every missed occurrence, not just one: a daily reminder
+		// that was missed for three days used to keep producing one overdue
+		// instance per scheduler tick.
+		let dueAt = template.nextDueAt;
+		let iteration = 0;
 
-		// Copy todos to instance
-		if (templateTodos.length > 0) {
-			await db.insert(reminderTodo).values(
-				templateTodos.map((todo) => ({
-					reminderId: reminderInstance.id,
-					text: todo.text,
-					completed: false,
-					position: todo.position
-				}))
-			);
+		while (dueAt && dueAt <= now && iteration < MAX_INSTANCES_PER_TEMPLATE) {
+			iteration++;
+
+			if (now.getTime() - dueAt.getTime() <= CATCHUP_WINDOW_MS) {
+				// Create reminder instance
+				const [reminderInstance] = await db
+					.insert(reminder)
+					.values({
+						userId,
+						templateId: template.id,
+						title: template.title,
+						description: template.description,
+						markdown: template.markdown,
+						dueAt,
+						completed: false
+					})
+					.returning();
+
+				// Copy todos to instance
+				if (templateTodos.length > 0) {
+					await db.insert(reminderTodo).values(
+						templateTodos.map((todo) => ({
+							reminderId: reminderInstance.id,
+							text: todo.text,
+							completed: false,
+							position: todo.position
+						}))
+					);
+				}
+
+				generated++;
+			}
+
+			// Calculate next due date
+			dueAt = calculateNextDueAt(dueAt, template.recurrenceType, template.recurrenceConfig);
 		}
-
-		// Calculate next due date
-		const nextDueAt = calculateNextDueAt(
-			template.nextDueAt!,
-			template.recurrenceType,
-			template.recurrenceConfig
-		);
 
 		await db
 			.update(reminderTemplate)
-			.set({ nextDueAt })
+			.set({ nextDueAt: dueAt })
 			.where(eq(reminderTemplate.id, template.id));
-
-		generated++;
 	}
 
 	return generated;

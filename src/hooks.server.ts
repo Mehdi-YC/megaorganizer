@@ -49,8 +49,12 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	// content-length being present and numeric: chunked or malformed
 	// headers are rejected instead of buffered unbounded.
 	if (event.request.method !== 'GET' && event.url.pathname.startsWith('/api/')) {
-		const contentLength = Number(event.request.headers.get('content-length'));
-		if (!Number.isFinite(contentLength)) {
+		// Number(null) is 0 and Number('') is 0, so reading the header
+		// directly would let a missing or empty Content-Length pass the
+		// check as a zero-byte body.
+		const rawContentLength = event.request.headers.get('content-length');
+		const contentLength = rawContentLength ? Number(rawContentLength) : NaN;
+		if (!rawContentLength || !Number.isFinite(contentLength) || contentLength < 0) {
 			return json({ error: 'Content-Length required' }, { status: 411 });
 		}
 		const isUpload =

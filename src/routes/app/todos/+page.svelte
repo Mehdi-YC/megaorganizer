@@ -8,6 +8,7 @@
 	import { showToast } from '$lib/utils/toast.svelte';
 	import type { Todo } from '$lib/types';
 	import type { PageData } from './$types';
+	import { toDateKey, dateKeyWithOffset } from '$lib/utils/date';
 
 	let { data }: { data: PageData } = $props();
 
@@ -18,7 +19,7 @@
 	let currentFilter = $state('today');
 	let searchQuery = $state('');
 
-	const todayStr = new Date().toISOString().slice(0, 10);
+	const todayStr = toDateKey();
 
 	function setQuickDate(offsetDays: number | null) {
 		if (offsetDays === null) {
@@ -27,7 +28,7 @@
 		}
 		const d = new Date();
 		d.setDate(d.getDate() + offsetDays);
-		newDueDate = d.toISOString().slice(0, 10);
+		newDueDate = toDateKey(d);
 	}
 
 	const filteredTodos = $derived.by(() => {
@@ -172,7 +173,7 @@
 
 		const tomorrow = new Date();
 		tomorrow.setDate(tomorrow.getDate() + 1);
-		const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+		const tomorrowStr = toDateKey(tomorrow);
 		if (dueDate === tomorrowStr) return { text: 'Tomorrow', isOverdue: false };
 
 		const [y, m, d] = dueDate.split('-');
@@ -231,7 +232,7 @@
 					<button
 						type="button"
 						class="cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors {newDueDate ===
-						new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+						dateKeyWithOffset(1)
 							? 'bg-primary text-white shadow-xs'
 							: 'bg-muted text-fg hover:bg-muted/80'}"
 						onclick={() => setQuickDate(1)}

@@ -6,6 +6,7 @@ import { getDueReminders, generateDueReminders, getUpcomingReminders } from './r
 import { getAnalytics } from './analytics.service';
 import { getUserSettings } from './finance.service';
 import { getTodayAndOverdueTodos } from './todo.service';
+import { toDateKey } from '$lib/utils/date';
 
 function getWeeklyTrainingMinutes(
 	sessions: Array<{ startedAt: Date | string; duration: number | null }>
@@ -33,7 +34,7 @@ export async function getDashboardData(userId: string) {
 	// Generate any due reminders first
 	await generateDueReminders(userId);
 
-	const todayStr = new Date().toISOString().slice(0, 10);
+	const todayStr = toDateKey();
 
 	const [
 		recentItems,

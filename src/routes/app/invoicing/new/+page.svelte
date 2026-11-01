@@ -8,6 +8,7 @@
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { formatDZD, numberToFrenchWords } from '$lib/utils/invoice';
 	import type { PageData } from './$types';
+	import { toDateKey } from '$lib/utils/date';
 
 	let { data }: { data: PageData } = $props();
 
@@ -20,8 +21,8 @@
 	let clientId = $state(clients.length > 0 ? clients[0].id : '');
 	// svelte-ignore state_referenced_locally
 	let invoiceNumber = $state(data.nextNumber);
-	let invoiceDate = $state(new Date().toISOString().slice(0, 10));
-	let dueDate = $state(new Date().toISOString().slice(0, 10));
+	let invoiceDate = $state(toDateKey());
+	let dueDate = $state(toDateKey());
 	let status = $state<'draft' | 'sent' | 'paid' | 'cancelled'>('draft');
 	let paymentMode = $state('Virement bancaire / Chèque');
 	let paymentConditions = $state('30% au démarrage, le solde à la livraison');

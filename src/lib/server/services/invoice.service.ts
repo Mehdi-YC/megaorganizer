@@ -1,5 +1,5 @@
 import { eq, and, desc, sql, asc } from 'drizzle-orm';
-import { db } from '$lib/server/db';
+import { db, type DbExecutor } from '$lib/server/db';
 import {
 	invoiceClient,
 	invoiceProduct,
@@ -247,9 +247,13 @@ export async function getInvoiceYears(userId: string): Promise<number[]> {
 	return years.sort((a, b) => b - a);
 }
 
-export async function getNextInvoiceNumber(userId: string, year: number): Promise<string> {
+export async function getNextInvoiceNumber(
+	userId: string,
+	year: number,
+	executor: DbExecutor = db
+): Promise<string> {
 	// Find all invoice numbers for this year to find highest sequential number
-	const rows = await db
+	const rows = await executor
 		.select({ invoiceNumber: invoice.invoiceNumber })
 		.from(invoice)
 		.where(and(eq(invoice.userId, userId), eq(invoice.year, year)));
@@ -279,6 +283,40 @@ export interface InvoiceLineInput {
 	position?: number;
 }
 
+/** Thrown when an invoice number is already used by another invoice of the
+ * same account. Callers translate it into a 409 instead of leaking SQL. */
+export class InvoiceNumberConflictError extends Error {
+	constructor(invoiceNumber: string) {
+		super(`Invoice number ${invoiceNumber} is already used`);
+		this.name = 'InvoiceNumberConflictError';
+	}
+}
+
+function isUniqueViolation(error: unknown): boolean {
+	// Drizzle wraps driver errors in a DrizzleQueryError whose message is the
+	// SQL text; the UNIQUE text and the SQLite code live on the cause chain.
+	let current: unknown = error;
+	for (let depth = 0; current && depth < 5; depth++) {
+		const candidate = current as {
+			message?: string;
+			code?: string;
+			extendedCode?: string;
+			cause?: unknown;
+		};
+		const message = candidate.message ?? '';
+		if (
+			message.includes('UNIQUE constraint failed') ||
+			message.includes('SQLITE_CONSTRAINT_UNIQUE') ||
+			candidate.code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+			candidate.extendedCode === 'SQLITE_CONSTRAINT_UNIQUE'
+		) {
+			return true;
+		}
+		current = candidate.cause;
+	}
+	return false;
+}
+
 export async function createInvoice(
 	userId: string,
 	data: {
@@ -294,10 +332,17 @@ export async function createInvoice(
 		lines: InvoiceLineInput[];
 	}
 ) {
+	// The client must belong to the caller: a forged clientId would otherwise
+	// let one account bill against another account's client record.
+	const client = await db.query.invoiceClient.findFirst({
+		where: and(eq(invoiceClient.id, data.clientId), eq(invoiceClient.userId, userId)),
+		columns: { id: true }
+	});
+	if (!client) throw new Error('Client not found');
+
 	const invDate = new Date(data.invoiceDate);
 	const dueDate = new Date(data.dueDate);
 	const year = invDate.getFullYear();
-	const invoiceNumber = data.invoiceNumber || (await getNextInvoiceNumber(userId, year));
 
 	let subtotal = 0;
 	let tvaAmount = 0;
@@ -326,36 +371,60 @@ export async function createInvoice(
 
 	const total = subtotal + tvaAmount;
 
-	const [createdInvoice] = await db
-		.insert(invoice)
-		.values({
-			userId,
-			clientId: data.clientId,
-			invoiceNumber,
-			invoiceDate: invDate,
-			dueDate,
-			status: data.status || 'draft',
-			paymentMode: data.paymentMode?.trim() || 'Virement bancaire / Chèque',
-			paymentConditions:
-				data.paymentConditions?.trim() || '30% au démarrage, le solde à la livraison',
-			notes: data.notes?.trim() || null,
-			showTvaStamp: data.showTvaStamp !== undefined ? data.showTvaStamp : tvaAmount === 0,
-			subtotal,
-			tvaAmount,
-			total,
-			year
-		})
-		.returning();
+	// Two accounts may hold the same number (the unique index is per user),
+	// but one account may not. When the caller did not pick a number, a
+	// concurrent insert can still grab the one we computed: retry with the
+	// next free number instead of failing the request.
+	const explicitNumber = data.invoiceNumber?.trim() || null;
+	const attempts = explicitNumber ? 1 : 5;
+	let createdInvoice: typeof invoice.$inferSelect | undefined;
 
-	if (preparedLines.length > 0) {
-		await db.insert(invoiceLine).values(
-			preparedLines.map((line) => ({
-				invoiceId: createdInvoice.id,
-				...line
-			}))
-		);
+	for (let attempt = 0; attempt < attempts; attempt++) {
+		try {
+			createdInvoice = await db.transaction(async (tx) => {
+				const invoiceNumber = explicitNumber ?? (await getNextInvoiceNumber(userId, year, tx));
+
+				const [inserted] = await tx
+					.insert(invoice)
+					.values({
+						userId,
+						clientId: data.clientId,
+						invoiceNumber,
+						invoiceDate: invDate,
+						dueDate,
+						status: data.status || 'draft',
+						paymentMode: data.paymentMode?.trim() || 'Virement bancaire / Chèque',
+						paymentConditions:
+							data.paymentConditions?.trim() || '30% au démarrage, le solde à la livraison',
+						notes: data.notes?.trim() || null,
+						showTvaStamp: data.showTvaStamp !== undefined ? data.showTvaStamp : tvaAmount === 0,
+						subtotal,
+						tvaAmount,
+						total,
+						year
+					})
+					.returning();
+
+				if (preparedLines.length > 0) {
+					await tx.insert(invoiceLine).values(
+						preparedLines.map((line) => ({
+							invoiceId: inserted.id,
+							...line
+						}))
+					);
+				}
+
+				return inserted;
+			});
+			break;
+		} catch (error) {
+			if (!isUniqueViolation(error)) throw error;
+			if (explicitNumber) throw new InvoiceNumberConflictError(explicitNumber);
+			if (attempt === attempts - 1) throw new InvoiceNumberConflictError(`FAC/${year}/…`);
+		}
 	}
 
+	if (!createdInvoice) throw new Error('Failed to create invoice');
 	return getInvoice(userId, createdInvoice.id);
 }
 
@@ -377,6 +446,14 @@ export async function updateInvoice(
 ) {
 	const existing = await getInvoice(userId, invoiceId);
 	if (!existing) throw new Error('Invoice not found');
+
+	if (data.clientId) {
+		const client = await db.query.invoiceClient.findFirst({
+			where: and(eq(invoiceClient.id, data.clientId), eq(invoiceClient.userId, userId)),
+			columns: { id: true }
+		});
+		if (!client) throw new Error('Client not found');
+	}
 
 	const updateData: Record<string, unknown> = {};
 
@@ -434,10 +511,17 @@ export async function updateInvoice(
 	}
 
 	if (Object.keys(updateData).length > 0) {
-		await db
-			.update(invoice)
-			.set(updateData)
-			.where(and(eq(invoice.id, invoiceId), eq(invoice.userId, userId)));
+		try {
+			await db
+				.update(invoice)
+				.set(updateData)
+				.where(and(eq(invoice.id, invoiceId), eq(invoice.userId, userId)));
+		} catch (error) {
+			if (isUniqueViolation(error)) {
+				throw new InvoiceNumberConflictError(String(data.invoiceNumber ?? ''));
+			}
+			throw error;
+		}
 	}
 
 	return getInvoice(userId, invoiceId);
@@ -607,16 +691,73 @@ export async function updateUserInvoiceProfile(
 	return updated;
 }
 
+/** Signature and stamp images are shown inside invoices: accept raster images
+ * only, verify the bytes match the declared format, and cap the size. SVG is
+ * rejected on purpose — it can carry script and the file is served inline. */
+const MEDIA_MAX_SIZE = 2 * 1024 * 1024;
+
+function detectImageType(data: Buffer): { ext: '.png' | '.jpg' | '.webp'; mime: string } | null {
+	if (
+		data.length > 8 &&
+		data[0] === 0x89 &&
+		data[1] === 0x50 &&
+		data[2] === 0x4e &&
+		data[3] === 0x47 &&
+		data[4] === 0x0d &&
+		data[5] === 0x0a &&
+		data[6] === 0x1a &&
+		data[7] === 0x0a
+	) {
+		return { ext: '.png', mime: 'image/png' };
+	}
+	if (data.length > 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) {
+		return { ext: '.jpg', mime: 'image/jpeg' };
+	}
+	if (
+		data.length > 12 &&
+		data.subarray(0, 4).toString('ascii') === 'RIFF' &&
+		data.subarray(8, 12).toString('ascii') === 'WEBP'
+	) {
+		return { ext: '.webp', mime: 'image/webp' };
+	}
+	return null;
+}
+
 export async function saveUserMediaFile(userId: string, type: 'signature' | 'stamp', file: File) {
+	if (file.size > MEDIA_MAX_SIZE) {
+		throw new Error('Image must be smaller than 2MB');
+	}
+
+	const data = Buffer.from(await file.arrayBuffer());
+	const detected = detectImageType(data);
+	if (!detected) {
+		throw new Error('Image must be a PNG, JPEG, or WebP file');
+	}
+
 	const dir = getInvoicingDir(userId);
 	await mkdir(dir, { recursive: true });
 
-	const ext = path.extname(file.name).toLowerCase() || '.png';
-	const storedName = `${type}_${crypto.randomUUID()}${ext}`;
+	// Deterministic name: replacing the signature leaves one file behind
+	// instead of an ever-growing set of orphaned uploads, and the lookup
+	// below never has to guess which file is current.
+	const storedName = `${type}${detected.ext}`;
 	const filePath = path.resolve(dir, storedName);
+	if (!filePath.startsWith(path.resolve(dir) + path.sep)) {
+		throw new Error('Invalid file path');
+	}
 
-	const arrayBuffer = await file.arrayBuffer();
-	await writeFile(filePath, Buffer.from(arrayBuffer));
+	// Drop previous uploads for this slot (other extensions, legacy UUID names).
+	const { readdir } = await import('fs/promises');
+	for (const name of await readdir(dir).catch(() => [] as string[])) {
+		if (
+			name !== storedName &&
+			(name === type || name.startsWith(`${type}_`) || name.startsWith(`${type}.`))
+		) {
+			await unlink(path.join(dir, name)).catch(() => {});
+		}
+	}
+
+	await writeFile(filePath, data);
 
 	const relativeUrl = `/api/invoicing/user-media?type=${type}&t=${Date.now()}`;
 
@@ -631,14 +772,21 @@ export async function saveUserMediaFile(userId: string, type: 'signature' | 'sta
 
 export async function getUserMediaFilePath(userId: string, type: 'signature' | 'stamp') {
 	const dir = getInvoicingDir(userId);
-	// Search directory for the latest file starting with `${type}_`
 	try {
-		const { readdir } = await import('fs/promises');
+		const { readdir, stat } = await import('fs/promises');
 		const files = await readdir(dir);
-		const matching = files.filter((f) => f.startsWith(`${type}_`));
-		if (matching.length === 0) return null;
-		// pick the last one
-		return path.join(dir, matching[matching.length - 1]);
+		const candidates = files.filter(
+			(f) => f === type || f.startsWith(`${type}_`) || f.startsWith(`${type}.`)
+		);
+		if (candidates.length === 0) return null;
+		if (candidates.length === 1) return path.join(dir, candidates[0]);
+
+		// Legacy directories can hold several uploads per slot: use the newest.
+		const stats = await Promise.all(
+			candidates.map(async (name) => ({ name, mtime: (await stat(path.join(dir, name))).mtimeMs }))
+		);
+		stats.sort((a, b) => b.mtime - a.mtime);
+		return path.join(dir, stats[0].name);
 	} catch {
 		return null;
 	}

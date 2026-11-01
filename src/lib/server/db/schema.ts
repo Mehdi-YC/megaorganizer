@@ -955,7 +955,9 @@ export const invoice = sqliteTable(
 		clientId: text('client_id')
 			.notNull()
 			.references(() => invoiceClient.id, { onDelete: 'restrict' }),
-		invoiceNumber: text('invoice_number').notNull().unique(),
+		// Unique per account, not globally: two accounts may both own
+		// FAC/2026/00001.
+		invoiceNumber: text('invoice_number').notNull(),
 		invoiceDate: integer('invoice_date', { mode: 'timestamp_ms' }).notNull(),
 		dueDate: integer('due_date', { mode: 'timestamp_ms' }).notNull(),
 		status: text('status', { enum: ['draft', 'sent', 'paid', 'cancelled'] })
@@ -981,6 +983,7 @@ export const invoice = sqliteTable(
 	},
 	(table) => [
 		index('invoice_userId_idx').on(table.userId),
+		uniqueIndex('invoice_userId_number_unique').on(table.userId, table.invoiceNumber),
 		index('invoice_clientId_idx').on(table.clientId),
 		index('invoice_year_idx').on(table.year),
 		index('invoice_status_idx').on(table.status)

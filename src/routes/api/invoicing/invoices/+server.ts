@@ -6,8 +6,24 @@ import {
 	createInvoice,
 	updateInvoice,
 	deleteInvoice,
-	getNextInvoiceNumber
+	getNextInvoiceNumber,
+	InvoiceNumberConflictError
 } from '$lib/server/services/invoice.service';
+
+/**
+ * Map service errors to HTTP responses. Only errors we raise ourselves are
+ * echoed: raw SQLite/drizzle messages leak table and column details.
+ */
+function invoiceErrorResponse(error: unknown, fallback: string) {
+	if (error instanceof InvoiceNumberConflictError) {
+		return json({ error: error.message }, { status: 409 });
+	}
+	if (error instanceof Error && error.message === 'Client not found') {
+		return json({ error: 'Client not found' }, { status: 404 });
+	}
+	console.error(fallback, error);
+	return json({ error: fallback }, { status: 500 });
+}
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
@@ -64,8 +80,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 		return json(invoice, { status: 201 });
 	} catch (e: unknown) {
-		const msg = e instanceof Error ? e.message : 'Failed to create invoice';
-		return json({ error: msg }, { status: 500 });
+		return invoiceErrorResponse(e, 'Failed to create invoice');
 	}
 };
 
@@ -93,8 +108,7 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
 
 		return json(invoice);
 	} catch (e: unknown) {
-		const msg = e instanceof Error ? e.message : 'Failed to update invoice';
-		return json({ error: msg }, { status: 500 });
+		return invoiceErrorResponse(e, 'Failed to update invoice');
 	}
 };
 
@@ -108,7 +122,6 @@ export const DELETE: RequestHandler = async ({ locals, request, url }) => {
 		await deleteInvoice(locals.user.id, id);
 		return json({ success: true });
 	} catch (e: unknown) {
-		const msg = e instanceof Error ? e.message : 'Failed to delete invoice';
-		return json({ error: msg }, { status: 400 });
+		return invoiceErrorResponse(e, 'Failed to delete invoice');
 	}
 };

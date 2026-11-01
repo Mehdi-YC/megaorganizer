@@ -85,10 +85,14 @@ export async function renderMarkdown(
 	links?: Record<string, string | null>
 ): Promise<string> {
 	if (!text) return '';
-	currentLinks = links ?? null;
 	// The code renderer runs synchronously inside marked.parse, so the
 	// highlighter must be loaded before parsing whenever fences are present.
 	if (text.includes('```')) await ensureHljs();
+	// Set the wikilink map only after every await: parsing is synchronous,
+	// so the value cannot be swapped by a concurrent render mid-parse. Doing
+	// this before the awaits above let a second render overwrite the map of
+	// the first one, resolving links against the wrong document.
+	currentLinks = links ?? null;
 	const rawHtml = (await marked.parse(text)) as string;
 	const html = DOMPurify.sanitize(rawHtml, {
 		ALLOWED_TAGS: [

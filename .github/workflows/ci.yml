@@ -21,6 +21,8 @@ jobs:
       - name: Svelte check
         run: bun run check
 
-      # Tests are local-only. Run `bun test` before pushing.
+      - name: Tests
+        run: bun test
+
       - name: Lint and format
         run: bun run lint
