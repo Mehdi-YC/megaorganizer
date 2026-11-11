@@ -82,8 +82,6 @@
 			showToast('Invoice deleted', 'success');
 			confirmDeleteId = null;
 			await invalidateAll();
-		} else {
-			showToast('Error deleting invoice', 'error');
 		}
 	}
 
@@ -98,7 +96,7 @@
 					invoiceIds: selectedInvoiceIds
 				})
 			});
-			if (!res.ok) throw new Error('Export failed');
+			if (!res.ok) return;
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');

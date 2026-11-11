@@ -157,17 +157,13 @@
 				})
 			});
 
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Failed to create invoice');
-			}
+			if (!res.ok) return;
 
 			const created = await res.json();
 			showToast('Invoice created successfully', 'success');
 			goto(resolve('/app/invoicing/[id]', { id: created.id }));
-		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Failed to save';
-			showToast(msg, 'error');
+		} catch {
+			showToast('Network error, request failed', 'error');
 		} finally {
 			isSubmitting = false;
 		}
@@ -196,7 +192,7 @@
 					phone: newClientPhone
 				})
 			});
-			if (!res.ok) throw new Error('Failed to create client');
+			if (!res.ok) return;
 			const newClient = await res.json();
 			clients = [...clients, newClient];
 			clientId = newClient.id;

@@ -90,7 +90,6 @@
 				showToast('Scratchpad saved', 'success');
 			} else {
 				noteStatus = 'error';
-				showToast('Failed to save scratchpad', 'error');
 			}
 		} catch {
 			noteStatus = 'error';

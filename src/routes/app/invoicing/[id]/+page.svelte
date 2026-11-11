@@ -23,7 +23,7 @@
 					status: newStatus
 				})
 			});
-			if (!res.ok) throw new Error('Failed to update status');
+			if (!res.ok) return;
 			currentStatus = newStatus;
 			showToast('Status updated', 'success');
 			await invalidateAll();
@@ -39,8 +39,6 @@
 		if (res.ok) {
 			showToast('Invoice deleted', 'success');
 			goto(resolve('/app/invoicing'));
-		} else {
-			showToast('Failed to delete invoice', 'error');
 		}
 	}
 
@@ -58,7 +56,7 @@
 					invoiceIds: [data.invoice.id]
 				})
 			});
-			if (!res.ok) throw new Error('Export error');
+			if (!res.ok) return;
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');

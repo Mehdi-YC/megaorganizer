@@ -155,16 +155,12 @@
 				})
 			});
 
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Failed to update invoice');
-			}
+			if (!res.ok) return;
 
 			showToast('Invoice updated', 'success');
 			goto(resolve('/app/invoicing/[id]', { id: data.invoice.id }));
-		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Failed to save';
-			showToast(msg, 'error');
+		} catch {
+			showToast('Network error, request failed', 'error');
 		} finally {
 			isSubmitting = false;
 		}

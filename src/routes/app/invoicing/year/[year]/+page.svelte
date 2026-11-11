@@ -61,7 +61,7 @@
 				body: formData
 			});
 
-			if (!res.ok) throw new Error('Upload error');
+			if (!res.ok) return;
 			showToast(`Tax filing ${docType.toUpperCase().replace('_', ' ')} saved`, 'success');
 			await invalidateAll();
 		} catch {
@@ -78,7 +78,7 @@
 			const res = await fetch(`/api/invoicing/yearly-docs?id=${docId}`, {
 				method: 'DELETE'
 			});
-			if (!res.ok) throw new Error('Error');
+			if (!res.ok) return;
 			showToast(`${label} deleted`, 'success');
 			await invalidateAll();
 		} catch {
@@ -98,7 +98,7 @@
 				})
 			});
 
-			if (!res.ok) throw new Error('Export error');
+			if (!res.ok) return;
 
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
@@ -130,7 +130,7 @@
 				})
 			});
 
-			if (!res.ok) throw new Error('Export error');
+			if (!res.ok) return;
 
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);

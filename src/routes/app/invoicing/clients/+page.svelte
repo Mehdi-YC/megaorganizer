@@ -108,17 +108,13 @@
 				})
 			});
 
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Failed to save client');
-			}
+			if (!res.ok) return;
 
 			showToast(isEdit ? 'Client updated' : 'Client created', 'success');
 			showModal = false;
 			await invalidateAll();
-		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Failed to save client';
-			showToast(msg, 'error');
+		} catch {
+			showToast('Network error, request failed', 'error');
 		} finally {
 			isSaving = false;
 		}
@@ -129,16 +125,12 @@
 			const res = await fetch(`/api/invoicing/clients?id=${id}`, {
 				method: 'DELETE'
 			});
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Failed to delete client');
-			}
+			if (!res.ok) return;
 			showToast('Client deleted', 'success');
 			confirmDeleteId = null;
 			await invalidateAll();
-		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Failed to delete client';
-			showToast(msg, 'error');
+		} catch {
+			showToast('Network error, request failed', 'error');
 		}
 	}
 </script>

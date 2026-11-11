@@ -77,17 +77,13 @@
 				})
 			});
 
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Failed to save');
-			}
+			if (!res.ok) return;
 
 			showToast(isEdit ? 'Item updated' : 'Item created', 'success');
 			showModal = false;
 			await invalidateAll();
-		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Failed to save';
-			showToast(msg, 'error');
+		} catch {
+			showToast('Network error, request failed', 'error');
 		} finally {
 			isSaving = false;
 		}
@@ -98,16 +94,12 @@
 			const res = await fetch(`/api/invoicing/products?id=${id}`, {
 				method: 'DELETE'
 			});
-			if (!res.ok) {
-				const err = await res.json();
-				throw new Error(err.error || 'Failed to delete');
-			}
+			if (!res.ok) return;
 			showToast('Item deleted', 'success');
 			confirmDeleteId = null;
 			await invalidateAll();
-		} catch (e: unknown) {
-			const msg = e instanceof Error ? e.message : 'Failed to delete';
-			showToast(msg, 'error');
+		} catch {
+			showToast('Network error, request failed', 'error');
 		}
 	}
 </script>

@@ -70,8 +70,6 @@
 				showEditWorkspace = false;
 				showToast('Workspace updated', 'success');
 				await invalidateAll();
-			} else {
-				showToast('Failed to update workspace', 'error');
 			}
 		} catch {
 			showToast('Error updating workspace', 'error');
