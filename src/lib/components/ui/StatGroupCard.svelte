@@ -38,7 +38,7 @@
 					? 'bg-success/10 text-success'
 					: 'bg-error/10 text-error'}"
 			>
-				<i class="fas {trend.positive ? 'fa-arrow-up' : 'fa-arrow-down'} text-[9px]"></i>
+				<i class="fas {trend.positive ? 'fa-arrow-up' : 'fa-arrow-down'} text-[10px]"></i>
 				{Math.abs(trend.value)}%
 			</span>
 		{/if}

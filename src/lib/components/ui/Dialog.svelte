@@ -43,6 +43,22 @@
 		);
 		focusable?.focus();
 	}
+
+	// On open: focus the first field and lock background scroll. On close:
+	// restore scroll and hand focus back to whatever opened the dialog.
+	let panelEl = $state<HTMLElement | null>(null);
+	$effect(() => {
+		if (!open || !panelEl) return;
+		const previous = document.activeElement as HTMLElement | null;
+		const overflow = document.body.style.overflow;
+		document.body.style.overflow = 'hidden';
+		const field = panelEl.querySelector<HTMLElement>('input, select, textarea');
+		(field ?? panelEl).focus();
+		return () => {
+			document.body.style.overflow = overflow;
+			previous?.focus?.();
+		};
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -57,11 +73,13 @@
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
+			bind:this={panelEl}
 			class="animate-scale-in max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
 			aria-labelledby={title ? 'dialog-title' : undefined}
+			aria-label={title ? undefined : 'Dialog'}
 			onclick={handlePanelClick}
 		>
 			<div class="flex items-start justify-between border-b border-border/80 px-6 py-4">

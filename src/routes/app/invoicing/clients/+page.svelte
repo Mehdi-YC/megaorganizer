@@ -199,7 +199,7 @@
 								{#if c.city}{c.city},
 								{/if}{c.country || 'Algeria'}
 								{#if c.address}
-									<div class="text-[11px] text-fg-subdued/80">{c.address}</div>
+									<div class="text-[11px] text-fg-subdued">{c.address}</div>
 								{/if}
 							</td>
 							<td class="px-4 py-3 text-fg-subdued">
@@ -207,14 +207,14 @@
 								{#if c.nTva}<div>VAT: <span class="text-fg">{c.nTva}</span></div>{/if}
 								{#if c.rc}<div>RC: <span class="text-fg">{c.rc}</span></div>{/if}
 								{#if !c.nif && !c.nTva && !c.rc}
-									<span class="text-[11px] text-fg-subdued/60 italic">Not set</span>
+									<span class="text-[11px] text-fg-subdued italic">Not set</span>
 								{/if}
 							</td>
 							<td class="px-4 py-3 text-fg-subdued">
 								{#if c.phone}<div>{c.phone}</div>{/if}
 								{#if c.email}<div>{c.email}</div>{/if}
 								{#if !c.phone && !c.email}
-									<span class="text-[11px] text-fg-subdued/60 italic">-</span>
+									<span class="text-[11px] text-fg-subdued italic">-</span>
 								{/if}
 							</td>
 							<td class="px-4 py-3 text-right">

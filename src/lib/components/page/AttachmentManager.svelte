@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Attachment } from '$lib/types';
 	import { Button, Spinner } from '$lib/components/ui';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 
 	/**
 	 * Attachment manager: upload by picker or drag-and-drop, multi-select,
@@ -107,6 +108,7 @@
 	}
 
 	async function deleteAttachment(id: string) {
+		if (!(await confirmAction('Delete this attachment?'))) return;
 		await fetch('/api/attachments', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
@@ -119,6 +121,8 @@
 	}
 
 	async function deleteSelectedAttachments() {
+		if (!(await confirmAction(`Delete ${selectedAttachments.size} selected attachment(s)?`)))
+			return;
 		for (const id of selectedAttachments) {
 			await fetch('/api/attachments', {
 				method: 'DELETE',
@@ -200,15 +204,15 @@
 			{#if selectedAttachments.size > 0}
 				<span class="text-[10px] text-fg-subdued">{selectedAttachments.size} selected</span>
 				<Button size="sm" onclick={shareSelectedAttachments}>
-					<i class="fas fa-share-nodes text-[9px]"></i> Share
+					<i class="fas fa-share-nodes text-[10px]"></i> Share
 				</Button>
 				<Button size="sm" variant="danger" onclick={deleteSelectedAttachments}>
-					<i class="fas fa-trash text-[9px]"></i> Delete
+					<i class="fas fa-trash text-[10px]"></i> Delete
 				</Button>
 				<Button size="sm" variant="secondary" onclick={clearSelection}>Cancel</Button>
 			{:else if attachments.length > 1}
 				<Button size="sm" variant="secondary" onclick={selectAllAttachments}>
-					<i class="fas fa-check-double text-[9px]"></i> Select All
+					<i class="fas fa-check-double text-[10px]"></i> Select All
 				</Button>
 			{/if}
 		</div>
@@ -244,9 +248,9 @@
 				class="w-full cursor-pointer py-8 text-center"
 				onclick={() => fileInput?.click()}
 			>
-				<i class="fas fa-paperclip mb-2 text-xl text-fg-subdued/40"></i>
+				<i class="fas fa-paperclip mb-2 text-xl text-fg-subdued"></i>
 				<p class="text-xs text-fg-subdued">Drop files here or click to upload</p>
-				<p class="mt-1 text-[10px] text-fg-subdued/60">Max 100MB per file</p>
+				<p class="mt-1 text-[10px] text-fg-subdued">Max 100MB per file</p>
 			</button>
 		{:else}
 			<div class="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -286,7 +290,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-[11px] font-medium text-fg-accent">{att.originalName}</p>
-								<p class="text-[9px] text-fg-subdued">{formatFileSize(att.size)}</p>
+								<p class="text-[10px] text-fg-subdued">{formatFileSize(att.size)}</p>
 							</div>
 						</button>
 						<button
@@ -295,7 +299,7 @@
 							class="h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:opacity-0 sm:group-hover:opacity-100"
 							onclick={() => deleteAttachment(att.id)}
 						>
-							<i class="fas fa-times text-[9px]"></i>
+							<i class="fas fa-times text-[10px]"></i>
 						</button>
 					</div>
 				{/each}
@@ -340,7 +344,7 @@
 						href={previewFile.url}
 						download={previewFile.originalName}
 					>
-						<i class="fas fa-download text-[9px]"></i> Download
+						<i class="fas fa-download text-[10px]"></i> Download
 					</Button>
 					<button
 						type="button"

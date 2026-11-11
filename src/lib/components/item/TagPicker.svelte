@@ -46,7 +46,7 @@
 						style="background: {t.color || '#5A31F4'}"
 					></div>
 					<span class="flex-1 text-fg">{t.name}</span>
-					{#if tagIds.includes(t.id)}<i class="fas fa-check text-[9px] text-primary-text"></i>{/if}
+					{#if tagIds.includes(t.id)}<i class="fas fa-check text-[10px] text-primary-text"></i>{/if}
 				</button>
 			{:else}
 				<p class="text-[11px] text-fg-subdued italic">

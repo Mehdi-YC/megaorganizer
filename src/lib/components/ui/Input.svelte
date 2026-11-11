@@ -65,7 +65,7 @@
 		aria-describedby={error ? `${id}-error` : undefined}
 		class="{sizes[
 			size
-		]} w-full border border-border bg-surface text-fg shadow-xs transition-all placeholder:text-fg-subdued/70 hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none {error
+		]} w-full border border-border bg-surface text-fg shadow-xs transition-all placeholder:text-fg-subdued hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none {error
 			? 'border-error ring-1 ring-error/30'
 			: ''} {disabled ? 'cursor-not-allowed opacity-50' : ''}"
 	/>

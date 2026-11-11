@@ -604,7 +604,7 @@
 										</div>
 									{/each}
 									{#if events.length > 3}
-										<div class="text-center text-[9px] text-fg-subdued">
+										<div class="text-center text-[10px] text-fg-subdued">
 											+{events.length - 3} more
 										</div>
 									{/if}
@@ -667,7 +667,7 @@
 
 				{#if selectedEvents.length === 0}
 					<div class="rounded-sm border border-dashed border-border py-8 text-center">
-						<i class="fas fa-calendar-day mb-2 text-2xl text-fg-subdued/30"></i>
+						<i class="fas fa-calendar-day mb-2 text-2xl text-fg-subdued"></i>
 						<p class="text-sm text-fg-subdued">No events for this day</p>
 					</div>
 				{:else}
@@ -745,7 +745,7 @@
 										{/if}
 									</p>
 								</div>
-								<i class="fas fa-arrow-right text-[10px] text-fg-subdued/50"></i>
+								<i class="fas fa-arrow-right text-[10px] text-fg-subdued"></i>
 							</a>
 						{/each}
 					</div>
@@ -763,9 +763,9 @@
 
 				{#if upcomingGroups.length === 0}
 					<div class="rounded-sm border border-dashed border-border py-12 text-center">
-						<i class="fas fa-bell mb-2 text-2xl text-fg-subdued/30"></i>
+						<i class="fas fa-bell mb-2 text-2xl text-fg-subdued"></i>
 						<p class="text-sm text-fg-subdued">No upcoming reminders</p>
-						<p class="mt-1 text-xs text-fg-subdued/70">Tap a day to see its events</p>
+						<p class="mt-1 text-xs text-fg-subdued">Tap a day to see its events</p>
 					</div>
 				{:else}
 					<div class="max-h-[440px] space-y-3 overflow-y-auto pr-1">
@@ -781,7 +781,7 @@
 										{group.items.length} reminder{group.items.length !== 1 ? 's' : ''}
 									</span>
 									<span class="h-px flex-1 bg-border/50"></span>
-									<i class="fas fa-chevron-right text-[9px] text-fg-subdued/50"></i>
+									<i class="fas fa-chevron-right text-[10px] text-fg-subdued"></i>
 								</button>
 								<div class="space-y-1">
 									{#each group.items as item (item.id)}
@@ -806,7 +806,7 @@
 												{item.title}
 											</p>
 											<span
-												class="shrink-0 rounded-sm px-1.5 py-0.5 text-[9px] font-medium {item.isVirtual
+												class="shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-medium {item.isVirtual
 													? 'bg-muted text-fg-subdued'
 													: 'bg-error/10 text-error'}"
 											>
@@ -818,7 +818,7 @@
 							</div>
 						{/each}
 					</div>
-					<p class="mt-3 text-center text-[10px] text-fg-subdued/70">Tap a day to see its events</p>
+					<p class="mt-3 text-center text-[10px] text-fg-subdued">Tap a day to see its events</p>
 				{/if}
 			{/if}
 		</div>

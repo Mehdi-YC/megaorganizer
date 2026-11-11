@@ -274,7 +274,7 @@
 							type="text"
 							bind:value={quickTodoTitle}
 							placeholder="Add a task for today..."
-							class="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+							class="flex-1 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
 						/>
 						<Button type="submit" size="xs" disabled={!quickTodoTitle.trim() || isAddingTodo}>
 							<i class="fas fa-plus text-[10px]"></i>
@@ -293,7 +293,7 @@
 									<div class="flex min-w-0 flex-1 items-center gap-2.5">
 										<button
 											type="button"
-											class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {t.completed
+											class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {t.completed
 												? 'border-success bg-success text-white'
 												: 'border-border-strong hover:border-fg-subdued'}"
 											onclick={() => handleToggleQuickTodo(t)}
@@ -317,7 +317,7 @@
 						</div>
 					{:else}
 						<div class="py-6 text-center text-xs text-fg-subdued">
-							<i class="fas fa-clipboard-check mb-1.5 block text-xl text-fg-subdued/30"></i>
+							<i class="fas fa-clipboard-check mb-1.5 block text-xl text-fg-subdued"></i>
 							No tasks pending for today. You're all caught up!
 						</div>
 					{/if}
@@ -439,8 +439,7 @@
 												})}
 												class="flex items-center gap-2 rounded px-1.5 py-1 text-xs text-fg-subdued transition-colors hover:bg-muted/50 hover:text-fg"
 											>
-												<i class="{p.icon || 'far fa-file-lines'} text-[10px] text-fg-subdued/70"
-												></i>
+												<i class="{p.icon || 'far fa-file-lines'} text-[10px] text-fg-subdued"></i>
 												<span class="truncate">{p.name}</span>
 											</a>
 										{/each}
@@ -452,7 +451,7 @@
 				</div>
 			{:else}
 				<div class="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
-					<i class="fas fa-folder-open mb-2 block text-2xl text-fg-subdued/40"></i>
+					<i class="fas fa-folder-open mb-2 block text-2xl text-fg-subdued"></i>
 					<p class="text-sm font-medium text-fg">No workspaces yet</p>
 					<p class="mt-0.5 text-xs text-fg-subdued">
 						Create a workspace to group pages, documents, and notes.
@@ -635,7 +634,7 @@
 						<Badge variant="default" size="sm">Saving...</Badge>
 					{:else if noteStatus === 'saved'}
 						<Badge variant="success" size="sm">
-							<i class="fas fa-check mr-1 text-[9px]"></i> Saved
+							<i class="fas fa-check mr-1 text-[10px]"></i> Saved
 						</Badge>
 					{:else if noteStatus === 'error'}
 						<Badge variant="danger" size="sm">Error saving</Badge>

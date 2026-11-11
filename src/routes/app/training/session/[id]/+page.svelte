@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
+	import { formatDate, formatDateTime } from '$lib/utils/format';
 	import RunMap from '$lib/components/ui/RunMap.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
@@ -158,7 +159,7 @@
 					</h1>
 				{/if}
 				<p class="text-fg-subdued">
-					{new Date(session.startedAt).toLocaleDateString('en-US', {
+					{formatDate(session.startedAt, {
 						weekday: 'long',
 						year: 'numeric',
 						month: 'long',
@@ -282,7 +283,7 @@
 									<Badge variant="primary">{activity.type}</Badge>
 									{#if activity.startedAt}
 										<span class="text-sm text-fg-subdued">
-											{new Date(activity.startedAt).toLocaleTimeString()}
+											{formatDateTime(activity.startedAt)}
 										</span>
 									{/if}
 								</div>

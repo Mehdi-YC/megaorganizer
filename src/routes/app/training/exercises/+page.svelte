@@ -324,7 +324,7 @@
 								{#if src.startsWith('/api/')}
 									<button
 										type="button"
-										class="absolute -top-1.5 -right-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded-full bg-error text-[10px] text-white"
+										class="absolute -top-1.5 -right-1.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-error text-[10px] text-white"
 										aria-label="Remove image"
 										onclick={() => removeImage(src)}
 									>

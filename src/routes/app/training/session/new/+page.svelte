@@ -887,7 +887,7 @@
 							? 'border-primary bg-primary text-white'
 							: 'border-border-strong'}"
 					>
-						{#if selected}<i class="fas fa-check text-[9px]"></i>{/if}
+						{#if selected}<i class="fas fa-check text-[10px]"></i>{/if}
 					</div>
 					<div class="h-10 w-14 shrink-0 overflow-hidden rounded-sm bg-muted">
 						{#if exercise.images[0]}

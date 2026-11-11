@@ -349,7 +349,7 @@
 				</div>
 				<div class="flex min-w-0 items-center gap-1.5">
 					<span class="truncate text-sm font-semibold tracking-tight text-fg">MegaOrganize</span>
-					<i class="fas fa-chevron-down text-[10px] text-fg-subdued/80"></i>
+					<i class="fas fa-chevron-down text-[10px] text-fg-subdued"></i>
 				</div>
 			</div>
 
@@ -421,7 +421,7 @@
 						{/each}
 					{:else}
 						<div class="px-4 py-6 text-center">
-							<i class="fas fa-search mb-2 text-xl text-fg-subdued/30"></i>
+							<i class="fas fa-search mb-2 text-xl text-fg-subdued"></i>
 							<p class="text-xs text-fg-subdued">No results found</p>
 						</div>
 					{/if}
@@ -452,9 +452,7 @@
 		<!-- Section: CORE -->
 		<div class="space-y-0.5">
 			{#if !collapsed}
-				<div
-					class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase"
-				>
+				<div class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued uppercase">
 					Main
 				</div>
 			{/if}
@@ -553,9 +551,7 @@
 		<!-- Section: FINANCE & FACTURATION -->
 		{#if (enabledFeatures.finance !== false || enabledFeatures.invoicing !== false) && !collapsed}
 			<div class="space-y-0.5">
-				<div
-					class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase"
-				>
+				<div class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued uppercase">
 					Finance
 				</div>
 
@@ -599,7 +595,7 @@
 								}}
 							>
 								<i
-									class="fas fa-chevron-right text-[9px] transition-transform duration-150 {invoicingExpanded
+									class="fas fa-chevron-right text-[10px] transition-transform duration-150 {invoicingExpanded
 										? 'rotate-90'
 										: ''}"
 								></i>
@@ -648,7 +644,7 @@
 													: ''}"
 											></i>
 											<span>Fiscal years</span>
-											<span class="ml-auto text-[10px] text-fg-subdued/70 tabular-nums">
+											<span class="ml-auto text-[10px] text-fg-subdued tabular-nums">
 												{allInvoiceYears.length}
 											</span>
 										</button>
@@ -690,7 +686,7 @@
 													</a>
 													<button
 														type="button"
-														class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued hover:text-primary-text"
+														class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued hover:text-primary-text"
 														title="Export year zip"
 														onclick={(e) => exportYearFromSidebar(e, yr)}
 													>
@@ -705,7 +701,7 @@
 															onclick={onNavigate}
 															class="flex h-6 items-center gap-1.5 text-[11px] text-fg-subdued hover:text-fg"
 														>
-															<i class="fas fa-file-shield text-[9px]"></i>
+															<i class="fas fa-file-shield text-[10px]"></i>
 															<span>G12 / G12 bis</span>
 														</a>
 													</div>
@@ -722,7 +718,7 @@
 												<i
 													class="fas {showAllYears
 														? 'fa-chevron-up'
-														: 'fa-ellipsis'} w-3 text-center text-[9px]"
+														: 'fa-ellipsis'} w-3 text-center text-[10px]"
 												></i>
 												<span>
 													{showAllYears ? 'Show less' : `Show ${hiddenYearCount} more`}
@@ -742,7 +738,7 @@
 		{#if !collapsed}
 			<div class="space-y-0.5">
 				<div class="flex items-center justify-between px-2.5 py-1">
-					<span class="text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase">
+					<span class="text-[10px] font-semibold tracking-wider text-fg-subdued uppercase">
 						Workspaces
 					</span>
 					<a
@@ -751,7 +747,7 @@
 						title="New Category"
 						class="flex h-4 w-4 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
 					>
-						<i class="fas fa-plus text-[9px]"></i>
+						<i class="fas fa-plus text-[10px]"></i>
 					</a>
 				</div>
 
@@ -815,7 +811,7 @@
 										newPageName = '';
 									}}
 								>
-									<i class="fas fa-plus text-[9px]"></i>
+									<i class="fas fa-plus text-[10px]"></i>
 								</button>
 								<ConfirmButton
 									confirmId={confirmDeleteCatId ?? ''}
@@ -878,7 +874,7 @@
 											aria-label="Create page"
 											class="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md bg-primary text-white"
 										>
-											<i class="fas fa-check text-[9px]"></i>
+											<i class="fas fa-check text-[10px]"></i>
 										</button>
 										<button
 											type="button"
@@ -889,7 +885,7 @@
 												newPageName = '';
 											}}
 										>
-											<i class="fas fa-times text-[9px]"></i>
+											<i class="fas fa-times text-[10px]"></i>
 										</button>
 									</form>
 								{/if}
@@ -903,9 +899,7 @@
 		<!-- Section: MORE MODULES -->
 		<div class="space-y-0.5">
 			{#if !collapsed}
-				<div
-					class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued/80 uppercase"
-				>
+				<div class="px-2.5 py-1 text-[10px] font-semibold tracking-wider text-fg-subdued uppercase">
 					Modules
 				</div>
 			{/if}

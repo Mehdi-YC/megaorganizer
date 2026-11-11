@@ -41,7 +41,7 @@
 		{...rest}
 		aria-invalid={error ? 'true' : undefined}
 		aria-describedby={error ? `${id}-error` : undefined}
-		class="resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg shadow-xs transition-all placeholder:text-fg-subdued/70 hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none {error
+		class="resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-fg shadow-xs transition-all placeholder:text-fg-subdued hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none {error
 			? 'border-error ring-1 ring-error/30'
 			: ''} {disabled ? 'cursor-not-allowed opacity-50' : ''}"></textarea>
 	{#if error}

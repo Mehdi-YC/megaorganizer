@@ -205,7 +205,7 @@
 								<i class="fas fa-arrow-down"></i>
 							</button>
 							<span
-								class="rounded-sm px-1.5 py-0.5 text-[9px] font-semibold {kindBadge(step.kind)}"
+								class="rounded-sm px-1.5 py-0.5 text-[10px] font-semibold {kindBadge(step.kind)}"
 							>
 								{step.kind}
 							</span>
@@ -249,7 +249,7 @@
 								{#if step.kind !== 'start' && step.kind !== 'end'}
 									<button
 										type="button"
-										class="cursor-pointer rounded-sm px-1.5 py-0.5 text-[9px] font-semibold transition-colors {step.kind ===
+										class="cursor-pointer rounded-sm px-1.5 py-0.5 text-[10px] font-semibold transition-colors {step.kind ===
 										'silent'
 											? 'bg-warning/20 text-warning'
 											: 'bg-muted text-fg-subdued hover:bg-border'}"
@@ -303,7 +303,7 @@
 													<i class="fas fa-arrow-down"></i>
 												</button>
 												<span
-													class="rounded-sm px-1.5 py-0.5 text-[9px] font-semibold {kindBadge(
+													class="rounded-sm px-1.5 py-0.5 text-[10px] font-semibold {kindBadge(
 														child.kind
 													)}"
 												>
@@ -339,7 +339,7 @@
 												/>
 												<button
 													type="button"
-													class="cursor-pointer rounded-sm px-1.5 py-0.5 text-[9px] font-semibold transition-colors {child.kind ===
+													class="cursor-pointer rounded-sm px-1.5 py-0.5 text-[10px] font-semibold transition-colors {child.kind ===
 													'silent'
 														? 'bg-warning/20 text-warning'
 														: 'bg-muted text-fg-subdued hover:bg-border'}"

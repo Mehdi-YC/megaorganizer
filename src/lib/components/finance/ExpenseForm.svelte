@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import MarkdownEditor from '$lib/components/ui/MarkdownEditor.svelte';
+	import { toDateKey } from '$lib/utils/date';
 
 	export interface ExpenseDraft {
 		amount: number;
@@ -42,7 +43,7 @@
 	let markdown = $state(draft?.markdown ?? '');
 	let tags = $state<string[]>(draft?.tags ?? []);
 	let newTag = $state('');
-	let spentAt = $state(draft?.spentAt ?? new Date().toISOString().split('T')[0]);
+	let spentAt = $state(draft?.spentAt ?? toDateKey());
 	let showContent = $state(!!draft?.markdown);
 
 	function addTag() {
@@ -174,7 +175,7 @@
 			{/if}
 			<Button onclick={handleSave} disabled={amount <= 0}>
 				<i class="fas fa-plus mr-2 text-xs"></i>
-				Add Expense
+				Save Expense
 			</Button>
 		</div>
 	</div>
