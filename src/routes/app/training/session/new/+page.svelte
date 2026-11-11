@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
 	import {
 		computeRunStats,
@@ -31,7 +31,12 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 
 	let { data } = $props();
-	let title = $state('');
+	// One-time seeds from load data; drafts and edits take over from here.
+	let title = $state(
+		untrack(() =>
+			data.programBlock ? `${data.programBlock.programName} — ${data.programBlock.title}` : ''
+		)
+	);
 	let notes = $state('');
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
@@ -52,7 +57,29 @@
 			: 'strength') as (typeof activityTypes)[number]
 	);
 	let selectedItems = $state<string[]>([]);
-	let exerciseRecords = $state<ExerciseRecordDraft[]>([]);
+	let exerciseRecords = $state<ExerciseRecordDraft[]>(untrack(() => programRecords()));
+
+	/** Prefill record rows from the program block when ?block= is set. */
+	function programRecords(): ExerciseRecordDraft[] {
+		const block = data.programBlock;
+		if (!block) return [];
+		return block.entries.map((e) => ({
+			exerciseId: e.exerciseId,
+			name: e.exerciseName,
+			sets: e.sets ?? 3,
+			reps: e.reps ?? '10',
+			weight: e.weight ?? 0,
+			unit: e.unit ?? 'kg',
+			rpe: 7,
+			restTime: 90,
+			notes: e.notes ?? ''
+		}));
+	}
+
+	/** Records come from library items or the exercise library. */
+	function recordKey(record: ExerciseRecordDraft): string {
+		return record.itemId ?? record.exerciseId ?? record.name ?? '';
+	}
 
 	let elapsedTime = $state(0);
 	let timerRunning = $state(false);
@@ -313,9 +340,9 @@
 		}
 	}
 
-	function updateRecord(itemId: string, field: keyof ExerciseRecordDraft, value: string | number) {
+	function updateRecord(key: string, field: keyof ExerciseRecordDraft, value: string | number) {
 		exerciseRecords = exerciseRecords.map((r) =>
-			r.itemId === itemId ? { ...r, [field]: value } : r
+			recordKey(r) === key ? { ...r, [field]: value } : r
 		);
 	}
 
@@ -376,7 +403,8 @@
 					exerciseRecords:
 						exerciseRecords.length > 0
 							? exerciseRecords.map((record, i) => ({
-									itemId: record.itemId,
+									itemId: record.itemId ?? undefined,
+									exerciseId: record.exerciseId ?? undefined,
 									sets: record.sets,
 									reps: record.reps,
 									weight: record.weight,
@@ -418,6 +446,18 @@
 	</div>
 
 	<h1 class="mb-6 text-lg font-semibold text-fg-accent">New Training Session</h1>
+
+	{#if data.programBlock}
+		<div
+			class="mb-6 flex items-center gap-2 rounded-sm border border-blue-400/40 bg-blue-500/5 px-3 py-2 text-xs text-blue-500"
+		>
+			<i class="fas fa-calendar-days"></i>
+			<span>
+				Prefilled from program: {data.programBlock.programName} — {data.programBlock.title}. Adjust
+				the values to what you actually did.
+			</span>
+		</div>
+	{/if}
 
 	{#if isGpsActivity}
 		<div class="mb-6 rounded-sm border border-border bg-surface p-4">
@@ -552,75 +592,83 @@
 		</Select>
 
 		{#if activityType === 'strength'}
-			<div>
-				<h3 class="mb-2 text-sm font-medium text-fg">Exercises</h3>
-				<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
-				<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
-					{#each data.items as item (item.id)}
-						<div class="rounded-sm px-2 py-1.5 transition-colors hover:bg-muted">
-							<Checkbox
-								checked={selectedItems.includes(item.id)}
-								onchange={() => toggleItem(item.id)}
-								label={item.name}
-							/>
-						</div>
-					{/each}
-					{#if data.items.length === 0}
-						<p class="py-4 text-center text-xs text-fg-subdued">
-							No items in library. Create items first.
-						</p>
-					{/if}
+			{#if !data.programBlock}
+				<div>
+					<h3 class="mb-2 text-sm font-medium text-fg">Exercises</h3>
+					<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
+					<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
+						{#each data.items as item (item.id)}
+							<div class="rounded-sm px-2 py-1.5 transition-colors hover:bg-muted">
+								<Checkbox
+									checked={selectedItems.includes(item.id)}
+									onchange={() => toggleItem(item.id)}
+									label={item.name}
+								/>
+							</div>
+						{/each}
+						{#if data.items.length === 0}
+							<p class="py-4 text-center text-xs text-fg-subdued">
+								No items in library. Create items first.
+							</p>
+						{/if}
+					</div>
 				</div>
-			</div>
+			{/if}
 
 			{#if exerciseRecords.length > 0}
 				<div class="space-y-3">
 					<h3 class="text-sm font-medium text-fg">Exercise Records</h3>
-					{#each exerciseRecords as record (record.itemId)}
+					{#each exerciseRecords as record (recordKey(record))}
 						{@const item = data.items.find((i) => i.id === record.itemId)}
 						<div class="rounded-sm border border-border bg-bg p-3">
-							<p class="mb-2 text-sm font-medium text-fg">{item?.name || 'Exercise'}</p>
+							<p class="mb-2 text-sm font-medium text-fg">
+								{item?.name || record.name || 'Exercise'}
+							</p>
 							<div class="grid grid-cols-3 gap-2">
 								<div>
 									<label
-										for="sets-{record.itemId}"
+										for="sets-{recordKey(record)}"
 										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Sets</label
 									>
 									<input
-										id="sets-{record.itemId}"
+										id="sets-{recordKey(record)}"
 										type="number"
 										value={record.sets}
 										onchange={(e) =>
-											updateRecord(record.itemId, 'sets', parseRecordInt(e.currentTarget.value, 3))}
+											updateRecord(
+												recordKey(record),
+												'sets',
+												parseRecordInt(e.currentTarget.value, 3)
+											)}
 										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 								<div>
 									<label
-										for="reps-{record.itemId}"
+										for="reps-{recordKey(record)}"
 										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Reps</label
 									>
 									<input
-										id="reps-{record.itemId}"
+										id="reps-{recordKey(record)}"
 										type="text"
 										value={record.reps}
-										onchange={(e) => updateRecord(record.itemId, 'reps', e.currentTarget.value)}
+										onchange={(e) => updateRecord(recordKey(record), 'reps', e.currentTarget.value)}
 										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 								<div>
 									<label
-										for="weight-{record.itemId}"
+										for="weight-{recordKey(record)}"
 										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Weight</label
 									>
 									<div class="flex">
 										<input
-											id="weight-{record.itemId}"
+											id="weight-{recordKey(record)}"
 											type="number"
 											value={record.weight}
 											onchange={(e) =>
 												updateRecord(
-													record.itemId,
+													recordKey(record),
 													'weight',
 													parseRecordFloat(e.currentTarget.value, 0)
 												)}
@@ -634,32 +682,36 @@
 								</div>
 								<div>
 									<label
-										for="rpe-{record.itemId}"
+										for="rpe-{recordKey(record)}"
 										class="text-[10px] font-semibold tracking-wide text-fg-subdued">RPE</label
 									>
 									<input
-										id="rpe-{record.itemId}"
+										id="rpe-{recordKey(record)}"
 										type="number"
 										min="1"
 										max="10"
 										value={record.rpe}
 										onchange={(e) =>
-											updateRecord(record.itemId, 'rpe', parseRecordInt(e.currentTarget.value, 7))}
+											updateRecord(
+												recordKey(record),
+												'rpe',
+												parseRecordInt(e.currentTarget.value, 7)
+											)}
 										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg focus:border-primary-text focus:outline-none"
 									/>
 								</div>
 								<div>
 									<label
-										for="rest-{record.itemId}"
+										for="rest-{recordKey(record)}"
 										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Rest (s)</label
 									>
 									<input
-										id="rest-{record.itemId}"
+										id="rest-{recordKey(record)}"
 										type="number"
 										value={record.restTime}
 										onchange={(e) =>
 											updateRecord(
-												record.itemId,
+												recordKey(record),
 												'restTime',
 												parseRecordInt(e.currentTarget.value, 90)
 											)}
@@ -668,14 +720,15 @@
 								</div>
 								<div>
 									<label
-										for="notes-{record.itemId}"
+										for="notes-{recordKey(record)}"
 										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Notes</label
 									>
 									<input
-										id="notes-{record.itemId}"
+										id="notes-{recordKey(record)}"
 										type="text"
 										value={record.notes}
-										onchange={(e) => updateRecord(record.itemId, 'notes', e.currentTarget.value)}
+										onchange={(e) =>
+											updateRecord(recordKey(record), 'notes', e.currentTarget.value)}
 										placeholder="optional"
 										class="h-8 w-full rounded-sm border border-border bg-surface px-2 text-xs text-fg placeholder:text-fg-subdued focus:border-primary-text focus:outline-none"
 									/>

@@ -468,9 +468,10 @@ export const trainingExerciseRecord = sqliteTable(
 		activityId: text('activity_id')
 			.notNull()
 			.references(() => trainingActivity.id, { onDelete: 'cascade' }),
-		itemId: text('item_id')
-			.notNull()
-			.references(() => treeElement.id, { onDelete: 'cascade' }),
+		// Records come either from a library item (legacy sessions) or from the
+		// exercise library; at least one of the two is set.
+		itemId: text('item_id').references(() => treeElement.id, { onDelete: 'cascade' }),
+		exerciseId: text('exercise_id').references(() => exercise.id, { onDelete: 'set null' }),
 		sets: integer('sets'),
 		reps: text('reps'), // can be "8" or "6-8"
 		weight: real('weight'), // in kg
@@ -484,6 +485,148 @@ export const trainingExerciseRecord = sqliteTable(
 			.notNull()
 	},
 	(table) => [index('trainingExerciseRecord_activityId_idx').on(table.activityId)]
+);
+
+// ─── Exercise Library ────────────────────────────────────────────────────────
+export const exercise = sqliteTable(
+	'exercise',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		// Null = built-in catalog exercise, shared by every user.
+		userId: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		muscleGroup: text('muscle_group', {
+			enum: [
+				'chest',
+				'back',
+				'shoulders',
+				'biceps',
+				'triceps',
+				'forearms',
+				'abs',
+				'glutes',
+				'quadriceps',
+				'hamstrings',
+				'calves',
+				'full_body',
+				'cardio',
+				'other'
+			]
+		})
+			.notNull()
+			.default('other'),
+		/** JSON array of muscle group strings from the catalog. */
+		secondaryMuscles: text('secondary_muscles'),
+		equipment: text('equipment'),
+		description: text('description'),
+		/** JSON array of image URLs or static asset paths (built-in catalog). */
+		imageUrls: text('image_urls'),
+		/** JSON array of stored upload names (served via /api/exercises/image). */
+		imageFiles: text('image_files'),
+		/** Stable key of the built-in catalog entry this row was seeded from. */
+		builtinKey: text('builtin_key').unique(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('exercise_userId_idx').on(table.userId),
+		index('exercise_muscleGroup_idx').on(table.muscleGroup)
+	]
+);
+
+// ─── Training Programs ───────────────────────────────────────────────────────
+export const program = sqliteTable(
+	'program',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		description: text('description'),
+		/** Inactive programs stay editable but leave the calendar. */
+		active: integer('active', { mode: 'boolean' }).notNull().default(true),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [index('program_userId_idx').on(table.userId)]
+);
+
+export const programBlock = sqliteTable(
+	'program_block',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		programId: text('program_id')
+			.notNull()
+			.references(() => program.id, { onDelete: 'cascade' }),
+		/** Section title, e.g. "Pecs", "Biceps". */
+		title: text('title').notNull(),
+		/** JSON array of weekdays this block is trained on: 0 = Monday … 6 = Sunday. */
+		weekdays: text('weekdays').notNull().default('[]'),
+		position: integer('position').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [index('programBlock_programId_idx').on(table.programId)]
+);
+
+export const programEntry = sqliteTable(
+	'program_entry',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		blockId: text('block_id')
+			.notNull()
+			.references(() => programBlock.id, { onDelete: 'cascade' }),
+		/** 'exercise' rows carry the prescription; 'title' rows separate groups. */
+		kind: text('kind', { enum: ['title', 'exercise'] })
+			.notNull()
+			.default('exercise'),
+		/** Heading text when kind = 'title'. */
+		title: text('title'),
+		exerciseId: text('exercise_id').references(() => exercise.id, { onDelete: 'cascade' }),
+		sets: integer('sets'),
+		/** Approximate reps: "8" or "6-8". */
+		reps: text('reps'),
+		weight: real('weight'),
+		unit: text('unit').default('kg'),
+		/** Free-form note shown under the exercise. */
+		notes: text('notes'),
+		position: integer('position').notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('programEntry_blockId_idx').on(table.blockId),
+		index('programEntry_exerciseId_idx').on(table.exerciseId)
+	]
 );
 
 // ─── YDK Decks ───────────────────────────────────────────────────────────────
@@ -645,6 +788,40 @@ export const trainingExerciseRecordRelations = relations(trainingExerciseRecord,
 	item: one(treeElement, {
 		fields: [trainingExerciseRecord.itemId],
 		references: [treeElement.id]
+	}),
+	exercise: one(exercise, {
+		fields: [trainingExerciseRecord.exerciseId],
+		references: [exercise.id]
+	})
+}));
+
+export const exerciseRelations = relations(exercise, ({ one, many }) => ({
+	user: one(user, { fields: [exercise.userId], references: [user.id] }),
+	records: many(trainingExerciseRecord),
+	programEntries: many(programEntry)
+}));
+
+export const programRelations = relations(program, ({ one, many }) => ({
+	user: one(user, { fields: [program.userId], references: [user.id] }),
+	blocks: many(programBlock)
+}));
+
+export const programBlockRelations = relations(programBlock, ({ one, many }) => ({
+	program: one(program, {
+		fields: [programBlock.programId],
+		references: [program.id]
+	}),
+	entries: many(programEntry)
+}));
+
+export const programEntryRelations = relations(programEntry, ({ one }) => ({
+	block: one(programBlock, {
+		fields: [programEntry.blockId],
+		references: [programBlock.id]
+	}),
+	exercise: one(exercise, {
+		fields: [programEntry.exerciseId],
+		references: [exercise.id]
 	})
 }));
 

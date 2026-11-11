@@ -1,4 +1,5 @@
 import { getTrainingSessionsInRange } from '$lib/server/services/training.service';
+import { getProgramOccurrences } from '$lib/server/services/program.service';
 import {
 	getReminderHistory,
 	getReminderTemplates,
@@ -35,6 +36,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
 		return {
 			sessions: [],
+			programOccurrences: [],
 			reminders: [],
 			virtualReminders: [],
 			templates: [],
@@ -60,6 +62,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	const [
 		sessions,
+		programOccurrences,
 		reminders,
 		virtualReminders,
 		templates,
@@ -69,6 +72,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		rawTodos
 	] = await Promise.all([
 		getTrainingSessionsInRange(locals.user.id, rangeStart, rangeEnd),
+		getProgramOccurrences(locals.user.id, rangeStart, rangeEnd),
 		getReminderHistory(locals.user.id, rangeStart, rangeEnd),
 		getVirtualReminders(locals.user.id, rangeStart, rangeEnd),
 		getReminderTemplates(locals.user.id),
@@ -120,6 +124,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 
 	return {
 		sessions,
+		programOccurrences,
 		reminders,
 		virtualReminders,
 		templates,

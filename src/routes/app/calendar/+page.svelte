@@ -12,9 +12,10 @@
 	};
 
 	type CalendarEntry = {
-		type: 'training' | 'reminder' | 'scheduled' | 'expense' | 'todo';
+		type: 'training' | 'program' | 'reminder' | 'scheduled' | 'expense' | 'todo';
 		id: string;
 		templateId?: string | null;
+		programId?: string | null;
 		title: string;
 		completed?: boolean;
 		isVirtual?: boolean;
@@ -25,6 +26,7 @@
 
 	let { data } = $props();
 	let sessions = $derived(data.sessions ?? []);
+	let programOccurrences = $derived(data.programOccurrences ?? []);
 	let reminders = $derived(data.reminders ?? []);
 	let virtualReminders = $derived(data.virtualReminders ?? []);
 	let expenses = $derived(data.expenses ?? []);
@@ -119,6 +121,26 @@
 						hour: '2-digit',
 						minute: '2-digit'
 					})
+				});
+			}
+
+			// Planned program days (recurring markers, never materialized)
+			const dayPrograms = programOccurrences.filter((p) => {
+				const d = new Date(p.date);
+				return (
+					d.getFullYear() === date.getFullYear() &&
+					d.getMonth() === date.getMonth() &&
+					d.getDate() === date.getDate()
+				);
+			});
+
+			for (const occurrence of dayPrograms) {
+				events.push({
+					type: 'program',
+					id: occurrence.id,
+					programId: occurrence.programId,
+					title: `${occurrence.title} · ${occurrence.programName}`,
+					isVirtual: true
 				});
 			}
 		}
@@ -235,6 +257,8 @@
 	function eventHref(event: CalendarEntry): string {
 		if (event.type === 'todo') return resolve('/app/todos');
 		if (event.type === 'training') return resolve('/app/training/session/[id]', { id: event.id });
+		if (event.type === 'program')
+			return resolve('/app/training/programs/[id]', { id: event.programId ?? '' });
 		if (event.type === 'expense') return resolve('/app/finance');
 		if (event.type === 'scheduled') {
 			return resolve('/app/reminders/[id]', {
@@ -505,6 +529,7 @@
 						{@const date = cell.date}
 						{@const events = date ? getEventsForDate(date) : []}
 						{@const hasTraining = events.some((e) => e.type === 'training')}
+						{@const hasProgram = events.some((e) => e.type === 'program')}
 						{@const hasReminders = events.some((e) => e.type === 'reminder')}
 						{@const hasUncompleted = events.some((e) => e.type === 'reminder' && !e.completed)}
 						{@const hasExpenses = events.some((e) => e.type === 'expense')}
@@ -533,6 +558,12 @@
 										{#if hasTraining}
 											<div class="h-2 w-2 rounded-full bg-blue-500" title="Training"></div>
 										{/if}
+										{#if hasProgram}
+											<div
+												class="h-2 w-2 rounded-full border border-blue-500"
+												title="Planned program"
+											></div>
+										{/if}
 										{#if hasReminders}
 											<div
 												class="h-2 w-2 rounded-full {hasUncompleted ? 'bg-error' : 'bg-success'}"
@@ -548,20 +579,21 @@
 								<div class="hidden space-y-0.5 sm:block">
 									{#each events.slice(0, 3) as event (event)}
 										<div
-											class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {event.type ===
-											'training'
-												? 'bg-blue-500/10 text-blue-600'
-												: event.type === 'scheduled'
-													? 'bg-muted text-fg-subdued italic'
-													: event.type === 'expense'
-														? 'bg-warning/10 text-warning'
-														: event.type === 'todo'
-															? event.completed
-																? 'bg-success/10 text-success line-through'
-																: 'bg-primary-subdued text-primary-text'
-															: event.completed
-																? 'bg-success/10 text-success line-through'
-																: 'bg-error/10 text-error'}"
+											class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {event.type === 'program'
+												? 'border border-dashed border-blue-400/60 bg-blue-500/5 text-blue-500 italic'
+												: event.type === 'training'
+													? 'bg-blue-500/10 text-blue-600'
+													: event.type === 'scheduled'
+														? 'bg-muted text-fg-subdued italic'
+														: event.type === 'expense'
+															? 'bg-warning/10 text-warning'
+															: event.type === 'todo'
+																? event.completed
+																	? 'bg-success/10 text-success line-through'
+																	: 'bg-primary-subdued text-primary-text'
+																: event.completed
+																	? 'bg-success/10 text-success line-through'
+																	: 'bg-error/10 text-error'}"
 											title={event.title}
 										>
 											{event.type === 'expense'
@@ -587,6 +619,10 @@
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-blue-500"></div>
 						<span>Training</span>
+					</div>
+					<div class="flex items-center gap-1.5">
+						<div class="h-3 w-3 rounded-full border border-blue-500"></div>
+						<span>Planned program</span>
 					</div>
 					<div class="flex items-center gap-1.5">
 						<div class="h-3 w-3 rounded-full bg-primary-text"></div>

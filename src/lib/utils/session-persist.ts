@@ -1,5 +1,9 @@
 export interface ExerciseRecordDraft {
-	itemId: string;
+	/** Library item or exercise library entry — at least one is set. */
+	itemId?: string | null;
+	exerciseId?: string | null;
+	/** Display name for exercise-library records (items resolve by id). */
+	name?: string;
 	sets: number;
 	reps: string;
 	weight: number;

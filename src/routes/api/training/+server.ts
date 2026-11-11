@@ -44,7 +44,8 @@ const activityTypes = [
  * validated when present instead of being passed through on trust.
  */
 function isExerciseRecord(r: unknown): r is {
-	itemId: string;
+	itemId?: string;
+	exerciseId?: string;
 	sets?: number;
 	reps?: string;
 	weight?: number;
@@ -54,13 +55,14 @@ function isExerciseRecord(r: unknown): r is {
 	notes?: string;
 	position?: number;
 } {
-	if (!hasFields(r) || typeof r.itemId !== 'string') return false;
+	if (!hasFields(r)) return false;
+	if (typeof r.itemId !== 'string' && typeof r.exerciseId !== 'string') return false;
 
 	for (const key of ['sets', 'weight', 'rpe', 'restTime', 'position']) {
 		const value = r[key];
 		if (value !== undefined && value !== null && typeof value !== 'number') return false;
 	}
-	for (const key of ['reps', 'unit', 'notes']) {
+	for (const key of ['reps', 'unit', 'notes', 'itemId', 'exerciseId']) {
 		const value = r[key];
 		if (value !== undefined && value !== null && typeof value !== 'string') return false;
 	}
@@ -171,9 +173,7 @@ export const POST: RequestHandler = async (event) => {
 				startedAt: { validate: isString, required: false },
 				duration: { validate: isNumber, required: false },
 				exerciseRecords: {
-					validate: isArray(
-						(r): r is Record<string, unknown> => hasFields(r) && typeof r.itemId === 'string'
-					),
+					validate: isArray(isExerciseRecord),
 					required: false,
 					label: 'Exercise records'
 				}
@@ -181,7 +181,8 @@ export const POST: RequestHandler = async (event) => {
 			if (!v.ok) return v.error;
 
 			const records = (v.data.exerciseRecords ?? []) as Array<{
-				itemId: string;
+				itemId?: string;
+				exerciseId?: string;
 				sets?: number;
 				reps?: string;
 				weight?: number;
