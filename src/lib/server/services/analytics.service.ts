@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { trainingSession, expense, reminder, treeElement } from '$lib/server/db/schema';
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { eq, and, gte, isNotNull, desc, count, sql } from 'drizzle-orm';
 
 export interface AnalyticsData {
 	training: {
@@ -30,6 +30,11 @@ export interface AnalyticsData {
 	};
 }
 
+/**
+ * Dashboard analytics. Every figure is computed in SQL (counts, sums and
+ * one grouping per domain); only the small per-day reminder grouping comes
+ * back to JS, for the streak calculation.
+ */
 export async function getAnalytics(userId: string): Promise<AnalyticsData> {
 	const now = new Date();
 	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -51,168 +56,90 @@ export async function getAnalytics(userId: string): Promise<AnalyticsData> {
 	const thirtyDaysAgo = new Date(today);
 	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-	// Get all data in parallel
-	const [
-		allSessions,
-		thisWeekSessions,
-		thisMonthSessions,
-		thisMonthExpenses,
-		lastMonthExpenses,
-		allReminders,
-		completedReminders,
-		allItems,
-		thisWeekItems,
-		allPages
-	] = await Promise.all([
-		// All training sessions
+	const [trainingRow, spendingRow, topExpenseRow, reminderDays, productRow] = await Promise.all([
 		db
 			.select({
-				id: trainingSession.id,
-				startedAt: trainingSession.startedAt,
-				duration: trainingSession.duration
+				totalSessions: count(),
+				totalDuration: sql<number>`COALESCE(SUM(${trainingSession.duration}), 0)`,
+				weekSessions: sql<number>`SUM(CASE WHEN ${trainingSession.startedAt} >= ${weekStart.getTime()} THEN 1 ELSE 0 END)`,
+				monthSessions: sql<number>`SUM(CASE WHEN ${trainingSession.startedAt} >= ${monthStart.getTime()} THEN 1 ELSE 0 END)`
 			})
 			.from(trainingSession)
-			.where(eq(trainingSession.userId, userId))
-			.all(),
+			.where(eq(trainingSession.userId, userId)),
 
-		// This week sessions
-		db
-			.select({ id: trainingSession.id })
-			.from(trainingSession)
-			.where(and(eq(trainingSession.userId, userId), gte(trainingSession.startedAt, weekStart)))
-			.all(),
-
-		// This month sessions
-		db
-			.select({ id: trainingSession.id })
-			.from(trainingSession)
-			.where(and(eq(trainingSession.userId, userId), gte(trainingSession.startedAt, monthStart)))
-			.all(),
-
-		// This month expenses
 		db
 			.select({
-				amount: expense.amount,
-				description: expense.description
+				thisMonthTotal: sql<number>`COALESCE(SUM(CASE WHEN ${expense.spentAt} >= ${monthStart.getTime()} THEN ${expense.amount} ELSE 0 END), 0)`,
+				lastMonthTotal: sql<number>`COALESCE(SUM(CASE WHEN ${expense.spentAt} >= ${lastMonthStart.getTime()} AND ${expense.spentAt} <= ${lastMonthEnd.getTime()} THEN ${expense.amount} ELSE 0 END), 0)`
 			})
 			.from(expense)
-			.where(and(eq(expense.userId, userId), gte(expense.spentAt, monthStart)))
-			.all(),
+			.where(eq(expense.userId, userId)),
 
-		// Last month expenses
 		db
-			.select({ amount: expense.amount })
+			.select({ description: expense.description, hits: count() })
 			.from(expense)
 			.where(
 				and(
 					eq(expense.userId, userId),
-					gte(expense.spentAt, lastMonthStart),
-					lte(expense.spentAt, lastMonthEnd)
+					gte(expense.spentAt, monthStart),
+					isNotNull(expense.description)
 				)
 			)
-			.all(),
+			.groupBy(expense.description)
+			.orderBy(desc(count()))
+			.limit(1),
 
-		// All reminders (last 30 days)
+		// One row per UTC day, enough to walk the completion streak.
 		db
 			.select({
-				id: reminder.id,
-				completed: reminder.completed,
-				dueAt: reminder.dueAt
+				day: sql<string>`date(${reminder.dueAt} / 1000, 'unixepoch')`,
+				total: count(),
+				completed: sql<number>`SUM(CASE WHEN ${reminder.completed} THEN 1 ELSE 0 END)`
 			})
 			.from(reminder)
 			.where(and(eq(reminder.userId, userId), gte(reminder.dueAt, thirtyDaysAgo)))
-			.all(),
+			.groupBy(sql`date(${reminder.dueAt} / 1000, 'unixepoch')`),
 
-		// Completed reminders (last 30 days)
 		db
-			.select({ id: reminder.id })
-			.from(reminder)
-			.where(
-				and(
-					eq(reminder.userId, userId),
-					eq(reminder.completed, true),
-					gte(reminder.dueAt, thirtyDaysAgo)
-				)
-			)
-			.all(),
-
-		// All items
-		db
-			.select({ id: treeElement.id })
+			.select({
+				totalItems: sql<number>`SUM(CASE WHEN ${treeElement.type} = 'item' THEN 1 ELSE 0 END)`,
+				itemsThisWeek: sql<number>`SUM(CASE WHEN ${treeElement.type} = 'item' AND ${treeElement.createdAt} >= ${weekStart.getTime()} THEN 1 ELSE 0 END)`,
+				totalPages: sql<number>`SUM(CASE WHEN ${treeElement.type} = 'node' THEN 1 ELSE 0 END)`
+			})
 			.from(treeElement)
-			.where(and(eq(treeElement.userId, userId), eq(treeElement.type, 'item')))
-			.all(),
-
-		// Items this week
-		db
-			.select({ id: treeElement.id })
-			.from(treeElement)
-			.where(
-				and(
-					eq(treeElement.userId, userId),
-					eq(treeElement.type, 'item'),
-					gte(treeElement.createdAt, weekStart)
-				)
-			)
-			.all(),
-
-		// Count pages (via tree elements that are nodes)
-		db
-			.select({ id: treeElement.id })
-			.from(treeElement)
-			.where(and(eq(treeElement.userId, userId), eq(treeElement.type, 'node')))
-			.all()
+			.where(eq(treeElement.userId, userId))
 	]);
 
-	// Calculate training stats
-	const totalDuration = allSessions.reduce((sum, s) => sum + (s.duration ?? 0), 0);
-	const avgDuration = allSessions.length > 0 ? totalDuration / allSessions.length : 0;
+	const totalSessions = trainingRow[0]?.totalSessions ?? 0;
+	const totalDuration = trainingRow[0]?.totalDuration ?? 0;
+	const avgDuration = totalSessions > 0 ? totalDuration / totalSessions : 0;
 
-	// Calculate spending stats
-	const thisMonthTotal = thisMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
-	const lastMonthTotal = lastMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
+	const thisMonthTotal = spendingRow[0]?.thisMonthTotal ?? 0;
+	const lastMonthTotal = spendingRow[0]?.lastMonthTotal ?? 0;
 	const daysInMonth = now.getDate();
 	const avgDaily = daysInMonth > 0 ? thisMonthTotal / daysInMonth : 0;
+	const topExpenseDescription = topExpenseRow[0]?.description ?? null;
 
-	// Find most common expense description
-	const descCounts: Record<string, number> = {};
-	for (const exp of thisMonthExpenses) {
-		if (exp.description) {
-			descCounts[exp.description] = (descCounts[exp.description] || 0) + 1;
-		}
+	// Streak: consecutive days with every reminder completed.
+	const remindersByDate = new Map<string, { total: number; completed: number }>();
+	let totalReminders = 0;
+	let completedReminders = 0;
+	for (const row of reminderDays) {
+		remindersByDate.set(row.day, { total: row.total, completed: row.completed });
+		totalReminders += row.total;
+		completedReminders += row.completed;
 	}
-	const topExpenseDescription =
-		Object.entries(descCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-
-	// Calculate habit stats
 	const completionRate =
-		allReminders.length > 0
-			? Math.round((completedReminders.length / allReminders.length) * 100)
-			: 0;
+		totalReminders > 0 ? Math.round((completedReminders / totalReminders) * 100) : 0;
 
-	// Calculate streak (consecutive days with all reminders completed)
-	let currentStreak: number;
 	let bestStreak = 0;
 	let tempStreak = 0;
-
-	// Group reminders by date
-	const remindersByDate = new Map<string, { total: number; completed: number }>();
-	for (const rem of allReminders) {
-		const dateKey = new Date(rem.dueAt).toISOString().split('T')[0];
-		const existing = remindersByDate.get(dateKey) || { total: 0, completed: 0 };
-		existing.total++;
-		if (rem.completed) existing.completed++;
-		remindersByDate.set(dateKey, existing);
-	}
-
-	// Check streak from yesterday backwards
 	const checkDate = new Date(today);
 	checkDate.setDate(checkDate.getDate() - 1);
 
 	while (true) {
 		const dateKey = checkDate.toISOString().split('T')[0];
 		const dayData = remindersByDate.get(dateKey);
-
 		if (!dayData || dayData.total === 0) break;
 
 		if (dayData.completed === dayData.total) {
@@ -221,25 +148,22 @@ export async function getAnalytics(userId: string): Promise<AnalyticsData> {
 		} else {
 			break;
 		}
-
 		checkDate.setDate(checkDate.getDate() - 1);
 	}
 
-	// Check if today's reminders are all completed
 	const todayKey = today.toISOString().split('T')[0];
 	const todayData = remindersByDate.get(todayKey);
-	if (todayData && todayData.completed === todayData.total && todayData.total > 0) {
-		currentStreak = tempStreak + 1;
-	} else {
-		currentStreak = tempStreak;
-	}
+	const currentStreak =
+		todayData && todayData.completed === todayData.total && todayData.total > 0
+			? tempStreak + 1
+			: tempStreak;
 
 	return {
 		training: {
-			totalSessions: allSessions.length,
+			totalSessions,
 			totalDuration,
-			thisWeekSessions: thisWeekSessions.length,
-			thisMonthSessions: thisMonthSessions.length,
+			thisWeekSessions: trainingRow[0]?.weekSessions ?? 0,
+			thisMonthSessions: trainingRow[0]?.monthSessions ?? 0,
 			avgDuration: Math.round(avgDuration)
 		},
 		spending: {
@@ -249,16 +173,16 @@ export async function getAnalytics(userId: string): Promise<AnalyticsData> {
 			topExpenseDescription
 		},
 		habits: {
-			totalReminders: allReminders.length,
-			completedReminders: completedReminders.length,
+			totalReminders,
+			completedReminders,
 			completionRate,
 			currentStreak,
 			bestStreak
 		},
 		products: {
-			totalItems: allItems.length,
-			itemsThisWeek: thisWeekItems.length,
-			totalPages: allPages.length
+			totalItems: productRow[0]?.totalItems ?? 0,
+			itemsThisWeek: productRow[0]?.itemsThisWeek ?? 0,
+			totalPages: productRow[0]?.totalPages ?? 0
 		}
 	};
 }

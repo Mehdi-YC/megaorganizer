@@ -8,6 +8,8 @@ export async function getTodos(
 	options?: {
 		completed?: boolean;
 		dueDate?: string | null;
+		/** Cap the result (e.g. completed history on the todos page). */
+		limit?: number;
 	}
 ): Promise<Todo[]> {
 	const conditions = [eq(todo.userId, userId)];
@@ -24,12 +26,12 @@ export async function getTodos(
 		}
 	}
 
-	const rows = await db
+	const base = db
 		.select()
 		.from(todo)
 		.where(and(...conditions))
-		.orderBy(asc(todo.completed), asc(todo.position), desc(todo.createdAt))
-		.all();
+		.orderBy(asc(todo.completed), asc(todo.position), desc(todo.createdAt));
+	const rows = options?.limit ? await base.limit(options.limit).all() : await base.all();
 
 	return rows.map((r) => ({
 		...r,

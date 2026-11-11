@@ -92,6 +92,13 @@
       "when": 1794394144755,
       "tag": "0012_unique_power_man",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1794429920788,
+      "tag": "0013_nappy_thunderbird",
+      "breakpoints": true
     }
   ]
 }

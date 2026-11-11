@@ -1,8 +1,8 @@
 import { db } from '$lib/server/db';
 import { treeElement, trainingSession, dashboardNote } from '$lib/server/db/schema';
-import { eq, desc, and, gte, lte } from 'drizzle-orm';
+import { eq, desc, and, gte, lte, count, sql } from 'drizzle-orm';
 import { getTrainingSessionsWithActivities } from './training.service';
-import { getDueReminders, generateDueReminders, getUpcomingReminders } from './reminder.service';
+import { getDueReminders, getUpcomingReminders } from './reminder.service';
 import { getAnalytics } from './analytics.service';
 import { getUserSettings } from './finance.service';
 import { getTodayAndOverdueTodos } from './todo.service';
@@ -31,16 +31,19 @@ function getWeeklyTrainingMinutes(
 }
 
 export async function getDashboardData(userId: string) {
-	// Generate any due reminders first
-	await generateDueReminders(userId);
-
 	const todayStr = toDateKey();
+
+	// The weekly chart covers 12 weeks; fetch only that window.
+	const twelveWeeksAgo = new Date();
+	twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+	twelveWeeksAgo.setHours(0, 0, 0, 0);
 
 	const [
 		recentItems,
 		recentSessions,
-		allItems,
-		allSessions,
+		itemStats,
+		sessionStats,
+		chartSessions,
 		dueReminders,
 		upcomingEvents,
 		analytics,
@@ -62,8 +65,24 @@ export async function getDashboardData(userId: string) {
 			.orderBy(desc(treeElement.updatedAt))
 			.limit(6),
 		getTrainingSessionsWithActivities(userId, 5),
-		db.select({ id: treeElement.id }).from(treeElement).where(eq(treeElement.userId, userId)),
-		db.select().from(trainingSession).where(eq(trainingSession.userId, userId)),
+		db.select({ itemCount: count() }).from(treeElement).where(eq(treeElement.userId, userId)),
+		db
+			.select({
+				sessionCount: count(),
+				totalDuration: sql<number>`COALESCE(SUM(${trainingSession.duration}), 0)`
+			})
+			.from(trainingSession)
+			.where(eq(trainingSession.userId, userId)),
+		db
+			.select({
+				startedAt: trainingSession.startedAt,
+				duration: trainingSession.duration
+			})
+			.from(trainingSession)
+			.where(
+				and(eq(trainingSession.userId, userId), gte(trainingSession.startedAt, twelveWeeksAgo))
+			)
+			.all(),
 		getDueReminders(userId, 10),
 		getUpcomingEvents(userId, 7),
 		getAnalytics(userId),
@@ -71,8 +90,6 @@ export async function getDashboardData(userId: string) {
 		getDashboardNote(userId),
 		getTodayAndOverdueTodos(userId, todayStr)
 	]);
-
-	const totalDuration = allSessions.reduce((acc, s) => acc + (s.duration ?? 0), 0);
 
 	return {
 		recentItems,
@@ -83,11 +100,11 @@ export async function getDashboardData(userId: string) {
 		analytics,
 		currency: settings?.currency ?? 'DZD',
 		note,
-		weeklyTraining: getWeeklyTrainingMinutes(allSessions),
+		weeklyTraining: getWeeklyTrainingMinutes(chartSessions),
 		stats: {
-			itemCount: allItems.length,
-			sessionCount: allSessions.length,
-			totalDuration
+			itemCount: itemStats[0].itemCount,
+			sessionCount: sessionStats[0].sessionCount,
+			totalDuration: sessionStats[0].totalDuration
 		}
 	};
 }

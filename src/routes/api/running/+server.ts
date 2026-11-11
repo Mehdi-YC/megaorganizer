@@ -4,6 +4,7 @@ import {
 	createRunningActivity,
 	updateRunningActivity,
 	getRunningActivity,
+	getRunningActivitiesForSession,
 	addTrackPoint,
 	batchAddTrackPoints,
 	getTrackPoints,
@@ -13,8 +14,7 @@ import {
 import {
 	createTrainingSession,
 	createTrainingActivity,
-	updateTrainingSession,
-	getTrainingActivities
+	updateTrainingSession
 } from '$lib/server/services/training.service';
 import { requireUser } from '$lib/server/api-helpers';
 import {
@@ -99,30 +99,21 @@ export const GET: RequestHandler = async (event) => {
 	}
 
 	if (sessionId) {
-		const activities = await getTrainingActivities(user.id, sessionId);
-		const allTrackPoints: {
-			activityId: string;
-			runningActivity: NonNullable<Awaited<ReturnType<typeof getRunningActivity>>>;
-			trackPoints: Awaited<ReturnType<typeof getTrackPoints>>;
-		}[] = [];
-		for (const act of activities) {
-			const runningAct = await getRunningActivity(user.id, act.id);
-			if (runningAct) {
-				const points = await getTrackPoints(user.id, act.id);
-				allTrackPoints.push({
-					activityId: act.id,
-					runningActivity: runningAct,
-					trackPoints: points
-				});
-			}
-		}
+		const rows = await getRunningActivitiesForSession(user.id, sessionId);
+		const allTrackPoints = await Promise.all(
+			rows.map(async (row) => ({
+				activityId: row.activityId,
+				runningActivity: row.runningActivity,
+				trackPoints: await getTrackPoints(user.id, row.activityId, 500)
+			}))
+		);
 		return json(allTrackPoints);
 	}
 
 	if (activityId) {
 		const activity = await getRunningActivity(user.id, activityId);
 		if (!activity) return json({ error: 'Activity not found' }, { status: 404 });
-		const points = await getTrackPoints(user.id, activityId);
+		const points = await getTrackPoints(user.id, activityId, 1000);
 		return json({ activity, trackPoints: points });
 	}
 
