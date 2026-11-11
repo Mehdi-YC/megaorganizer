@@ -77,34 +77,6 @@ export function getTagIds(item: Taggable): string[] {
 	}
 }
 
-export function isSmallImage(url: string): Promise<boolean> {
-	return new Promise((resolve) => {
-		const img = new Image();
-		img.onload = () =>
-			resolve(
-				img.naturalWidth < SMALL_IMAGE_THRESHOLD.width ||
-					img.naturalHeight < SMALL_IMAGE_THRESHOLD.height
-			);
-		img.onerror = () => resolve(false);
-		img.src = url;
-	});
-}
-
-export async function checkSmallImages(
-	items: Pick<TreeElement, 'id' | 'imageUrl'>[],
-	onUpdate: (ids: Set<string>) => void,
-	existing?: Set<string>
-) {
-	const small = new Set(existing ?? []);
-	await Promise.all(
-		items.map(async (item) => {
-			if (!item.imageUrl || small.has(item.id)) return;
-			if (await isSmallImage(item.imageUrl)) small.add(item.id);
-		})
-	);
-	onUpdate(small);
-}
-
 export async function searchTree(
 	query: string,
 	typeFilter?: TreeElement['type']
