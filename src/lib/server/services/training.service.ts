@@ -258,8 +258,9 @@ export async function getActivityItems(userId: string, activityId: string) {
 export async function createExerciseRecord(
 	userId: string,
 	activityId: string,
-	itemId: string,
+	itemId: string | null,
 	data: {
+		exerciseId?: string | null;
 		sets?: number;
 		reps?: string;
 		weight?: number;
@@ -292,7 +293,9 @@ export async function batchCreateExerciseRecords(
 	userId: string,
 	activityId: string,
 	records: Array<{
-		itemId: string;
+		/** Library item or exercise library entry — at least one must be set. */
+		itemId?: string | null;
+		exerciseId?: string | null;
 		sets?: number;
 		reps?: string;
 		weight?: number;
@@ -314,7 +317,8 @@ export async function batchCreateExerciseRecords(
 
 	const values = records.map((r, i) => ({
 		activityId,
-		itemId: r.itemId,
+		itemId: r.itemId ?? null,
+		exerciseId: r.exerciseId ?? null,
 		sets: r.sets,
 		reps: r.reps,
 		weight: r.weight,

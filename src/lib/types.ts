@@ -384,6 +384,99 @@ export interface InvoiceUserData {
 	rib?: string | null;
 }
 
+// ─── Exercise library & training programs ────────────────────────────────────
+export type MuscleGroup =
+	| 'chest'
+	| 'back'
+	| 'shoulders'
+	| 'biceps'
+	| 'triceps'
+	| 'forearms'
+	| 'abs'
+	| 'glutes'
+	| 'quadriceps'
+	| 'hamstrings'
+	| 'calves'
+	| 'full_body'
+	| 'cardio'
+	| 'other';
+
+/** A library exercise as the client sees it: images merged into one list. */
+export interface Exercise {
+	id: string;
+	name: string;
+	muscleGroup: MuscleGroup;
+	secondaryMuscles: string[];
+	equipment: string | null;
+	description: string | null;
+	/** Image srcs: uploaded files (/api/exercises/image?…) or static/external URLs. */
+	images: string[];
+	isBuiltIn: boolean;
+	/** Logged personal record, when requested. */
+	pr?: PersonalRecord | null;
+}
+
+/** "7 reps for 50 kg" — best logged performance for an exercise. */
+export interface PersonalRecord {
+	maxWeight: number | null;
+	maxReps: number | null;
+	unit: string | null;
+}
+
+export interface ProgramEntry {
+	id: string;
+	blockId: string;
+	kind: 'title' | 'exercise';
+	title: string | null;
+	exerciseId: string | null;
+	sets: number | null;
+	reps: string | null;
+	weight: number | null;
+	unit: string | null;
+	notes: string | null;
+	position: number;
+	exercise: Exercise | null;
+	pr: PersonalRecord | null;
+}
+
+export interface ProgramBlock {
+	id: string;
+	programId: string;
+	title: string;
+	/** 0 = Monday … 6 = Sunday. */
+	weekdays: number[];
+	position: number;
+	entries: ProgramEntry[];
+}
+
+export interface Program {
+	id: string;
+	name: string;
+	description: string | null;
+	active: boolean;
+	blocks: ProgramBlock[];
+}
+
+export interface ProgramListItem {
+	id: string;
+	name: string;
+	description: string | null;
+	active: boolean;
+	blockCount: number;
+	exerciseCount: number;
+	weekdays: number[];
+}
+
+/** A planned program day, projected onto the calendar (never materialized). */
+export interface ProgramOccurrence {
+	id: string;
+	programId: string;
+	blockId: string;
+	programName: string;
+	title: string;
+	date: Date | string;
+}
+
 export interface EnabledFeatures {
 	todos?: boolean;
 	reminders?: boolean;
