@@ -8,7 +8,8 @@ import { createWikilinkExtension, escapeHtml } from '$lib/utils/wikilink';
 // cache here. Their API hangs off the default export, which is what the
 // initialisers and call sites below use.
 type MermaidApi = typeof import('mermaid').default;
-type HljsApi = typeof import('highlight.js').default;
+// lib/common carries the ~40 popular grammars instead of all ~190.
+type HljsApi = typeof import('highlight.js/lib/common').default;
 
 let mermaidReady = false;
 let mermaidModule: MermaidApi | null = null;
@@ -34,7 +35,7 @@ async function ensureMermaid(): Promise<MermaidApi> {
 
 async function ensureHljs(): Promise<HljsApi> {
 	if (hljsReady && hljsModule) return hljsModule;
-	const mod = await import('highlight.js');
+	const mod = await import('highlight.js/lib/common');
 	hljsModule = mod.default;
 	hljsReady = true;
 	return hljsModule;

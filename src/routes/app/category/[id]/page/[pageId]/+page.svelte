@@ -10,7 +10,6 @@
 		parseMetadata,
 		getNodeColor,
 		getNodeIcon,
-		checkSmallImages,
 		searchTree,
 		NODE_COLORS,
 		NODE_ICONS
@@ -73,20 +72,26 @@
 			cancel();
 		}
 	});
-	let smallImages = $state(new Set<string>());
 	let nodeDragIdx = $state<number | null>(null);
 	let addMenuSearchInput = $state<HTMLInputElement | null>(null);
 	let nodeMarkdownHtml = $state<Record<string, string>>({});
+	// Memoized by id + updatedAt so tree changes only render new or edited
+	// node bodies instead of every node's markdown again.
+	const nodeMarkdownCache = new Map<string, string>();
 
 	async function renderNodeMarkdown() {
-		const entries: [string, string][] = [];
-		for (const node of treeElements) {
-			if (node.type === 'node' && node.markdown) {
-				const html = await renderMarkdown(node.markdown);
-				entries.push([node.id, html]);
-			}
-		}
-		nodeMarkdownHtml = Object.fromEntries(entries);
+		const nodes = treeElements.filter((n) => n.type === 'node' && n.markdown);
+		const results = await Promise.all(
+			nodes.map(async (node) => {
+				const key = `${node.id}:${node.updatedAt ?? ''}`;
+				const cachedHtml = nodeMarkdownCache.get(key);
+				if (cachedHtml !== undefined) return [node.id, cachedHtml] as const;
+				const html = await renderMarkdown(node.markdown ?? '');
+				nodeMarkdownCache.set(key, html);
+				return [node.id, html] as const;
+			})
+		);
+		nodeMarkdownHtml = { ...nodeMarkdownHtml, ...Object.fromEntries(results) };
 	}
 
 	$effect(() => {
@@ -101,7 +106,6 @@
 	}
 
 	onMount(() => {
-		checkSmallImages(treeElements, (ids) => (smallImages = ids), smallImages);
 		if (topLevelNodes.length > 0 && expandedNodes.size === 0) {
 			const next = new Set(expandedNodes);
 			next.add(topLevelNodes[0].id);
@@ -115,9 +119,16 @@
 	let renderedContent = $state('');
 
 	$effect(() => {
-		renderMarkdown(pageContent, data.links).then((html) => {
-			renderedContent = html;
-		});
+		// Debounced: typing used to re-parse and sanitize the whole document
+		// on every keystroke.
+		const value = pageContent;
+		const links = data.links;
+		const timer = setTimeout(() => {
+			renderMarkdown(value, links).then((html) => {
+				renderedContent = html;
+			});
+		}, 200);
+		return () => clearTimeout(timer);
 	});
 
 	async function searchItems() {
@@ -220,7 +231,6 @@
 		if (res.ok) {
 			const children = await res.json();
 			nodeChildrenCache = { ...nodeChildrenCache, [nodeId]: children };
-			checkSmallImages(children, (ids) => (smallImages = ids), smallImages);
 		}
 	}
 

@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { checkSmallImages, getAssignedTags, toggleArrayItem } from '$lib/utils';
+	import { getAssignedTags, toggleArrayItem } from '$lib/utils';
 	import {
 		GridItemImage,
 		TagChips,
@@ -28,7 +28,6 @@
 	let filterYdk = $state(false);
 	let filterFavorite = $state(false);
 	let showFilters = $state(false);
-	let smallImages = $state(new Set<string>());
 	let currentPage = $state(1);
 	const PAGE_SIZE = 50;
 
@@ -45,7 +44,6 @@
 				allItems = await itemsRes.json();
 				allTags = await tagsRes.json();
 				filterItems();
-				checkSmallImages(allItems, (ids) => (smallImages = ids), smallImages);
 			}
 		} catch {
 			loadError = true;

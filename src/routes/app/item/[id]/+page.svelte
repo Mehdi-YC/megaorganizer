@@ -86,9 +86,16 @@
 	let renderedContent = $state('');
 
 	$effect(() => {
-		renderMarkdown(content, data.links).then((html) => {
-			renderedContent = html;
-		});
+		// Debounced: typing used to re-parse and sanitize the whole document
+		// on every keystroke.
+		const value = content;
+		const links = data.links;
+		const timer = setTimeout(() => {
+			renderMarkdown(value, links).then((html) => {
+				renderedContent = html;
+			});
+		}, 200);
+		return () => clearTimeout(timer);
 	});
 
 	onMount(async () => {

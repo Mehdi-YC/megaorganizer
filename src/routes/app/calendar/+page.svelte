@@ -98,22 +98,28 @@
 		changeMonth(1);
 	}
 
-	function getEventsForDate(date: Date): CalendarEntry[] {
-		const events: CalendarEntry[] = [];
+	function dayKey(date: Date): string {
+		const y = date.getFullYear();
+		const m = String(date.getMonth() + 1).padStart(2, '0');
+		const d = String(date.getDate()).padStart(2, '0');
+		return `${y}-${m}-${d}`;
+	}
 
-		// Add training sessions
+	/**
+	 * All events bucketed by day, computed once per data or filter change.
+	 * The month grid used to re-filter every source array per day cell.
+	 */
+	let eventsByDate = $derived.by(() => {
+		const map = new Map<string, CalendarEntry[]>();
+		const push = (key: string, entry: CalendarEntry) => {
+			const list = map.get(key) ?? [];
+			list.push(entry);
+			map.set(key, list);
+		};
+
 		if (!filter || filter === 'training') {
-			const daySessions = sessions.filter((s) => {
-				const sessionDate = new Date(s.startedAt);
-				return (
-					sessionDate.getFullYear() === date.getFullYear() &&
-					sessionDate.getMonth() === date.getMonth() &&
-					sessionDate.getDate() === date.getDate()
-				);
-			});
-
-			for (const session of daySessions) {
-				events.push({
+			for (const session of sessions) {
+				push(dayKey(new Date(session.startedAt)), {
 					type: 'training',
 					id: session.id,
 					title: session.title || 'Training Session',
@@ -125,17 +131,8 @@
 			}
 
 			// Planned program days (recurring markers, never materialized)
-			const dayPrograms = programOccurrences.filter((p) => {
-				const d = new Date(p.date);
-				return (
-					d.getFullYear() === date.getFullYear() &&
-					d.getMonth() === date.getMonth() &&
-					d.getDate() === date.getDate()
-				);
-			});
-
-			for (const occurrence of dayPrograms) {
-				events.push({
+			for (const occurrence of programOccurrences) {
+				push(dayKey(new Date(occurrence.date)), {
 					type: 'program',
 					id: occurrence.id,
 					programId: occurrence.programId,
@@ -145,19 +142,9 @@
 			}
 		}
 
-		// Add existing reminders (instances)
 		if (!filter || filter === 'reminders') {
-			const dayReminders = reminders.filter((r) => {
-				const reminderDate = new Date(r.dueAt);
-				return (
-					reminderDate.getFullYear() === date.getFullYear() &&
-					reminderDate.getMonth() === date.getMonth() &&
-					reminderDate.getDate() === date.getDate()
-				);
-			});
-
-			for (const reminder of dayReminders) {
-				events.push({
+			for (const reminder of reminders) {
+				push(dayKey(new Date(reminder.dueAt)), {
 					type: 'reminder',
 					id: reminder.id,
 					title: reminder.title,
@@ -169,23 +156,15 @@
 				});
 			}
 
-			// Add virtual (scheduled) reminders from templates
-			const dayVirtual = virtualReminders.filter((r) => {
-				const reminderDate = new Date(r.dueAt);
-				return (
-					reminderDate.getFullYear() === date.getFullYear() &&
-					reminderDate.getMonth() === date.getMonth() &&
-					reminderDate.getDate() === date.getDate()
-				);
-			});
-
-			for (const vReminder of dayVirtual) {
+			for (const vReminder of virtualReminders) {
+				const key = dayKey(new Date(vReminder.dueAt));
+				const dayEvents = map.get(key) ?? [];
 				// Don't add if there's already a real reminder for this template on this day
-				const hasReal = events.some(
+				const hasReal = dayEvents.some(
 					(e) => e.type === 'reminder' && e.id.includes(vReminder.templateId)
 				);
 				if (!hasReal) {
-					events.push({
+					push(key, {
 						type: 'scheduled',
 						id: vReminder.id,
 						templateId: vReminder.templateId,
@@ -200,16 +179,10 @@
 			}
 		}
 
-		// Add simple todos scheduled for this date
 		if (!filter || filter === 'todos') {
-			const y = date.getFullYear();
-			const m = String(date.getMonth() + 1).padStart(2, '0');
-			const d = String(date.getDate()).padStart(2, '0');
-			const dateStr = `${y}-${m}-${d}`;
-
-			const dayTodos = (data.todos ?? []).filter((t) => t.dueDate === dateStr);
-			for (const todoItem of dayTodos) {
-				events.push({
+			for (const todoItem of data.todos ?? []) {
+				if (!todoItem.dueDate) continue;
+				push(todoItem.dueDate, {
 					type: 'todo',
 					id: todoItem.id,
 					title: todoItem.title,
@@ -219,19 +192,9 @@
 			}
 		}
 
-		// Add expenses
 		if (!filter || filter === 'finance') {
-			const dayExpenses = expenses.filter((e) => {
-				const expenseDate = new Date(e.spentAt);
-				return (
-					expenseDate.getFullYear() === date.getFullYear() &&
-					expenseDate.getMonth() === date.getMonth() &&
-					expenseDate.getDate() === date.getDate()
-				);
-			});
-
-			for (const exp of dayExpenses) {
-				events.push({
+			for (const exp of expenses) {
+				push(dayKey(new Date(exp.spentAt)), {
 					type: 'expense',
 					id: exp.id,
 					title: exp.description || 'Expense',
@@ -241,7 +204,11 @@
 			}
 		}
 
-		return events;
+		return map;
+	});
+
+	function getEventsForDate(date: Date): CalendarEntry[] {
+		return eventsByDate.get(dayKey(date)) ?? [];
 	}
 
 	function isToday(date: Date) {
@@ -330,47 +297,39 @@
 		});
 	}
 
-	function getMonthOverview(date: Date) {
-		const year = date.getFullYear();
-		const month = date.getMonth();
+	/** Month totals in one pass per source, recomputed only on month change. */
+	let monthOverview = $derived.by(() => {
+		const year = currentDate.getFullYear();
+		const month = currentDate.getMonth();
 		const startDate = new Date(year, month, 1);
 		const endDate = new Date(year, month + 1, 0, 23, 59, 59);
 		const now = new Date();
 
-		// Count training sessions
-		const monthSessions = sessions.filter((s) => {
+		let trainingCount = 0;
+		for (const s of sessions) {
 			const d = new Date(s.startedAt);
-			return d >= startDate && d <= endDate;
-		});
+			if (d >= startDate && d <= endDate) trainingCount++;
+		}
 
-		// Count reminders
-		const monthReminders = reminders.filter((r) => {
+		let reminderCount = 0;
+		let completedCount = 0;
+		let missedCount = 0;
+		for (const r of reminders) {
 			const d = new Date(r.dueAt);
-			return d >= startDate && d <= endDate;
-		});
+			if (d < startDate || d > endDate) continue;
+			reminderCount++;
+			if (r.completed) completedCount++;
+			else if (d < now) missedCount++;
+		}
 
-		// Count completed reminders
-		const completedReminders = monthReminders.filter((r) => r.completed);
+		let expenseTotal = 0;
+		for (const e of expenses) {
+			const d = new Date(e.spentAt);
+			if (d >= startDate && d <= endDate) expenseTotal += e.amount;
+		}
 
-		// Count missed reminders (past due and not completed)
-		const missedReminders = monthReminders.filter((r) => !r.completed && new Date(r.dueAt) < now);
-
-		// Sum expenses
-		const monthExpenseTotal = expenses
-			.filter((e) => {
-				const d = new Date(e.spentAt);
-				return d >= startDate && d <= endDate;
-			})
-			.reduce((sum, e) => sum + e.amount, 0);
-
-		return {
-			trainingCount: monthSessions.length,
-			reminderCount: monthReminders.length,
-			completedCount: completedReminders.length,
-			missedCount: missedReminders.length,
-			expenseTotal: monthExpenseTotal
-		};
-	}
+		return { trainingCount, reminderCount, completedCount, missedCount, expenseTotal };
+	});
 </script>
 
 <svelte:head>
@@ -476,7 +435,7 @@
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
-								{getMonthOverview(currentDate).trainingCount}
+								{monthOverview.trainingCount}
 							</p>
 							<p class="text-[10px] text-fg-subdued">Trainings</p>
 						</div>
@@ -489,11 +448,11 @@
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
-								{getMonthOverview(currentDate).reminderCount}
+								{monthOverview.reminderCount}
 								<span class="text-xs font-normal text-fg-subdued">
-									({getMonthOverview(currentDate).completedCount}
+									({monthOverview.completedCount}
 									<i class="fas fa-check text-success"></i>
-									/ {getMonthOverview(currentDate).missedCount}
+									/ {monthOverview.missedCount}
 									<i class="fas fa-times text-error"></i>)
 								</span>
 							</p>
@@ -508,7 +467,7 @@
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
-								{getMonthOverview(currentDate).expenseTotal.toLocaleString()}
+								{monthOverview.expenseTotal.toLocaleString()}
 								{expenseSettings.currency}
 							</p>
 							<p class="text-[10px] text-fg-subdued">Expenses</p>
@@ -577,7 +536,7 @@
 								</div>
 
 								<div class="hidden space-y-0.5 sm:block">
-									{#each events.slice(0, 3) as event (event)}
+									{#each events.slice(0, 3) as event (event.type + event.id)}
 										<div
 											class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {event.type === 'program'
 												? 'border border-dashed border-blue-400/60 bg-blue-500/5 text-blue-500 italic'

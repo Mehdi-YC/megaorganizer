@@ -1,5 +1,5 @@
-const CACHE_NAME = 'megorganize-v6';
-const RUNTIME_CACHE = 'megorganize-runtime-v6';
+const CACHE_NAME = 'megorganize-v7';
+const RUNTIME_CACHE = 'megorganize-runtime-v7';
 
 // Precache only unauthenticated URLs that always return 200. Auth-gated
 // pages and redirects make cache.addAll reject, which aborts the whole
@@ -83,8 +83,12 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	// Static assets (JS, CSS, images): cache-first
-	if (url.pathname.startsWith('/_app/') || url.pathname.match(/\.(js|css|png|svg|woff2?)$/)) {
+	// Static assets (JS, CSS, images): cache-first. The image list must
+	// cover every format the app serves (exercise assets are WebP).
+	if (
+		url.pathname.startsWith('/_app/') ||
+		url.pathname.match(/\.(js|css|png|svg|webp|avif|jpe?g|ico|woff2?)$/)
+	) {
 		event.respondWith(
 			caches.match(request).then((cached) => {
 				if (cached) return cached;
