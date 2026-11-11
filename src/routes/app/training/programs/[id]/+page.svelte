@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -11,6 +10,7 @@
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
+	import { MUSCLE_GROUP_LABELS as GROUP_LABELS } from '$lib/utils/training';
 	import { untrack } from 'svelte';
 	import type {
 		Program,
@@ -22,23 +22,6 @@
 	} from '$lib/types';
 
 	const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-	const GROUP_LABELS: Record<MuscleGroup, string> = {
-		chest: 'Chest',
-		back: 'Back',
-		shoulders: 'Shoulders',
-		biceps: 'Biceps',
-		triceps: 'Triceps',
-		forearms: 'Forearms',
-		abs: 'Abs',
-		glutes: 'Glutes',
-		quadriceps: 'Quadriceps',
-		hamstrings: 'Hamstrings',
-		calves: 'Calves',
-		full_body: 'Full body',
-		cardio: 'Cardio',
-		other: 'Other'
-	};
 
 	/** Editable copies with string fields, so inputs bind cleanly. */
 	type EntryDraft = Omit<ProgramEntry, 'title' | 'sets' | 'reps' | 'weight' | 'unit' | 'notes'> & {
@@ -138,7 +121,19 @@
 			programId: program.id,
 			title: `Block ${blocks.length + 1}`
 		});
-		if (res.ok) await invalidateAll();
+		if (!res.ok) return;
+		const row = await res.json();
+		blocks = [
+			...blocks,
+			{
+				id: row.id,
+				programId: program.id,
+				title: row.title,
+				weekdays: [],
+				position: row.position ?? blocks.length,
+				entries: []
+			}
+		];
 	}
 
 	async function removeBlock(block: BlockDraft) {
@@ -148,7 +143,7 @@
 		});
 		if (res.ok) {
 			showToast('Block deleted');
-			await invalidateAll();
+			blocks = blocks.filter((b) => b.id !== block.id);
 		}
 	}
 
@@ -179,7 +174,26 @@
 			kind: 'title',
 			title: 'Section'
 		});
-		if (res.ok) await invalidateAll();
+		if (!res.ok) return;
+		const row = await res.json();
+		block.entries = [
+			...block.entries,
+			{
+				id: row.id,
+				blockId: block.id,
+				kind: 'title',
+				title: 'Section',
+				exerciseId: null,
+				sets: '',
+				reps: '',
+				weight: '',
+				unit: 'kg',
+				notes: '',
+				position: row.position ?? block.entries.length,
+				exercise: null,
+				pr: null
+			}
+		];
 	}
 
 	function moveEntry(block: BlockDraft, index: number, delta: number) {
@@ -209,6 +223,8 @@
 	let pickerBlockId = $state('');
 	let pickerSearch = $state('');
 	let pickerGroup = $state<MuscleGroup | 'all'>('all');
+	let pickerSelection = $state<Array<Exercise & { pr: PersonalRecord | null }>>([]);
+	let addingExercises = $state(false);
 
 	let pickerList = $derived(
 		exercises.filter((e) => {
@@ -223,24 +239,65 @@
 		pickerBlockId = block.id;
 		pickerSearch = '';
 		pickerGroup = 'all';
+		pickerSelection = [];
 		pickerOpen = true;
 	}
 
-	async function pickExercise(exercise: Exercise) {
-		const res = await post({
-			action: 'createEntry',
-			blockId: pickerBlockId,
-			kind: 'exercise',
-			exerciseId: exercise.id,
-			sets: 3,
-			reps: '8-10',
-			weight: 0,
-			unit: 'kg'
+	function togglePick(exercise: Exercise & { pr: PersonalRecord | null }) {
+		pickerSelection = pickerSelection.some((e) => e.id === exercise.id)
+			? pickerSelection.filter((e) => e.id !== exercise.id)
+			: [...pickerSelection, exercise];
+	}
+
+	/** Add every selected exercise in one go, then append the rows locally. */
+	async function addSelected() {
+		const block = blocks.find((b) => b.id === pickerBlockId);
+		if (!block || pickerSelection.length === 0 || addingExercises) return;
+		addingExercises = true;
+
+		const created = await Promise.all(
+			pickerSelection.map((ex) =>
+				post({
+					action: 'createEntry',
+					blockId: block.id,
+					kind: 'exercise',
+					exerciseId: ex.id,
+					sets: 3,
+					reps: '8-10',
+					weight: 0,
+					unit: 'kg'
+				}).then(async (res) => (res.ok ? res.json() : null))
+			)
+		);
+
+		let position = block.entries.reduce((max, e) => Math.max(max, e.position), -1) + 1;
+		const drafts = created.flatMap((row, i) => {
+			if (!row) return [];
+			const ex = pickerSelection[i];
+			position += 1;
+			return [
+				{
+					id: row.id as string,
+					blockId: block.id,
+					kind: 'exercise' as const,
+					title: '',
+					exerciseId: ex.id,
+					sets: '3',
+					reps: '8-10',
+					weight: '0',
+					unit: 'kg',
+					notes: '',
+					position: position - 1,
+					exercise: ex,
+					pr: ex.pr ?? null
+				}
+			];
 		});
-		if (res.ok) {
-			pickerOpen = false;
-			await invalidateAll();
-		}
+		block.entries = [...block.entries, ...drafts];
+
+		addingExercises = false;
+		pickerSelection = [];
+		pickerOpen = false;
 	}
 
 	function formatPr(pr: PersonalRecord | null): string | null {
@@ -556,11 +613,21 @@
 		</div>
 		<div class="max-h-80 space-y-1 overflow-y-auto">
 			{#each pickerList as exercise (exercise.id)}
+				{@const selected = pickerSelection.some((e) => e.id === exercise.id)}
 				<button
 					type="button"
-					class="flex w-full cursor-pointer items-center gap-3 rounded-sm border border-transparent p-2 text-left transition-colors hover:bg-muted"
-					onclick={() => pickExercise(exercise)}
+					class="flex w-full cursor-pointer items-center gap-3 rounded-sm border p-2 text-left transition-colors {selected
+						? 'border-primary bg-primary/5'
+						: 'border-transparent hover:bg-muted'}"
+					onclick={() => togglePick(exercise)}
 				>
+					<div
+						class="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border {selected
+							? 'border-primary bg-primary text-white'
+							: 'border-border-strong'}"
+					>
+						{#if selected}<i class="fas fa-check text-[9px]"></i>{/if}
+					</div>
 					<div class="h-10 w-14 shrink-0 overflow-hidden rounded-sm bg-muted">
 						{#if exercise.images[0]}
 							<img
@@ -589,5 +656,8 @@
 	</div>
 	{#snippet footer()}
 		<Button variant="secondary" onclick={() => (pickerOpen = false)}>Cancel</Button>
+		<Button disabled={pickerSelection.length === 0} loading={addingExercises} onclick={addSelected}>
+			Add {pickerSelection.length} exercise{pickerSelection.length === 1 ? '' : 's'}
+		</Button>
 	{/snippet}
 </Dialog>

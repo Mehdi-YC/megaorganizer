@@ -8,6 +8,24 @@ export const ACTIVITY_ICONS: Record<string, { icon: string; color: string }> = {
 	other: { icon: 'fa-circle-dot', color: 'text-fg-subdued' }
 };
 
+/** Display labels for exercise muscle groups, shared by all training pages. */
+export const MUSCLE_GROUP_LABELS: Record<string, string> = {
+	chest: 'Chest',
+	back: 'Back',
+	shoulders: 'Shoulders',
+	biceps: 'Biceps',
+	triceps: 'Triceps',
+	forearms: 'Forearms',
+	abs: 'Abs',
+	glutes: 'Glutes',
+	quadriceps: 'Quadriceps',
+	hamstrings: 'Hamstrings',
+	calves: 'Calves',
+	full_body: 'Full body',
+	cardio: 'Cardio',
+	other: 'Other'
+};
+
 export function getSessionIcon(activityTypes: string[]): { icon: string; color: string } {
 	if (!activityTypes || activityTypes.length === 0) return ACTIVITY_ICONS.other;
 	return ACTIVITY_ICONS[activityTypes[0]] ?? ACTIVITY_ICONS.other;

@@ -416,6 +416,22 @@ export interface Exercise {
 	pr?: PersonalRecord | null;
 }
 
+/** A logged exercise record as the session detail page shows it. */
+export interface SessionExerciseRecord {
+	id: string;
+	activityId: string;
+	/** Display name: library exercise or legacy library item. */
+	name: string;
+	sets: number | null;
+	reps: string | null;
+	weight: number | null;
+	unit: string | null;
+	rpe: number | null;
+	restTime: number | null;
+	notes: string | null;
+	position: number;
+}
+
 /** "7 reps for 50 kg" — best logged performance for an exercise. */
 export interface PersonalRecord {
 	maxWeight: number | null;
