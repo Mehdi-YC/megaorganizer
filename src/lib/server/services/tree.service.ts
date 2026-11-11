@@ -1,7 +1,7 @@
 import { db } from '$lib/server/db';
 import { treeElement, treeRelationship, page } from '$lib/server/db/schema';
 import type { TreeElement, TreeElementNode } from '$lib/types';
-import { eq, and, or, asc, like, inArray, count } from 'drizzle-orm';
+import { eq, and, or, asc, like, inArray, count, sql } from 'drizzle-orm';
 import {
 	rebuildDocLinks,
 	rebindDanglingLinks,
@@ -114,7 +114,8 @@ export async function deleteTreeElement(userId: string, id: string) {
  * Both getFullTree and getSubtreeForItem build one of these.
  */
 interface NodeWithChildren {
-	element: typeof treeElement.$inferSelect;
+	/** Rows may come from the slim list projection (no markdown/ydkData). */
+	element: TreeElement;
 	children: NodeWithChildren[];
 }
 
@@ -157,7 +158,7 @@ function toTree(node: NodeWithChildren, seen = new Set<string>()): TreeElementNo
 
 /** Wire parent/child links into a map of nodes, then return the roots. */
 function assemble(
-	elements: (typeof treeElement.$inferSelect)[],
+	elements: TreeElement[],
 	relationships: { parentId: string; childId: string }[]
 ): NodeWithChildren[] {
 	const byId = new Map<string, NodeWithChildren>(
@@ -290,33 +291,19 @@ async function verifyParent(userId: string, parentType: TreeParentType, parentId
 async function wouldCreateCycle(userId: string, parentId: string, childId: string) {
 	if (parentId === childId) return true;
 
-	const edges = await db
-		.select({
-			parentId: treeRelationship.parentId,
-			childId: treeRelationship.childId
-		})
-		.from(treeRelationship)
-		.innerJoin(treeElement, eq(treeRelationship.childId, treeElement.id))
-		.where(eq(treeElement.userId, userId))
-		.all();
-
-	const parentsByChild = new Map<string, string[]>();
-	for (const edge of edges) {
-		const parents = parentsByChild.get(edge.childId) ?? [];
-		parents.push(edge.parentId);
-		parentsByChild.set(edge.childId, parents);
-	}
-
-	const seen = new Set<string>();
-	const stack = [parentId];
-	while (stack.length > 0) {
-		const current = stack.pop() as string;
-		if (current === childId) return true;
-		if (seen.has(current)) continue;
-		seen.add(current);
-		stack.push(...(parentsByChild.get(current) ?? []));
-	}
-	return false;
+	// Walk up from parentId to its ancestors in SQL; a cycle forms when
+	// childId is among them. One indexed CTE instead of loading the whole
+	// relationship graph on every link.
+	const res = await db.$client.execute({
+		sql: `WITH RECURSIVE up(id) AS (
+				SELECT ?
+				UNION
+				SELECT r.parent_id FROM tree_relationship r JOIN up ON r.child_id = up.id
+			)
+			SELECT 1 AS hit FROM up WHERE id = ? LIMIT 1`,
+		args: [parentId, childId]
+	});
+	return res.rows.length > 0;
 }
 
 export async function addChildToParent(
@@ -420,20 +407,46 @@ export async function moveChild(
 		);
 }
 
+/**
+ * List projection for pickers, the library and the mind map: everything
+ * except the `markdown` body and the `ydkData` blob, which can dwarf the
+ * rest of the row and are only needed on the detail paths.
+ */
+const slimTreeColumns = {
+	id: treeElement.id,
+	userId: treeElement.userId,
+	type: treeElement.type,
+	name: treeElement.name,
+	description: treeElement.description,
+	imageUrl: treeElement.imageUrl,
+	videoUrl: treeElement.videoUrl,
+	externalUrl: treeElement.externalUrl,
+	tags: treeElement.tags,
+	metadata: treeElement.metadata,
+	favorite: treeElement.favorite,
+	createdAt: treeElement.createdAt,
+	updatedAt: treeElement.updatedAt,
+	hasYdk: sql<boolean>`${treeElement.ydkData} IS NOT NULL`
+};
+
 export async function getFullTree(userId: string): Promise<TreeElementNode[]> {
-	const elements = await db.select().from(treeElement).where(eq(treeElement.userId, userId)).all();
+	const elements = await db
+		.select(slimTreeColumns)
+		.from(treeElement)
+		.where(eq(treeElement.userId, userId))
+		.all();
 	const relationships = await getUserRelationships(userId);
 	return assemble(elements, relationships).map((node) => toTree(node));
 }
 
 export async function searchTreeElements(userId: string, query: string) {
 	if (!query || !query.trim()) {
-		return db.select().from(treeElement).where(eq(treeElement.userId, userId)).all();
+		return db.select(slimTreeColumns).from(treeElement).where(eq(treeElement.userId, userId)).all();
 	}
 
 	const searchTerm = `%${query.trim()}%`;
 	const treeResults = await db
-		.select()
+		.select(slimTreeColumns)
 		.from(treeElement)
 		.where(and(eq(treeElement.userId, userId), like(treeElement.name, searchTerm)))
 		.all();
@@ -451,7 +464,7 @@ export async function searchTreeElements(userId: string, query: string) {
 			.from(page)
 			.where(and(eq(page.userId, userId), like(page.name, searchTerm)))
 			.all()
-	).map((p) => ({ ...p, type: 'page' as const }));
+	).map((p) => ({ ...p, type: 'page' as const, hasYdk: false }));
 
 	return [...treeResults, ...pageResults];
 }

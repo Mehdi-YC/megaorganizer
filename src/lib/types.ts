@@ -22,6 +22,8 @@ export interface TreeElement {
 	/** JSON object; see parseMetadata. */
 	metadata?: string | null;
 	ydkData?: string | null;
+	/** Slim list projection: whether a YDK deck exists, without the blob. */
+	hasYdk?: boolean;
 	favorite?: boolean | null;
 	/** Drizzle maps these to Date on the server; they cross the wire as strings. */
 	createdAt?: Date | string | null;

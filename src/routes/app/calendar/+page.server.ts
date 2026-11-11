@@ -10,7 +10,8 @@ import {
 	getUserSettings,
 	getMonthlyTotalForDateRange
 } from '$lib/server/services/finance.service';
-import { getTodos } from '$lib/server/services/todo.service';
+import { getTodosForDateRange } from '$lib/server/services/todo.service';
+import { toDateKey } from '$lib/utils/date';
 import type { PageServerLoad } from './$types';
 
 function parseMonth(param: string | null): { year: number; month: number } {
@@ -79,7 +80,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		getExpensesForDateRange(locals.user.id, rangeStart, rangeEnd),
 		getUserSettings(locals.user.id),
 		getMonthlyTotalForDateRange(locals.user.id, rangeStart, rangeEnd),
-		getTodos(locals.user.id)
+		getTodosForDateRange(locals.user.id, toDateKey(rangeStart), toDateKey(rangeEnd))
 	]);
 
 	const calendarTodos = rawTodos

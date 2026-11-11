@@ -97,7 +97,9 @@ export const treeElement = sqliteTable(
 	},
 	(table) => [
 		index('treeElement_userId_idx').on(table.userId),
-		index('treeElement_type_idx').on(table.type)
+		index('treeElement_type_idx').on(table.type),
+		index('treeElement_userId_updatedAt_idx').on(table.userId, table.updatedAt),
+		index('treeElement_userId_type_idx').on(table.userId, table.type)
 	]
 );
 
@@ -376,7 +378,8 @@ export const trainingSession = sqliteTable(
 	},
 	(table) => [
 		index('trainingSession_userId_idx').on(table.userId),
-		index('trainingSession_startedAt_idx').on(table.startedAt)
+		index('trainingSession_startedAt_idx').on(table.startedAt),
+		index('trainingSession_userId_startedAt_idx').on(table.userId, table.startedAt)
 	]
 );
 
@@ -919,7 +922,8 @@ export const reminder = sqliteTable(
 		index('reminder_userId_idx').on(table.userId),
 		index('reminder_templateId_idx').on(table.templateId),
 		index('reminder_dueAt_idx').on(table.dueAt),
-		index('reminder_completed_idx').on(table.completed)
+		index('reminder_completed_idx').on(table.completed),
+		index('reminder_userId_dueAt_idx').on(table.userId, table.dueAt)
 	]
 );
 
@@ -1344,7 +1348,9 @@ export const todo = sqliteTable(
 	(table) => [
 		index('todo_userId_idx').on(table.userId),
 		index('todo_dueDate_idx').on(table.dueDate),
-		index('todo_completed_idx').on(table.completed)
+		index('todo_completed_idx').on(table.completed),
+		index('todo_userId_dueDate_idx').on(table.userId, table.dueDate),
+		index('todo_userId_completed_idx').on(table.userId, table.completed)
 	]
 );
 

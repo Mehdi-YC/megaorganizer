@@ -91,6 +91,21 @@ export async function getRunningActivity(userId: string, activityId: string) {
 	return db.select().from(runningActivity).where(eq(runningActivity.activityId, activityId)).get();
 }
 
+/**
+ * All running activities of a session in one query (the session detail map
+ * used to fetch them one activity at a time).
+ */
+export async function getRunningActivitiesForSession(userId: string, sessionId: string) {
+	return db
+		.select({ activityId: runningActivity.activityId, runningActivity })
+		.from(runningActivity)
+		.innerJoin(trainingActivity, eq(runningActivity.activityId, trainingActivity.id))
+		.innerJoin(trainingSession, eq(trainingActivity.sessionId, trainingSession.id))
+		.where(and(eq(trainingSession.id, sessionId), eq(trainingSession.userId, userId)))
+		.orderBy(asc(trainingActivity.startedAt))
+		.all();
+}
+
 export async function addTrackPoint(
 	userId: string,
 	activityId: string,
@@ -149,16 +164,22 @@ export async function batchAddTrackPoints(
 	return executor.insert(runningTrackPoint).values(values).returning().all();
 }
 
-export async function getTrackPoints(userId: string, activityId: string) {
+export async function getTrackPoints(userId: string, activityId: string, maxPoints?: number) {
 	const owned = await verifyActivityOwnership(userId, activityId);
 	if (!owned) return [];
 
-	return db
+	const points = await db
 		.select()
 		.from(runningTrackPoint)
 		.where(eq(runningTrackPoint.activityId, activityId))
 		.orderBy(asc(runningTrackPoint.sequence))
 		.all();
+
+	// 1 Hz GPS produces thousands of points per run; map views only need
+	// the shape. Even-stride downsample, always keeping the last point.
+	if (!maxPoints || points.length <= maxPoints) return points;
+	const stride = Math.ceil(points.length / maxPoints);
+	return points.filter((_, i) => i % stride === 0 || i === points.length - 1);
 }
 
 export async function deleteTrackPoints(userId: string, activityId: string) {

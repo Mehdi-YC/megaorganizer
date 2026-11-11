@@ -60,11 +60,11 @@
 
 		if (searchQuery.trim()) {
 			const q = searchQuery.toLowerCase();
+			// Name and description only: the markdown body is not part of the
+			// list payload any more (it is searchable through global search).
 			result = result.filter(
 				(item) =>
-					item.name?.toLowerCase().includes(q) ||
-					item.description?.toLowerCase().includes(q) ||
-					item.markdown?.toLowerCase().includes(q)
+					item.name?.toLowerCase().includes(q) || item.description?.toLowerCase().includes(q)
 			);
 		}
 
@@ -85,7 +85,7 @@
 		}
 
 		if (filterYdk) {
-			result = result.filter((item) => !!item.ydkData);
+			result = result.filter((item) => !!item.hasYdk);
 		}
 
 		items = result;
@@ -315,7 +315,7 @@
 							src={item.imageUrl}
 							alt={item.name}
 							height="h-24"
-							icon={item.ydkData ? 'fa-layer-group' : 'fa-cube'}
+							icon={item.hasYdk ? 'fa-layer-group' : 'fa-cube'}
 						/>
 					</div>
 					<div class="p-2.5">
@@ -330,7 +330,7 @@
 							{/if}
 						</div>
 						<p class="mt-0.5 text-[10px] text-fg-subdued capitalize">
-							{item.type}{#if item.ydkData}
+							{item.type}{#if item.hasYdk}
 								· Deck{/if}
 						</p>
 						{#if itemTags.length > 0}
