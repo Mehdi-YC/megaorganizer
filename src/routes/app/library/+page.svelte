@@ -32,14 +32,28 @@
 	let currentPage = $state(1);
 	const PAGE_SIZE = 50;
 
-	onMount(async () => {
-		const [itemsRes, tagsRes] = await Promise.all([fetch('/api/tree'), fetch('/api/tags')]);
-		if (itemsRes.ok) allItems = await itemsRes.json();
-		if (tagsRes.ok) allTags = await tagsRes.json();
+	let loadError = $state(false);
+
+	async function loadData() {
+		loading = true;
+		loadError = false;
+		try {
+			const [itemsRes, tagsRes] = await Promise.all([fetch('/api/tree'), fetch('/api/tags')]);
+			if (!itemsRes.ok || !tagsRes.ok) {
+				loadError = true;
+			} else {
+				allItems = await itemsRes.json();
+				allTags = await tagsRes.json();
+				filterItems();
+				checkSmallImages(allItems, (ids) => (smallImages = ids), smallImages);
+			}
+		} catch {
+			loadError = true;
+		}
 		loading = false;
-		filterItems();
-		checkSmallImages(allItems, (ids) => (smallImages = ids), smallImages);
-	});
+	}
+
+	onMount(loadData);
 
 	function filterItems() {
 		let result = allItems.filter((item) => item.type !== 'node');
@@ -273,6 +287,14 @@
 
 	{#if loading}
 		<div class="flex items-center justify-center py-16"><Spinner size="md" /></div>
+	{:else if loadError}
+		<EmptyState
+			icon="fa-triangle-exclamation"
+			message="Couldn't load your library"
+			submessage="Check your connection and try again."
+		>
+			<Button variant="secondary" onclick={loadData}>Retry</Button>
+		</EmptyState>
 	{:else if items.length === 0}
 		<EmptyState
 			icon="fa-cubes"

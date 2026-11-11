@@ -30,11 +30,25 @@
 		'#6B7280'
 	];
 
-	onMount(async () => {
-		const res = await fetch('/api/tags');
-		if (res.ok) tags = await res.json();
+	let loadError = $state(false);
+
+	async function loadData() {
+		loading = true;
+		loadError = false;
+		try {
+			const res = await fetch('/api/tags');
+			if (!res.ok) {
+				loadError = true;
+			} else {
+				tags = await res.json();
+			}
+		} catch {
+			loadError = true;
+		}
 		loading = false;
-	});
+	}
+
+	onMount(loadData);
 
 	async function create() {
 		if (!newName.trim()) return;
@@ -149,6 +163,14 @@
 
 	{#if loading}
 		<div class="flex items-center justify-center py-16"><Spinner size="md" /></div>
+	{:else if loadError}
+		<EmptyState
+			icon="fa-triangle-exclamation"
+			message="Couldn't load your tags"
+			submessage="Check your connection and try again."
+		>
+			<Button variant="secondary" onclick={loadData}>Retry</Button>
+		</EmptyState>
 	{:else if tags.length === 0}
 		<EmptyState icon="fa-tags" message="No tags yet" />
 	{:else}

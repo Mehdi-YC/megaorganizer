@@ -108,13 +108,13 @@
 		e.stopPropagation();
 		e.preventDefault();
 		try {
-			showToast(`Exportation du dossier ${year}...`, 'info');
+			showToast(`Exporting the ${year} tax folder...`, 'info');
 			const res = await fetch('/api/invoicing/export', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ exportType: 'year', year })
 			});
-			if (!res.ok) throw new Error('Erreur');
+			if (!res.ok) return;
 			const blob = await res.blob();
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
@@ -124,9 +124,9 @@
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
-			showToast(`Dossier ${year} exporté avec succès`, 'success');
+			showToast(`${year} tax folder exported`, 'success');
 		} catch {
-			showToast("Échec de l'exportation du dossier", 'error');
+			showToast('Network error, export failed', 'error');
 		}
 	}
 
