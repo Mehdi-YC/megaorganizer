@@ -257,7 +257,7 @@
 					type="text"
 					bind:value={newTitle}
 					placeholder="Add a task... (e.g. Prepare meeting notes, Review invoice draft)"
-					class="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+					class="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
 				/>
 				<Button type="submit" class="shrink-0" disabled={!newTitle.trim() || isAdding}>
 					<i class="fas fa-plus mr-1.5 text-xs"></i>
@@ -331,7 +331,7 @@
 				type="text"
 				bind:value={searchQuery}
 				placeholder="Filter tasks..."
-				class="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+				class="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
 			/>
 		</div>
 	</div>
@@ -400,14 +400,14 @@
 						<div class="flex min-w-0 flex-1 items-start gap-2.5 sm:items-center">
 							<button
 								type="button"
-								class="mt-0.5 flex h-4.5 w-4.5 shrink-0 cursor-pointer items-center justify-center rounded border transition-all sm:mt-0 {t.completed
+								class="mt-0.5 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border transition-all sm:mt-0 {t.completed
 									? 'border-success bg-success text-white'
 									: 'border-border-strong hover:border-fg-subdued'}"
 								onclick={() => handleToggle(t)}
 								aria-label="Toggle task"
 							>
 								{#if t.completed}
-									<i class="fas fa-check text-[9px]"></i>
+									<i class="fas fa-check text-[10px]"></i>
 								{/if}
 							</button>
 
@@ -441,7 +441,7 @@
 										? 'bg-error/15 font-medium text-error'
 										: 'bg-muted text-fg-subdued'}"
 								>
-									<i class="far fa-calendar text-[9px]"></i>
+									<i class="far fa-calendar text-[10px]"></i>
 									{dueInfo.text}
 								</span>
 							{/if}

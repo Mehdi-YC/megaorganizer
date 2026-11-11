@@ -312,7 +312,7 @@
 						</text>
 					{/if}
 
-					<text x="14" y="40" class="fill-fg-subdued text-[9px]" dominant-baseline="middle">
+					<text x="14" y="40" class="fill-fg-subdued text-[10px]" dominant-baseline="middle">
 						{nd.type === 'node' ? 'Folder' : 'Item'}
 						{#if nd.node.children?.length}
 							· {nd.node.children.length} children

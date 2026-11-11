@@ -161,6 +161,8 @@
 		// Link Ctrl+K
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
 			e.preventDefault();
+			// Keep the sidebar's global ⌘K search from hijacking this shortcut.
+			e.stopPropagation();
 			insertLink();
 			return;
 		}
@@ -363,7 +365,7 @@
 							: 'text-fg-subdued hover:text-fg'}"
 						title="Markdown Editor"
 					>
-						<i class="fas fa-pen text-[9px]"></i>
+						<i class="fas fa-pen text-[10px]"></i>
 						<span>Write</span>
 					</button>
 
@@ -379,7 +381,7 @@
 							: 'text-fg-subdued hover:text-fg'}"
 						title="Side-by-side Editor & WYSIWYG Preview"
 					>
-						<i class="fas fa-columns text-[9px]"></i>
+						<i class="fas fa-columns text-[10px]"></i>
 						<span>Split</span>
 					</button>
 
@@ -395,7 +397,7 @@
 							: 'text-fg-subdued hover:text-fg'}"
 						title="Live WYSIWYG Output"
 					>
-						<i class="fas fa-eye text-[9px]"></i>
+						<i class="fas fa-eye text-[10px]"></i>
 						<span>Preview</span>
 					</button>
 				</div>
@@ -428,7 +430,7 @@
 					{placeholder}
 					{rows}
 					onkeydown={handleKeydown}
-					class="w-full flex-1 resize-y bg-transparent p-3.5 font-mono text-xs leading-relaxed text-fg placeholder:text-fg-subdued/60 focus:ring-0 focus:outline-none sm:text-sm"
+					class="w-full flex-1 resize-y bg-transparent p-3.5 font-mono text-xs leading-relaxed text-fg placeholder:text-fg-subdued focus:ring-0 focus:outline-none sm:text-sm"
 					style={isFullscreen ? 'height: 100%; resize: none;' : `min-height: ${minHeight};`}
 				></textarea>
 			</div>
@@ -445,7 +447,7 @@
 						{@html previewHtml}
 					</div>
 				{:else}
-					<div class="py-8 text-center text-xs text-fg-subdued/70 italic">
+					<div class="py-8 text-center text-xs text-fg-subdued italic">
 						Nothing to preview yet. Start typing to see formatted WYSIWYG output.
 					</div>
 				{/if}
@@ -464,9 +466,9 @@
 
 		<div class="flex items-center gap-2">
 			{#if onSave}
-				<span class="hidden text-[10px] text-fg-subdued/70 sm:inline">Press Ctrl+S to save</span>
+				<span class="hidden text-[10px] text-fg-subdued sm:inline">Press Ctrl+S to save</span>
 			{/if}
-			<span class="text-[10px] text-fg-subdued/80">Markdown & [[wiki]] ready</span>
+			<span class="text-[10px] text-fg-subdued">Markdown & [[wiki]] ready</span>
 		</div>
 	</div>
 </div>

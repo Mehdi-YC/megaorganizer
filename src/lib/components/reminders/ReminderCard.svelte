@@ -76,7 +76,7 @@
 			<div class="flex min-w-0 flex-1 items-start gap-2.5">
 				<button
 					type="button"
-					class="mt-0.5 flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {reminder.completed
+					class="mt-0.5 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors {reminder.completed
 						? 'border-success bg-success text-white'
 						: 'border-border-strong hover:border-fg-subdued'}"
 					onclick={() => onComplete?.(reminder.id)}
@@ -161,11 +161,11 @@
 				onclick={() => handleSnooze(1)}
 				title="Reporter de 1 heure"
 			>
-				<i class="fas fa-clock mr-1 text-[9px]"></i>
+				<i class="fas fa-clock mr-1 text-[10px]"></i>
 				+1h
 			</Button>
 			<Button variant="secondary" size="xs" onclick={handleTomorrow} title="Reporter à demain">
-				<i class="fas fa-calendar mr-1 text-[9px]"></i>
+				<i class="fas fa-calendar mr-1 text-[10px]"></i>
 				Demain
 			</Button>
 		</div>

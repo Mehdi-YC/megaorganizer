@@ -407,7 +407,7 @@
 			<div class="flex items-center justify-center gap-4 border-t border-border px-4 py-2">
 				{#each tabs as tab, i (tab.id)}
 					<span class="text-[10px] text-fg-subdued">
-						<kbd class="rounded bg-muted px-1 py-0.5 text-[9px]">{i + 1}</kbd>
+						<kbd class="rounded bg-muted px-1 py-0.5 text-[10px]">{i + 1}</kbd>
 						{tab.label}
 					</span>
 				{/each}

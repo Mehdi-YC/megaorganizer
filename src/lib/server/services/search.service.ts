@@ -6,13 +6,27 @@ import {
 	reminderTemplate,
 	expense,
 	trainingSession,
-	tag
+	tag,
+	todo,
+	program,
+	exercise,
+	invoice
 } from '$lib/server/db/schema';
 import { inArray } from 'drizzle-orm';
 import { buildMatchQuery } from '$lib/server/db/search-index';
 
 export interface SearchResult {
-	type: 'item' | 'page' | 'reminder' | 'expense' | 'training' | 'tag';
+	type:
+		| 'item'
+		| 'page'
+		| 'reminder'
+		| 'expense'
+		| 'training'
+		| 'tag'
+		| 'todo'
+		| 'program'
+		| 'exercise'
+		| 'invoice';
 	id: string;
 	title: string;
 	subtitle?: string;
@@ -229,6 +243,82 @@ export async function globalSearch(
 				subtitle: 'Tag',
 				icon: 'fa-tag',
 				url: '/app/tags'
+			});
+		}
+	}
+
+	const todoIds = idsByType.get('todo') ?? [];
+	if (todoIds.length > 0) {
+		const rows = await db
+			.select({ id: todo.id, title: todo.title, completed: todo.completed })
+			.from(todo)
+			.where(inArray(todo.id, todoIds))
+			.all();
+		for (const t of rows) {
+			add(`todo:${t.id}`, {
+				type: 'todo',
+				id: t.id,
+				title: t.title,
+				subtitle: t.completed ? 'Completed task' : 'Task',
+				icon: t.completed ? 'fa-check-circle' : 'fa-circle-check',
+				url: '/app/todos'
+			});
+		}
+	}
+
+	const programIds = idsByType.get('program') ?? [];
+	if (programIds.length > 0) {
+		const rows = await db
+			.select({ id: program.id, name: program.name, description: program.description })
+			.from(program)
+			.where(inArray(program.id, programIds))
+			.all();
+		for (const p of rows) {
+			add(`program:${p.id}`, {
+				type: 'program',
+				id: p.id,
+				title: p.name,
+				subtitle: p.description || snipOf('program', p.id) || 'Training program',
+				icon: 'fa-calendar-days',
+				url: `/app/training/programs/${p.id}`
+			});
+		}
+	}
+
+	const exerciseIds = idsByType.get('exercise') ?? [];
+	if (exerciseIds.length > 0) {
+		const rows = await db
+			.select({ id: exercise.id, name: exercise.name, equipment: exercise.equipment })
+			.from(exercise)
+			.where(inArray(exercise.id, exerciseIds))
+			.all();
+		for (const ex of rows) {
+			add(`exercise:${ex.id}`, {
+				type: 'exercise',
+				id: ex.id,
+				title: ex.name,
+				subtitle: ex.equipment || snipOf('exercise', ex.id) || 'Exercise',
+				icon: 'fa-dumbbell',
+				url: '/app/training/exercises'
+			});
+		}
+	}
+
+	const invoiceIds = idsByType.get('invoice') ?? [];
+	if (invoiceIds.length > 0) {
+		const rows = await db
+			.select({ id: invoice.id, invoiceNumber: invoice.invoiceNumber, status: invoice.status })
+			.from(invoice)
+			.where(inArray(invoice.id, invoiceIds))
+			.all();
+		for (const inv of rows) {
+			add(`invoice:${inv.id}`, {
+				type: 'invoice',
+				id: inv.id,
+				title: inv.invoiceNumber,
+				subtitle: inv.status ? `Invoice · ${inv.status}` : 'Invoice',
+				icon: 'fa-file-invoice',
+				url: `/app/invoicing/${inv.id}`
 			});
 		}
 	}

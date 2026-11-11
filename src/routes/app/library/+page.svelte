@@ -193,7 +193,7 @@
 			>
 				<i class="fas fa-filter text-[10px]"></i>
 				{#if hasActiveFilters}<span
-						class="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[9px] text-white"
+						class="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white"
 						>{filterTagIds.length + (filterYdk ? 1 : 0) + (filterFavorite ? 1 : 0)}</span
 					>{/if}
 			</button>
@@ -245,7 +245,7 @@
 								: 'bg-muted text-fg-subdued hover:text-fg'}"
 							onclick={toggleFilterFavorite}
 						>
-							<i class="fas fa-star text-[9px]"></i> Favorites only
+							<i class="fas fa-star text-[10px]"></i> Favorites only
 						</button>
 						{#if page.data.enabledFeatures?.ydk !== false}
 							<button
@@ -255,7 +255,7 @@
 									: 'bg-muted text-fg-subdued hover:text-fg'}"
 								onclick={toggleFilterYdk}
 							>
-								<i class="fas fa-layer-group text-[9px]"></i> Decks only
+								<i class="fas fa-layer-group text-[10px]"></i> Decks only
 							</button>
 						{/if}
 					</div>
@@ -270,7 +270,7 @@
 					disabled={currentPage <= 1}
 					onclick={() => (currentPage = currentPage - 1)}
 				>
-					<i class="fas fa-chevron-left text-[9px]"></i> Prev
+					<i class="fas fa-chevron-left text-[10px]"></i> Prev
 				</Button>
 				<span class="text-xs text-fg-subdued">Page {currentPage} of {totalPages}</span>
 				<Button
@@ -279,7 +279,7 @@
 					disabled={currentPage >= totalPages}
 					onclick={() => (currentPage = currentPage + 1)}
 				>
-					Next <i class="fas fa-chevron-right text-[9px]"></i>
+					Next <i class="fas fa-chevron-right text-[10px]"></i>
 				</Button>
 			</div>
 		{/if}
@@ -337,7 +337,7 @@
 							<div class="mt-1.5 flex flex-wrap gap-1">
 								<TagChips tags={itemTags.slice(0, 3)} size="xs" />
 								{#if itemTags.length > 3}
-									<span class="rounded-sm bg-muted px-1 py-0.5 text-[9px] text-fg-subdued"
+									<span class="rounded-sm bg-muted px-1 py-0.5 text-[10px] text-fg-subdued"
 										>+{itemTags.length - 3}</span
 									>
 								{/if}

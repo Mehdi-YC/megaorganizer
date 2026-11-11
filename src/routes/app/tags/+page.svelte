@@ -136,7 +136,7 @@
 						<button
 							type="button"
 							aria-label="Color {i + 1}"
-							class="h-5 w-5 cursor-pointer rounded-sm border-2 transition-all {newColor === c
+							class="h-6 w-6 cursor-pointer rounded-sm border-2 transition-all {newColor === c
 								? 'scale-110 border-fg'
 								: 'border-transparent hover:border-fg-subdued'}"
 							style="background: {c}"
@@ -194,7 +194,7 @@
 									<button
 										type="button"
 										aria-label="Color {i + 1}"
-										class="h-4 w-4 cursor-pointer rounded-sm border transition-all {editColor === c
+										class="h-6 w-6 cursor-pointer rounded-sm border transition-all {editColor === c
 											? 'scale-110 border-fg'
 											: 'border-transparent'}"
 										style="background: {c}"
@@ -225,13 +225,13 @@
 								type="button"
 								aria-label="Edit"
 								class="h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:bg-muted hover:text-fg"
-								onclick={() => startEdit(t)}><i class="fas fa-pen text-[9px]"></i></button
+								onclick={() => startEdit(t)}><i class="fas fa-pen text-[10px]"></i></button
 							>
 							<button
 								type="button"
 								aria-label="Delete"
 								class="h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:bg-error/10 hover:text-error"
-								onclick={() => remove(t.id)}><i class="fas fa-trash text-[9px]"></i></button
+								onclick={() => remove(t.id)}><i class="fas fa-trash text-[10px]"></i></button
 							>
 						</div>
 					{/if}

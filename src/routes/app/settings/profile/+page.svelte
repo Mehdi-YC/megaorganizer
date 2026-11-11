@@ -6,6 +6,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import { enablePush, disablePush } from '$lib/utils/push-client';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { themeState } from '$lib/utils/theme.svelte';
 	import type { EnabledFeatures } from '$lib/types';
 	import type { ActionData, PageData } from './$types';
@@ -251,6 +252,11 @@
 		const input = e.target as HTMLInputElement;
 		const file = input.files?.[0];
 		if (!file) return;
+
+		if (!(await confirmAction('Import this backup into your account?'))) {
+			input.value = '';
+			return;
+		}
 
 		importStatus = 'loading';
 		importMessage = '';
@@ -690,7 +696,7 @@
 							onchange={handleImportFile}
 						/>
 					</div>
-					<p class="text-[10px] text-fg-subdued/60">
+					<p class="text-[10px] text-fg-subdued">
 						Includes all entities and files: knowledge base, attachments, tasks, reminders,
 						expenses, invoicing, tax documents (G12/G12 bis), GPS workouts, roadmaps, tier lists,
 						YDK decks, and timers.
@@ -708,7 +714,7 @@
 									{#each Object.entries(importCounts).filter(([key, n]) => key !== 'skipped' && n > 0) as [key, n] (key)}
 										<span>{n} {COUNT_LABELS[key] ?? key}</span>
 									{/each}
-									{#if importCounts.skipped}<span class="text-fg-subdued/60"
+									{#if importCounts.skipped}<span class="text-fg-subdued"
 											>({importCounts.skipped} skipped)</span
 										>{/if}
 								</div>

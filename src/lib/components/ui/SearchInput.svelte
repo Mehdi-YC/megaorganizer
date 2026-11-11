@@ -36,7 +36,7 @@
 		onkeydown={(e) => {
 			if (e.key === 'Enter') onsearch?.();
 		}}
-		class="h-9 w-full rounded-lg border border-border bg-surface pr-10 pl-9 text-sm text-fg shadow-xs transition-all placeholder:text-fg-subdued/70 hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+		class="h-9 w-full rounded-lg border border-border bg-surface pr-10 pl-9 text-sm text-fg shadow-xs transition-all placeholder:text-fg-subdued hover:border-border-strong focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
 	/>
 	{#if shortcut && !value}
 		<kbd

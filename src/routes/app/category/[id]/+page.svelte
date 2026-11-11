@@ -235,7 +235,7 @@
 											: `fas ${editIcon.startsWith('fa-') ? editIcon : `fa-${editIcon}`}`}
 									></i>
 								{:else}
-									<i class="fas fa-folder text-fg-subdued/50"></i>
+									<i class="fas fa-folder text-fg-subdued"></i>
 								{/if}
 							</div>
 
@@ -268,7 +268,7 @@
 									onclick={() => (editIcon = opt.value)}
 								>
 									<i class="fas {opt.value} text-xs"></i>
-									<span class="truncate text-[9px] font-medium">{opt.label}</span>
+									<span class="truncate text-[10px] font-medium">{opt.label}</span>
 								</button>
 							{/each}
 						</div>
@@ -380,7 +380,7 @@
 						<div
 							class="absolute top-2 right-2 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
 						>
-							<i class="fas fa-grip-vertical text-[10px] text-fg-subdued/40"></i>
+							<i class="fas fa-grip-vertical text-[10px] text-fg-subdued"></i>
 						</div>
 						<div
 							class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg shadow-xs"

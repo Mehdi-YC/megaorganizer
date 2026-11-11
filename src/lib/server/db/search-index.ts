@@ -20,6 +20,11 @@ export interface SearchSource {
 	name: string;
 	description: string | null;
 	body: string | null;
+	/**
+	 * Optional row guard (with the `:row.` macro), e.g. to skip rows that
+	 * have no owning user and cannot be stored in search_doc.
+	 */
+	condition?: string;
 }
 
 export const SEARCH_SOURCES: SearchSource[] = [
@@ -71,6 +76,37 @@ export const SEARCH_SOURCES: SearchSource[] = [
 		name: ':row.name',
 		description: null,
 		body: null
+	},
+	{
+		entityType: 'todo',
+		table: 'todo',
+		name: ':row.title',
+		description: null,
+		body: null
+	},
+	{
+		entityType: 'program',
+		table: 'program',
+		name: ':row.name',
+		description: ':row.description',
+		body: null
+	},
+	{
+		entityType: 'exercise',
+		table: 'exercise',
+		name: ':row.name',
+		description: ':row.equipment',
+		body: ':row.description',
+		// Built-in exercises are shared (user_id NULL) and have no owner to
+		// attribute search hits to.
+		condition: ':row.user_id IS NOT NULL'
+	},
+	{
+		entityType: 'invoice',
+		table: 'invoice',
+		name: ":row.invoice_number || ' ' || COALESCE(:row.status, '')",
+		description: ':row.notes',
+		body: null
 	}
 ];
 
@@ -85,9 +121,17 @@ function deleteSql(source: SearchSource, row: 'OLD' | 'NEW'): string {
 	DELETE FROM search_doc WHERE entity_type = '${source.entityType}' AND entity_id = ${id};`;
 }
 
+function renderCondition(source: SearchSource, row: string): string {
+	if (!source.condition) return '1 = 1';
+	return source.condition.split(':row.').join(row ? `${row}.` : '');
+}
+
 function insertSql(source: SearchSource): string {
-	return `INSERT INTO search_doc(entity_type, entity_id, user_id) VALUES ('${source.entityType}', NEW.id, NEW.user_id);
-	INSERT INTO search_index(rowid, name, description, body) VALUES (last_insert_rowid(), ${render(source.name, 'NEW')}, ${render(source.description, 'NEW')}, ${render(source.body, 'NEW')});`;
+	return `INSERT INTO search_doc(entity_type, entity_id, user_id)
+		SELECT '${source.entityType}', NEW.id, NEW.user_id WHERE ${renderCondition(source, 'NEW')};
+	INSERT INTO search_index(rowid, name, description, body)
+		SELECT last_insert_rowid(), ${render(source.name, 'NEW')}, ${render(source.description, 'NEW')}, ${render(source.body, 'NEW')}
+		WHERE ${renderCondition(source, 'NEW')};`;
 }
 
 export function buildDdl(): string[] {
@@ -138,7 +182,40 @@ export async function ensureSearchIndex(client: Client): Promise<void> {
 	const { rows } = await client.execute('SELECT COUNT(*) AS n FROM search_doc');
 	if (Number(rows[0].n) === 0) {
 		await rebuildSearchIndex(client);
+		return;
 	}
+
+	// A release that adds a search source must index rows that predate it:
+	// rebuild any source whose indexed count lags its table.
+	for (const source of SEARCH_SOURCES) {
+		const cond = renderCondition(source, 't');
+		const { rows: counts } = await client.execute(
+			`SELECT (SELECT COUNT(*) FROM ${source.table} t WHERE ${cond}) AS src,
+				(SELECT COUNT(*) FROM search_doc WHERE entity_type = '${source.entityType}') AS idx`
+		);
+		if (Number(counts[0].src) !== Number(counts[0].idx)) {
+			await rebuildSource(client, source);
+		}
+	}
+}
+
+/** Drop and re-index one source's documents. Idempotent. */
+async function rebuildSource(client: Client, source: SearchSource): Promise<void> {
+	await client.execute(
+		`DELETE FROM search_index WHERE rowid IN (SELECT doc_id FROM search_doc WHERE entity_type = '${source.entityType}')`
+	);
+	await client.execute(`DELETE FROM search_doc WHERE entity_type = '${source.entityType}'`);
+	await client.execute(
+		`INSERT INTO search_doc(entity_type, entity_id, user_id)
+			SELECT '${source.entityType}', t.id, t.user_id FROM ${source.table} t
+			WHERE ${renderCondition(source, 't')}`
+	);
+	await client.execute(
+		`INSERT INTO search_index(rowid, name, description, body)
+			SELECT d.doc_id, ${render(source.name, 't')}, ${render(source.description, 't')}, ${render(source.body, 't')}
+			FROM ${source.table} t
+			JOIN search_doc d ON d.entity_type = '${source.entityType}' AND d.entity_id = t.id`
+	);
 }
 
 /** Drop and rebuild every document (or one user's documents) from source. */
@@ -155,7 +232,9 @@ export async function rebuildSearchIndex(client: Client, userId?: string): Promi
 		await client.execute('DELETE FROM search_doc');
 	}
 	for (const source of SEARCH_SOURCES) {
-		const where = userId ? 'WHERE t.user_id = ?' : '';
+		const where = `WHERE ${[renderCondition(source, 't'), userId ? 't.user_id = ?' : '']
+			.filter(Boolean)
+			.join(' AND ')}`;
 		await client.execute(
 			`INSERT INTO search_doc(entity_type, entity_id, user_id)
 				SELECT '${source.entityType}', t.id, t.user_id FROM ${source.table} t ${where}`,

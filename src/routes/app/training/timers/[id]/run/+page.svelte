@@ -302,7 +302,7 @@
 
 		{#if status === 'idle'}
 			<div class="flex flex-1 flex-col items-center justify-center gap-4">
-				<i class="fas fa-stopwatch text-5xl text-fg-subdued/30"></i>
+				<i class="fas fa-stopwatch text-5xl text-fg-subdued"></i>
 				<p class="text-sm text-fg-subdued">
 					{queue.length} steps · {totalRounds} round{totalRounds !== 1 ? 's' : ''}
 				</p>

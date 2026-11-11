@@ -204,7 +204,7 @@
 								</div>
 							{/each}
 							{#if dayReminders.length > 2}
-								<div class="text-center text-[9px] text-fg-subdued">
+								<div class="text-center text-[10px] text-fg-subdued">
 									+{dayReminders.length - 2} more
 								</div>
 							{/if}

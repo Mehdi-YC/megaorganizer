@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
+	import { toDateKey } from '$lib/utils/date';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { EmptyState } from '$lib/components/ui';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
@@ -308,7 +309,7 @@
 						description: editing.description ?? '',
 						markdown: editing.markdown ?? '',
 						tags: editing.tags ? JSON.parse(editing.tags) : [],
-						spentAt: new Date(editing.spentAt).toISOString().split('T')[0]
+						spentAt: toDateKey(new Date(editing.spentAt))
 					}
 				: undefined}
 			onSave={handleSave}

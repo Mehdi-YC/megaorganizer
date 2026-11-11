@@ -221,7 +221,7 @@
 					type="search"
 					bind:value={searchQuery}
 					placeholder="Search number, client..."
-					class="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-xs text-fg shadow-xs placeholder:text-fg-subdued/70 focus:border-primary focus:outline-none"
+					class="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-xs text-fg shadow-xs placeholder:text-fg-subdued focus:border-primary focus:outline-none"
 				/>
 			</div>
 

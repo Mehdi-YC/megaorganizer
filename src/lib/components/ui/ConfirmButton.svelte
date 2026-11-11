@@ -13,7 +13,7 @@
 		onconfirm: () => void;
 	} = $props();
 	const sizeClasses = { sm: 'h-7 w-7', xs: 'h-5 w-5' };
-	const iconSizes = { sm: 'text-xs', xs: 'text-[9px]' };
+	const iconSizes = { sm: 'text-xs', xs: 'text-[10px]' };
 </script>
 
 {#if confirmId === targetId}

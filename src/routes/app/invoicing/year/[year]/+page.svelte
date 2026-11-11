@@ -5,6 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { formatDZD, formatDateDZ } from '$lib/utils/invoice';
 	import type { InvoiceWithDetails } from '$lib/types';
 	import type { PageData } from './$types';
@@ -74,6 +75,7 @@
 	}
 
 	async function handleDeleteDoc(docId: string, label: string) {
+		if (!(await confirmAction(`Delete "${label}"? This cannot be undone.`))) return;
 		try {
 			const res = await fetch(`/api/invoicing/yearly-docs?id=${docId}`, {
 				method: 'DELETE'

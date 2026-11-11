@@ -274,7 +274,7 @@
 				>
 					<i class="fas fa-arrow-left text-xs"></i>
 				</button>
-				<i class="fas fa-chevron-right text-[10px] text-fg-subdued/50"></i>
+				<i class="fas fa-chevron-right text-[10px] text-fg-subdued"></i>
 				{#if editing}
 					<input
 						type="text"
@@ -519,7 +519,7 @@
 									size="sm"
 									onclick={toggleTreeView}
 									aria-label="Switch to list view"
-									><i class="fas fa-list text-[9px]"></i> List</Button
+									><i class="fas fa-list text-[10px]"></i> List</Button
 								>
 							</div>
 							<div class="h-[350px] overflow-hidden rounded-lg border border-border sm:h-[400px]">

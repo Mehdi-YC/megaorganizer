@@ -302,6 +302,7 @@
 	});
 
 	async function removeChildFromNode(nodeId: string, childId: string) {
+		if (!(await confirmAction('Remove this item from the page?'))) return;
 		const res = await fetch('/api/tree', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
@@ -506,7 +507,7 @@
 				href={resolve('/app/category/[id]', { id: category.id })}
 				class="max-w-[120px] truncate hover:text-primary-text sm:max-w-none">{category.name}</a
 			>
-			<i class="fas fa-chevron-right shrink-0 text-[8px] text-fg-subdued/50"></i>
+			<i class="fas fa-chevron-right shrink-0 text-[8px] text-fg-subdued"></i>
 			{#if editingPage}
 				<input
 					type="text"
@@ -682,7 +683,7 @@
 							}}
 						>
 							<i
-								class="fas fa-grip-vertical shrink-0 cursor-move text-[8px] text-fg-subdued/30 transition-opacity sm:opacity-0 sm:group-hover/node:opacity-100"
+								class="fas fa-grip-vertical shrink-0 cursor-move text-[8px] text-fg-subdued transition-opacity sm:opacity-0 sm:group-hover/node:opacity-100"
 							></i>
 							<i
 								class="fas fa-chevron-right text-[10px] transition-transform duration-150 {isExpanded
@@ -741,14 +742,14 @@
 										<button
 											type="button"
 											aria-label="Remove from section"
-											class="ml-auto flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-opacity hover:text-error sm:opacity-0 sm:group-hover/subnode:opacity-100"
+											class="ml-auto flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-opacity hover:text-error sm:opacity-0 sm:group-hover/subnode:opacity-100"
 											onclick={(e) => {
 												e.preventDefault();
 												e.stopPropagation();
 												removeChildFromNode(node.id, subNode.id);
 											}}
 										>
-											<i class="fas fa-times text-[9px]"></i>
+											<i class="fas fa-times text-[10px]"></i>
 										</button>
 									</div>
 								{/each}
@@ -769,7 +770,7 @@
 											<button
 												type="button"
 												aria-label="Remove from section"
-												class="absolute top-1 right-1 z-10 flex h-4 w-4 cursor-pointer items-center justify-center rounded-xs bg-surface/90 text-fg-subdued shadow-xs transition-opacity hover:bg-error hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
+												class="absolute top-1 right-1 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-xs bg-surface/90 text-fg-subdued shadow-xs transition-opacity hover:bg-error hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
 												onclick={(e) => {
 													e.preventDefault();
 													e.stopPropagation();
@@ -795,7 +796,7 @@
 												</div>
 												<div class="flex items-center gap-0.5">
 													<p
-														class="flex-1 truncate text-[9px] font-medium text-fg-accent group-hover:text-primary-text"
+														class="flex-1 truncate text-[10px] font-medium text-fg-accent group-hover:text-primary-text"
 													>
 														{item.name}
 													</p>
@@ -812,7 +813,7 @@
 									<div class="space-y-1.5 pt-1">
 										<div class="relative">
 											<i
-												class="fas fa-search pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[9px] text-fg-subdued"
+												class="fas fa-search pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[10px] text-fg-subdued"
 											></i>
 											<input
 												type="text"
@@ -853,7 +854,7 @@
 														{/if}
 														<span class="flex-1 truncate">{result.name}</span>
 														{#if result.type}
-															<span class="text-[9px] text-fg-subdued capitalize"
+															<span class="text-[10px] text-fg-subdued capitalize"
 																>{result.type}</span
 															>
 														{/if}
@@ -925,13 +926,13 @@
 									<button
 										type="button"
 										aria-label="Remove"
-										class="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:hidden sm:group-hover:flex"
+										class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:hidden sm:group-hover:flex"
 										onclick={(e) => {
 											e.preventDefault();
 											removeElement(item.id);
 										}}
 									>
-										<i class="fas fa-times text-[9px]"></i>
+										<i class="fas fa-times text-[10px]"></i>
 									</button>
 								</a>
 							{/each}
@@ -985,7 +986,7 @@
 					class="w-full cursor-pointer rounded-sm border border-dashed border-border bg-surface py-6 text-center transition-colors hover:border-primary-text/50"
 					onclick={() => (editingPageContent = true)}
 				>
-					<i class="fas fa-file-alt mb-2 text-xl text-fg-subdued/40"></i>
+					<i class="fas fa-file-alt mb-2 text-xl text-fg-subdued"></i>
 					<p class="text-xs text-fg-subdued">Add page content</p>
 				</button>
 			{/if}

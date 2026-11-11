@@ -114,7 +114,7 @@
 										: `fas ${icon.startsWith('fa-') ? icon : `fa-${icon}`}`}
 								></i>
 							{:else}
-								<i class="fas fa-folder text-fg-subdued/50"></i>
+								<i class="fas fa-folder text-fg-subdued"></i>
 							{/if}
 						</div>
 
@@ -147,7 +147,7 @@
 								onclick={() => (icon = opt.value)}
 							>
 								<i class="fas {opt.value} text-xs"></i>
-								<span class="truncate text-[9px] font-medium">{opt.label}</span>
+								<span class="truncate text-[10px] font-medium">{opt.label}</span>
 							</button>
 						{/each}
 					</div>

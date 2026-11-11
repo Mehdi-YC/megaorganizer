@@ -2,6 +2,7 @@
 	import type { TreeElement } from '$lib/types';
 	import { resolve } from '$app/paths';
 	import { searchTree } from '$lib/utils';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	let {
@@ -59,6 +60,7 @@
 	}
 
 	async function removeChild(childId: string) {
+		if (!(await confirmAction('Remove this item from the list?'))) return;
 		const res = await fetch('/api/tree', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
@@ -175,7 +177,7 @@
 		<div class="mb-3 space-y-1.5">
 			<div class="relative">
 				<i
-					class="fas fa-search pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[9px] text-fg-subdued"
+					class="fas fa-search pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 text-[10px] text-fg-subdued"
 				></i>
 				<input
 					type="text"
@@ -233,7 +235,7 @@
 					ondragend={handleDragEnd}
 				>
 					<i
-						class="fas fa-grip-vertical w-3 text-center text-fg-subdued/40 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+						class="fas fa-grip-vertical w-3 text-center text-fg-subdued transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
 					></i>
 					<a
 						href={resolve('/app/item/[id]', { id: child.id })}
@@ -248,11 +250,11 @@
 					</a>
 					<button
 						type="button"
-						class="flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:hidden sm:group-hover:flex"
+						class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:hidden sm:group-hover:flex"
 						onclick={() => removeChild(child.id)}
 						aria-label="Remove"
 					>
-						<i class="fas fa-times text-[9px]"></i>
+						<i class="fas fa-times text-[10px]"></i>
 					</button>
 				</div>
 			{/each}
