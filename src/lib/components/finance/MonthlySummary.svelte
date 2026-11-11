@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { MONTH_LABELS, formatAmount } from '$lib/utils/format';
 	let {
 		total = 0,
 		count = 0,
@@ -15,21 +16,6 @@
 		month: number;
 	} = $props();
 
-	const monthNames = [
-		'January',
-		'February',
-		'March',
-		'April',
-		'May',
-		'June',
-		'July',
-		'August',
-		'September',
-		'October',
-		'November',
-		'December'
-	];
-
 	let percentage = $derived(limit && limit > 0 ? Math.min((total / limit) * 100, 100) : 0);
 	let remaining = $derived(limit ? Math.max(limit - total, 0) : null);
 	let isOverLimit = $derived(limit ? total > limit : false);
@@ -44,7 +30,7 @@
 <div class="rounded-xl border border-border bg-surface p-5 shadow-xs">
 	<div class="mb-3.5 flex items-center justify-between">
 		<h3 class="text-xs font-semibold tracking-wider text-fg-subdued uppercase">
-			{monthNames[month]}
+			{MONTH_LABELS[month]}
 			{year}
 		</h3>
 		<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-fg-subdued"
@@ -56,7 +42,7 @@
 		<!-- Total spent -->
 		<div>
 			<p class="text-3xl font-bold tracking-tight text-fg">
-				{total.toLocaleString()} <span class="text-sm font-medium text-fg-subdued">{currency}</span>
+				{formatAmount(total)} <span class="text-sm font-medium text-fg-subdued">{currency}</span>
 			</p>
 		</div>
 
@@ -66,7 +52,7 @@
 				<div class="mb-1 flex items-center justify-between">
 					<span class="text-[10px] text-fg-subdued">
 						{isOverLimit ? 'Over limit!' : 'of'}
-						{limit.toLocaleString()}
+						{formatAmount(limit)}
 						{currency}
 					</span>
 					<span class="text-[10px] font-medium {isOverLimit ? 'text-error' : 'text-fg-subdued'}">
@@ -81,12 +67,12 @@
 				</div>
 				{#if remaining !== null && !isOverLimit}
 					<p class="mt-1 text-[10px] text-fg-subdued">
-						{remaining.toLocaleString()}
+						{formatAmount(remaining)}
 						{currency} remaining
 					</p>
 				{:else if isOverLimit}
 					<p class="mt-1 text-[10px] text-error">
-						{(total - limit).toLocaleString()}
+						{formatAmount(total - limit)}
 						{currency} over budget
 					</p>
 				{/if}

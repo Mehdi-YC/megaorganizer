@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import { formatDate } from '$lib/utils/format';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { Button, EmptyState } from '$lib/components/ui';
@@ -94,7 +96,7 @@
 			<p class="mt-1 text-sm text-fg-subdued">Manage your recurring reminders</p>
 		</div>
 		<div class="flex gap-2">
-			<Button variant="secondary" size="md" href="/app/reminders/history">
+			<Button variant="secondary" size="md" href={resolve('/app/reminders/history')}>
 				<i class="fas fa-chart-bar mr-2 text-xs"></i>
 				History
 			</Button>
@@ -204,7 +206,7 @@
 						<div class="mt-3 flex items-center justify-between border-t border-border pt-3">
 							<span class="text-[10px] text-fg-subdued">Next due:</span>
 							<span class="text-xs text-fg">
-								{new Date(template.nextDueAt).toLocaleDateString([], {
+								{formatDate(new Date(template.nextDueAt), {
 									month: 'short',
 									day: 'numeric',
 									hour: '2-digit',

@@ -59,11 +59,15 @@
 
 <div class="p-4 sm:p-8">
 	<PageHeader title="Edit Timer" subtitle="Update the sequence">
-		<Button href="/app/training/timers/{template.id}/run" variant="secondary" size="md">
+		<Button
+			href={resolve('/app/training/timers/[id]/run', { id: template.id })}
+			variant="secondary"
+			size="md"
+		>
 			<i class="fas fa-play mr-2 text-xs"></i>
 			Run
 		</Button>
-		<Button href="/app/training/timers" variant="secondary" size="md">
+		<Button href={resolve('/app/training/timers')} variant="secondary" size="md">
 			<i class="fas fa-arrow-left mr-2 text-xs"></i>
 			Timers
 		</Button>

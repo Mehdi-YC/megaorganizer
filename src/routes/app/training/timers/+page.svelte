@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -65,11 +66,11 @@
 
 <div class="p-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title="HIIT & WOD Timers" subtitle="Saved interval timers you can run again">
-		<Button href="/app/training" variant="secondary" size="md">
+		<Button href={resolve('/app/training')} variant="secondary" size="md">
 			<i class="fas fa-arrow-left mr-2 text-xs"></i>
 			Training
 		</Button>
-		<Button href="/app/training/timers/new" variant="primary" size="md">
+		<Button href={resolve('/app/training/timers/new')} variant="primary" size="md">
 			<i class="fas fa-plus mr-2 text-xs"></i>
 			Timer
 		</Button>
@@ -99,11 +100,11 @@
 						</p>
 					</div>
 					<div class="flex shrink-0 items-center gap-1.5">
-						<Button href="/app/training/timers/{t.id}/run" size="sm">
+						<Button href={resolve('/app/training/timers/[id]/run', { id: t.id })} size="sm">
 							<i class="fas fa-play mr-2 text-xs"></i>Start
 						</Button>
 						<Button
-							href="/app/training/timers/{t.id}"
+							href={resolve('/app/training/timers/[id]', { id: t.id })}
 							variant="secondary"
 							size="sm"
 							aria-label="Edit"

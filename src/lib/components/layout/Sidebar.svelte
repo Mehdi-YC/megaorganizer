@@ -5,7 +5,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import ConfirmButton from '$lib/components/ui/ConfirmButton.svelte';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { themeState } from '$lib/utils/theme.svelte';
 
@@ -119,7 +119,7 @@
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = `dossier-fiscal-${year}.zip`;
+			a.download = `tax-folder-${year}.zip`;
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
@@ -164,7 +164,6 @@
 		}>
 	>([]);
 	let showUserMenu = $state(false);
-	let confirmDeleteCatId = $state<string | null>(null);
 
 	function toggleCategory(id: string) {
 		const next = new Set(expandedCategories);
@@ -191,7 +190,6 @@
 			body: JSON.stringify({ id: catId })
 		});
 		if (res.ok) {
-			confirmDeleteCatId = null;
 			showToast('Category deleted', 'success');
 			await invalidateAll();
 			if (page.url.pathname.includes(`/category/${catId}`)) {
@@ -254,9 +252,6 @@
 			}
 			if (showUserMenu) {
 				showUserMenu = false;
-			}
-			if (confirmDeleteCatId) {
-				confirmDeleteCatId = null;
 			}
 		}
 	}
@@ -661,7 +656,7 @@
 												<div class="flex items-center justify-between rounded-md pr-1">
 													<button
 														type="button"
-														aria-label="Toggle dossier {yr}"
+														aria-label="Toggle tax folder {yr}"
 														class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
 														onclick={(e) => {
 															e.stopPropagation();
@@ -813,21 +808,19 @@
 								>
 									<i class="fas fa-plus text-[10px]"></i>
 								</button>
-								<ConfirmButton
-									confirmId={confirmDeleteCatId ?? ''}
-									targetId={cat.id}
-									size="sm"
-									onconfirm={() => {
-										if (confirmDeleteCatId === cat.id) {
+								<button
+									type="button"
+									class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+									onclick={async (e) => {
+										e.stopPropagation();
+										if (await confirmAction('Delete this workspace? Its pages go with it.')) {
 											deleteCategory(cat.id);
-										} else {
-											confirmDeleteCatId = cat.id;
-											setTimeout(() => {
-												if (confirmDeleteCatId === cat.id) confirmDeleteCatId = null;
-											}, 3000);
 										}
 									}}
-								/>
+									aria-label="Delete"
+								>
+									<i class="fas fa-trash text-xs"></i>
+								</button>
 							</div>
 						</div>
 

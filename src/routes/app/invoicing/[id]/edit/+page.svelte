@@ -28,10 +28,10 @@
 	// svelte-ignore state_referenced_locally
 	let status = $state(data.invoice.status);
 	// svelte-ignore state_referenced_locally
-	let paymentMode = $state(data.invoice.paymentMode || 'Virement bancaire / Chèque');
+	let paymentMode = $state(data.invoice.paymentMode || 'Bank transfer / Check');
 	// svelte-ignore state_referenced_locally
 	let paymentConditions = $state(
-		data.invoice.paymentConditions || '30% au démarrage, le solde à la livraison'
+		data.invoice.paymentConditions || '30% upfront, balance on delivery'
 	);
 	// svelte-ignore state_referenced_locally
 	let notes = $state(data.invoice.notes || '');

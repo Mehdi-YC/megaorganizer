@@ -99,6 +99,13 @@
       "when": 1794429920788,
       "tag": "0013_nappy_thunderbird",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1794434012470,
+      "tag": "0014_solid_sue_storm",
+      "breakpoints": true
     }
   ]
 }

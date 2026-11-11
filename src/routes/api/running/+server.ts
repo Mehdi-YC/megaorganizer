@@ -1,3 +1,4 @@
+import { formatDate } from '$lib/utils/format';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import {
@@ -216,7 +217,7 @@ export const POST: RequestHandler = async (event) => {
 			const title =
 				typeof v.data.title === 'string' && v.data.title.trim()
 					? v.data.title.trim()
-					: `Run - ${new Date().toLocaleDateString()}`;
+					: `Run - ${formatDate(new Date())}`;
 			const startedAt = gpsPoints.length > 0 ? timestamps[0] : new Date();
 			const endedAt = gpsPoints.length > 0 ? timestamps[timestamps.length - 1] : new Date();
 

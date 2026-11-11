@@ -93,7 +93,7 @@ function generateInvoiceHtml(
 <body>
 	<div class="header">
 		<div>
-			<div class="brand-name">${esc(profile?.brandName || profile?.name || 'Facture')}</div>
+			<div class="brand-name">${esc(profile?.brandName || profile?.name || 'Invoice')}</div>
 			${profile?.brandTagline ? `<div class="brand-tagline">${esc(profile.brandTagline)}</div>` : ''}
 
 			<div class="client-box">
@@ -120,14 +120,14 @@ function generateInvoiceHtml(
 	</div>
 
 	<div class="title-bar">
-		<div class="title">Facture ${esc(inv.invoiceNumber)}</div>
+		<div class="title">Invoice ${esc(inv.invoiceNumber)}</div>
 		<div class="dates">
 			<div>
 				<strong>Date de facturation</strong>
 				${formatDateDZ(inv.invoiceDate)}
 			</div>
 			<div>
-				<strong>Échéance</strong>
+				<strong>Due date</strong>
 				${formatDateDZ(inv.dueDate)}
 			</div>
 		</div>
@@ -152,9 +152,9 @@ function generateInvoiceHtml(
 
 	<div class="bottom-section">
 		<div class="conditions-box">
-			<div class="conditions-title">Conditions & Règlement</div>
-			<div><strong>Mode de règlement :</strong> ${esc(inv.paymentMode || 'Virement bancaire / Chèque')}</div>
-			<div><strong>Conditions de paiement :</strong> ${esc(inv.paymentConditions || '30% au démarrage, le solde à la livraison')}</div>
+			<div class="conditions-title">Terms & Payment</div>
+			<div><strong>Payment method:</strong> ${esc(inv.paymentMode || 'Bank transfer / Check')}</div>
+			<div><strong>Payment terms:</strong> ${esc(inv.paymentConditions || '30% upfront, balance on delivery')}</div>
 			<div><strong>Communication :</strong> ${esc(inv.invoiceNumber)}</div>
 			${profile?.rib ? `<div style="font-family: monospace; margin-top: 4px;"><strong>RIB / RIP :</strong> ${esc(profile.rib)}</div>` : ''}
 			${inv.notes ? `<div style="margin-top: 4px; color: #6b7280; font-style: italic;">${esc(inv.notes)}</div>` : ''}
@@ -181,9 +181,9 @@ function generateInvoiceHtml(
 			<div class="stamps" style="margin-top: 15px; display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
 				${(inv.showTvaStamp ?? inv.tvaAmount === 0) ? '<div class="tva-stamp">NON SOUMIS À LA TVA</div>' : ''}
 				<div style="position: relative; width: 190px; min-height: 80px; display: flex; align-items: center; justify-content: center;">
-					${stampBase64 ? `<img src="${stampBase64}" alt="Cachet" style="max-height: 90px; max-width: 100%; object-fit: contain;" />` : ''}
+					${stampBase64 ? `<img src="${stampBase64}" alt="Stamp" style="max-height: 90px; max-width: 100%; object-fit: contain;" />` : ''}
 					${signatureBase64 ? `<img src="${signatureBase64}" alt="Signature" style="position: absolute; inset: 0; margin: auto; max-height: 75px; max-width: 100%; object-fit: contain; opacity: 0.95;" />` : ''}
-					${!stampBase64 && !signatureBase64 ? `<div style="border: 1px dashed #d1d5db; padding: 15px; font-size: 11px; color: #9ca3af; border-radius: 4px;">Cachet et Signature</div>` : ''}
+					${!stampBase64 && !signatureBase64 ? `<div style="border: 1px dashed #d1d5db; padding: 15px; font-size: 11px; color: #9ca3af; border-radius: 4px;">Stamp and signature</div>` : ''}
 				</div>
 			</div>
 		</div>
@@ -267,17 +267,19 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
 		// 2. Fetch all invoices for this year
 		const invoices = await getInvoices(locals.user.id, targetYear);
-		let csvContent = 'Numéro;Client;Date;Échéance;Statut;Montant HT (DA);TVA (DA);Total TTC (DA)\n';
+		let csvContent =
+			'Number;Client;Date;Due date;Status;Amount excl. VAT (DA);VAT (DA);Total incl. VAT (DA)\n';
 
 		for (const inv of invoices) {
 			csvContent += `"${inv.invoiceNumber}";"${inv.client?.name || ''}";"${formatDateDZ(inv.invoiceDate)}";"${formatDateDZ(inv.dueDate)}";"${inv.status}";"${inv.subtotal}";"${inv.tvaAmount}";"${inv.total}"\n`;
 			const html = generateInvoiceHtml(inv, profile, stampBase64, signatureBase64);
-			archive.append(html, { name: `factures/${inv.invoiceNumber.replace(/\//g, '_')}.html` });
+			archive.append(html, { name: `invoices/${inv.invoiceNumber.replace(/\//g, '_')}.html` });
 		}
 
-		archive.append(csvContent, { name: `recapitulatif_factures_${targetYear}.csv` });
+		archive.append(csvContent, { name: `invoice_summary_${targetYear}.csv` });
 	} else if (exportType === 'invoices' && Array.isArray(invoiceIds)) {
-		let csvContent = 'Numéro;Client;Date;Échéance;Statut;Montant HT (DA);TVA (DA);Total TTC (DA)\n';
+		let csvContent =
+			'Number;Client;Date;Due date;Status;Amount excl. VAT (DA);VAT (DA);Total incl. VAT (DA)\n';
 
 		for (const id of invoiceIds) {
 			const inv = await getInvoice(locals.user.id, id);
@@ -288,7 +290,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			}
 		}
 
-		archive.append(csvContent, { name: `factures_export.csv` });
+		archive.append(csvContent, { name: `invoices_export.csv` });
 	} else {
 		return json({ error: 'Invalid export parameters' }, { status: 400 });
 	}
@@ -298,7 +300,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	const filename =
 		exportType === 'year'
 			? `megaorganize-facturation-${year}.zip`
-			: `megaorganize-factures-selection.zip`;
+			: `megaorganize-invoices-selection.zip`;
 
 	const webStream = Readable.toWeb(passThrough) as ReadableStream;
 

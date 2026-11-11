@@ -67,7 +67,7 @@
 		markdown = draft?.markdown ?? '';
 		tags = draft?.tags ?? [];
 		newTag = '';
-		spentAt = draft?.spentAt ?? new Date().toISOString().split('T')[0];
+		spentAt = draft?.spentAt ?? toDateKey();
 		showContent = !!draft?.markdown;
 	}
 

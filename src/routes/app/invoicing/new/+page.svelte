@@ -24,8 +24,8 @@
 	let invoiceDate = $state(toDateKey());
 	let dueDate = $state(toDateKey());
 	let status = $state<'draft' | 'sent' | 'paid' | 'cancelled'>('draft');
-	let paymentMode = $state('Virement bancaire / Chèque');
-	let paymentConditions = $state('30% au démarrage, le solde à la livraison');
+	let paymentMode = $state('Bank transfer / Check');
+	let paymentConditions = $state('30% upfront, balance on delivery');
 	let notes = $state('');
 	let showTvaStamp = $state(true);
 

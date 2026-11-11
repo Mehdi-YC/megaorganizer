@@ -393,9 +393,8 @@ export async function createInvoice(
 						invoiceDate: invDate,
 						dueDate,
 						status: data.status || 'draft',
-						paymentMode: data.paymentMode?.trim() || 'Virement bancaire / Chèque',
-						paymentConditions:
-							data.paymentConditions?.trim() || '30% au démarrage, le solde à la livraison',
+						paymentMode: data.paymentMode?.trim() || 'Bank transfer / Check',
+						paymentConditions: data.paymentConditions?.trim() || '30% upfront, balance on delivery',
 						notes: data.notes?.trim() || null,
 						showTvaStamp: data.showTvaStamp !== undefined ? data.showTvaStamp : tvaAmount === 0,
 						subtotal,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate, formatDateTime, formatTimeOfDay } from '$lib/utils/format';
 	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { renderMarkdown } from '$lib/utils/markdown';
@@ -120,7 +121,7 @@
 
 	function formatDueDate(dueAt: Date | string): string {
 		const date = new Date(dueAt);
-		return date.toLocaleDateString([], {
+		return formatDate(date, {
 			weekday: 'long',
 			year: 'numeric',
 			month: 'long',
@@ -130,7 +131,7 @@
 
 	function formatDueTime(dueAt: Date | string): string {
 		const date = new Date(dueAt);
-		return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		return formatTimeOfDay(date);
 	}
 
 	function isOverdue(dueAt: Date | string): boolean {
@@ -366,19 +367,19 @@
 						{#if item.createdAt}
 							<div class="flex justify-between">
 								<dt class="text-fg-subdued">Created</dt>
-								<dd class="text-fg">{new Date(item.createdAt).toLocaleDateString()}</dd>
+								<dd class="text-fg">{formatDate(new Date(item.createdAt))}</dd>
 							</div>
 						{/if}
 						{#if item.updatedAt}
 							<div class="flex justify-between">
 								<dt class="text-fg-subdued">Updated</dt>
-								<dd class="text-fg">{new Date(item.updatedAt).toLocaleDateString()}</dd>
+								<dd class="text-fg">{formatDate(new Date(item.updatedAt))}</dd>
 							</div>
 						{/if}
 						{#if isReminder && item.completedAt}
 							<div class="flex justify-between">
 								<dt class="text-fg-subdued">Completed</dt>
-								<dd class="text-fg">{new Date(item.completedAt).toLocaleString()}</dd>
+								<dd class="text-fg">{formatDateTime(new Date(item.completedAt))}</dd>
 							</div>
 						{/if}
 					</dl>

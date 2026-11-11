@@ -6,7 +6,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import ConfirmButton from '$lib/components/ui/ConfirmButton.svelte';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import type { InvoiceClient } from '$lib/types';
 	import type { PageData } from './$types';
@@ -16,7 +16,6 @@
 	let searchQuery = $state('');
 	let showModal = $state(false);
 	let editingClient = $state<InvoiceClient | null>(null);
-	let confirmDeleteId = $state<string | null>(null);
 
 	// Form fields
 	let formName = $state('');
@@ -121,13 +120,13 @@
 	}
 
 	async function handleDelete(id: string) {
+		if (!(await confirmAction('Delete this client?'))) return;
 		try {
 			const res = await fetch(`/api/invoicing/clients?id=${id}`, {
 				method: 'DELETE'
 			});
 			if (!res.ok) return;
 			showToast('Client deleted', 'success');
-			confirmDeleteId = null;
 			await invalidateAll();
 		} catch {
 			showToast('Network error, request failed', 'error');
@@ -227,21 +226,14 @@
 									>
 										<i class="fas fa-pencil text-xs"></i>
 									</button>
-									<ConfirmButton
-										confirmId={confirmDeleteId ?? ''}
-										targetId={c.id}
-										size="sm"
-										onconfirm={() => {
-											if (confirmDeleteId === c.id) {
-												handleDelete(c.id);
-											} else {
-												confirmDeleteId = c.id;
-												setTimeout(() => {
-													if (confirmDeleteId === c.id) confirmDeleteId = null;
-												}, 3000);
-											}
-										}}
-									/>
+									<button
+										type="button"
+										class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+										onclick={() => handleDelete(c.id)}
+										aria-label="Delete"
+									>
+										<i class="fas fa-trash text-xs"></i>
+									</button>
 								</div>
 							</td>
 						</tr>

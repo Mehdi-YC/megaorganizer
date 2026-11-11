@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		if (contentType.includes('multipart/form-data')) {
 			const formData = await request.formData();
 			const file = formData.get('file') as File | null;
-			if (!file) return json({ success: false, message: 'Aucun fichier fourni' }, { status: 400 });
+			if (!file) return json({ success: false, message: 'No file provided' }, { status: 400 });
 
 			const arrayBuffer = await file.arrayBuffer();
 			const buffer = Buffer.from(arrayBuffer);
@@ -70,7 +70,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		return json(
 			{
 				success: false,
-				message: err instanceof Error ? err.message : 'Échec de la restauration de la sauvegarde'
+				message: err instanceof Error ? err.message : 'Failed to restore the backup'
 			},
 			{ status: 500 }
 		);

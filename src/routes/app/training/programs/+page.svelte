@@ -11,9 +11,8 @@
 	import Switch from '$lib/components/ui/Switch.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
+	import { WEEKDAY_LABELS as DAY_LABELS } from '$lib/utils/format';
 	import type { ProgramListItem } from '$lib/types';
-
-	const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 	let { data } = $props();
 	let programs = $derived<ProgramListItem[]>(data.programs ?? []);
@@ -75,7 +74,7 @@
 
 <div class="px-3.5 py-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title="Training Programs" subtitle="Weekly plans with exercises, sets and reps">
-		<Button href="/app/training" variant="secondary" size="sm">
+		<Button href={resolve('/app/training')} variant="secondary" size="sm">
 			<i class="fas fa-arrow-left mr-1.5 text-xs sm:mr-2"></i>
 			Training
 		</Button>
@@ -128,7 +127,11 @@
 							label="On calendar"
 							onchange={(checked) => toggleActive(p, checked)}
 						/>
-						<Button href="/app/training/programs/{p.id}" size="sm" variant="secondary">
+						<Button
+							href={resolve('/app/training/programs/[id]', { id: p.id })}
+							size="sm"
+							variant="secondary"
+						>
 							<i class="fas fa-pen mr-1.5 text-[10px]"></i>
 							Open
 						</Button>

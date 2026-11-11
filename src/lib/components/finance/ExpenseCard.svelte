@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatAmount, formatDate } from '$lib/utils/format';
 	import type { Expense } from '$lib/types';
 	import { renderMarkdown } from '$lib/utils/markdown';
 	import { Badge } from '$lib/components/ui';
@@ -25,13 +26,6 @@
 		}
 	});
 
-	function formatDate(date: Date | string): string {
-		return new Date(date).toLocaleDateString([], {
-			month: 'short',
-			day: 'numeric'
-		});
-	}
-
 	let tags: string[] = $derived(expense.tags ? JSON.parse(expense.tags) : []);
 </script>
 
@@ -42,10 +36,12 @@
 		<div class="min-w-0 flex-1">
 			<div class="flex items-center gap-2">
 				<span class="text-sm font-bold tracking-tight text-fg">
-					{expense.amount.toLocaleString()}
+					{formatAmount(expense.amount)}
 					{expense.currency || currency}
 				</span>
-				<span class="text-xs text-fg-subdued">{formatDate(expense.spentAt)}</span>
+				<span class="text-xs text-fg-subdued"
+					>{formatDate(expense.spentAt, { month: 'short', day: 'numeric' })}</span
+				>
 			</div>
 			{#if expense.description}
 				<p class="mt-0.5 truncate text-xs text-fg-subdued">{expense.description}</p>

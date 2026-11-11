@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate, formatTimeOfDay } from '$lib/utils/format';
 	import type { Reminder } from '$lib/types';
 	import { resolve } from '$app/paths';
 	import { renderMarkdown } from '$lib/utils/markdown';
@@ -34,7 +35,7 @@
 		const dueDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
 		if (dueDay.getTime() === today.getTime()) {
-			return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+			return formatTimeOfDay(date);
 		}
 
 		const tomorrow = new Date(today);
@@ -43,7 +44,7 @@
 			return 'Demain';
 		}
 
-		return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+		return formatDate(date, { month: 'short', day: 'numeric' });
 	}
 
 	function isOverdue(dueAt: Date | string): boolean {

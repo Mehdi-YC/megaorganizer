@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { WEEKDAY_LABELS } from '$lib/utils/format';
 	import { Button, Input, Select, MarkdownEditor, Dialog } from '$lib/components/ui';
 	import type {
 		ReminderTemplateView,
@@ -58,7 +59,10 @@
 		}
 	});
 
-	const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+	// Reminder recurrence stores JS weekday values (0 = Sunday); display
+	// them Monday first like everywhere else.
+	const WEEKDAY_VALUE_ORDER = [1, 2, 3, 4, 5, 6, 0];
+	const weekdayLabel = (value: number) => WEEKDAY_LABELS[(value + 6) % 7];
 	const iconOptions = [
 		'fa-bell',
 		'fa-clock',
@@ -301,18 +305,18 @@
 			<div>
 				<span class="mb-1.5 block text-xs font-semibold tracking-wide text-fg-accent"> DAYS </span>
 				<div class="flex gap-1.5">
-					{#each dayNames as day, i (i)}
+					{#each WEEKDAY_VALUE_ORDER as value (value)}
 						<button
 							type="button"
 							class="flex-1 cursor-pointer rounded-sm px-2 py-2 text-xs font-medium transition-colors {selectedDays.includes(
-								i
+								value
 							)
 								? 'bg-primary text-white'
 								: 'bg-muted text-fg hover:bg-border'}"
-							onclick={() => toggleDay(i)}
-							aria-label={day}
+							onclick={() => toggleDay(value)}
+							aria-label={weekdayLabel(value)}
 						>
-							{day}
+							{weekdayLabel(value)}
 						</button>
 					{/each}
 				</div>
@@ -355,8 +359,8 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div>
 					<Select label="WEEKDAY" id="relative-weekday" bind:value={relativeWeekday}>
-						{#each dayNames as day, i (i)}
-							<option value={i}>{day}</option>
+						{#each WEEKDAY_VALUE_ORDER as value (value)}
+							<option {value}>{weekdayLabel(value)}</option>
 						{/each}
 					</Select>
 				</div>

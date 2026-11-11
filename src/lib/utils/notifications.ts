@@ -1,3 +1,4 @@
+import { formatTimeOfDay } from '$lib/utils/format';
 import type { Reminder } from '$lib/types';
 // Browser-side reminder notifications.
 //
@@ -130,7 +131,7 @@ export async function showReminderNotification(reminder: {
 	todos?: Array<{ text: string; completed: boolean }>;
 }): Promise<void> {
 	const dueTime = new Date(reminder.dueAt);
-	const timeStr = dueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+	const timeStr = formatTimeOfDay(dueTime);
 
 	const pendingTodos = reminder.todos?.filter((t) => !t.completed) ?? [];
 	const todoText =

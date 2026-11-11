@@ -1144,10 +1144,8 @@ export const invoice = sqliteTable(
 		status: text('status', { enum: ['draft', 'sent', 'paid', 'cancelled'] })
 			.default('draft')
 			.notNull(),
-		paymentMode: text('payment_mode').default('Virement bancaire / Chèque'),
-		paymentConditions: text('payment_conditions').default(
-			'30% au démarrage, le solde à la livraison'
-		),
+		paymentMode: text('payment_mode').default('Bank transfer / Check'),
+		paymentConditions: text('payment_conditions').default('30% upfront, balance on delivery'),
 		notes: text('notes'),
 		showTvaStamp: integer('show_tva_stamp', { mode: 'boolean' }).default(true).notNull(),
 		subtotal: real('subtotal').default(0).notNull(),
