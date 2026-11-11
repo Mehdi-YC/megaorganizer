@@ -38,6 +38,8 @@ export interface RunningSessionState {
 	title?: string;
 	notes?: string;
 	activityType?: string;
+	whenDate?: string;
+	whenTime?: string;
 	selectedItems?: string[];
 	exerciseRecords?: ExerciseRecordDraft[];
 }

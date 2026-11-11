@@ -3,9 +3,12 @@ import {
 	trainingSession,
 	trainingActivity,
 	trainingActivityItem,
-	trainingExerciseRecord
+	trainingExerciseRecord,
+	exercise,
+	treeElement
 } from '$lib/server/db/schema';
 import { eq, and, asc, desc, inArray, gte, lte } from 'drizzle-orm';
+import type { SessionExerciseRecord } from '$lib/types';
 
 function toDate(value: Date | string | number | undefined | null): Date {
 	if (value instanceof Date) return value;
@@ -190,6 +193,55 @@ export async function getTrainingActivities(userId: string, sessionId: string) {
 		.where(eq(trainingActivity.sessionId, sessionId))
 		.orderBy(asc(trainingActivity.startedAt))
 		.all();
+}
+
+/**
+ * Logged exercise records of a session with resolved display names, so the
+ * session detail page can show what was actually trained.
+ */
+export async function getExerciseRecordsBySession(
+	userId: string,
+	sessionId: string
+): Promise<SessionExerciseRecord[]> {
+	const owned = await verifySessionOwnership(userId, sessionId);
+	if (!owned) return [];
+
+	const rows = await db
+		.select({
+			id: trainingExerciseRecord.id,
+			activityId: trainingExerciseRecord.activityId,
+			sets: trainingExerciseRecord.sets,
+			reps: trainingExerciseRecord.reps,
+			weight: trainingExerciseRecord.weight,
+			unit: trainingExerciseRecord.unit,
+			rpe: trainingExerciseRecord.rpe,
+			restTime: trainingExerciseRecord.restTime,
+			notes: trainingExerciseRecord.notes,
+			position: trainingExerciseRecord.position,
+			exerciseName: exercise.name,
+			itemName: treeElement.name
+		})
+		.from(trainingExerciseRecord)
+		.innerJoin(trainingActivity, eq(trainingExerciseRecord.activityId, trainingActivity.id))
+		.leftJoin(exercise, eq(trainingExerciseRecord.exerciseId, exercise.id))
+		.leftJoin(treeElement, eq(trainingExerciseRecord.itemId, treeElement.id))
+		.where(eq(trainingActivity.sessionId, sessionId))
+		.orderBy(asc(trainingExerciseRecord.position))
+		.all();
+
+	return rows.map((r) => ({
+		id: r.id,
+		activityId: r.activityId,
+		name: r.exerciseName ?? r.itemName ?? 'Exercise',
+		sets: r.sets,
+		reps: r.reps,
+		weight: r.weight,
+		unit: r.unit,
+		rpe: r.rpe,
+		restTime: r.restTime,
+		notes: r.notes,
+		position: r.position
+	}));
 }
 
 export async function updateTrainingActivity(

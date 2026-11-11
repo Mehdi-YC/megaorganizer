@@ -5,6 +5,9 @@
 	import { browser } from '$app/environment';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
+	import { toDateKey } from '$lib/utils/date';
+	import { MUSCLE_GROUP_LABELS } from '$lib/utils/training';
+	import { showToast } from '$lib/utils/toast.svelte';
 	import {
 		computeRunStats,
 		buildRunPayload,
@@ -29,6 +32,10 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import SearchInput from '$lib/components/ui/SearchInput.svelte';
+	import type { Exercise, PersonalRecord } from '$lib/types';
 
 	let { data } = $props();
 	// One-time seeds from load data; drafts and edits take over from here.
@@ -79,6 +86,83 @@
 	/** Records come from library items or the exercise library. */
 	function recordKey(record: ExerciseRecordDraft): string {
 		return record.itemId ?? record.exerciseId ?? record.name ?? '';
+	}
+
+	// When the session happened. Defaults to now; backfill past workouts here.
+	let whenDate = $state(toDateKey());
+	let whenTime = $state('');
+
+	function currentTimeKey(): string {
+		const d = new Date();
+		return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+	}
+	whenTime = currentTimeKey();
+
+	/** The running timer wins; otherwise use the When fields. */
+	function startedAtIso(): string {
+		if (startTime > 0) return new Date(startTime).toISOString();
+		const parsed = whenDate && whenTime ? new Date(`${whenDate}T${whenTime}`) : new Date();
+		return (Number.isNaN(parsed.getTime()) ? new Date() : parsed).toISOString();
+	}
+
+	// ── Exercise library picker ─────────────────────────────────────────────
+	let pickerOpen = $state(false);
+	let pickerSearch = $state('');
+	let pickerSelection = $state<Array<Exercise & { pr: PersonalRecord | null }>>([]);
+
+	let pickerList = $derived(
+		((data.exercises ?? []) as Array<Exercise & { pr: PersonalRecord | null }>).filter(
+			(e) =>
+				!pickerSearch.trim() ||
+				e.name.toLowerCase().includes(pickerSearch.trim().toLowerCase()) ||
+				e.muscleGroup.includes(pickerSearch.trim().toLowerCase())
+		)
+	);
+
+	function openPicker() {
+		pickerSearch = '';
+		pickerSelection = [];
+		pickerOpen = true;
+	}
+
+	function togglePick(exercise: Exercise & { pr: PersonalRecord | null }) {
+		pickerSelection = pickerSelection.some((e) => e.id === exercise.id)
+			? pickerSelection.filter((e) => e.id !== exercise.id)
+			: [...pickerSelection, exercise];
+	}
+
+	/** Add every selected exercise as a record row, then close. */
+	function addSelected() {
+		const fresh = pickerSelection.filter(
+			(ex) => !exerciseRecords.some((r) => r.exerciseId === ex.id)
+		);
+		exerciseRecords = [
+			...exerciseRecords,
+			...fresh.map((ex) => ({
+				exerciseId: ex.id,
+				name: ex.name,
+				sets: 3,
+				reps: '10',
+				weight: 0,
+				unit: 'kg',
+				rpe: 7,
+				restTime: 90,
+				notes: ''
+			}))
+		];
+		if (fresh.length < pickerSelection.length) {
+			showToast('Skipped exercises already logged in this session', 'info');
+		}
+		pickerSelection = [];
+		pickerOpen = false;
+	}
+
+	function formatPr(pr: PersonalRecord | null): string | null {
+		if (!pr || (pr.maxWeight === null && pr.maxReps === null)) return null;
+		if (pr.maxWeight !== null) {
+			return `${pr.maxReps ?? '–'} × ${pr.maxWeight} ${pr.unit ?? 'kg'}`;
+		}
+		return `${pr.maxReps} reps`;
 	}
 
 	let elapsedTime = $state(0);
@@ -135,6 +219,8 @@
 		// never discards what was typed or selected.
 		if (saved.title) title = saved.title;
 		if (saved.notes) notes = saved.notes;
+		if (saved.whenDate) whenDate = saved.whenDate;
+		if (saved.whenTime) whenTime = saved.whenTime;
 		if (saved.activityType && (activityTypes as readonly string[]).includes(saved.activityType)) {
 			activityType = saved.activityType as typeof activityType;
 		}
@@ -191,6 +277,8 @@
 			title,
 			notes,
 			activityType,
+			whenDate,
+			whenTime,
 			selectedItems,
 			exerciseRecords
 		});
@@ -398,7 +486,7 @@
 					title: title || undefined,
 					notes: notes || undefined,
 					activityType,
-					startedAt: new Date(startTime || Date.now()).toISOString(),
+					startedAt: startedAtIso(),
 					duration: elapsedTime,
 					exerciseRecords:
 						exerciseRecords.length > 0
@@ -591,10 +679,21 @@
 			<option value="other">Other</option>
 		</Select>
 
+		<div class="grid grid-cols-2 gap-2.5">
+			<Input label="Date" type="date" bind:value={whenDate} />
+			<Input label="Start time" type="time" bind:value={whenTime} />
+		</div>
+
 		{#if activityType === 'strength'}
+			<div class="flex items-center justify-between">
+				<h3 class="text-sm font-medium text-fg">Exercises</h3>
+				<Button variant="secondary" size="sm" onclick={openPicker}>
+					<i class="fas fa-plus mr-1.5 text-xs"></i>
+					From library
+				</Button>
+			</div>
 			{#if !data.programBlock}
 				<div>
-					<h3 class="mb-2 text-sm font-medium text-fg">Exercises</h3>
 					<p class="mb-3 text-xs text-fg-subdued">Select items to add as exercises</p>
 					<div class="max-h-48 space-y-1 overflow-y-auto rounded-sm border border-border bg-bg p-2">
 						{#each data.items as item (item.id)}
@@ -768,3 +867,58 @@
 		</div>
 	</div>
 </div>
+
+<!-- Exercise library picker -->
+<Dialog bind:open={pickerOpen} title="Choose an exercise">
+	<div class="space-y-3">
+		<SearchInput bind:value={pickerSearch} placeholder="Search the library..." />
+		<div class="max-h-80 space-y-1 overflow-y-auto">
+			{#each pickerList as exercise (exercise.id)}
+				{@const selected = pickerSelection.some((e) => e.id === exercise.id)}
+				<button
+					type="button"
+					class="flex w-full cursor-pointer items-center gap-3 rounded-sm border p-2 text-left transition-colors {selected
+						? 'border-primary bg-primary/5'
+						: 'border-transparent hover:bg-muted'}"
+					onclick={() => togglePick(exercise)}
+				>
+					<div
+						class="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border {selected
+							? 'border-primary bg-primary text-white'
+							: 'border-border-strong'}"
+					>
+						{#if selected}<i class="fas fa-check text-[9px]"></i>{/if}
+					</div>
+					<div class="h-10 w-14 shrink-0 overflow-hidden rounded-sm bg-muted">
+						{#if exercise.images[0]}
+							<img
+								src={exercise.images[0]}
+								alt={exercise.name}
+								class="h-full w-full object-cover"
+								loading="lazy"
+							/>
+						{/if}
+					</div>
+					<div class="min-w-0 flex-1">
+						<p class="truncate text-sm text-fg">{exercise.name}</p>
+						<p class="text-xs text-fg-subdued">
+							{MUSCLE_GROUP_LABELS[exercise.muscleGroup] ?? exercise.muscleGroup}
+							{#if exercise.equipment}· {exercise.equipment}{/if}
+						</p>
+					</div>
+					{#if formatPr(exercise.pr)}
+						<Badge size="sm" variant="success">{formatPr(exercise.pr)}</Badge>
+					{/if}
+				</button>
+			{:else}
+				<p class="py-6 text-center text-sm text-fg-subdued">No exercises match</p>
+			{/each}
+		</div>
+	</div>
+	{#snippet footer()}
+		<Button variant="secondary" onclick={() => (pickerOpen = false)}>Cancel</Button>
+		<Button disabled={pickerSelection.length === 0} onclick={addSelected}>
+			Add {pickerSelection.length} exercise{pickerSelection.length === 1 ? '' : 's'}
+		</Button>
+	{/snippet}
+</Dialog>
