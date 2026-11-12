@@ -13,13 +13,7 @@
 	import { MUSCLE_GROUP_LABELS as GROUP_LABELS, formatPr } from '$lib/utils/training';
 	import { WEEKDAY_LABELS as DAY_LABELS } from '$lib/utils/format';
 	import { untrack } from 'svelte';
-	import type {
-		Program,
-		ProgramBlock,
-		ProgramEntry,
-		Exercise,
-		PersonalRecord
-	} from '$lib/types';
+	import type { Program, ProgramBlock, ProgramEntry, Exercise, PersonalRecord } from '$lib/types';
 
 	/** Editable copies with string fields, so inputs bind cleanly. */
 	type EntryDraft = Omit<ProgramEntry, 'title' | 'sets' | 'reps' | 'weight' | 'unit' | 'notes'> & {
