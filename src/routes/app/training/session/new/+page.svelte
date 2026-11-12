@@ -6,7 +6,6 @@
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { formatTime, formatPace } from '$lib/utils';
 	import { toDateKey } from '$lib/utils/date';
-	import { MUSCLE_GROUP_LABELS } from '$lib/utils/training';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import {
 		computeRunStats,
@@ -32,9 +31,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Checkbox from '$lib/components/ui/Checkbox.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
-	import Dialog from '$lib/components/ui/Dialog.svelte';
-	import Badge from '$lib/components/ui/Badge.svelte';
-	import SearchInput from '$lib/components/ui/SearchInput.svelte';
+	import ExercisePicker from '$lib/components/training/ExercisePicker.svelte';
 	import type { Exercise, PersonalRecord } from '$lib/types';
 
 	let { data } = $props();
@@ -107,35 +104,9 @@
 
 	// ── Exercise library picker ─────────────────────────────────────────────
 	let pickerOpen = $state(false);
-	let pickerSearch = $state('');
-	let pickerSelection = $state<Array<Exercise & { pr: PersonalRecord | null }>>([]);
 
-	let pickerList = $derived(
-		((data.exercises ?? []) as Array<Exercise & { pr: PersonalRecord | null }>).filter(
-			(e) =>
-				!pickerSearch.trim() ||
-				e.name.toLowerCase().includes(pickerSearch.trim().toLowerCase()) ||
-				e.muscleGroup.includes(pickerSearch.trim().toLowerCase())
-		)
-	);
-
-	function openPicker() {
-		pickerSearch = '';
-		pickerSelection = [];
-		pickerOpen = true;
-	}
-
-	function togglePick(exercise: Exercise & { pr: PersonalRecord | null }) {
-		pickerSelection = pickerSelection.some((e) => e.id === exercise.id)
-			? pickerSelection.filter((e) => e.id !== exercise.id)
-			: [...pickerSelection, exercise];
-	}
-
-	/** Add every selected exercise as a record row, then close. */
-	function addSelected() {
-		const fresh = pickerSelection.filter(
-			(ex) => !exerciseRecords.some((r) => r.exerciseId === ex.id)
-		);
+	function addPickedExercises(selected: Array<Exercise & { pr: PersonalRecord | null }>) {
+		const fresh = selected.filter((ex) => !exerciseRecords.some((r) => r.exerciseId === ex.id));
 		exerciseRecords = [
 			...exerciseRecords,
 			...fresh.map((ex) => ({
@@ -150,19 +121,9 @@
 				notes: ''
 			}))
 		];
-		if (fresh.length < pickerSelection.length) {
+		if (fresh.length < selected.length) {
 			showToast('Skipped exercises already logged in this session', 'info');
 		}
-		pickerSelection = [];
-		pickerOpen = false;
-	}
-
-	function formatPr(pr: PersonalRecord | null): string | null {
-		if (!pr || (pr.maxWeight === null && pr.maxReps === null)) return null;
-		if (pr.maxWeight !== null) {
-			return `${pr.maxReps ?? '–'} × ${pr.maxWeight} ${pr.unit ?? 'kg'}`;
-		}
-		return `${pr.maxReps} reps`;
 	}
 
 	let elapsedTime = $state(0);
@@ -687,7 +648,7 @@
 		{#if activityType === 'strength'}
 			<div class="flex items-center justify-between">
 				<h3 class="text-sm font-medium text-fg">Exercises</h3>
-				<Button variant="secondary" size="sm" onclick={openPicker}>
+				<Button variant="secondary" size="sm" onclick={() => (pickerOpen = true)}>
 					<i class="fas fa-plus mr-1.5 text-xs"></i>
 					From library
 				</Button>
@@ -861,64 +822,19 @@
 					{saveError ? 'Retry Save' : 'Save Session'}
 				</Button>
 			{/if}
-			<Button href="/app/training" variant="secondary" onclick={() => clearSessionState()}>
+			<Button
+				href={resolve('/app/training')}
+				variant="secondary"
+				onclick={() => clearSessionState()}
+			>
 				Cancel
 			</Button>
 		</div>
 	</div>
 </div>
 
-<!-- Exercise library picker -->
-<Dialog bind:open={pickerOpen} title="Choose an exercise">
-	<div class="space-y-3">
-		<SearchInput bind:value={pickerSearch} placeholder="Search the library..." />
-		<div class="max-h-80 space-y-1 overflow-y-auto">
-			{#each pickerList as exercise (exercise.id)}
-				{@const selected = pickerSelection.some((e) => e.id === exercise.id)}
-				<button
-					type="button"
-					class="flex w-full cursor-pointer items-center gap-3 rounded-sm border p-2 text-left transition-colors {selected
-						? 'border-primary bg-primary/5'
-						: 'border-transparent hover:bg-muted'}"
-					onclick={() => togglePick(exercise)}
-				>
-					<div
-						class="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border {selected
-							? 'border-primary bg-primary text-white'
-							: 'border-border-strong'}"
-					>
-						{#if selected}<i class="fas fa-check text-[10px]"></i>{/if}
-					</div>
-					<div class="h-10 w-14 shrink-0 overflow-hidden rounded-sm bg-muted">
-						{#if exercise.images[0]}
-							<img
-								src={exercise.images[0]}
-								alt={exercise.name}
-								class="h-full w-full object-cover"
-								loading="lazy"
-							/>
-						{/if}
-					</div>
-					<div class="min-w-0 flex-1">
-						<p class="truncate text-sm text-fg">{exercise.name}</p>
-						<p class="text-xs text-fg-subdued">
-							{MUSCLE_GROUP_LABELS[exercise.muscleGroup] ?? exercise.muscleGroup}
-							{#if exercise.equipment}· {exercise.equipment}{/if}
-						</p>
-					</div>
-					{#if formatPr(exercise.pr)}
-						<Badge size="sm" variant="success">{formatPr(exercise.pr)}</Badge>
-					{/if}
-				</button>
-			{:else}
-				<p class="py-6 text-center text-sm text-fg-subdued">No exercises match</p>
-			{/each}
-		</div>
-	</div>
-	{#snippet footer()}
-		<Button variant="secondary" onclick={() => (pickerOpen = false)}>Cancel</Button>
-		<Button disabled={pickerSelection.length === 0} onclick={addSelected}>
-			Add {pickerSelection.length} exercise{pickerSelection.length === 1 ? '' : 's'}
-		</Button>
-	{/snippet}
-</Dialog>
+<ExercisePicker
+	bind:open={pickerOpen}
+	exercises={(data.exercises ?? []) as Array<Exercise & { pr: PersonalRecord | null }>}
+	onadd={addPickedExercises}
+/>

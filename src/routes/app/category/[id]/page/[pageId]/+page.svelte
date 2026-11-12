@@ -20,7 +20,6 @@
 		Input,
 		MarkdownEditor,
 		EmptyState,
-		ConfirmButton,
 		Dialog
 	} from '$lib/components/ui';
 	import AttachmentManager from '$lib/components/page/AttachmentManager.svelte';
@@ -50,7 +49,6 @@
 	let nodeAddName = $state<Record<string, string>>({});
 	let nodeSearchResults = $state<Record<string, TreeElement[]>>({});
 	let editingPageContent = $state(false);
-	let confirmDeleteId = $state<string | null>(null);
 	let nodeAddOpen = $state<Record<string, boolean>>({});
 	let hoverItem = $state<TreeElement | null>(null);
 	let hoverItemChildren = $state<TreeElement[]>([]);
@@ -193,11 +191,10 @@
 	}
 
 	async function removeElement(id: string, isNode: boolean = false) {
-		if (isNode && confirmDeleteId !== id) {
-			confirmDeleteId = id;
-			return;
-		}
-		confirmDeleteId = null;
+		const message = isNode
+			? 'Delete this section and everything under it?'
+			: 'Remove this item from the page?';
+		if (!(await confirmAction(message))) return;
 		const res = await fetch('/api/tree', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
@@ -729,12 +726,17 @@
 							>
 								<i class="fas fa-pen text-[10px]"></i>
 							</button>
-							<ConfirmButton
-								confirmId={confirmDeleteId ?? ''}
-								targetId={node.id}
-								icon="fa-times"
-								onconfirm={() => removeElement(node.id, true)}
-							/>
+							<button
+								type="button"
+								class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+								onclick={(e) => {
+									e.stopPropagation();
+									removeElement(node.id, true);
+								}}
+								aria-label="Delete section"
+							>
+								<i class="fas fa-times text-xs"></i>
+							</button>
 						</div>
 						<hr style="border-color: {nodeColor}40" />
 

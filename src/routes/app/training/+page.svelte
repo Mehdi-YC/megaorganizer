@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import SessionListItem from '$lib/components/ui/SessionListItem.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -20,23 +21,23 @@
 
 <div class="px-3.5 py-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title="Training Sessions" subtitle="All your training sessions">
-		<Button href="/app/training/programs" variant="secondary" size="sm">
+		<Button href={resolve('/app/training/programs')} variant="secondary" size="sm">
 			<i class="fas fa-calendar-days mr-1.5 text-xs sm:mr-2"></i>
 			Programs
 		</Button>
-		<Button href="/app/training/exercises" variant="secondary" size="sm">
+		<Button href={resolve('/app/training/exercises')} variant="secondary" size="sm">
 			<i class="fas fa-dumbbell mr-1.5 text-xs sm:mr-2"></i>
 			Exercises
 		</Button>
-		<Button href="/app/training/timers" variant="secondary" size="sm">
+		<Button href={resolve('/app/training/timers')} variant="secondary" size="sm">
 			<i class="fas fa-stopwatch mr-1.5 text-xs sm:mr-2"></i>
 			Timers
 		</Button>
-		<Button href="/app/training/running" variant="secondary" size="sm">
+		<Button href={resolve('/app/training/running')} variant="secondary" size="sm">
 			<i class="fas fa-person-running mr-1.5 text-xs sm:mr-2"></i>
 			Running
 		</Button>
-		<Button href="/app/training/session/new" variant="primary" size="sm">
+		<Button href={resolve('/app/training/session/new')} variant="primary" size="sm">
 			<i class="fas fa-plus mr-1.5 text-xs sm:mr-2"></i>
 			Session
 		</Button>

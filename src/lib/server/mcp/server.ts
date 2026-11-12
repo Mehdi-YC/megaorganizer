@@ -594,7 +594,7 @@ export function createMcpServer(userId: string): McpServer {
 					.string()
 					.nullable()
 					.optional()
-					.describe('Payment method (e.g. Virement bancaire / Chèque)'),
+					.describe('Payment method (e.g. Bank transfer / Check)'),
 				paymentConditions: z.string().nullable().optional().describe('Payment terms'),
 				notes: z.string().nullable().optional().describe('Public notes or legal remarks'),
 				showTvaStamp: z

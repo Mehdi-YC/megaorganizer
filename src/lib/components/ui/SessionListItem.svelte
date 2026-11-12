@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate } from '$lib/utils/format';
 	import { resolve } from '$app/paths';
 	import { getSessionIcon } from '$lib/utils/training';
 	import { formatTime } from '$lib/utils';
@@ -31,7 +32,7 @@
 		<div>
 			<p class="font-medium text-fg">{session.title || 'Training Session'}</p>
 			<p class="text-sm text-fg-subdued">
-				{new Date(session.startedAt).toLocaleDateString()}
+				{formatDate(new Date(session.startedAt))}
 				{#if session.duration}
 					· {formatTime(session.duration)}
 				{/if}

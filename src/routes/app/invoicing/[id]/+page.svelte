@@ -2,14 +2,13 @@
 	import { resolve } from '$app/paths';
 	import { goto, invalidateAll } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
-	import ConfirmButton from '$lib/components/ui/ConfirmButton.svelte';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import InvoiceDocument from '$lib/components/invoicing/InvoiceDocument.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let confirmDeleteId = $state<string | null>(null);
 	// svelte-ignore state_referenced_locally
 	let currentStatus = $state(data.invoice.status);
 
@@ -33,6 +32,7 @@
 	}
 
 	async function deleteInvoice() {
+		if (!(await confirmAction('Delete this invoice?'))) return;
 		const res = await fetch(`/api/invoicing/invoices?id=${data.invoice.id}`, {
 			method: 'DELETE'
 		});
@@ -134,21 +134,9 @@
 				</Button>
 			</a>
 
-			<ConfirmButton
-				confirmId={confirmDeleteId ?? ''}
-				targetId={data.invoice.id}
-				size="sm"
-				onconfirm={() => {
-					if (confirmDeleteId === data.invoice.id) {
-						deleteInvoice();
-					} else {
-						confirmDeleteId = data.invoice.id;
-						setTimeout(() => {
-							if (confirmDeleteId === data.invoice.id) confirmDeleteId = null;
-						}, 3000);
-					}
-				}}
-			/>
+			<Button variant="danger" size="sm" onclick={deleteInvoice}>
+				<i class="fas fa-trash mr-1.5 text-xs"></i> Delete
+			</Button>
 		</div>
 	</div>
 

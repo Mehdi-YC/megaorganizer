@@ -1,4 +1,12 @@
 <script lang="ts">
+	import {
+		MONTH_LABELS,
+		WEEKDAY_LABELS,
+		formatAmount,
+		formatDate,
+		formatDateTime,
+		formatTimeOfDay
+	} from '$lib/utils/format';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
@@ -41,23 +49,6 @@
 		}
 		return new Date();
 	});
-
-	const monthNames = [
-		'January',
-		'February',
-		'March',
-		'April',
-		'May',
-		'June',
-		'July',
-		'August',
-		'September',
-		'October',
-		'November',
-		'December'
-	];
-
-	const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 	function getDaysInMonth(date: Date) {
 		const year = date.getFullYear();
@@ -123,10 +114,7 @@
 					type: 'training',
 					id: session.id,
 					title: session.title || 'Training Session',
-					time: new Date(session.startedAt).toLocaleTimeString([], {
-						hour: '2-digit',
-						minute: '2-digit'
-					})
+					time: formatTimeOfDay(new Date(session.startedAt))
 				});
 			}
 
@@ -149,10 +137,7 @@
 					id: reminder.id,
 					title: reminder.title,
 					completed: reminder.completed,
-					time: new Date(reminder.dueAt).toLocaleTimeString([], {
-						hour: '2-digit',
-						minute: '2-digit'
-					})
+					time: formatTimeOfDay(new Date(reminder.dueAt))
 				});
 			}
 
@@ -170,10 +155,7 @@
 						templateId: vReminder.templateId,
 						title: vReminder.title,
 						isVirtual: true,
-						time: new Date(vReminder.dueAt).toLocaleTimeString([], {
-							hour: '2-digit',
-							minute: '2-digit'
-						})
+						time: formatTimeOfDay(new Date(vReminder.dueAt))
 					});
 				}
 			}
@@ -265,7 +247,7 @@
 		const diffDays = Math.round((startOf(date) - startOf(new Date())) / 86_400_000);
 		if (diffDays === 0) return 'Today';
 		if (diffDays === 1) return 'Tomorrow';
-		return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+		return formatDate(date, { weekday: 'short', month: 'short', day: 'numeric' });
 	}
 
 	function isSameCalendarDay(d1: Date, d2: Date): boolean {
@@ -289,7 +271,7 @@
 	});
 
 	function formatSelectedDate(date: Date): string {
-		return date.toLocaleDateString([], {
+		return formatDate(date, {
 			weekday: 'long',
 			month: 'long',
 			day: 'numeric',
@@ -412,7 +394,7 @@
 						<i class="fas fa-chevron-left text-xs"></i>
 					</button>
 					<h2 class="text-base font-bold tracking-tight text-fg sm:text-lg">
-						{monthNames[currentDate.getMonth()]}
+						{MONTH_LABELS[currentDate.getMonth()]}
 						{currentDate.getFullYear()}
 					</h2>
 					<button
@@ -467,7 +449,7 @@
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-fg">
-								{monthOverview.expenseTotal.toLocaleString()}
+								{formatDateTime(monthOverview.expenseTotal)}
 								{expenseSettings.currency}
 							</p>
 							<p class="text-[10px] text-fg-subdued">Expenses</p>
@@ -476,7 +458,7 @@
 				</div>
 
 				<div class="grid grid-cols-7 gap-px bg-border">
-					{#each dayNames as day (day)}
+					{#each WEEKDAY_LABELS as day (day)}
 						<div
 							class="bg-muted px-1 py-1.5 text-center text-[10px] font-semibold text-fg-subdued uppercase sm:px-2 sm:py-2 sm:text-xs"
 						>
@@ -556,7 +538,7 @@
 											title={event.title}
 										>
 											{event.type === 'expense'
-												? `${event.amount?.toLocaleString()} - ${event.title}`
+												? `${formatAmount(event.amount ?? 0)} - ${event.title}`
 												: event.type === 'todo'
 													? `✓ ${event.title}`
 													: event.title}
@@ -693,7 +675,7 @@
 									</p>
 									<p class="text-[10px] text-fg-subdued">
 										{#if event.type === 'expense'}
-											{event.amount?.toLocaleString()} {expenseSettings.currency}
+											{formatAmount(event.amount ?? 0)} {expenseSettings.currency}
 										{:else}
 											{event.time}
 											{#if event.type === 'scheduled'}
@@ -744,10 +726,7 @@
 								</button>
 								<div class="space-y-1">
 									{#each group.items as item (item.id)}
-										{@const time = new Date(item.dueAt).toLocaleTimeString([], {
-											hour: '2-digit',
-											minute: '2-digit'
-										})}
+										{@const time = formatTimeOfDay(new Date(item.dueAt))}
 										<a
 											href={resolve('/app/reminders/[id]', {
 												id: item.isVirtual ? (item.templateId ?? item.id) : item.id

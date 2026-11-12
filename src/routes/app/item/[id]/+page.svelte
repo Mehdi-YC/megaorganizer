@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate } from '$lib/utils/format';
 	import { resolve } from '$app/paths';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { beforeNavigate, goto } from '$app/navigation';
@@ -264,7 +265,7 @@
 {#if !item}
 	<div class="flex h-full items-center justify-center">
 		<EmptyState icon="fa-exclamation-triangle" message="Item not found">
-			<Button href="/app/library" variant="primary" size="sm">Back to Library</Button>
+			<Button href={resolve('/app/library')} variant="primary" size="sm">Back to Library</Button>
 		</EmptyState>
 	</div>
 {:else}
@@ -564,11 +565,11 @@
 							</div>
 							<div class="flex justify-between">
 								<dt class="text-fg-subdued">Created</dt>
-								<dd class="text-fg">{new Date(item.createdAt).toLocaleDateString()}</dd>
+								<dd class="text-fg">{formatDate(new Date(item.createdAt))}</dd>
 							</div>
 							<div class="flex justify-between">
 								<dt class="text-fg-subdued">Updated</dt>
-								<dd class="text-fg">{new Date(item.updatedAt).toLocaleDateString()}</dd>
+								<dd class="text-fg">{formatDate(new Date(item.updatedAt))}</dd>
 							</div>
 						</dl>
 					</div>

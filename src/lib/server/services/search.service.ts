@@ -1,3 +1,4 @@
+import { formatAmount, formatDate } from '$lib/utils/format';
 import { db } from '$lib/server/db';
 import {
 	treeElement,
@@ -196,7 +197,7 @@ export async function globalSearch(
 			add(`expense:${exp.id}`, {
 				type: 'expense',
 				id: exp.id,
-				title: `${exp.amount.toLocaleString()} ${exp.currency}`,
+				title: `${formatAmount(exp.amount)} ${exp.currency}`,
 				subtitle: exp.description || snipOf('expense', exp.id),
 				icon: 'fa-receipt',
 				url: '/app/finance'
@@ -221,7 +222,7 @@ export async function globalSearch(
 				type: 'training',
 				id: session.id,
 				title: session.title || 'Training Session',
-				subtitle: session.notes || new Date(session.startedAt).toLocaleDateString(),
+				subtitle: session.notes || formatDate(new Date(session.startedAt)),
 				icon: 'fa-dumbbell',
 				url: `/app/training/session/${session.id}`
 			});

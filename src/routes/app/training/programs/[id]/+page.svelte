@@ -1,27 +1,19 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import ExercisePicker from '$lib/components/training/ExercisePicker.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
-	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
-	import { MUSCLE_GROUP_LABELS as GROUP_LABELS } from '$lib/utils/training';
+	import { MUSCLE_GROUP_LABELS as GROUP_LABELS, formatPr } from '$lib/utils/training';
+	import { WEEKDAY_LABELS as DAY_LABELS } from '$lib/utils/format';
 	import { untrack } from 'svelte';
-	import type {
-		Program,
-		ProgramBlock,
-		ProgramEntry,
-		Exercise,
-		PersonalRecord,
-		MuscleGroup
-	} from '$lib/types';
-
-	const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+	import type { Program, ProgramBlock, ProgramEntry, Exercise, PersonalRecord } from '$lib/types';
 
 	/** Editable copies with string fields, so inputs bind cleanly. */
 	type EntryDraft = Omit<ProgramEntry, 'title' | 'sets' | 'reps' | 'weight' | 'unit' | 'notes'> & {
@@ -221,42 +213,21 @@
 	// ── Exercise picker ─────────────────────────────────────────────────────
 	let pickerOpen = $state(false);
 	let pickerBlockId = $state('');
-	let pickerSearch = $state('');
-	let pickerGroup = $state<MuscleGroup | 'all'>('all');
-	let pickerSelection = $state<Array<Exercise & { pr: PersonalRecord | null }>>([]);
 	let addingExercises = $state(false);
-
-	let pickerList = $derived(
-		exercises.filter((e) => {
-			if (pickerGroup !== 'all' && e.muscleGroup !== pickerGroup) return false;
-			if (pickerSearch.trim() && !e.name.toLowerCase().includes(pickerSearch.trim().toLowerCase()))
-				return false;
-			return true;
-		})
-	);
 
 	function openPicker(block: BlockDraft) {
 		pickerBlockId = block.id;
-		pickerSearch = '';
-		pickerGroup = 'all';
-		pickerSelection = [];
 		pickerOpen = true;
 	}
 
-	function togglePick(exercise: Exercise & { pr: PersonalRecord | null }) {
-		pickerSelection = pickerSelection.some((e) => e.id === exercise.id)
-			? pickerSelection.filter((e) => e.id !== exercise.id)
-			: [...pickerSelection, exercise];
-	}
-
-	/** Add every selected exercise in one go, then append the rows locally. */
-	async function addSelected() {
+	/** Create an entry per selected exercise, then append the rows locally. */
+	async function addPickedExercises(selected: Array<Exercise & { pr: PersonalRecord | null }>) {
 		const block = blocks.find((b) => b.id === pickerBlockId);
-		if (!block || pickerSelection.length === 0 || addingExercises) return;
+		if (!block || selected.length === 0 || addingExercises) return;
 		addingExercises = true;
 
 		const created = await Promise.all(
-			pickerSelection.map((ex) =>
+			selected.map((ex) =>
 				post({
 					action: 'createEntry',
 					blockId: block.id,
@@ -273,7 +244,7 @@
 		let position = block.entries.reduce((max, e) => Math.max(max, e.position), -1) + 1;
 		const drafts = created.flatMap((row, i) => {
 			if (!row) return [];
-			const ex = pickerSelection[i];
+			const ex = selected[i];
 			position += 1;
 			return [
 				{
@@ -294,18 +265,7 @@
 			];
 		});
 		block.entries = [...block.entries, ...drafts];
-
 		addingExercises = false;
-		pickerSelection = [];
-		pickerOpen = false;
-	}
-
-	function formatPr(pr: PersonalRecord | null): string | null {
-		if (!pr || (pr.maxWeight === null && pr.maxReps === null)) return null;
-		if (pr.maxWeight !== null) {
-			return `${pr.maxReps ?? '–'} × ${pr.maxWeight} ${pr.unit ?? 'kg'}`;
-		}
-		return `${pr.maxReps} reps`;
 	}
 </script>
 
@@ -315,7 +275,7 @@
 
 <div class="mx-auto max-w-3xl px-3.5 py-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title={program.name} subtitle="Plan blocks, exercises, sets and reps">
-		<Button href="/app/training/programs" variant="secondary" size="sm">
+		<Button href={resolve('/app/training/programs')} variant="secondary" size="sm">
 			<i class="fas fa-arrow-left mr-1.5 text-xs sm:mr-2"></i>
 			Programs
 		</Button>
@@ -564,7 +524,11 @@
 						Add title
 					</Button>
 					<div class="flex-1"></div>
-					<Button href="/app/training/session/new?block={block.id}" variant="outline" size="sm">
+					<Button
+						href={`${resolve('/app/training/session/new')}?block=${block.id}`}
+						variant="outline"
+						size="sm"
+					>
 						<i class="fas fa-play mr-1.5 text-xs"></i>
 						Start session
 					</Button>
@@ -583,81 +547,4 @@
 	</button>
 </div>
 
-<!-- Exercise picker -->
-<Dialog bind:open={pickerOpen} title="Choose an exercise">
-	<div class="space-y-3">
-		<SearchInput bind:value={pickerSearch} placeholder="Search the library..." />
-		<div class="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
-			<button
-				type="button"
-				class="cursor-pointer rounded-sm px-2.5 py-1 text-xs font-medium transition-colors {pickerGroup ===
-				'all'
-					? 'bg-primary text-white'
-					: 'bg-muted text-fg hover:bg-border'}"
-				onclick={() => (pickerGroup = 'all')}
-			>
-				All
-			</button>
-			{#each Object.entries(GROUP_LABELS) as [key, label] (key)}
-				<button
-					type="button"
-					class="cursor-pointer rounded-sm px-2.5 py-1 text-xs font-medium transition-colors {pickerGroup ===
-					key
-						? 'bg-primary text-white'
-						: 'bg-muted text-fg hover:bg-border'}"
-					onclick={() => (pickerGroup = key as MuscleGroup)}
-				>
-					{label}
-				</button>
-			{/each}
-		</div>
-		<div class="max-h-80 space-y-1 overflow-y-auto">
-			{#each pickerList as exercise (exercise.id)}
-				{@const selected = pickerSelection.some((e) => e.id === exercise.id)}
-				<button
-					type="button"
-					class="flex w-full cursor-pointer items-center gap-3 rounded-sm border p-2 text-left transition-colors {selected
-						? 'border-primary bg-primary/5'
-						: 'border-transparent hover:bg-muted'}"
-					onclick={() => togglePick(exercise)}
-				>
-					<div
-						class="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border {selected
-							? 'border-primary bg-primary text-white'
-							: 'border-border-strong'}"
-					>
-						{#if selected}<i class="fas fa-check text-[10px]"></i>{/if}
-					</div>
-					<div class="h-10 w-14 shrink-0 overflow-hidden rounded-sm bg-muted">
-						{#if exercise.images[0]}
-							<img
-								src={exercise.images[0]}
-								alt={exercise.name}
-								class="h-full w-full object-cover"
-								loading="lazy"
-							/>
-						{/if}
-					</div>
-					<div class="min-w-0 flex-1">
-						<p class="truncate text-sm text-fg">{exercise.name}</p>
-						<p class="text-xs text-fg-subdued">
-							{GROUP_LABELS[exercise.muscleGroup]}
-							{#if exercise.equipment}· {exercise.equipment}{/if}
-						</p>
-					</div>
-					{#if formatPr(exercise.pr)}
-						<Badge size="sm" variant="success">{formatPr(exercise.pr)}</Badge>
-					{/if}
-				</button>
-			{:else}
-				<p class="py-6 text-center text-sm text-fg-subdued">No exercises match</p>
-			{/each}
-		</div>
-	</div>
-	{#snippet footer()}
-		<Button variant="secondary" onclick={() => (pickerOpen = false)}>Cancel</Button>
-		<Button disabled={pickerSelection.length === 0} loading={addingExercises} onclick={addSelected}>
-			Add {pickerSelection.length} exercise{pickerSelection.length === 1 ? '' : 's'}
-		</Button>
-	{/snippet}
-</Dialog>
+<ExercisePicker bind:open={pickerOpen} {exercises} onadd={addPickedExercises} />

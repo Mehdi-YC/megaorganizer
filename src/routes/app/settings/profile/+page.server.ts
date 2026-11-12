@@ -202,13 +202,13 @@ export const actions: Actions = {
 			await saveUserMediaFile(event.locals.user.id, type, file);
 		} catch (error) {
 			return fail(500, {
-				mediaMessage: { text: 'Erreur lors du téléversement du fichier', ok: false }
+				mediaMessage: { text: 'Failed to upload the file', ok: false }
 			});
 		}
 
 		return {
 			mediaMessage: {
-				text: `${type === 'signature' ? 'Signature' : 'Cachet'} téléversé avec succès`,
+				text: `${type === 'signature' ? 'Signature' : 'Stamp'} uploaded successfully`,
 				ok: true
 			}
 		};

@@ -5,7 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import ConfirmButton from '$lib/components/ui/ConfirmButton.svelte';
+	import { confirmAction } from '$lib/utils/confirm.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { formatDZD, formatDateDZ } from '$lib/utils/invoice';
 	import type { InvoiceWithDetails } from '$lib/types';
@@ -19,7 +19,6 @@
 	// svelte-ignore state_referenced_locally
 	let selectedStatus = $state<string>(data.currentStatus || 'all');
 	let selectedInvoiceIds = $state<string[]>([]);
-	let confirmDeleteId = $state<string | null>(null);
 
 	const filteredInvoices = $derived(
 		(data.invoices || []).filter((inv: InvoiceWithDetails) => {
@@ -75,12 +74,12 @@
 	}
 
 	async function deleteInvoice(id: string) {
+		if (!(await confirmAction('Delete this invoice?'))) return;
 		const res = await fetch(`/api/invoicing/invoices?id=${id}`, {
 			method: 'DELETE'
 		});
 		if (res.ok) {
 			showToast('Invoice deleted', 'success');
-			confirmDeleteId = null;
 			await invalidateAll();
 		}
 	}
@@ -336,21 +335,14 @@
 									>
 										<i class="fas fa-pencil text-xs"></i>
 									</a>
-									<ConfirmButton
-										confirmId={confirmDeleteId ?? ''}
-										targetId={inv.id}
-										size="sm"
-										onconfirm={() => {
-											if (confirmDeleteId === inv.id) {
-												deleteInvoice(inv.id);
-											} else {
-												confirmDeleteId = inv.id;
-												setTimeout(() => {
-													if (confirmDeleteId === inv.id) confirmDeleteId = null;
-												}, 3000);
-											}
-										}}
-									/>
+									<button
+										type="button"
+										class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+										onclick={() => deleteInvoice(inv.id)}
+										aria-label="Delete"
+									>
+										<i class="fas fa-trash text-xs"></i>
+									</button>
 								</div>
 							</td>
 						</tr>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -11,26 +12,10 @@
 	import SearchInput from '$lib/components/ui/SearchInput.svelte';
 	import { showToast } from '$lib/utils/toast.svelte';
 	import { confirmAction } from '$lib/utils/confirm.svelte';
+	import { MUSCLE_GROUP_LABELS as GROUP_LABELS, formatPr } from '$lib/utils/training';
 	import type { Exercise, MuscleGroup, PersonalRecord } from '$lib/types';
 
 	type ExerciseWithPr = Exercise & { pr: PersonalRecord | null };
-
-	const GROUP_LABELS: Record<MuscleGroup, string> = {
-		chest: 'Chest',
-		back: 'Back',
-		shoulders: 'Shoulders',
-		biceps: 'Biceps',
-		triceps: 'Triceps',
-		forearms: 'Forearms',
-		abs: 'Abs',
-		glutes: 'Glutes',
-		quadriceps: 'Quadriceps',
-		hamstrings: 'Hamstrings',
-		calves: 'Calves',
-		full_body: 'Full body',
-		cardio: 'Cardio',
-		other: 'Other'
-	};
 
 	let { data } = $props();
 	let exercises = $derived<ExerciseWithPr[]>(data.exercises ?? []);
@@ -154,14 +139,6 @@
 		previewSrc = images[0] ?? '';
 		await invalidateAll();
 	}
-
-	function formatPr(pr: PersonalRecord | null): string | null {
-		if (!pr || (pr.maxWeight === null && pr.maxReps === null)) return null;
-		if (pr.maxWeight !== null) {
-			return `PR ${pr.maxReps ?? '–'} × ${pr.maxWeight} ${pr.unit ?? 'kg'}`;
-		}
-		return `PR ${pr.maxReps} reps`;
-	}
 </script>
 
 <svelte:head>
@@ -170,7 +147,7 @@
 
 <div class="px-3.5 py-4 pb-24 sm:p-8 sm:pb-8">
 	<PageHeader title="Exercise Library" subtitle="Built-in exercises with pictures, plus your own">
-		<Button href="/app/training" variant="secondary" size="sm">
+		<Button href={resolve('/app/training')} variant="secondary" size="sm">
 			<i class="fas fa-arrow-left mr-1.5 text-xs sm:mr-2"></i>
 			Training
 		</Button>

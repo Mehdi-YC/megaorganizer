@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { MONTH_LABELS, WEEKDAY_LABELS } from '$lib/utils/format';
 	import type { Reminder } from '$lib/types';
 	let {
 		reminders = [],
@@ -17,23 +18,6 @@
 	} = $props();
 
 	let currentDate = $state(new Date());
-
-	const monthNames = [
-		'January',
-		'February',
-		'March',
-		'April',
-		'May',
-		'June',
-		'July',
-		'August',
-		'September',
-		'October',
-		'November',
-		'December'
-	];
-
-	const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 	function getDaysInMonth(date: Date) {
 		const year = date.getFullYear();
@@ -136,7 +120,7 @@
 			<i class="fas fa-chevron-left"></i>
 		</button>
 		<h2 class="text-lg font-semibold text-fg">
-			{monthNames[currentDate.getMonth()]}
+			{MONTH_LABELS[currentDate.getMonth()]}
 			{currentDate.getFullYear()}
 		</h2>
 		<button
@@ -150,7 +134,7 @@
 	</div>
 
 	<div class="grid grid-cols-7 gap-px bg-border">
-		{#each dayNames as day (day)}
+		{#each WEEKDAY_LABELS as day (day)}
 			<div
 				class="bg-muted px-1 py-1.5 text-center text-[10px] font-semibold text-fg-subdued uppercase sm:px-2 sm:py-2 sm:text-xs"
 			>

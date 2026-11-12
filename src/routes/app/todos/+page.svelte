@@ -8,6 +8,7 @@
 	import type { Todo } from '$lib/types';
 	import type { PageData } from './$types';
 	import { toDateKey, dateKeyWithOffset } from '$lib/utils/date';
+	import { formatDate } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
 
@@ -227,7 +228,7 @@
 		if (dueDate === tomorrowStr) return { text: 'Tomorrow', isOverdue: false };
 
 		const [y, m, d] = dueDate.split('-');
-		const formatted = `${d}/${m}/${y}`;
+		const formatted = formatDate(new Date(Number(y), Number(m) - 1, Number(d)));
 		const isOverdue = dueDate < todayStr;
 		return { text: isOverdue ? `${formatted} (Overdue)` : formatted, isOverdue };
 	}
