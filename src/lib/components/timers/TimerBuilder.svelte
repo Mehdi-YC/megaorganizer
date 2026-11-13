@@ -142,7 +142,7 @@
 			case 'silent':
 				return 'bg-warning/10 text-warning-text';
 			case 'group':
-				return 'bg-blue-500/10 text-blue-600';
+				return 'bg-accent-blue/10 text-accent-blue-text';
 			default:
 				return 'bg-error/10 text-error-text';
 		}

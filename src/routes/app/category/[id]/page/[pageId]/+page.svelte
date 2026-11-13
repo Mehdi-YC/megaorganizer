@@ -776,7 +776,7 @@
 									{#each childItems as item (item.id)}
 										<div
 											class="group relative rounded-lg border {item.favorite
-												? 'border-yellow-400/40 bg-yellow-500/5'
+												? 'border-accent-yellow/40 bg-accent-yellow/5'
 												: 'border-border bg-surface'} p-1.5 transition-all hover:border-primary-text/50"
 										>
 											<button
@@ -813,7 +813,7 @@
 														{item.name}
 													</p>
 													{#if item.favorite}
-														<i class="fas fa-star shrink-0 text-[8px] text-yellow-400"></i>
+														<i class="fas fa-star shrink-0 text-[8px] text-accent-yellow-text"></i>
 													{/if}
 												</div>
 											</a>
@@ -911,7 +911,7 @@
 								<a
 									href={resolve('/app/item/[id]', { id: item.id })}
 									class="group flex items-center gap-2.5 rounded-sm border {item.favorite
-										? 'border-yellow-400/40 bg-yellow-500/5'
+										? 'border-accent-yellow/40 bg-accent-yellow/5'
 										: 'border-border bg-surface'} p-2.5 transition-all hover:border-primary-text/50"
 								>
 									<div
@@ -921,7 +921,7 @@
 											class="fas {item.ydkData
 												? 'fa-layer-group'
 												: item.favorite
-													? 'fa-star text-yellow-400'
+													? 'fa-star text-accent-yellow-text'
 													: 'fa-cube text-fg-subdued'} text-[10px]"
 										></i>
 									</div>
@@ -933,7 +933,7 @@
 										</p>
 									</div>
 									{#if item.favorite}
-										<i class="fas fa-star shrink-0 text-[10px] text-yellow-400"></i>
+										<i class="fas fa-star shrink-0 text-[10px] text-accent-yellow-text"></i>
 									{/if}
 									<button
 										type="button"

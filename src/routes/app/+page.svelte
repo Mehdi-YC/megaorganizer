@@ -191,7 +191,7 @@
 					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 				>
 					<div
-						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
+						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-accent-indigo text-white shadow-xs"
 					>
 						<i class="fas fa-folder-plus text-xs"></i>
 					</div>
@@ -205,7 +205,7 @@
 					class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 				>
 					<div
-						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
+						class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-accent-emerald text-white shadow-xs"
 					>
 						<i class="fas fa-cube text-xs"></i>
 					</div>
@@ -218,7 +218,7 @@
 						class="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-xs"
 					>
 						<div
-							class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
+							class="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-accent-blue text-white shadow-xs"
 						>
 							<i class="fas fa-dumbbell text-xs"></i>
 						</div>
@@ -251,7 +251,7 @@
 					title="Today's Tasks"
 					description="Fast capture and daily task execution"
 					icon="fas fa-check-square"
-					iconBg="bg-indigo-600 text-white"
+					iconBg="bg-accent-indigo text-white"
 				>
 					{#snippet headerAction()}
 						<a
@@ -484,7 +484,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-emerald text-white shadow-xs"
 								>
 									<i class="fas fa-file-invoice-dollar text-xs"></i>
 								</div>
@@ -511,7 +511,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-amber text-white shadow-xs"
 								>
 									<i class="fas fa-wallet text-xs"></i>
 								</div>
@@ -538,7 +538,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-blue text-white shadow-xs"
 								>
 									<i class="fas fa-person-running text-xs"></i>
 								</div>
@@ -564,7 +564,7 @@
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2.5">
 							<div
-								class="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-600 text-white shadow-xs"
+								class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-orange text-white shadow-xs"
 							>
 								<i class="fas fa-cube text-xs"></i>
 							</div>
@@ -590,7 +590,7 @@
 						<div class="flex items-center justify-between">
 							<div class="flex items-center gap-2.5">
 								<div
-									class="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs"
+									class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-purple text-white shadow-xs"
 								>
 									<i class="fas fa-network-wired text-xs"></i>
 								</div>

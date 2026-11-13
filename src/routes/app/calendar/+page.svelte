@@ -411,7 +411,7 @@
 				<div class="mb-4 flex flex-wrap gap-3 sm:gap-6">
 					<div class="flex items-center gap-2">
 						<div
-							class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs"
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-blue text-white shadow-xs"
 						>
 							<i class="fas fa-dumbbell text-[10px]"></i>
 						</div>
@@ -424,7 +424,7 @@
 					</div>
 					<div class="flex items-center gap-2">
 						<div
-							class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs"
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-indigo text-white shadow-xs"
 						>
 							<i class="fas fa-tasks text-[10px]"></i>
 						</div>
@@ -443,7 +443,7 @@
 					</div>
 					<div class="flex items-center gap-2">
 						<div
-							class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
+							class="flex h-7 w-7 items-center justify-center rounded-lg bg-accent-amber text-white shadow-xs"
 						>
 							<i class="fas fa-receipt text-[10px]"></i>
 						</div>
@@ -497,11 +497,11 @@
 									</span>
 									<div class="flex gap-0.5">
 										{#if hasTraining}
-											<div class="h-2 w-2 rounded-full bg-blue-500" title="Training"></div>
+											<div class="h-2 w-2 rounded-full bg-accent-blue" title="Training"></div>
 										{/if}
 										{#if hasProgram}
 											<div
-												class="h-2 w-2 rounded-full border border-blue-500"
+												class="h-2 w-2 rounded-full border border-accent-blue"
 												title="Planned program"
 											></div>
 										{/if}
@@ -521,9 +521,9 @@
 									{#each events.slice(0, 3) as event (event.type + event.id)}
 										<div
 											class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {event.type === 'program'
-												? 'border border-dashed border-blue-400/60 bg-blue-500/5 text-blue-500 italic'
+												? 'border border-dashed border-accent-blue/60 bg-accent-blue/5 text-accent-blue-text italic'
 												: event.type === 'training'
-													? 'bg-blue-500/10 text-blue-600'
+													? 'bg-accent-blue/10 text-accent-blue-text'
 													: event.type === 'scheduled'
 														? 'bg-muted text-fg-subdued italic'
 														: event.type === 'expense'
@@ -558,11 +558,11 @@
 				<!-- Legend -->
 				<div class="mt-4 flex flex-wrap items-center gap-4 text-[10px] text-fg-subdued">
 					<div class="flex items-center gap-1.5">
-						<div class="h-3 w-3 rounded-full bg-blue-500"></div>
+						<div class="h-3 w-3 rounded-full bg-accent-blue"></div>
 						<span>Training</span>
 					</div>
 					<div class="flex items-center gap-1.5">
-						<div class="h-3 w-3 rounded-full border border-blue-500"></div>
+						<div class="h-3 w-3 rounded-full border border-accent-blue"></div>
 						<span>Planned program</span>
 					</div>
 					<div class="flex items-center gap-1.5">
@@ -620,7 +620,7 @@
 							<a
 								{href}
 								class="flex items-center gap-3 rounded-sm border {event.type === 'training'
-									? 'border-blue-500/30 bg-blue-500/5'
+									? 'border-accent-blue/30 bg-accent-blue/5'
 									: event.type === 'expense'
 										? 'border-warning/30 bg-warning/5'
 										: event.type === 'scheduled'
@@ -636,7 +636,7 @@
 								<div
 									class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm {event.type ===
 									'training'
-										? 'bg-blue-500/10'
+										? 'bg-accent-blue/10'
 										: event.type === 'expense'
 											? 'bg-warning/10'
 											: event.type === 'scheduled'
@@ -651,7 +651,7 @@
 								>
 									<i
 										class="fas {event.type === 'training'
-											? 'fa-dumbbell text-blue-600'
+											? 'fa-dumbbell text-accent-blue-text'
 											: event.type === 'expense'
 												? 'fa-receipt text-warning-text'
 												: event.type === 'scheduled'

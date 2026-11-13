@@ -31,6 +31,35 @@
 	--warning-text: #b45309;
 	--error: #dc2626;
 	--error-text: #dc2626;
+	/* Categorical accents: icon tiles, activity types, calendar colours and
+	   stars. One entry per hue, so an accent can be re-tuned here instead of
+	   raw Tailwind palette values drifting through the app. The `-text` tone
+	   clears 4.5:1 against the surface it sits on; the plain name is a fill
+	   that carries white labels. `--accent-yellow-on` is the label colour on
+	   the yellow fill. */
+	--accent-blue: #2563eb;
+	--accent-indigo: #4f46e5;
+	--accent-purple: #9333ea;
+	--accent-teal: #0d9488;
+	--accent-emerald: #059669;
+	--accent-green: #16a34a;
+	--accent-amber: #d97706;
+	--accent-orange: #ea580c;
+	--accent-yellow: #facc15;
+	--accent-cyan: #0891b2;
+	--accent-rose: #e11d48;
+	--accent-blue-text: #2563eb;
+	--accent-indigo-text: #4f46e5;
+	--accent-purple-text: #9333ea;
+	--accent-teal-text: #0f766e;
+	--accent-emerald-text: #047857;
+	--accent-green-text: #15803d;
+	--accent-amber-text: #b45309;
+	--accent-orange-text: #c2410c;
+	--accent-yellow-text: #a16207;
+	--accent-cyan-text: #0e7490;
+	--accent-rose-text: #be123c;
+	--accent-yellow-on: #422006;
 	--surface: #ffffff;
 	--surface-subdued: #f8fafc;
 	--surface-overlay: rgba(15, 23, 42, 0.45);
@@ -61,6 +90,29 @@
 	--warning-text: #fbbf24;
 	--error: #dc2626;
 	--error-text: #f87171;
+	--accent-blue: #2563eb;
+	--accent-indigo: #4f46e5;
+	--accent-purple: #9333ea;
+	--accent-teal: #0d9488;
+	--accent-emerald: #059669;
+	--accent-green: #16a34a;
+	--accent-amber: #d97706;
+	--accent-orange: #ea580c;
+	--accent-yellow: #facc15;
+	--accent-cyan: #0891b2;
+	--accent-rose: #e11d48;
+	--accent-blue-text: #60a5fa;
+	--accent-indigo-text: #818cf8;
+	--accent-purple-text: #c084fc;
+	--accent-teal-text: #2dd4bf;
+	--accent-emerald-text: #34d399;
+	--accent-green-text: #4ade80;
+	--accent-amber-text: #fbbf24;
+	--accent-orange-text: #fdba74;
+	--accent-yellow-text: #facc15;
+	--accent-cyan-text: #22d3ee;
+	--accent-rose-text: #fda4af;
+	--accent-yellow-on: #422006;
 	--surface: #121215;
 	--surface-subdued: #18181b;
 	--surface-overlay: rgba(0, 0, 0, 0.7);
@@ -91,6 +143,29 @@
 	--color-warning-text: var(--warning-text);
 	--color-error: var(--error);
 	--color-error-text: var(--error-text);
+	--color-accent-blue: var(--accent-blue);
+	--color-accent-indigo: var(--accent-indigo);
+	--color-accent-purple: var(--accent-purple);
+	--color-accent-teal: var(--accent-teal);
+	--color-accent-emerald: var(--accent-emerald);
+	--color-accent-green: var(--accent-green);
+	--color-accent-amber: var(--accent-amber);
+	--color-accent-orange: var(--accent-orange);
+	--color-accent-yellow: var(--accent-yellow);
+	--color-accent-cyan: var(--accent-cyan);
+	--color-accent-rose: var(--accent-rose);
+	--color-accent-blue-text: var(--accent-blue-text);
+	--color-accent-indigo-text: var(--accent-indigo-text);
+	--color-accent-purple-text: var(--accent-purple-text);
+	--color-accent-teal-text: var(--accent-teal-text);
+	--color-accent-emerald-text: var(--accent-emerald-text);
+	--color-accent-green-text: var(--accent-green-text);
+	--color-accent-amber-text: var(--accent-amber-text);
+	--color-accent-orange-text: var(--accent-orange-text);
+	--color-accent-yellow-text: var(--accent-yellow-text);
+	--color-accent-cyan-text: var(--accent-cyan-text);
+	--color-accent-rose-text: var(--accent-rose-text);
+	--color-accent-yellow-on: var(--accent-yellow-on);
 	--color-surface: var(--surface);
 	--color-surface-subdued: var(--surface-subdued);
 	--color-surface-overlay: var(--surface-overlay);
@@ -121,21 +196,6 @@ body {
 	color: var(--color-fg);
 	height: 100%;
 	overflow: hidden;
-}
-
-::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
-}
-::-webkit-scrollbar-track {
-	background: var(--color-bg-subdued);
-}
-::-webkit-scrollbar-thumb {
-	background: var(--color-border);
-	border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-	background: #3d444d;
 }
 
 *:focus-visible {
@@ -226,12 +286,13 @@ body {
 	transform-style: preserve-3d;
 	border-radius: 0.375rem;
 	overflow: hidden;
-	will-change: transform;
 }
 
 /* Small card hover zoom */
 .ygo-card:not(.ygo-card-large):hover .ygo-card-inner {
 	transform: scale(1.06);
+	/* Compositor layer only while animating; at rest it is wasted memory. */
+	will-change: transform;
 }
 
 .ygo-card:not(.ygo-card-large):hover .ygo-count-badge {
@@ -336,10 +397,13 @@ body {
 	transform-style: preserve-3d;
 	border-radius: 0.5rem;
 	overflow: hidden;
-	will-change: transform;
 	box-shadow:
 		0 4px 20px rgba(0, 0, 0, 0.5),
 		0 0 40px rgba(90, 49, 244, 0.15);
+}
+
+.ygo-card-enlarged:hover .ygo-card-inner {
+	will-change: transform;
 }
 
 .ygo-card-enlarged .ygo-card-inner img {
@@ -493,15 +557,6 @@ body {
 	font-size: 0.75rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-	*,
-	*::before,
-	::after {
-		animation-duration: 0.01ms !important;
-		transition-duration: 0.01ms !important;
-	}
-}
-
 /* Slim, quiet scrollbars (the default dark-theme bars read as double
    scrollbars next to the sidebar's own scroller) */
 * {
@@ -518,6 +573,9 @@ body {
 *::-webkit-scrollbar-thumb {
 	background: var(--color-border);
 	border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+	background: var(--color-border-strong);
 }
 .no-scrollbar {
 	scrollbar-width: none;

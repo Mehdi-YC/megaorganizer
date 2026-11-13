@@ -33,49 +33,49 @@
 			name: 'todos',
 			label: 'Tasks',
 			icon: 'fa-check-square',
-			color: 'bg-indigo-600',
+			color: 'bg-accent-indigo',
 			hint: 'Daily tasks, scheduling and priorities'
 		},
 		{
 			name: 'reminders',
 			label: 'Reminders',
 			icon: 'fa-bell',
-			color: 'bg-amber-600',
+			color: 'bg-accent-amber',
 			hint: 'Recurring reminders and alert schedules'
 		},
 		{
 			name: 'finance',
 			label: 'Finance',
 			icon: 'fa-receipt',
-			color: 'bg-emerald-600',
+			color: 'bg-accent-emerald',
 			hint: 'Spending logs and monthly budget limit'
 		},
 		{
 			name: 'invoicing',
 			label: 'Invoicing',
 			icon: 'fa-file-invoice-dollar',
-			color: 'bg-teal-600',
+			color: 'bg-accent-teal',
 			hint: 'Client invoices and annual tax dossiers'
 		},
 		{
 			name: 'training',
 			label: 'Training',
 			icon: 'fa-person-running',
-			color: 'bg-blue-600',
+			color: 'bg-accent-blue',
 			hint: 'Workout logs, intervals and GPS running'
 		},
 		{
 			name: 'mindmap',
 			label: 'Mindmap',
 			icon: 'fa-network-wired',
-			color: 'bg-purple-600',
+			color: 'bg-accent-purple',
 			hint: 'Visual network of wiki notes and links'
 		},
 		{
 			name: 'ydk',
 			label: 'Yu-Gi-Oh (YDK)',
 			icon: 'fa-layer-group',
-			color: 'bg-rose-600',
+			color: 'bg-accent-rose',
 			hint: 'Deck builder and card catalog viewer'
 		}
 	];

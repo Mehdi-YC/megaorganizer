@@ -1,11 +1,11 @@
 import type { PersonalRecord } from '$lib/types';
 
 export const ACTIVITY_ICONS: Record<string, { icon: string; color: string }> = {
-	strength: { icon: 'fa-dumbbell', color: 'text-blue-500' },
-	running: { icon: 'fa-person-running', color: 'text-green-500' },
-	cycling: { icon: 'fa-bicycle', color: 'text-orange-500' },
-	walking: { icon: 'fa-person-walking', color: 'text-yellow-500' },
-	swimming: { icon: 'fa-person-swimming', color: 'text-cyan-500' },
+	strength: { icon: 'fa-dumbbell', color: 'text-accent-blue-text' },
+	running: { icon: 'fa-person-running', color: 'text-accent-green-text' },
+	cycling: { icon: 'fa-bicycle', color: 'text-accent-orange-text' },
+	walking: { icon: 'fa-person-walking', color: 'text-accent-yellow-text' },
+	swimming: { icon: 'fa-person-swimming', color: 'text-accent-cyan-text' },
 	hiit: { icon: 'fa-fire', color: 'text-error-text' },
 	other: { icon: 'fa-circle-dot', color: 'text-fg-subdued' }
 };

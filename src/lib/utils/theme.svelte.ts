@@ -30,6 +30,11 @@ class ThemeState {
 		// Keeps native widgets, scrollbars, and form controls on the same
 		// scheme as the app (matches static/theme-init.js).
 		root.style.colorScheme = resolved;
+		// The browser chrome (address bar on Android) follows this meta, so it
+		// has to track the theme. Values match --bg in layout.css.
+		document
+			.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+			?.setAttribute('content', resolved === 'dark' ? '#09090b' : '#f8fafc');
 	}
 
 	private applyTheme(newTheme: Theme) {
