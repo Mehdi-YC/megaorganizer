@@ -433,9 +433,9 @@
 								{monthOverview.reminderCount}
 								<span class="text-xs font-normal text-fg-subdued">
 									({monthOverview.completedCount}
-									<i class="fas fa-check text-success"></i>
+									<i class="fas fa-check text-success-text"></i>
 									/ {monthOverview.missedCount}
-									<i class="fas fa-times text-error"></i>)
+									<i class="fas fa-times text-error-text"></i>)
 								</span>
 							</p>
 							<p class="text-[10px] text-fg-subdued">Tasks (completed / missed)</p>
@@ -527,14 +527,14 @@
 													: event.type === 'scheduled'
 														? 'bg-muted text-fg-subdued italic'
 														: event.type === 'expense'
-															? 'bg-warning/10 text-warning'
+															? 'bg-warning/10 text-warning-text'
 															: event.type === 'todo'
 																? event.completed
-																	? 'bg-success/10 text-success line-through'
+																	? 'bg-success/10 text-success-text line-through'
 																	: 'bg-primary-subdued text-primary-text'
 																: event.completed
-																	? 'bg-success/10 text-success line-through'
-																	: 'bg-error/10 text-error'}"
+																	? 'bg-success/10 text-success-text line-through'
+																	: 'bg-error/10 text-error-text'}"
 											title={event.title}
 										>
 											{event.type === 'expense'
@@ -653,16 +653,16 @@
 										class="fas {event.type === 'training'
 											? 'fa-dumbbell text-blue-600'
 											: event.type === 'expense'
-												? 'fa-receipt text-warning'
+												? 'fa-receipt text-warning-text'
 												: event.type === 'scheduled'
 													? 'fa-clock text-fg-subdued'
 													: event.type === 'todo'
 														? event.completed
-															? 'fa-check-square text-success'
+															? 'fa-check-square text-success-text'
 															: 'fa-check-square text-primary-text'
 														: event.completed
-															? 'fa-check text-success'
-															: 'fa-bell text-error'} text-xs"
+															? 'fa-check text-success-text'
+															: 'fa-bell text-error-text'} text-xs"
 									></i>
 								</div>
 								<div class="min-w-0 flex-1">
@@ -746,7 +746,7 @@
 											<span
 												class="shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-medium {item.isVirtual
 													? 'bg-muted text-fg-subdued'
-													: 'bg-error/10 text-error'}"
+													: 'bg-error/10 text-error-text'}"
 											>
 												{item.isVirtual ? 'Scheduled' : 'Pending'}
 											</span>

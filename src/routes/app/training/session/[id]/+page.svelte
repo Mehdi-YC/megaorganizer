@@ -403,7 +403,7 @@
 																</button>
 																<button
 																	type="button"
-																	class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error"
+																	class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error-text"
 																	aria-label="Delete record"
 																	title="Delete"
 																	onclick={() => deleteRecord(record)}

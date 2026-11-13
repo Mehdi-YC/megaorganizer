@@ -90,12 +90,12 @@
 </svelte:head>
 
 <div class="px-3.5 py-4 sm:p-6 lg:p-8">
-	<div class="mb-6 flex items-center justify-between">
+	<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 		<div>
 			<h1 class="text-xl font-semibold text-fg-accent">Reminders</h1>
 			<p class="mt-1 text-sm text-fg-subdued">Manage your recurring reminders</p>
 		</div>
-		<div class="flex gap-2">
+		<div class="flex shrink-0 gap-2">
 			<Button variant="secondary" size="md" href={resolve('/app/reminders/history')}>
 				<i class="fas fa-chart-bar mr-2 text-xs"></i>
 				History
@@ -153,7 +153,7 @@
 							<button
 								type="button"
 								class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm {template.active
-									? 'bg-success/10 text-success'
+									? 'bg-success/10 text-success-text'
 									: 'bg-muted text-fg-subdued'} transition-colors hover:bg-border"
 								onclick={() => toggleTemplateActive(template.id, !template.active)}
 								title={template.active ? 'Deactivate' : 'Activate'}
@@ -172,7 +172,7 @@
 							</button>
 							<button
 								type="button"
-								class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+								class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error-text"
 								onclick={() => deleteTemplate(template.id)}
 								title="Delete"
 								aria-label="Delete"

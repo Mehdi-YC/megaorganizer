@@ -130,7 +130,7 @@
 		<div class="mt-2.5 flex items-center gap-2">
 			<span
 				class="text-xs {isOverdue(reminder.dueAt) && !reminder.completed
-					? 'font-medium text-error'
+					? 'font-medium text-error-text'
 					: 'text-fg-subdued'}"
 			>
 				<i class="far fa-clock mr-1 text-[10px]"></i>

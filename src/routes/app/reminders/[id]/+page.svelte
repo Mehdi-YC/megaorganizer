@@ -194,7 +194,7 @@
 								<div class="mt-2 flex items-center gap-3">
 									<span
 										class="text-xs {isOverdue(item.dueAt) && !item.completed
-											? 'text-error'
+											? 'text-error-text'
 											: 'text-fg-subdued'}"
 									>
 										{formatDueDate(item.dueAt)} at {formatDueTime(item.dueAt)}
@@ -291,20 +291,20 @@
 								<p class="text-[10px] text-fg-subdued">Total</p>
 							</div>
 							<div class="text-center">
-								<p class="text-2xl font-semibold text-success">{s.completed}</p>
+								<p class="text-2xl font-semibold text-success-text">{s.completed}</p>
 								<p class="text-[10px] text-fg-subdued">Completed</p>
 							</div>
 							<div class="text-center">
-								<p class="text-2xl font-semibold text-error">{s.missed}</p>
+								<p class="text-2xl font-semibold text-error-text">{s.missed}</p>
 								<p class="text-[10px] text-fg-subdued">Missed</p>
 							</div>
 							<div class="text-center">
 								<p
 									class="text-2xl font-semibold {s.rate >= 80
-										? 'text-success'
+										? 'text-success-text'
 										: s.rate >= 50
-											? 'text-warning'
-											: 'text-error'}"
+											? 'text-warning-text'
+											: 'text-error-text'}"
 								>
 									{s.rate}%
 								</p>

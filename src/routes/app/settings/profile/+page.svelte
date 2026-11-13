@@ -358,7 +358,7 @@
 						</div>
 
 						{#if form?.profileMessage}
-							<p class="text-xs {form.profileMessage.ok ? 'text-success' : 'text-error'}">
+							<p class="text-xs {form.profileMessage.ok ? 'text-success-text' : 'text-error-text'}">
 								{form.profileMessage.text}
 							</p>
 						{/if}
@@ -404,7 +404,9 @@
 						/>
 
 						{#if form?.passwordMessage}
-							<p class="text-xs {form.passwordMessage.ok ? 'text-success' : 'text-error'}">
+							<p
+								class="text-xs {form.passwordMessage.ok ? 'text-success-text' : 'text-error-text'}"
+							>
 								{form.passwordMessage.text}
 							</p>
 						{/if}
@@ -459,7 +461,7 @@
 						</div>
 
 						{#if form?.financeMessage}
-							<p class="text-xs {form.financeMessage.ok ? 'text-success' : 'text-error'}">
+							<p class="text-xs {form.financeMessage.ok ? 'text-success-text' : 'text-error-text'}">
 								{form.financeMessage.text}
 							</p>
 						{/if}
@@ -577,7 +579,9 @@
 						</div>
 
 						{#if form?.invoicingMessage}
-							<p class="text-xs {form.invoicingMessage.ok ? 'text-success' : 'text-error'}">
+							<p
+								class="text-xs {form.invoicingMessage.ok ? 'text-success-text' : 'text-error-text'}"
+							>
 								{form.invoicingMessage.text}
 							</p>
 						{/if}
@@ -664,7 +668,11 @@
 						</div>
 
 						{#if form?.mediaMessage}
-							<p class="mt-3 text-xs {form.mediaMessage.ok ? 'text-success' : 'text-error'}">
+							<p
+								class="mt-3 text-xs {form.mediaMessage.ok
+									? 'text-success-text'
+									: 'text-error-text'}"
+							>
 								{form.mediaMessage.text}
 							</p>
 						{/if}
@@ -709,7 +717,7 @@
 						</div>
 					{:else if importStatus === 'success'}
 						<div class="rounded-sm border border-success/30 bg-success/10 px-4 py-3">
-							<p class="text-xs font-medium text-success">{importMessage}</p>
+							<p class="text-xs font-medium text-success-text">{importMessage}</p>
 							{#if importCounts}
 								<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-fg-subdued">
 									{#each Object.entries(importCounts).filter(([key, n]) => key !== 'skipped' && n > 0) as [key, n] (key)}
@@ -723,7 +731,7 @@
 						</div>
 					{:else if importStatus === 'error'}
 						<div class="rounded-sm border border-error/30 bg-error/10 px-4 py-3">
-							<p class="text-xs font-medium text-error">{importMessage}</p>
+							<p class="text-xs font-medium text-error-text">{importMessage}</p>
 						</div>
 					{/if}
 				</div>
@@ -827,7 +835,11 @@
 					>
 						<Button size="sm" type="submit">Save</Button>
 						{#if form?.featuresMessage}
-							<span class="text-[11px] {form.featuresMessage.ok ? 'text-success' : 'text-error'}">
+							<span
+								class="text-[11px] {form.featuresMessage.ok
+									? 'text-success-text'
+									: 'text-error-text'}"
+							>
 								{form.featuresMessage.text}
 							</span>
 						{/if}
@@ -861,11 +873,11 @@
 								{pushSubscribed ? 'Disable on this device' : 'Enable on this device'}
 							</Button>
 							{#if pushSubscribed}
-								<span class="text-xs text-success">Enabled</span>
+								<span class="text-xs text-success-text">Enabled</span>
 							{/if}
 						</div>
 						{#if pushError}
-							<p class="text-xs text-error">{pushError}</p>
+							<p class="text-xs text-error-text">{pushError}</p>
 						{/if}
 					{/if}
 				</div>

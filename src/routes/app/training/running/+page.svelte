@@ -372,7 +372,7 @@
 		<div class="flex flex-1 flex-col items-center justify-center p-8">
 			{#if gpsError}
 				<div
-					class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error"
+					class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error-text"
 				>
 					<i class="fas fa-circle-exclamation"></i>
 					<span>{gpsError}</span>
@@ -420,7 +420,7 @@
 			>
 				{#if gpsGapNotice}
 					<div
-						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning-text"
 					>
 						<i class="fas fa-triangle-exclamation"></i>
 						<span>{gpsGapNotice}</span>
@@ -428,7 +428,7 @@
 				{/if}
 				{#if gpsError}
 					<div
-						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning-text"
 					>
 						<i class="fas fa-satellite-dish"></i>
 						<span>{gpsError}</span>
@@ -512,13 +512,13 @@
 			<div class="flex flex-1 flex-col items-center justify-center p-6">
 				{#if saveError}
 					<div
-						class="mb-4 flex w-full max-w-md items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error"
+						class="mb-4 flex w-full max-w-md items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error-text"
 					>
 						<i class="fas fa-circle-exclamation"></i>
 						<span>{saveError}</span>
 					</div>
 				{/if}
-				<i class="fas fa-check-circle mb-4 text-5xl text-success"></i>
+				<i class="fas fa-check-circle mb-4 text-5xl text-success-text"></i>
 				<h1 class="mb-4 text-lg font-semibold text-fg-accent">Run Complete!</h1>
 
 				<div class="mb-6 grid grid-cols-2 gap-6 text-center">

@@ -243,9 +243,9 @@
 				<span class="text-xs font-semibold tracking-wide text-fg-accent uppercase"
 					>Total Collected</span
 				>
-				<i class="fas fa-circle-check text-xs text-success"></i>
+				<i class="fas fa-circle-check text-xs text-success-text"></i>
 			</div>
-			<div class="text-2xl font-semibold text-success">{formatDZD(stats().totalPaid)}</div>
+			<div class="text-2xl font-semibold text-success-text">{formatDZD(stats().totalPaid)}</div>
 		</div>
 	</div>
 
@@ -308,7 +308,7 @@
 								</a>
 								<button
 									type="button"
-									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
+									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error-text"
 									title="Delete"
 									onclick={() => handleDeleteDoc(doc.id, 'Declaration G12')}
 								>
@@ -397,7 +397,7 @@
 								</a>
 								<button
 									type="button"
-									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
+									class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error-text"
 									title="Delete"
 									onclick={() => handleDeleteDoc(doc.id, 'Declaration G12 Bis')}
 								>

@@ -45,6 +45,6 @@
 			? 'border-error ring-1 ring-error/30'
 			: ''} {disabled ? 'cursor-not-allowed opacity-50' : ''}"></textarea>
 	{#if error}
-		<p id="{id}-error" class="text-xs text-error">{error}</p>
+		<p id="{id}-error" class="text-xs text-error-text">{error}</p>
 	{/if}
 </div>

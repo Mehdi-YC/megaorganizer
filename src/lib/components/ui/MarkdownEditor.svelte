@@ -44,7 +44,7 @@
 			if (seq === renderSeq) previewHtml = html;
 		} catch {
 			if (seq === renderSeq) {
-				previewHtml = '<p class="text-error text-xs">Error rendering preview</p>';
+				previewHtml = '<p class="text-error-text text-xs">Error rendering preview</p>';
 			}
 		}
 	}

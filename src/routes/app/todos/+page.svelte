@@ -439,7 +439,7 @@
 								<span
 									class="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] {dueInfo.isOverdue &&
 									!t.completed
-										? 'bg-error/15 font-medium text-error'
+										? 'bg-error/15 font-medium text-error-text'
 										: 'bg-muted text-fg-subdued'}"
 								>
 									<i class="far fa-calendar text-[10px]"></i>
@@ -458,7 +458,7 @@
 							</button>
 							<button
 								type="button"
-								class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued opacity-70 transition-opacity hover:bg-muted hover:text-error sm:opacity-0 sm:group-hover:opacity-100"
+								class="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued opacity-70 transition-opacity hover:bg-muted hover:text-error-text sm:opacity-0 sm:group-hover:opacity-100"
 								onclick={() => handleDelete(t.id)}
 								title="Delete"
 								aria-label="Delete task"

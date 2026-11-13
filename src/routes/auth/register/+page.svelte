@@ -67,7 +67,7 @@
 				/>
 
 				{#if form?.message}
-					<p class="text-xs font-medium text-error">{form.message}</p>
+					<p class="text-xs font-medium text-error-text">{form.message}</p>
 				{/if}
 
 				<Button type="submit" class="w-full">Create Account</Button>

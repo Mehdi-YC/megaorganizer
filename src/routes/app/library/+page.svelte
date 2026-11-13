@@ -239,7 +239,7 @@
 						<button
 							type="button"
 							class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1 text-[10px] font-medium transition-all {filterFavorite
-								? 'bg-yellow-400 text-white'
+								? 'bg-yellow-400 text-yellow-950'
 								: 'bg-muted text-fg-subdued hover:text-fg'}"
 							onclick={toggleFilterFavorite}
 						>

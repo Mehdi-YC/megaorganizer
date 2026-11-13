@@ -55,7 +55,9 @@
 						{formatAmount(limit)}
 						{currency}
 					</span>
-					<span class="text-[10px] font-medium {isOverLimit ? 'text-error' : 'text-fg-subdued'}">
+					<span
+						class="text-[10px] font-medium {isOverLimit ? 'text-error-text' : 'text-fg-subdued'}"
+					>
 						{percentage.toFixed(0)}%
 					</span>
 				</div>
@@ -71,7 +73,7 @@
 						{currency} remaining
 					</p>
 				{:else if isOverLimit}
-					<p class="mt-1 text-[10px] text-error">
+					<p class="mt-1 text-[10px] text-error-text">
 						{formatAmount(total - limit)}
 						{currency} over budget
 					</p>

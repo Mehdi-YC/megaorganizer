@@ -340,7 +340,7 @@
 						/>
 						<button
 							type="button"
-							class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error"
+							class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error-text"
 							aria-label="Delete block"
 							onclick={() => removeBlock(block)}
 						>
@@ -397,7 +397,7 @@
 									</button>
 									<button
 										type="button"
-										class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error"
+										class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error-text"
 										aria-label="Remove title"
 										onclick={() => removeEntry(block, entry)}
 									>
@@ -501,7 +501,7 @@
 										</button>
 										<button
 											type="button"
-											class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error"
+											class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-colors hover:bg-error/10 hover:text-error-text"
 											aria-label="Remove exercise"
 											onclick={() => removeEntry(block, entry)}
 										>

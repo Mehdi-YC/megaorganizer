@@ -185,7 +185,7 @@
 					<i class="fas fa-circle-check text-xs"></i>
 				</div>
 			</div>
-			<div class="text-2xl font-bold tracking-tight text-success">
+			<div class="text-2xl font-bold tracking-tight text-success-text">
 				{formatDZD(stats().totalPaid)}
 			</div>
 		</div>
@@ -203,7 +203,7 @@
 					<i class="fas fa-clock text-xs"></i>
 				</div>
 			</div>
-			<div class="text-2xl font-bold tracking-tight text-warning">
+			<div class="text-2xl font-bold tracking-tight text-warning-text">
 				{formatDZD(stats().totalPending)}
 			</div>
 		</div>
@@ -337,7 +337,7 @@
 									</a>
 									<button
 										type="button"
-										class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+										class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error-text"
 										onclick={() => deleteInvoice(inv.id)}
 										aria-label="Delete"
 									>
