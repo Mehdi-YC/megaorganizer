@@ -514,7 +514,7 @@
 				<div class="py-8 text-center">
 					{#if gpsError}
 						<div
-							class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error"
+							class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error-text"
 						>
 							<i class="fas fa-circle-exclamation"></i>
 							<span>{gpsError}</span>
@@ -550,7 +550,7 @@
 
 				{#if gpsGapNotice}
 					<div
-						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning-text"
 					>
 						<i class="fas fa-triangle-exclamation"></i>
 						<span>{gpsGapNotice}</span>
@@ -559,7 +559,7 @@
 
 				{#if gpsError}
 					<div
-						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning"
+						class="mb-3 flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/15 px-4 py-2 text-xs text-warning-text"
 					>
 						<i class="fas fa-satellite-dish"></i>
 						<span>{gpsError}</span>
@@ -806,7 +806,7 @@
 	<div class="mt-6">
 		{#if saveError}
 			<div
-				class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error"
+				class="mb-3 flex items-center gap-2 rounded-sm border border-error/30 bg-error/15 px-4 py-2 text-xs text-error-text"
 			>
 				<i class="fas fa-circle-exclamation"></i>
 				<span>{saveError}</span>

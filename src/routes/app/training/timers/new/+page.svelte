@@ -39,7 +39,7 @@
 <div class="p-4 sm:p-8">
 	<PageHeader title="New Timer" subtitle="Build a HIIT or WOD sequence" />
 	{#if error}
-		<p class="mb-3 text-xs text-error">{error}</p>
+		<p class="mb-3 text-xs text-error-text">{error}</p>
 	{/if}
 	<TimerBuilder {saving} saveLabel="Save Timer" onSave={handleSave} />
 </div>

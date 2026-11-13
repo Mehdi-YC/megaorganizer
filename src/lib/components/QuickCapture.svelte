@@ -35,6 +35,30 @@
 	let saving = $state(false);
 	let saved = $state(false);
 	let expenseForm: ExpenseForm | undefined = $state();
+	let panelEl = $state<HTMLElement | null>(null);
+
+	// Focus trap: any focus that lands outside the open panel is pulled back to
+	// the first field. Focus moving *inside* the panel (including the initial
+	// programmatic focus) is left alone.
+	function trapFocus(e: FocusEvent) {
+		const panel = e.currentTarget as HTMLElement;
+		if (panel.contains(e.target as Node)) return;
+		const focusable = panel.querySelector<HTMLElement>(
+			'input, select, textarea, button, [href], [tabindex]:not([tabindex="-1"])'
+		);
+		(focusable ?? panel).focus();
+	}
+
+	// On open: move focus into the panel. On close: hand focus back to whatever
+	// opened it (the FAB, usually). Body scroll stays put because the panel
+	// itself is the scrolling element.
+	$effect(() => {
+		if (!show || !panelEl) return;
+		const previous = document.activeElement as HTMLElement | null;
+		const field = panelEl.querySelector<HTMLElement>('input, select, textarea');
+		(field ?? panelEl).focus();
+		return () => previous?.focus?.();
+	});
 
 	function open(prefill?: { name?: string; text?: string; url?: string }) {
 		show = true;
@@ -201,7 +225,12 @@
 			color: string;
 		}[] = [];
 		if (enabledFeatures?.finance !== false) {
-			list.push({ id: 'finance', label: 'Finance', icon: 'fa-receipt', color: 'text-warning' });
+			list.push({
+				id: 'finance',
+				label: 'Finance',
+				icon: 'fa-receipt',
+				color: 'text-warning-text'
+			});
 		}
 		if (enabledFeatures?.reminders !== false) {
 			list.push({
@@ -211,7 +240,7 @@
 				color: 'text-primary-text'
 			});
 		}
-		list.push({ id: 'item', label: 'Item', icon: 'fa-cube', color: 'text-success' });
+		list.push({ id: 'item', label: 'Item', icon: 'fa-cube', color: 'text-success-text' });
 		if (enabledFeatures?.training !== false) {
 			list.push({
 				id: 'training',
@@ -239,13 +268,15 @@
 <!-- Modal -->
 {#if show}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="no-print fixed inset-0 z-50 flex items-end justify-center bg-surface-overlay/80 p-0 backdrop-blur-xs sm:items-center sm:p-4"
 		onclick={close}
+		onfocusin={trapFocus}
+		role="presentation"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
+			bind:this={panelEl}
 			class="animate-slide-up w-full max-w-md rounded-t-2xl border border-border bg-surface shadow-2xl sm:rounded-2xl"
 			role="dialog"
 			aria-modal="true"
@@ -299,7 +330,7 @@
 				{#if saved}
 					<div class="py-8 text-center">
 						<div
-							class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success"
+							class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success-text"
 						>
 							<i class="fas fa-check text-xl"></i>
 						</div>

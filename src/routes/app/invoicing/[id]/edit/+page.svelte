@@ -214,7 +214,7 @@
 				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 					<div class="flex flex-col gap-1.5">
 						<label for="clientSelect" class="text-xs font-semibold text-fg-accent">
-							Client / Company <span class="text-error">*</span>
+							Client / Company <span class="text-error-text">*</span>
 						</label>
 						<select
 							id="clientSelect"
@@ -229,7 +229,7 @@
 
 					<div class="flex flex-col gap-1.5">
 						<label for="invNumber" class="text-xs font-semibold text-fg-accent">
-							Invoice Number <span class="text-error">*</span>
+							Invoice Number <span class="text-error-text">*</span>
 						</label>
 						<Input id="invNumber" type="text" bind:value={invoiceNumber} required />
 					</div>
@@ -332,7 +332,7 @@
 									{/if}
 									<button
 										type="button"
-										class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error"
+										class="flex h-7 w-7 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-error-text"
 										title="Delete line"
 										onclick={() => removeLine(line.id)}
 									>

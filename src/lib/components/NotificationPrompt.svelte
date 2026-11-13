@@ -65,7 +65,7 @@
 			<Button size="sm" variant="ghost" onclick={dismiss}>Not now</Button>
 		</div>
 		{#if error}
-			<p class="w-full text-xs text-error">{error}</p>
+			<p class="w-full text-xs text-error-text">{error}</p>
 		{/if}
 	</div>
 {/if}

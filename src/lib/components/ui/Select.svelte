@@ -65,6 +65,6 @@
 		</div>
 	</div>
 	{#if error}
-		<p id="{id}-error" class="text-xs text-error">{error}</p>
+		<p id="{id}-error" class="text-xs text-error-text">{error}</p>
 	{/if}
 </div>

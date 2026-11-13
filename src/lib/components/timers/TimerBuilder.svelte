@@ -134,17 +134,17 @@
 	function kindBadge(kind: StepDraft['kind']): string {
 		switch (kind) {
 			case 'start':
-				return 'bg-success/10 text-success';
+				return 'bg-success/10 text-success-text';
 			case 'end':
 				return 'bg-primary/10 text-primary-text';
 			case 'info':
 				return 'bg-muted text-fg-subdued';
 			case 'silent':
-				return 'bg-warning/10 text-warning';
+				return 'bg-warning/10 text-warning-text';
 			case 'group':
 				return 'bg-blue-500/10 text-blue-600';
 			default:
-				return 'bg-error/10 text-error';
+				return 'bg-error/10 text-error-text';
 		}
 	}
 
@@ -251,7 +251,7 @@
 										type="button"
 										class="cursor-pointer rounded-sm px-1.5 py-0.5 text-[10px] font-semibold transition-colors {step.kind ===
 										'silent'
-											? 'bg-warning/20 text-warning'
+											? 'bg-warning/20 text-warning-text'
 											: 'bg-muted text-fg-subdued hover:bg-border'}"
 										onclick={() => toggleSilent(i)}
 										title="Silent step: no cue on transition"
@@ -264,7 +264,7 @@
 							{/if}
 							<button
 								type="button"
-								class="cursor-pointer text-[10px] text-error"
+								class="cursor-pointer text-[10px] text-error-text"
 								onclick={() => removeStep(i)}
 								aria-label="Remove step"
 							>
@@ -341,7 +341,7 @@
 													type="button"
 													class="cursor-pointer rounded-sm px-1.5 py-0.5 text-[10px] font-semibold transition-colors {child.kind ===
 													'silent'
-														? 'bg-warning/20 text-warning'
+														? 'bg-warning/20 text-warning-text'
 														: 'bg-muted text-fg-subdued hover:bg-border'}"
 													onclick={() => toggleGroupChildSilent(i, ci)}
 													title="Silent step: no cue on transition"
@@ -350,7 +350,7 @@
 												</button>
 												<button
 													type="button"
-													class="cursor-pointer text-[10px] text-error"
+													class="cursor-pointer text-[10px] text-error-text"
 													onclick={() => removeGroupChild(i, ci)}
 													aria-label="Remove step"
 												>

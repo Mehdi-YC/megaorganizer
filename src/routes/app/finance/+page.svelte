@@ -320,7 +320,7 @@
 		/>
 	{/key}
 	{#if formError}
-		<p class="mt-2 text-xs text-error">{formError}</p>
+		<p class="mt-2 text-xs text-error-text">{formError}</p>
 	{/if}
 	{#snippet footer()}
 		{#if saving}

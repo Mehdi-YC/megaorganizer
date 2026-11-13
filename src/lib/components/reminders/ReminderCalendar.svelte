@@ -180,7 +180,7 @@
 							{#each dayReminders.slice(0, 2) as r (r.id)}
 								<div
 									class="truncate rounded-sm px-1.5 py-0.5 text-[10px] {r.completed
-										? 'bg-success/10 text-success line-through'
+										? 'bg-success/10 text-success-text line-through'
 										: 'bg-muted text-fg'}"
 									title={r.title}
 								>

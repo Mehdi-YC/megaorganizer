@@ -319,7 +319,7 @@
 					<p class="text-xs text-fg-subdued">Saving session...</p>
 				{/if}
 				{#if saveError}
-					<p class="text-xs text-error">{saveError}</p>
+					<p class="text-xs text-error-text">{saveError}</p>
 					<Button onclick={finishRun}>Retry Save</Button>
 				{/if}
 				<Button variant="secondary" onclick={discard}>Back to Timer</Button>

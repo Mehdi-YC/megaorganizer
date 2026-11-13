@@ -70,7 +70,7 @@
 			{#if onDelete}
 				<button
 					type="button"
-					class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-error"
+					class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg text-fg-subdued transition-colors hover:bg-muted hover:text-error-text"
 					onclick={() => onDelete(expense.id)}
 					title="Delete"
 					aria-label="Delete"

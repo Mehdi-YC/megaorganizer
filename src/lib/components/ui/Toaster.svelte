@@ -8,8 +8,8 @@
 	} as const;
 
 	const tones = {
-		success: 'border-success/30 text-success',
-		error: 'border-error/30 text-error',
+		success: 'border-success/30 text-success-text',
+		error: 'border-error/30 text-error-text',
 		info: 'border-border text-primary-text'
 	} as const;
 </script>

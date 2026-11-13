@@ -657,7 +657,7 @@
 													<button
 														type="button"
 														aria-label="Toggle tax folder {yr}"
-														class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
+														class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued hover:bg-muted/60 hover:text-fg"
 														onclick={(e) => {
 															e.stopPropagation();
 															toggleInvoiceYear(yr);
@@ -740,7 +740,7 @@
 						href={resolve('/app/category/new')}
 						onclick={onNavigate}
 						title="New Category"
-						class="flex h-4 w-4 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
+						class="flex h-6 w-6 items-center justify-center rounded text-fg-subdued hover:bg-muted hover:text-fg"
 					>
 						<i class="fas fa-plus text-[10px]"></i>
 					</a>
@@ -759,7 +759,7 @@
 							<button
 								type="button"
 								aria-label="Toggle category"
-								class="flex h-6 w-5 shrink-0 cursor-pointer items-center justify-center text-fg-subdued hover:text-fg"
+								class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded text-fg-subdued hover:bg-muted/60 hover:text-fg"
 								onclick={(e) => {
 									e.stopPropagation();
 									toggleCategory(cat.id);
@@ -794,7 +794,7 @@
 							</a>
 
 							<div
-								class="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+								class="flex items-center gap-0.5 transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
 							>
 								<button
 									type="button"
@@ -810,7 +810,7 @@
 								</button>
 								<button
 									type="button"
-									class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+									class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error-text"
 									onclick={async (e) => {
 										e.stopPropagation();
 										if (await confirmAction('Delete this workspace? Its pages go with it.')) {
@@ -1075,7 +1075,7 @@
 						</a>
 						<button
 							type="button"
-							class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-error transition-colors hover:bg-error/10"
+							class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs text-error-text transition-colors hover:bg-error/10"
 							onclick={handleLogout}
 						>
 							<i class="fas fa-right-from-bracket text-xs"></i>

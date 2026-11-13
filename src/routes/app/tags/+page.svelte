@@ -230,7 +230,7 @@
 							<button
 								type="button"
 								aria-label="Delete"
-								class="h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:bg-error/10 hover:text-error"
+								class="h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:bg-error/10 hover:text-error-text"
 								onclick={() => remove(t.id)}><i class="fas fa-trash text-[10px]"></i></button
 							>
 						</div>

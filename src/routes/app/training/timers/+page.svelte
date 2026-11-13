@@ -89,7 +89,7 @@
 					class="flex flex-wrap items-center gap-3 rounded-sm border border-border bg-surface p-4 transition-all hover:border-primary-text/50"
 				>
 					<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm bg-error/10">
-						<i class="fas fa-fire text-sm text-error"></i>
+						<i class="fas fa-fire text-sm text-error-text"></i>
 					</div>
 					<div class="min-w-0 flex-1">
 						<p class="truncate text-sm font-medium text-fg">{t.name}</p>
@@ -122,7 +122,7 @@
 						</button>
 						<button
 							type="button"
-							class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+							class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error-text"
 							onclick={() => handleDelete(t.id)}
 							title="Delete"
 							aria-label="Delete"

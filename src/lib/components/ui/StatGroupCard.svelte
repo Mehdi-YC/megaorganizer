@@ -35,8 +35,8 @@
 		{#if trend}
 			<span
 				class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium {trend.positive
-					? 'bg-success/10 text-success'
-					: 'bg-error/10 text-error'}"
+					? 'bg-success/10 text-success-text'
+					: 'bg-error/10 text-error-text'}"
 			>
 				<i class="fas {trend.positive ? 'fa-arrow-up' : 'fa-arrow-down'} text-[10px]"></i>
 				{Math.abs(trend.value)}%

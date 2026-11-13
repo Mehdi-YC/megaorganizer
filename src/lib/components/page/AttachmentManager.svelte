@@ -222,7 +222,7 @@
 
 	{#if uploadError}
 		<div class="mb-3 rounded-sm border border-error/30 bg-error/10 px-3 py-2">
-			<p class="text-[11px] text-error">{uploadError}</p>
+			<p class="text-[11px] text-error-text">{uploadError}</p>
 		</div>
 	{/if}
 
@@ -296,7 +296,7 @@
 						<button
 							type="button"
 							aria-label="Delete"
-							class="h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:opacity-0 sm:group-hover:opacity-100"
+							class="h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error-text sm:opacity-0 sm:group-hover:opacity-100"
 							onclick={() => deleteAttachment(att.id)}
 						>
 							<i class="fas fa-times text-[10px]"></i>

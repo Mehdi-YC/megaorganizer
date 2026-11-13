@@ -728,7 +728,7 @@
 							</button>
 							<button
 								type="button"
-								class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+								class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error-text"
 								onclick={(e) => {
 									e.stopPropagation();
 									removeElement(node.id, true);
@@ -754,7 +754,7 @@
 										<button
 											type="button"
 											aria-label="Remove from section"
-											class="ml-auto flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-opacity hover:text-error sm:opacity-0 sm:group-hover/subnode:opacity-100"
+											class="ml-auto flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued transition-opacity hover:text-error-text sm:opacity-0 sm:group-hover/subnode:opacity-100"
 											onclick={(e) => {
 												e.preventDefault();
 												e.stopPropagation();
@@ -938,7 +938,7 @@
 									<button
 										type="button"
 										aria-label="Remove"
-										class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:hidden sm:group-hover:flex"
+										class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error-text sm:hidden sm:group-hover:flex"
 										onclick={(e) => {
 											e.preventDefault();
 											removeElement(item.id);

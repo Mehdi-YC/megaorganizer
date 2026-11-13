@@ -137,7 +137,7 @@
 						</Button>
 						<button
 							type="button"
-							class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error"
+							class="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-sm bg-muted text-fg transition-colors hover:bg-error/10 hover:text-error-text"
 							onclick={() => remove(p)}
 							title="Delete"
 							aria-label="Delete"

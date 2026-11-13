@@ -24,6 +24,35 @@
 		};
 	} = $props();
 	let sidebarOpen = $state(false);
+	let drawerEl = $state<HTMLDivElement | null>(null);
+	let isMobile = $state(false);
+
+	// Track the breakpoint so the off-canvas drawer can be made inert while it
+	// is closed. Without this the translated-off-screen nav stays in the tab
+	// order on phones.
+	$effect(() => {
+		const query = window.matchMedia('(max-width: 1023px)');
+		isMobile = query.matches;
+		const onChange = (e: MediaQueryListEvent) => (isMobile = e.matches);
+		query.addEventListener('change', onChange);
+		return () => query.removeEventListener('change', onChange);
+	});
+
+	// On open: focus the first item inside the drawer. On close: give focus back
+	// to whatever had it (usually the menu button).
+	$effect(() => {
+		if (!isMobile || !sidebarOpen) return;
+		const previous = document.activeElement as HTMLElement | null;
+		const first = [...(drawerEl?.querySelectorAll<HTMLElement>('a[href], button') ?? [])].find(
+			(el) => !el.hasAttribute('disabled') && el.getClientRects().length > 0
+		);
+		(first ?? drawerEl)?.focus();
+		return () => previous?.focus?.();
+	});
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && sidebarOpen) sidebarOpen = false;
+	}
 
 	onMount(() => {
 		const stopWikilinks = initWikilinkClicks();
@@ -36,7 +65,16 @@
 	});
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <div class="flex h-full w-full overflow-hidden bg-bg text-fg">
+	<a
+		href="#main-content"
+		class="sr-only rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+	>
+		Skip to content
+	</a>
+
 	{#if sidebarOpen}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -47,6 +85,9 @@
 	{/if}
 
 	<div
+		bind:this={drawerEl}
+		inert={isMobile && !sidebarOpen}
+		tabindex="-1"
 		class="no-print fixed z-50 h-full lg:static lg:z-auto {sidebarOpen
 			? 'translate-x-0'
 			: '-translate-x-full lg:translate-x-0'} transition-transform duration-200"
@@ -60,7 +101,11 @@
 		/>
 	</div>
 
-	<main class="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-bg">
+	<main
+		id="main-content"
+		tabindex="-1"
+		class="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-bg"
+	>
 		<!-- Modern Mobile Top Bar -->
 		<div
 			class="no-print sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-surface/80 px-4 backdrop-blur-md lg:hidden"

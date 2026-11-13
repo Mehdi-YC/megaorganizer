@@ -22,9 +22,15 @@
 	--primary-text: #4f46e5;
 	--primary-text-hover: #4338ca;
 	--primary-subdued: rgba(79, 70, 229, 0.08);
-	--success: #10b981;
-	--warning: #f59e0b;
-	--error: #ef4444;
+	/* Semantic colors come in two roles: `--*-text` is the tone used for text
+	   and icons (contrast-checked against the surface), while `--success` and
+	   friends are solid fills that always carry white labels. */
+	--success: #047857;
+	--success-text: #047857;
+	--warning: #b45309;
+	--warning-text: #b45309;
+	--error: #dc2626;
+	--error-text: #dc2626;
 	--surface: #ffffff;
 	--surface-subdued: #f8fafc;
 	--surface-overlay: rgba(15, 23, 42, 0.45);
@@ -44,14 +50,17 @@
 	--muted: #27272a;
 	--border: #27272a;
 	--border-strong: #3f3f46;
-	--primary: #6366f1;
-	--primary-hover: #4f46e5;
+	--primary: #4f46e5;
+	--primary-hover: #4338ca;
 	--primary-text: #818cf8;
 	--primary-text-hover: #a5b4fc;
 	--primary-subdued: rgba(99, 102, 241, 0.15);
-	--success: #2ec46d;
-	--warning: #ffa439;
-	--error: #e35169;
+	--success: #047857;
+	--success-text: #34d399;
+	--warning: #b45309;
+	--warning-text: #fbbf24;
+	--error: #dc2626;
+	--error-text: #f87171;
 	--surface: #121215;
 	--surface-subdued: #18181b;
 	--surface-overlay: rgba(0, 0, 0, 0.7);
@@ -77,8 +86,11 @@
 	--color-primary-text-hover: var(--primary-text-hover);
 	--color-primary-subdued: var(--primary-subdued);
 	--color-success: var(--success);
+	--color-success-text: var(--success-text);
 	--color-warning: var(--warning);
+	--color-warning-text: var(--warning-text);
 	--color-error: var(--error);
+	--color-error-text: var(--error-text);
 	--color-surface: var(--surface);
 	--color-surface-subdued: var(--surface-subdued);
 	--color-surface-overlay: var(--surface-overlay);

@@ -73,7 +73,7 @@
 		</Button>
 	</PageHeader>
 	{#if error}
-		<p class="mb-3 text-xs text-error">{error}</p>
+		<p class="mb-3 text-xs text-error-text">{error}</p>
 	{/if}
 	<TimerBuilder {initial} {saving} saveLabel="Save Changes" onSave={handleSave} />
 </div>

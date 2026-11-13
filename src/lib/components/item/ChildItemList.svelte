@@ -250,7 +250,7 @@
 					</a>
 					<button
 						type="button"
-						class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error sm:hidden sm:group-hover:flex"
+						class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm text-fg-subdued hover:text-error-text sm:hidden sm:group-hover:flex"
 						onclick={() => removeChild(child.id)}
 						aria-label="Remove"
 					>
