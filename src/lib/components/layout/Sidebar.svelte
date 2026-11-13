@@ -575,7 +575,7 @@
 							<a
 								href={resolve('/app/invoicing')}
 								onclick={onNavigate}
-								class="flex flex-1 items-center gap-2.5"
+								class="flex h-8 flex-1 items-center gap-2.5"
 							>
 								<i class="fas fa-file-invoice-dollar w-4 text-center text-xs"></i>
 								<span>Invoicing</span>

@@ -141,7 +141,9 @@
 			</div>
 		</div>
 
-		<div class="min-h-full">
+		<!-- pb-20 keeps the last row/field clear of the floating quick-capture
+		     button, which otherwise sits on top of the content. -->
+		<div class="min-h-full pb-20">
 			{#key page.url.pathname}
 				{@render children()}
 			{/key}

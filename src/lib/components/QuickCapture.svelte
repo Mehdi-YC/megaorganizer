@@ -37,6 +37,12 @@
 	let expenseForm: ExpenseForm | undefined = $state();
 	let panelEl = $state<HTMLElement | null>(null);
 
+	// Invoicing and Finance have their own create buttons; a floating one only
+	// duplicates them and sits on top of the last table column.
+	const fabHidden = $derived(
+		page.url.pathname.startsWith('/app/invoicing') || page.url.pathname.startsWith('/app/finance')
+	);
+
 	// Focus trap: any focus that lands outside the open panel is pulled back to
 	// the first field. Focus moving *inside* the panel (including the initial
 	// programmatic focus) is left alone.
@@ -256,14 +262,16 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <!-- FAB Button -->
-<button
-	type="button"
-	class="no-print fixed right-4 bottom-5 z-40 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 sm:right-6 sm:bottom-6"
-	onclick={() => open()}
-	aria-label="Quick capture"
->
-	<i class="fas fa-plus text-sm"></i>
-</button>
+{#if !fabHidden}
+	<button
+		type="button"
+		class="no-print fixed right-4 bottom-5 z-40 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-all hover:scale-105 hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none active:scale-95 sm:right-6 sm:bottom-6"
+		onclick={() => open()}
+		aria-label="Quick capture"
+	>
+		<i class="fas fa-plus text-sm"></i>
+	</button>
+{/if}
 
 <!-- Modal -->
 {#if show}

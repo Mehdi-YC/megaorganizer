@@ -267,13 +267,15 @@
 				<thead>
 					<tr class="border-b border-border bg-muted/30 text-fg-subdued">
 						<th class="w-10 px-3.5 py-3 text-center">
-							<input
-								type="checkbox"
-								checked={selectedInvoiceIds.length > 0 &&
-									selectedInvoiceIds.length === filteredInvoices.length}
-								onchange={toggleSelectAll}
-								class="rounded border-border"
-							/>
+							<label class="inline-flex h-6 w-6 cursor-pointer items-center justify-center">
+								<input
+									type="checkbox"
+									checked={selectedInvoiceIds.length > 0 &&
+										selectedInvoiceIds.length === filteredInvoices.length}
+									onchange={toggleSelectAll}
+									class="h-4 w-4 rounded border-border"
+								/>
+							</label>
 						</th>
 						<th class="px-3.5 py-3 font-semibold">Invoice #</th>
 						<th class="px-3.5 py-3 font-semibold">Client</th>
@@ -289,12 +291,14 @@
 						{@const badge = getStatusBadge(inv.status)}
 						<tr class="transition-colors hover:bg-muted/40">
 							<td class="w-10 px-3.5 py-3 text-center">
-								<input
-									type="checkbox"
-									checked={selectedInvoiceIds.includes(inv.id)}
-									onchange={() => toggleSelect(inv.id)}
-									class="rounded border-border"
-								/>
+								<label class="inline-flex h-6 w-6 cursor-pointer items-center justify-center">
+									<input
+										type="checkbox"
+										checked={selectedInvoiceIds.includes(inv.id)}
+										onchange={() => toggleSelect(inv.id)}
+										class="h-4 w-4 rounded border-border"
+									/>
+								</label>
 							</td>
 							<td class="px-3.5 py-3 font-semibold text-fg">
 								<a
