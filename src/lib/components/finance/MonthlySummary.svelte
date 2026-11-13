@@ -68,19 +68,19 @@
 					></div>
 				</div>
 				{#if remaining !== null && !isOverLimit}
-					<p class="mt-1 text-[10px] text-fg-subdued">
+					<p class="mt-1 text-[11px] text-fg-subdued">
 						{formatAmount(remaining)}
 						{currency} remaining
 					</p>
 				{:else if isOverLimit}
-					<p class="mt-1 text-[10px] text-error-text">
+					<p class="mt-1 text-[11px] text-error-text">
 						{formatAmount(total - limit)}
 						{currency} over budget
 					</p>
 				{/if}
 			</div>
 		{:else}
-			<p class="text-[10px] text-fg-subdued">No spending limit set</p>
+			<p class="text-[11px] text-fg-subdued">No spending limit set</p>
 		{/if}
 
 		<!-- Daily average -->

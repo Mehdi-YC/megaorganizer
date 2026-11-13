@@ -408,7 +408,7 @@
 								{/if}
 								<div class="min-w-0 flex-1">
 									<p class="truncate text-sm font-medium text-fg">{result.title}</p>
-									<p class="truncate text-[10px] text-fg-subdued">
+									<p class="truncate text-[11px] text-fg-subdued">
 										{result.subtitle || result.type}
 									</p>
 								</div>
@@ -1042,7 +1042,7 @@
 						<p class="truncate text-xs leading-tight font-semibold text-fg">
 							{user?.name || 'User'}
 						</p>
-						<p class="truncate text-[10px] leading-tight text-fg-subdued">{user?.email || ''}</p>
+						<p class="truncate text-[11px] leading-tight text-fg-subdued">{user?.email || ''}</p>
 					</div>
 					<i class="fas fa-ellipsis text-xs text-fg-subdued"></i>
 				{/if}
@@ -1059,7 +1059,7 @@
 				>
 					<div class="border-b border-border/70 px-3 py-2">
 						<p class="truncate text-xs font-semibold text-fg">{user?.name}</p>
-						<p class="truncate text-[10px] text-fg-subdued">{user?.email}</p>
+						<p class="truncate text-[11px] text-fg-subdued">{user?.email}</p>
 					</div>
 					<div class="py-1">
 						<a

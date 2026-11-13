@@ -213,7 +213,7 @@
 				</div>
 				<div class="space-y-2">
 					<div>
-						<p class="mb-1 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Tags</p>
+						<p class="mb-1 text-[11px] font-bold tracking-widest text-fg-subdued uppercase">Tags</p>
 						<div class="flex flex-wrap gap-1">
 							{#each allTags as t (t.id)}
 								<button
@@ -327,7 +327,7 @@
 								<i class="fas fa-star shrink-0 text-[10px] text-accent-yellow-text"></i>
 							{/if}
 						</div>
-						<p class="mt-0.5 text-[10px] text-fg-subdued capitalize">
+						<p class="mt-0.5 text-[11px] text-fg-subdued capitalize">
 							{item.type}{#if item.hasYdk}
 								· Deck{/if}
 						</p>

@@ -419,7 +419,7 @@
 							<p class="text-sm font-semibold text-fg">
 								{monthOverview.trainingCount}
 							</p>
-							<p class="text-[10px] text-fg-subdued">Trainings</p>
+							<p class="text-[11px] text-fg-subdued">Trainings</p>
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
@@ -438,7 +438,7 @@
 									<i class="fas fa-times text-error-text"></i>)
 								</span>
 							</p>
-							<p class="text-[10px] text-fg-subdued">Tasks (completed / missed)</p>
+							<p class="text-[11px] text-fg-subdued">Tasks (completed / missed)</p>
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
@@ -452,7 +452,7 @@
 								{formatDateTime(monthOverview.expenseTotal)}
 								{expenseSettings.currency}
 							</p>
-							<p class="text-[10px] text-fg-subdued">Expenses</p>
+							<p class="text-[11px] text-fg-subdued">Expenses</p>
 						</div>
 					</div>
 				</div>
@@ -475,6 +475,8 @@
 						{@const hasUncompleted = events.some((e) => e.type === 'reminder' && !e.completed)}
 						{@const hasExpenses = events.some((e) => e.type === 'expense')}
 
+						<!-- Interactive when the cell holds a date; empty cells stay inert. -->
+						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 						<div
 							class="min-h-[40px] cursor-pointer bg-surface p-1 transition-colors hover:bg-muted sm:min-h-[100px] sm:p-2 {date
 								? ''
@@ -483,7 +485,9 @@
 								: ''}"
 							onclick={() => date && handleDateClick(date)}
 							onkeydown={(e) => e.key === 'Enter' && date && handleDateClick(date)}
-							role="button"
+							role={date ? 'button' : undefined}
+							aria-label={date ? formatSelectedDate(date) : undefined}
+							aria-hidden={date ? undefined : true}
 							tabindex={date ? 0 : -1}
 						>
 							{#if date}
@@ -673,7 +677,7 @@
 									>
 										{event.title}
 									</p>
-									<p class="text-[10px] text-fg-subdued">
+									<p class="text-[11px] text-fg-subdued">
 										{#if event.type === 'expense'}
 											{formatAmount(event.amount ?? 0)} {expenseSettings.currency}
 										{:else}
@@ -756,7 +760,7 @@
 							</div>
 						{/each}
 					</div>
-					<p class="mt-3 text-center text-[10px] text-fg-subdued">Tap a day to see its events</p>
+					<p class="mt-3 text-center text-[11px] text-fg-subdued">Tap a day to see its events</p>
 				{/if}
 			{/if}
 		</div>

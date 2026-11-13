@@ -143,7 +143,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<h3 class="truncate text-sm font-medium text-fg">{template.title}</h3>
-								<p class="mt-0.5 text-[10px] text-fg-subdued">
+								<p class="mt-0.5 text-[11px] text-fg-subdued">
 									{getRecurrenceLabel(template.recurrenceType, template.recurrenceConfig)}
 								</p>
 							</div>
@@ -188,7 +188,7 @@
 
 					{#if template.todos && template.todos.length > 0}
 						<div class="mt-3 border-t border-border pt-3">
-							<p class="mb-1.5 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+							<p class="mb-1.5 text-[11px] font-bold tracking-widest text-fg-subdued uppercase">
 								{template.todos.length} todo{template.todos.length !== 1 ? 's' : ''}
 							</p>
 							<div class="space-y-1">
@@ -196,7 +196,7 @@
 									<p class="truncate text-xs text-fg">• {todo.text}</p>
 								{/each}
 								{#if template.todos.length > 3}
-									<p class="text-[10px] text-fg-subdued">+{template.todos.length - 3} more</p>
+									<p class="text-[11px] text-fg-subdued">+{template.todos.length - 3} more</p>
 								{/if}
 							</div>
 						</div>

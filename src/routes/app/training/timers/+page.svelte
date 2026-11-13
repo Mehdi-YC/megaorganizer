@@ -93,7 +93,7 @@
 					</div>
 					<div class="min-w-0 flex-1">
 						<p class="truncate text-sm font-medium text-fg">{t.name}</p>
-						<p class="text-[10px] text-fg-subdued">
+						<p class="text-[11px] text-fg-subdued">
 							{t.steps.length} step{t.steps.length !== 1 ? 's' : ''}
 							· {t.rounds} round{t.rounds !== 1 ? 's' : ''}
 							· {formatDuration(totalSeconds(t))}

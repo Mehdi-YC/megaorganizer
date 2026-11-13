@@ -250,7 +250,7 @@
 			>
 				<i class="fas fa-paperclip mb-2 text-xl text-fg-subdued"></i>
 				<p class="text-xs text-fg-subdued">Drop files here or click to upload</p>
-				<p class="mt-1 text-[10px] text-fg-subdued">Max 100MB per file</p>
+				<p class="mt-1 text-[11px] text-fg-subdued">Max 100MB per file</p>
 			</button>
 		{:else}
 			<div class="grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -290,7 +290,7 @@
 							</div>
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-[11px] font-medium text-fg-accent">{att.originalName}</p>
-								<p class="text-[10px] text-fg-subdued">{formatFileSize(att.size)}</p>
+								<p class="text-[11px] text-fg-subdued">{formatFileSize(att.size)}</p>
 							</div>
 						</button>
 						<button

@@ -352,7 +352,7 @@
 
 							<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
 								<div>
-									<label for="edit-qty-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="edit-qty-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>Quantity</label
 									>
 									<input
@@ -365,7 +365,7 @@
 									/>
 								</div>
 								<div>
-									<label for="edit-unit-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="edit-unit-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>Unit</label
 									>
 									<input
@@ -376,7 +376,7 @@
 									/>
 								</div>
 								<div>
-									<label for="edit-price-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="edit-price-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>Unit Price (DA)</label
 									>
 									<input
@@ -389,7 +389,7 @@
 									/>
 								</div>
 								<div>
-									<label for="edit-tva-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="edit-tva-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>VAT</label
 									>
 									<select

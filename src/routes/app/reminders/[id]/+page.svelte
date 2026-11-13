@@ -258,7 +258,7 @@
 						</div>
 						{#if isReminder}
 							<div class="mt-3 border-t border-border pt-3">
-								<p class="text-[10px] text-fg-subdued">
+								<p class="text-[11px] text-fg-subdued">
 									{item.todos.filter((t) => t.completed).length} of {item.todos.length} completed
 								</p>
 							</div>
@@ -288,15 +288,15 @@
 						<div class="grid grid-cols-4 gap-4">
 							<div class="text-center">
 								<p class="text-2xl font-semibold text-fg">{s.total}</p>
-								<p class="text-[10px] text-fg-subdued">Total</p>
+								<p class="text-[11px] text-fg-subdued">Total</p>
 							</div>
 							<div class="text-center">
 								<p class="text-2xl font-semibold text-success-text">{s.completed}</p>
-								<p class="text-[10px] text-fg-subdued">Completed</p>
+								<p class="text-[11px] text-fg-subdued">Completed</p>
 							</div>
 							<div class="text-center">
 								<p class="text-2xl font-semibold text-error-text">{s.missed}</p>
-								<p class="text-[10px] text-fg-subdued">Missed</p>
+								<p class="text-[11px] text-fg-subdued">Missed</p>
 							</div>
 							<div class="text-center">
 								<p
@@ -308,7 +308,7 @@
 								>
 									{s.rate}%
 								</p>
-								<p class="text-[10px] text-fg-subdued">Rate</p>
+								<p class="text-[11px] text-fg-subdued">Rate</p>
 							</div>
 						</div>
 					</div>
@@ -348,7 +348,7 @@
 							</div>
 							<div>
 								<p class="text-sm font-medium text-fg">{template.title}</p>
-								<p class="text-[10px] text-fg-subdued">
+								<p class="text-[11px] text-fg-subdued">
 									{getRecurrenceLabel(template.recurrenceType, template.recurrenceConfig)}
 								</p>
 							</div>

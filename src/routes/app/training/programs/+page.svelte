@@ -108,7 +108,7 @@
 					</div>
 					<div class="min-w-0 flex-1">
 						<p class="truncate text-sm font-medium text-fg">{p.name}</p>
-						<p class="text-[10px] text-fg-subdued">
+						<p class="text-[11px] text-fg-subdued">
 							{p.blockCount} block{p.blockCount !== 1 ? 's' : ''}
 							· {p.exerciseCount} exercise{p.exerciseCount !== 1 ? 's' : ''}
 							{#if p.weekdays.length > 0}
