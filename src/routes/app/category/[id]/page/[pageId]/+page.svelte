@@ -576,7 +576,7 @@
 								</div>
 							{/if}
 							<div class="space-y-2 border-t border-border pt-3">
-								<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+								<p class="mb-2 text-[11px] font-bold tracking-widest text-fg-subdued uppercase">
 									Create New
 								</p>
 								<div class="flex items-center gap-2">
@@ -808,7 +808,7 @@
 												</div>
 												<div class="flex items-center gap-0.5">
 													<p
-														class="flex-1 truncate text-[10px] font-medium text-fg-accent group-hover:text-primary-text"
+														class="flex-1 truncate text-[11px] font-medium text-fg-accent group-hover:text-primary-text"
 													>
 														{item.name}
 													</p>
@@ -1018,7 +1018,7 @@
 		{#if node}
 			<Dialog open={true} onclose={() => (editingNode = null)} title="Edit Section: {node.name}">
 				<div class="mb-4">
-					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Color</p>
+					<p class="mb-2 text-[11px] font-bold tracking-widest text-fg-subdued uppercase">Color</p>
 					<div class="flex flex-wrap gap-2">
 						{#each NODE_COLORS as c, i (c)}
 							<button
@@ -1039,7 +1039,7 @@
 					</div>
 				</div>
 				<div class="mb-4">
-					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">Icon</p>
+					<p class="mb-2 text-[11px] font-bold tracking-widest text-fg-subdued uppercase">Icon</p>
 					<div class="mb-2 flex items-center gap-2">
 						<div
 							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-sm shadow-2xs"
@@ -1085,7 +1085,7 @@
 					<span class="text-sm font-medium" style="color: {editColor}">{node.name}</span>
 				</div>
 				<div class="mb-4">
-					<p class="mb-2 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+					<p class="mb-2 text-[11px] font-bold tracking-widest text-fg-subdued uppercase">
 						Content (Markdown)
 					</p>
 					<MarkdownEditor
@@ -1116,7 +1116,7 @@
 		>
 			<p class="mb-1.5 truncate text-xs font-semibold text-fg-accent">{hoverItem.name}</p>
 			{#if hoverItemChildren.length > 0}
-				<p class="mb-1 text-[10px] font-bold tracking-widest text-fg-subdued uppercase">
+				<p class="mb-1 text-[11px] font-bold tracking-widest text-fg-subdued uppercase">
 					Children ({hoverItemChildren.length})
 				</p>
 				<div class="max-h-32 space-y-0.5 overflow-y-auto">
@@ -1131,7 +1131,7 @@
 					{/each}
 				</div>
 			{:else}
-				<p class="text-[10px] text-fg-subdued italic">No children</p>
+				<p class="text-[11px] text-fg-subdued italic">No children</p>
 			{/if}
 		</div>
 	{/if}

@@ -397,6 +397,7 @@
 								<div class="flex items-center gap-1.5">
 									{#if products.length > 0}
 										<select
+											aria-label="Prefill line {i + 1} from catalog"
 											class="h-7 max-w-[200px] rounded-sm border border-border bg-surface px-2 text-[11px] text-fg focus:outline-none"
 											onchange={(e) => onProductSelect(i, (e.target as HTMLSelectElement).value)}
 										>
@@ -420,6 +421,7 @@
 							<div class="mb-3">
 								<input
 									type="text"
+									aria-label="Line {i + 1} description"
 									bind:value={line.description}
 									placeholder="Item or service description (e.g., Web Development)..."
 									class="h-8 w-full rounded-sm border border-border bg-surface px-2.5 text-xs text-fg focus:border-primary-text focus:outline-none"
@@ -428,7 +430,7 @@
 
 							<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
 								<div>
-									<label for="line-qty-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="line-qty-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>Quantity</label
 									>
 									<input
@@ -441,7 +443,7 @@
 									/>
 								</div>
 								<div>
-									<label for="line-unit-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="line-unit-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>Unit</label
 									>
 									<input
@@ -453,7 +455,7 @@
 									/>
 								</div>
 								<div>
-									<label for="line-price-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="line-price-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>Unit Price (DA)</label
 									>
 									<input
@@ -466,7 +468,7 @@
 									/>
 								</div>
 								<div>
-									<label for="line-tva-{line.id}" class="mb-1 block text-[10px] text-fg-subdued"
+									<label for="line-tva-{line.id}" class="mb-1 block text-[11px] text-fg-subdued"
 										>VAT</label
 									>
 									<select
@@ -495,6 +497,7 @@
 					Notes & Instructions
 				</h2>
 				<textarea
+					aria-label="Notes and payment instructions"
 					bind:value={notes}
 					rows="3"
 					placeholder="Bank transfer instructions, communication or payment terms..."

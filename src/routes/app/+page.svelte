@@ -492,7 +492,7 @@
 									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
 										Invoicing & Taxes
 									</p>
-									<p class="text-[10px] text-fg-subdued">Clients, G12 & bills</p>
+									<p class="text-[11px] text-fg-subdued">Clients, G12 & bills</p>
 								</div>
 							</div>
 							<i
@@ -519,7 +519,7 @@
 									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
 										Expenses & Finance
 									</p>
-									<p class="text-[10px] text-fg-subdued">Budgets & transactions</p>
+									<p class="text-[11px] text-fg-subdued">Budgets & transactions</p>
 								</div>
 							</div>
 							<i
@@ -546,7 +546,7 @@
 									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
 										Training & Sport
 									</p>
-									<p class="text-[10px] text-fg-subdued">GPX runs, workouts</p>
+									<p class="text-[11px] text-fg-subdued">GPX runs, workouts</p>
 								</div>
 							</div>
 							<i
@@ -572,7 +572,7 @@
 								<p class="text-xs font-semibold text-fg group-hover:text-primary-text">
 									Item Library
 								</p>
-								<p class="text-[10px] text-fg-subdued">Gear & collections</p>
+								<p class="text-[11px] text-fg-subdued">Gear & collections</p>
 							</div>
 						</div>
 						<i
@@ -596,7 +596,7 @@
 								</div>
 								<div>
 									<p class="text-xs font-semibold text-fg group-hover:text-primary-text">Mindmap</p>
-									<p class="text-[10px] text-fg-subdued">Visual concepts & nodes</p>
+									<p class="text-[11px] text-fg-subdued">Visual concepts & nodes</p>
 								</div>
 							</div>
 							<i

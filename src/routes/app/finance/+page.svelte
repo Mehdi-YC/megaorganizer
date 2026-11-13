@@ -202,6 +202,7 @@
 						bind:value={searchQuery}
 						placeholder="Search description or amount..."
 						name="expense-search"
+						aria-label="Search expenses"
 					/>
 				</div>
 			</div>
@@ -289,7 +290,7 @@
 				</div>
 				<div>
 					<p class="text-sm font-medium text-fg">View in Calendar</p>
-					<p class="text-[10px] text-fg-subdued">See expenses on calendar</p>
+					<p class="text-[11px] text-fg-subdued">See expenses on calendar</p>
 				</div>
 			</a>
 		</div>

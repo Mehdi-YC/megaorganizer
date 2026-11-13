@@ -688,7 +688,7 @@
 								<div>
 									<label
 										for="sets-{recordKey(record)}"
-										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Sets</label
+										class="text-[11px] font-semibold tracking-wide text-fg-subdued">Sets</label
 									>
 									<input
 										id="sets-{recordKey(record)}"
@@ -706,7 +706,7 @@
 								<div>
 									<label
 										for="reps-{recordKey(record)}"
-										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Reps</label
+										class="text-[11px] font-semibold tracking-wide text-fg-subdued">Reps</label
 									>
 									<input
 										id="reps-{recordKey(record)}"
@@ -719,7 +719,7 @@
 								<div>
 									<label
 										for="weight-{recordKey(record)}"
-										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Weight</label
+										class="text-[11px] font-semibold tracking-wide text-fg-subdued">Weight</label
 									>
 									<div class="flex">
 										<input
@@ -743,7 +743,7 @@
 								<div>
 									<label
 										for="rpe-{recordKey(record)}"
-										class="text-[10px] font-semibold tracking-wide text-fg-subdued">RPE</label
+										class="text-[11px] font-semibold tracking-wide text-fg-subdued">RPE</label
 									>
 									<input
 										id="rpe-{recordKey(record)}"
@@ -763,7 +763,7 @@
 								<div>
 									<label
 										for="rest-{recordKey(record)}"
-										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Rest (s)</label
+										class="text-[11px] font-semibold tracking-wide text-fg-subdued">Rest (s)</label
 									>
 									<input
 										id="rest-{recordKey(record)}"
@@ -781,7 +781,7 @@
 								<div>
 									<label
 										for="notes-{recordKey(record)}"
-										class="text-[10px] font-semibold tracking-wide text-fg-subdued">Notes</label
+										class="text-[11px] font-semibold tracking-wide text-fg-subdued">Notes</label
 									>
 									<input
 										id="notes-{recordKey(record)}"

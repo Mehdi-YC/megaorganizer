@@ -245,7 +245,7 @@
 		</div>
 		<div class="mt-5 text-center">
 			<p class="text-sm font-semibold text-fg-accent">{enlargedCard.name}</p>
-			<p class="mt-1 text-[10px] text-fg-subdued">
+			<p class="mt-1 text-[11px] text-fg-subdued">
 				{enlargedCard.type} · {enlargedCard.race}
 				{enlargedCard.attribute ? `· ${enlargedCard.attribute}` : ''}
 			</p>

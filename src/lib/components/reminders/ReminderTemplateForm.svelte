@@ -69,7 +69,7 @@
 		'fa-calendar',
 		'fa-calendar-check',
 		'fa-calendar-day',
-		'fa-alarm-clock',
+		'fa-clock',
 		'fa-stopwatch',
 		'fa-dumbbell',
 		'fa-book',

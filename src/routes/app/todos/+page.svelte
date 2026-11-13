@@ -257,6 +257,7 @@
 				<input
 					type="text"
 					bind:value={newTitle}
+					aria-label="Task title"
 					placeholder="Add a task... (e.g. Prepare meeting notes, Review invoice draft)"
 					class="min-w-0 flex-1 rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-sm text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"
 				/>
@@ -301,6 +302,7 @@
 					</button>
 					<input
 						type="date"
+						aria-label="Due date"
 						bind:value={newDueDate}
 						class="max-w-[130px] rounded-lg border border-border bg-surface px-2 py-1 text-xs text-fg focus:border-primary focus:outline-none"
 					/>
@@ -309,6 +311,7 @@
 				<div class="flex items-center gap-1.5">
 					<span class="text-xs font-medium text-fg-subdued">Priority:</span>
 					<select
+						aria-label="Priority"
 						bind:value={newPriority}
 						class="rounded-lg border border-border bg-surface px-2.5 py-1 text-xs text-fg focus:border-primary focus:outline-none"
 					>
@@ -330,6 +333,7 @@
 		<div class="w-full sm:w-56">
 			<input
 				type="text"
+				aria-label="Filter tasks"
 				bind:value={searchQuery}
 				placeholder="Filter tasks..."
 				class="w-full rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-fg placeholder:text-fg-subdued focus:border-primary focus:outline-none"

@@ -354,7 +354,7 @@
 								disabled
 								class="h-[36px] w-full cursor-not-allowed rounded-sm border border-border bg-muted px-3 text-sm text-fg-subdued"
 							/>
-							<p class="text-[10px] text-fg-subdued">Email cannot be changed</p>
+							<p class="text-[11px] text-fg-subdued">Email cannot be changed</p>
 						</div>
 
 						{#if form?.profileMessage}
@@ -457,7 +457,7 @@
 								placeholder="No limit"
 								class="h-[36px] w-full rounded-sm border border-border bg-bg px-3 text-sm text-fg transition-colors placeholder:text-fg-subdued hover:border-fg-subdued focus:border-primary-text focus:ring-0 focus:outline-none"
 							/>
-							<p class="text-[10px] text-fg-subdued">Leave empty for no limit</p>
+							<p class="text-[11px] text-fg-subdued">Leave empty for no limit</p>
 						</div>
 
 						{#if form?.financeMessage}
@@ -705,7 +705,7 @@
 							onchange={handleImportFile}
 						/>
 					</div>
-					<p class="text-[10px] text-fg-subdued">
+					<p class="text-[11px] text-fg-subdued">
 						Includes all entities and files: knowledge base, attachments, tasks, reminders,
 						expenses, invoicing, tax documents (G12/G12 bis), GPS workouts, roadmaps, tier lists,
 						YDK decks, and timers.
@@ -769,7 +769,7 @@
 							></pre>
 					</div>
 
-					<p class="text-[10px] text-fg-subdued">
+					<p class="text-[11px] text-fg-subdued">
 						The client sends your account email and password on every request, so it stores them in
 						its config file. Changing your password revokes access everywhere.
 					</p>

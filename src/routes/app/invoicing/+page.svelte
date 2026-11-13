@@ -270,6 +270,7 @@
 							<label class="inline-flex h-6 w-6 cursor-pointer items-center justify-center">
 								<input
 									type="checkbox"
+									aria-label="Select all invoices"
 									checked={selectedInvoiceIds.length > 0 &&
 										selectedInvoiceIds.length === filteredInvoices.length}
 									onchange={toggleSelectAll}
@@ -294,6 +295,7 @@
 								<label class="inline-flex h-6 w-6 cursor-pointer items-center justify-center">
 									<input
 										type="checkbox"
+										aria-label="Select invoice {inv.invoiceNumber}"
 										checked={selectedInvoiceIds.includes(inv.id)}
 										onchange={() => toggleSelect(inv.id)}
 										class="h-4 w-4 rounded border-border"
