@@ -192,7 +192,7 @@
 				disabled={isExporting}
 				class="whitespace-nowrap sm:h-8 sm:px-3 sm:!text-xs"
 			>
-				<i class="fas fa-folder-arrow-down mr-1 text-[10px] text-primary-text sm:text-xs"></i>
+				<i class="fas fa-file-arrow-down mr-1 text-[10px] text-primary-text sm:text-xs"></i>
 				<span class="hidden sm:inline">Export year {data.year}</span>
 				<span class="sm:hidden">Export {data.year}</span>
 			</Button>

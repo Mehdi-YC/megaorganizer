@@ -1,12 +1,46 @@
 @import '@fontsource-variable/inter';
-/* Only solid + regular glyphs are used; skip brands/duotone/v4 shims. */
+/* Only solid + regular glyphs are used; skip brands/duotone/v4 shims. The
+   faces themselves are declared below on top of the trimmed files, so the
+   full webfonts from solid.min/regular.min are not referenced at all. */
 @import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
-@import '@fortawesome/fontawesome-free/css/solid.min.css';
-@import '@fortawesome/fontawesome-free/css/regular.min.css';
 @import 'tailwindcss';
 @import 'highlight.js/styles/github-dark.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Trimmed Font Awesome faces: only the glyphs the app uses ship to the
+   browser (12KB instead of 155KB for the solid face). The class definitions
+   come from fontawesome.min.css above; these declarations are the only faces
+   behind them. Regenerate after adding icons: bun run icons:subset */
+@font-face {
+	font-family: 'Font Awesome 6 Free';
+	font-style: normal;
+	font-weight: 900;
+	font-display: swap;
+	src: url('/fonts/fa-solid-900.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Font Awesome 6 Free';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/fa-regular-400.woff2') format('woff2');
+}
+/* The weight rules that live in solid.min.css and regular.min.css, which are
+   no longer imported along with their full-size faces. */
+:host,
+:root {
+	--fa-font-solid: normal 900 1em/1 'Font Awesome 6 Free';
+	--fa-font-regular: normal 400 1em/1 'Font Awesome 6 Free';
+}
+.fa-solid,
+.fas {
+	font-weight: 900;
+}
+.fa-regular,
+.far {
+	font-weight: 400;
+}
 
 :root {
 	--bg: #f8fafc;
