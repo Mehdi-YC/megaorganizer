@@ -498,7 +498,7 @@
 
 	{#if data.programBlock}
 		<div
-			class="mb-6 flex items-center gap-2 rounded-sm border border-blue-400/40 bg-blue-500/5 px-3 py-2 text-xs text-blue-500"
+			class="mb-6 flex items-center gap-2 rounded-sm border border-accent-blue/40 bg-accent-blue/5 px-3 py-2 text-xs text-accent-blue-text"
 		>
 			<i class="fas fa-calendar-days"></i>
 			<span>

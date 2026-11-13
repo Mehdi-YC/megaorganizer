@@ -20,6 +20,10 @@
 			root.classList.remove('dark');
 			root.style.colorScheme = 'light';
 		}
+		// Browser chrome follows this meta; keep it on the theme's background
+		// (values match --bg in layout.css, mirrored by theme.svelte.ts).
+		var meta = document.querySelector('meta[name="theme-color"]');
+		if (meta) meta.setAttribute('content', isDark ? '#09090b' : '#f8fafc');
 	} catch (_) {
 		// localStorage can be unavailable (private mode, blocked cookies):
 		// the app then follows the system preference once it hydrates.

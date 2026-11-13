@@ -239,7 +239,7 @@
 						<button
 							type="button"
 							class="inline-flex cursor-pointer items-center gap-1.5 rounded-sm px-2 py-1 text-[10px] font-medium transition-all {filterFavorite
-								? 'bg-yellow-400 text-yellow-950'
+								? 'bg-accent-yellow text-accent-yellow-on'
 								: 'bg-muted text-fg-subdued hover:text-fg'}"
 							onclick={toggleFilterFavorite}
 						>
@@ -305,7 +305,7 @@
 				<a
 					href={resolve('/app/item/[id]', { id: item.id })}
 					class="group overflow-hidden rounded-xl border {item.favorite
-						? 'border-yellow-400/40 bg-yellow-500/5'
+						? 'border-accent-yellow/40 bg-accent-yellow/5'
 						: 'border-border bg-surface'} shadow-xs transition-all hover:border-primary-text/50"
 				>
 					<div class="h-24 w-full overflow-hidden rounded-t-xl">
@@ -324,7 +324,7 @@
 								{item.name}
 							</h3>
 							{#if item.favorite}
-								<i class="fas fa-star shrink-0 text-[10px] text-yellow-400"></i>
+								<i class="fas fa-star shrink-0 text-[10px] text-accent-yellow-text"></i>
 							{/if}
 						</div>
 						<p class="mt-0.5 text-[10px] text-fg-subdued capitalize">

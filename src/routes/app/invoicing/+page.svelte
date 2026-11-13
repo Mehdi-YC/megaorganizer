@@ -180,7 +180,7 @@
 					>Paid Amount</span
 				>
 				<div
-					class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs"
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-emerald text-white shadow-xs"
 				>
 					<i class="fas fa-circle-check text-xs"></i>
 				</div>
@@ -198,7 +198,7 @@
 					>Pending Balance</span
 				>
 				<div
-					class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-600 text-white shadow-xs"
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-amber text-white shadow-xs"
 				>
 					<i class="fas fa-clock text-xs"></i>
 				</div>
